@@ -3,6 +3,14 @@ es:
   rules:
     no_action: Sin acción
     no_condition: Sin condición
+    category_rule_cta:
+      close: Cerrar
+      create_rule: Crear regla
+      description: Puedes crear una regla para categorizar automáticamente transacciones como esta
+      dont_show_again: No volver a mostrar
+      hide_for_today: Ocultar por hoy
+      hide_for_today_hint: "«Ocultar por hoy» pausa estas sugerencias durante 24 horas."
+      message: Actualizado a %{category_name}
     rule:
       edit: Editar
       re_apply_rule: Volver a aplicar la regla
@@ -14,9 +22,9 @@ es:
       and_more_actions:
         one: y 1 acción más
         other: y %{count} acciones más
-      action_label_to: '%{label} a %{value}'
+      action_label_to: "%{label} a %{value}"
       all_past_and_future: Todas las %{resource} pasadas y futuras
-      on_or_after: '%{resource} a partir del %{date}'
+      on_or_after: "%{resource} a partir del %{date}"
     form:
       rule_name_label: Nombre de la regla (opcional)
       rule_name_placeholder: Introduce un nombre para esta regla
@@ -51,6 +59,7 @@ es:
       view_usage_history: Ver historial de uso
       confirm_changes: Confirmar cambios
     actions:
+      to_label: a
       value_placeholder: Introduce un valor
     update:
       success: Regla actualizada
@@ -94,8 +103,8 @@ es:
         failed: Fallido
     clear_ai_cache:
       button: Restablecer caché de IA
-      confirm_title: ¿Restablecer caché de IA?
-      confirm_body: ¿Estás seguro de que deseas restablecer la caché de IA? Esto permitirá que las reglas de IA vuelvan a procesar todas las transacciones. Esto puede incurrir en costes adicionales de API.
+      confirm_title: "¿Restablecer caché de IA?"
+      confirm_body: "¿Estás seguro de que deseas restablecer la caché de IA? Esto permitirá que las reglas de IA vuelvan a procesar todas las transacciones. Esto puede incurrir en costes adicionales de API."
       confirm_button: Restablecer caché
       success: Se está limpiando la caché de IA. Esto puede tardar unos momentos.
     condition_filters:
@@ -104,12 +113,26 @@ es:
         expense: Gasto
         transfer: Transferencia
         equal_to: Igual a
+      operators:
+        contains: Contiene
+        does_not_contain: No contiene
+        equal_to: Igual a
+        is_equal_to: Es igual a
+        not_equal_to: Distinto de
+        is_empty: Está vacío
+        is_not_empty: No está vacío
+        greater_than: Mayor que
+        greater_or_equal_to: Mayor o igual que
+        less_than: Menor que
+        less_than_or_equal_to: Menor o igual que
   rule:
     conditions:
       condition_group:
-        and_prefix: y
+        and_prefix: "y"
         match: cumplir
         all: todas
         any: alguna
         of_the_following_conditions: de las siguientes condiciones
         add_condition: Añadir condición
+      condition:
+        value_placeholder: Introduce un valor

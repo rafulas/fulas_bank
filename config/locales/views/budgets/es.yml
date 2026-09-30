@@ -1,6 +1,9 @@
 ---
 es:
   budgets:
+    switcher:
+      aria_label: Cambiar de presupuesto
+      household: Hogar
     budget_donut:
       spent: Gastado
       new_budget: Nuevo presupuesto
@@ -20,10 +23,10 @@ es:
     budgeted_summary:
       expected_income: Ingresos previstos
       budgeted: Presupuestado
-      earned: '%{amount} ganado'
-      over: '%{amount} de más'
-      left: '%{amount} restante'
-      spent: '%{amount} gastado'
+      earned: "%{amount} ganado"
+      over: "%{amount} de más"
+      left: "%{amount} restante"
+      spent: "%{amount} gastado"
     edit:
       setup_title: Configura tu presupuesto
       setup_description: Introduce a continuación tus ingresos mensuales y el gasto previsto para configurar tu presupuesto.
@@ -33,8 +36,15 @@ es:
       autosuggest_description: Se basará en el historial de transacciones. La IA puede cometer errores, verifica antes de continuar.
       continue: Continuar
     name:
-      custom_range: '%{start} - %{end_date}'
-      month_year: '%{month}'
+      custom_range: "%{start} - %{end_date}"
+      month_year: "%{month}"
+    available_cash:
+      heading: Efectivo disponible
+      subtitle: Aparte del plan anterior, no forma parte de él.
+      available: Disponible en efectivo
+      earmarked: Ya reservado para objetivos
+      free: Libre de verdad
+      goals_link: Ver objetivos
     show:
       categories:
         amount: Importe
@@ -64,19 +74,45 @@ es:
       no_source: No se ha encontrado ningún presupuesto anterior del que copiar
       already_initialized: Este presupuesto ya se ha configurado
   budget_categories:
+    bills_reserved: "%{amount} reservados para recibos"
+    bills_reserved_unconvertible:
+      one: 1 recibo no está reservado por falta de tipo de cambio
+      other: "%{count} recibos no están reservados por falta de tipo de cambio"
     allocation_progress:
       budget_exceeded_html: Presupuesto superado en <span class="text-red-500 privacy-sensitive">%{amount}</span>
       left_to_allocate: por asignar
-      over_set: '> 100 % asignado'
-      percent_set: '%{percent} asignado'
+      over_set: "> 100 % asignado"
+      percent_set: "%{percent} asignado"
+    budget_category:
+      rolled_over: "+%{amount} acumulados del mes anterior"
     budget_category_form:
-      monthly_average: '%{amount}/mes de media'
+      monthly_average: "%{amount}/mes de media"
+      rollover_label: Acumular sobrante
+      rollover_title: Pasar el dinero no gastado de esta categoría de un mes al siguiente
       shared_placeholder: Compartido
       shared_title: Deja vacío para compartir el presupuesto de la categoría padre
     confirm_button:
       confirm: Confirmar
+    move:
+      button_title: Mover dinero de esta categoría
+      cancel: Cancelar
+      dialog_title: Mover dinero
+      no_destination: 'Este es el único sobre entre el que se puede mover dinero ahora mismo: una categoría no puede enviar dinero a su categoría padre ni a sus subcategorías.'
+      submit: Mover
+      amount_label: Importe
+      available: "%{amount} disponibles"
+      from_label: Desde
+      to_label: Hacia
+      success: Dinero movido.
+      errors:
+        different_budgets: Las dos categorías deben pertenecer al mismo presupuesto.
+        insufficient_funds: Es más de lo que tiene asignado esta categoría.
+        non_positive_amount: Introduce un importe mayor que cero.
+        parent_child: 'No se puede mover dinero entre una categoría y su propia subcategoría: ajusta la subcategoría directamente.'
+        same_category: Elige otra categoría a la que mover el dinero.
+        uncategorized: "«Sin categoría» no es un sobre real, así que no se puede mover dinero hacia ella ni desde ella."
     no_categories:
-      oops: ¡Vaya!
+      oops: "¡Vaya!"
       no_categories_message: Todavía no has creado ni asignado ninguna categoría de gasto a tus transacciones.
       use_defaults: Usar las predeterminadas (recomendado)
       new_category: Nueva categoría
@@ -91,6 +127,7 @@ es:
       overspent: excedido
       left: restante
       budgeted: Presupuestado
+      rolled_over: Acumulado
       monthly_average_spending: Gasto medio mensual
       monthly_median_spending: Gasto mediano mensual
       recent_transactions: Transacciones recientes

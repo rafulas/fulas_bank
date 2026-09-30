@@ -15,8 +15,9 @@ es:
     form:
       placeholder: Nombre de la categoría
       name_label: Nombre
-      unassigned: (sin asignar)
+      unassigned: "(sin asignar)"
       parent_category_label: Categoría padre (opcional)
+      trigger_label: Elegir color e icono
       color: Color
       icon: Icono
       auto_adjust: ajustar automáticamente.
@@ -46,8 +47,8 @@ es:
       new_category: Nueva categoría
     perform_merge:
       success:
-        one: '%{count} categoría fusionada correctamente'
-        other: '%{count} categorías fusionadas correctamente'
+        one: "%{count} categoría fusionada correctamente"
+        other: "%{count} categorías fusionadas correctamente"
       no_categories_selected: No hay categorías seleccionadas para fusionar
       target_not_found: No se ha encontrado la categoría de destino
       invalid_categories: Las categorías seleccionadas no son válidas
@@ -64,6 +65,6 @@ es:
         bootstrap: Generar categorías predeterminadas
         empty: No se encontraron categorías
         match_transfer: Emparejar transferencia/pago
-        one_time: '%{type} puntual'
+        one_time: "%{type} puntual"
         income: ingreso
         expense: gasto

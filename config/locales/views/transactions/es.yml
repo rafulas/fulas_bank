@@ -12,7 +12,7 @@ es:
         merchant_prompt: Selecciona un comercio
         name_label: Nombre
         name_placeholder: Introduce un nombre que se aplicará a las transacciones seleccionadas
-        none: (ninguno)
+        none: "(ninguno)"
         notes_label: Notas
         notes_placeholder: Introduce una nota que se aplicará a las transacciones seleccionadas
         overview: Resumen
@@ -32,16 +32,22 @@ es:
       category: Categoría
       category_label: Categoría
       category_prompt: Selecciona una categoría
+      category_search_placeholder: Buscar categorías
+      create_category: Crear «%{name}»
+      create_category_error: No se pudo crear la categoría
       date: Fecha
       description: Descripción
       description_placeholder: Describe la transacción
       expense: Gasto
       income: Ingreso
       merchant_label: Comercio
-      none: (ninguno)
+      none: "(ninguno)"
       note_label: Notas
       note_placeholder: Introduce una nota
       create_tag: Crear
+      create_merchant: Crear
+      create_merchant_error: No se pudo crear el comercio
+      merchant_search_placeholder: Buscar o crear comercio
       submit: Añadir transacción
       tag_search_placeholder: Buscar o crear etiqueta
       tags_label: Etiquetas
@@ -56,8 +62,12 @@ es:
       keep_both: No, mantener ambas
       loan_payment: Pago de préstamo
       mark_recurring: Marcar como recurrente
+      create_bill: Crear un recibo
       mark_recurring_subtitle: Haz seguimiento de esta transacción como recurrente. La variación del importe se calcula automáticamente a partir de transacciones similares de los últimos 6 meses.
       mark_recurring_title: Transacción recurrente
+      applied_to_title: Recibos que ha pagado
+      applied_to_detail: "%{amount} para el recibo que vence el %{date}"
+      applied_to_unreviewed: Pendiente de revisar
       merge_duplicate: Sí, combinarlas
       potential_duplicate_description: Esta transacción pendiente puede ser la misma que la transacción contabilizada de abajo. Si es así, combínalas para evitar contarlas dos veces.
       potential_duplicate_title: Posible duplicado detectado
@@ -81,13 +91,13 @@ es:
       convert_to_trade_description: Convierte esta transacción en una operación de compra o venta con detalles del valor para el seguimiento de la cartera.
       convert_to_trade_button: Convertir en operación
       transfer_matcher_description: Conecta esta transacción con su contrapartida en otra cuenta.
-      pending_duplicate_merger_title: ¿Duplicado de una transacción contabilizada?
+      pending_duplicate_merger_title: "¿Duplicado de una transacción contabilizada?"
       pending_duplicate_merger_description: Fusiona manualmente esta transacción pendiente con su versión contabilizada.
       pending_duplicate_merger_button: Abrir fusionador
       merchant_label: Comercio
       name_label: Nombre
       nature: Tipo
-      none: (ninguno)
+      none: "(ninguno)"
       note_label: Notas
       note_placeholder: Introduce una nota
       overview: Resumen
@@ -95,13 +105,32 @@ es:
       tags_label: Etiquetas
       tab_transactions: Transacciones
       tab_upcoming: Próximas
-      uncategorized: (sin categorizar)
+      uncategorized: "(sin categorizar)"
       additional_details: Detalles adicionales
       payee: Beneficiario
       description: Descripción
       memo: Concepto
+      original_description: Descripción original
+      payment_channel: Canal de pago
+      transaction_code: Código de transacción
       provider_extras: Extras del proveedor
-      transfer_or_debt_payment: ¿Transferencia o pago de deuda?
+      plaid_payment_meta_label: Datos del pago · %{name}
+      plaid_counterparty_label: Contraparte %{index}
+      provider_extra_fields:
+        by_order_of: Por orden de
+        confidence_level: Nivel de confianza
+        entity_id: ID de entidad
+        logo_url: URL del logotipo
+        name: Nombre
+        payee: Beneficiario
+        payer: Ordenante
+        phone_number: Teléfono
+        ppd_id: PPD ID
+        reason: Concepto
+        reference_number: Número de referencia
+        type: Tipo
+        website: Sitio web
+      transfer_or_debt_payment: "¿Transferencia o pago de deuda?"
       open_matcher: Abrir emparejador
       convert: Convertir
     activity_labels:
@@ -123,9 +152,6 @@ es:
     mark_recurring_title: Transacción recurrente
     potential_duplicate_title: Posible duplicado detectado
     potential_duplicate_description: Esta transacción pendiente podría ser la misma que la transacción confirmada a continuación. Si es así, combínalas para evitar una doble contabilización.
-    merge_duplicate:
-      success: Transacciones combinadas correctamente
-      failure: No se pudieron combinar las transacciones
     keep_both: No, mantener ambas
     split_parent_row:
       split_label: Dividida
@@ -141,19 +167,22 @@ es:
       pending_tooltip: Transacción pendiente — puede cambiar al confirmarse
       linked_with_provider: Vinculado con %{provider}
       activity_type_tooltip: Tipo de actividad de inversión
-      possible_duplicate: ¿Duplicada?
+      possible_duplicate: "¿Duplicada?"
       potential_duplicate_tooltip: Esto puede ser un duplicado de otra transacción
       review_recommended: Revisar
       review_recommended_tooltip: Gran diferencia de importe — se recomienda revisar para comprobar si es un duplicado
       split: Dividida
       split_tooltip: Esta transacción se ha dividido en varias entradas
       split_child_tooltip: Parte de una transacción dividida
+    merge_duplicate:
+      success: Transacciones combinadas correctamente
+      failure: No se pudieron combinar las transacciones
     dismiss_duplicate:
       success: Mantenidas como transacciones separadas
       failure: No se pudo descartar la sugerencia de duplicado
     pending_duplicate_merge:
-      possible_duplicate: ¿Duplicado?
-      possible_duplicate_short: ¿Dup?
+      possible_duplicate: "¿Duplicado?"
+      possible_duplicate_short: "¿Dup?"
       review_recommended: Revisar
       review_recommended_short: Rev
       confirm_title: Fusionar con la transacción contabilizada (%{posted_amount})
@@ -194,10 +223,10 @@ es:
           other: Quedan %{count} transacciones sin categorizar
         transaction_count:
           one: 1 transacción
-          other: '%{count} transacciones'
+          other: "%{count} transacciones"
         transactions_hint: Desmarca para excluir una transacción, o asígnale una categoría distinta directamente en su fila.
         assign_category: Asignar una categoría
-        assign_category_prompt: → asignar
+        assign_category_prompt: "→ asignar"
         filter_placeholder: Buscar categorías...
         col_transaction: Transacción
         col_date: Fecha
@@ -213,7 +242,7 @@ es:
       create:
         categorized:
           one: 1 transacción categorizada
-          other: '%{count} transacciones categorizadas'
+          other: "%{count} transacciones categorizadas"
         rule_creation_failed: Transacciones categorizadas, pero no se pudo crear la regla (puede que ya exista).
       entry_row:
         include_checkbox: Incluir %{name}
@@ -234,6 +263,7 @@ es:
         category: Categoría
         tag: Etiqueta
         merchant: Comercio
+        ai: IA
     convert_to_trade:
       title: Convertir en operación de valores
       description: Convierte esta transacción en una operación con detalles del valor
@@ -242,7 +272,7 @@ es:
       amount_label: 'Importe:'
       security_label: Valor
       security_prompt: Selecciona un valor...
-      security_custom: + Introducir ticker personalizado
+      security_custom: "+ Introducir ticker personalizado"
       security_not_listed_hint: ¿No ves tu valor? Selecciona "Introducir ticker personalizado" al final de la lista.
       ticker_placeholder: AAPL
       ticker_hint: Introduce el símbolo del ticker de la acción/ETF (ej. AAPL, MSFT)
@@ -302,6 +332,13 @@ es:
           transfer: Transferencia
           confirmed: Confirmada
           pending: Pendiente
+          ai_current: IA
+          ai_history: Historial de IA
+        ai_filter:
+          current: IA
+          current_description: La categoría sigue siendo la asignada automáticamente (IA o Bayes).
+          history: Historial de IA
+          history_description: Se categorizó automáticamente, pero la categoría se ha cambiado después.
         type_filter:
           expense: Gasto
           income: Ingreso
@@ -332,7 +369,7 @@ es:
     attachments:
       cannot_exceed: No se pueden superar los %{count} adjuntos por transacción
       uploaded_one: Adjunto subido correctamente
-      uploaded_many: '%{count} adjuntos subidos correctamente'
+      uploaded_many: "%{count} adjuntos subidos correctamente"
       failed_upload: 'Error al subir el adjunto: %{error}'
       no_files_selected: No se han seleccionado archivos para subir
       attachment_deleted: Adjunto eliminado correctamente

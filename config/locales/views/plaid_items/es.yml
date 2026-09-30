@@ -9,17 +9,19 @@ es:
       link_token_generic: No hemos podido abrir Plaid en este momento. Inténtalo de nuevo y, si el problema persiste, revisa los registros del servidor para más detalles.
       link_token_with_message: 'Plaid no pudo abrir la conexión: %{message}'
     plaid_item:
+      add_accounts: Añadir cuentas
       add_new: Añadir nueva conexión
       confirm_accept: Eliminar institución
       confirm_body: Esto eliminará permanentemente todas las cuentas de este grupo y todos los datos asociados.
-      confirm_title: ¿Eliminar institución?
+      confirm_title: "¿Eliminar institución?"
       connection_lost: Conexión perdida
       connection_lost_description: Esta conexión ya no es válida. Necesitarás eliminar esta conexión y añadirla de nuevo para continuar sincronizando los datos.
       delete: Eliminar
-      deletion_in_progress: (eliminación en curso...)
+      deletion_in_progress: "(eliminación en curso...)"
       error: Ocurrió un error mientras se sincronizaban los datos
       no_accounts_description: No pudimos cargar ninguna cuenta de esta institución financiera.
       no_accounts_title: No se encontraron cuentas
+      provider_name: Plaid
       requires_update: Requiere reautenticación
       status: Última sincronización hace %{timestamp}
       status_never: Requiere sincronización de datos

@@ -1,6 +1,11 @@
 ---
 es:
   trades:
+    api_errors:
+      activity_label_must_match_type: investment_activity_label debe ser %{label} cuando el tipo es %{type}
+      invalid_activity_label: Etiqueta de actividad de inversión no válida
+      invalid_type: Tipo no válido
+      supported_types: 'el tipo debe ser uno de: %{types}'
     form:
       account: Cuenta de transferencia (opcional)
       account_prompt: Buscar cuenta
@@ -26,6 +31,15 @@ es:
       sell: Vender
       dividend: Dividendo
       interest: Interés
+      contribution: Aportación
+      exchange: Canje
+      fee: Comisión
+      other: Otro
+      reinvestment: Reinversión
+      sweep_in: Barrido de entrada
+      sweep_out: Barrido de salida
+      transfer: Transferencia
+      withdrawal: Retirada
       current_market_price_label: Precio de mercado actual
       overview: Resumen
       purchase_price_label: Precio de compra

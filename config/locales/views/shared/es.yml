@@ -2,7 +2,7 @@
 es:
   concerns:
     self_hostable:
-      redis_configured: ¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Sure.
+      redis_configured: "¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Sure."
   shared:
     preview: Vista previa
     dot_separator: "·"
@@ -11,9 +11,9 @@ es:
       refresh: Actualizar
     confirm_modal:
       accept: Confirmar
-      body_html: <p>No podrás deshacer esta decisión</p>
+      body_html: "<p>No podrás deshacer esta decisión</p>"
       cancel: Cancelar
-      title: ¿Estás seguro?
+      title: "¿Estás seguro?"
     money_field:
       label: Importe
     exchange_rate_tabs:
@@ -25,12 +25,13 @@ es:
     syncing_notice:
       syncing: Sincronizando datos de cuentas...
     require_admin: Solo los administradores pueden realizar esta acción
+    require_connector_owner: Solo puedes gestionar las conexiones que añadiste tú
     custom_confirm:
-      default_title: ¿Estás seguro?
+      default_title: "¿Estás seguro?"
       default_body: Esto no es reversible.
       default_btn_text: Confirmar
-      resource_deletion_title: ¿Eliminar %{resource}?
-      resource_deletion_body: ¿Estás seguro de que deseas eliminar %{resource}? Esto no es reversible.
+      resource_deletion_title: "¿Eliminar %{resource}?"
+      resource_deletion_body: "¿Estás seguro de que deseas eliminar %{resource}? Esto no es reversible."
       resource_deletion_btn_text: Eliminar %{resource}
     family_moniker:
       group_plural: Grupos
@@ -44,3 +45,12 @@ es:
       expense: Gasto
       income: Ingreso
       transfer: Transferencia
+    sidekiq_health_banner:
+      title: Algunos datos pueden estar desactualizados
+      body: Las tareas en segundo plano no se están procesando, así que los saldos, el patrimonio y las sincronizaciones de cuentas pueden estar desactualizados o faltar.
+      cta: Ver estado del sistema
+      reasons:
+        redis_unreachable: La app no puede conectar con Redis. Revisa REDIS_URL y que Redis esté en marcha.
+        no_worker_processes: No hay ningún proceso worker de Sidekiq conectado. Arranca el contenedor del worker o la unidad de systemd.
+        stale_heartbeat: El worker de Sidekiq no ha dado señales de vida recientemente. Puede que esté bloqueado o se haya caído.
+        queue_backed_up: La tarea más antigua en cola lleva esperando más de lo previsto. El worker funciona, pero va con retraso.
