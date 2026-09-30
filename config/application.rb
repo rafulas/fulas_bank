@@ -27,6 +27,13 @@ module Sure
     # TODO: This is here for incremental adoption of localization.  This can be removed when all translations are implemented.
     config.i18n.fallbacks = true
 
+    # Instance-wide default language (see RegionalDefaults). Untranslated keys
+    # still fall back to English rather than to the new default locale.
+    if (default_locale = ENV["DEFAULT_LOCALE"].presence&.strip)
+      config.i18n.default_locale = default_locale.to_sym
+      config.i18n.fallbacks = [ :en ]
+    end
+
     config.app_mode = (ENV["SELF_HOSTED"] == "true" || ENV["SELF_HOSTING_ENABLED"] == "true" ? "self_hosted" : "managed").inquiry
 
     # Self hosters can optionally set their own encryption keys if they want to use ActiveRecord encryption.

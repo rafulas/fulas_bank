@@ -698,7 +698,7 @@ class Import < ApplicationRecord
     end
 
     def set_default_number_format
-      self.number_format ||= "1,234.56" # Default to US/UK format
+      self.number_format ||= RegionalDefaults.number_format || "1,234.56" # Default to US/UK format
     end
 
     def custom_column_import_requires_identifier
