@@ -216,7 +216,7 @@ es:
         qif_file_hint: Solo archivos .qif
         qif_submit: Subir QIF
         browse: Examinar
-        csv_file_prompt: para añadir tu archivo CSV aquí
+        csv_file_prompt: para añadir aquí tu archivo CSV o Excel (.xlsx)
         description: Pega o sube tu archivo CSV abajo. Por favor, revisa las instrucciones en la tabla de abajo antes de comenzar.
         instructions_1: Abajo hay un ejemplo de CSV con columnas disponibles para importar.
         instructions_2: Tu CSV debe tener una fila de encabezado.
@@ -428,8 +428,11 @@ es:
       title: Nueva importación
     create:
       file_too_large: El archivo es demasiado grande. El tamaño máximo es %{max_size}MB.
-      invalid_file_type: Tipo de archivo no válido. Por favor, sube un archivo CSV.
+      invalid_file_type: Tipo de archivo no válido. Sube un archivo CSV o Excel (.xlsx).
       csv_uploaded: CSV subido correctamente.
+      bank_preset_applied: "Extracto de %{bank} detectado. Las columnas se han configurado automáticamente: revísalas antes de continuar."
+      generic_bank_preset_applied: "Extracto bancario detectado. Las columnas se han configurado automáticamente: revísalas antes de continuar."
+      invalid_spreadsheet: "No se ha podido leer el archivo Excel. Guárdalo como .xlsx o CSV y vuelve a intentarlo."
       ndjson_uploaded: Archivo NDJSON subido correctamente.
       pdf_too_large: El archivo PDF es demasiado grande. El tamaño máximo es %{max_size}MB.
       pdf_processing: Tu PDF se está procesando. Recibirás un correo electrónico cuando el análisis haya finalizado.

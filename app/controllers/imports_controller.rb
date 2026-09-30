@@ -112,7 +112,8 @@ class ImportsController < ApplicationController
         return
       end
 
-      unless Import::ALLOWED_CSV_MIME_TYPES.include?(file.content_type)
+      spreadsheet = Import::XLSX_MIME_TYPES.include?(file.content_type)
+      unless spreadsheet || Import::ALLOWED_CSV_MIME_TYPES.include?(file.content_type)
         import.destroy
         redirect_to new_import_path, alert: t("imports.create.invalid_file_type")
         return
@@ -120,9 +121,30 @@ class ImportsController < ApplicationController
 
       # Stream reading is not fully applicable here as we store the raw string in the DB,
       # but we have validated size beforehand to prevent memory exhaustion from massive files.
-      import.update!(raw_file_str: file.read)
+      content = file.read
+      if spreadsheet || Import::XlsxConverter.xlsx?(content)
+        begin
+          content = Import::XlsxConverter.new(content).to_csv
+        rescue Import::XlsxConverter::Error
+          import.destroy
+          redirect_to new_import_path, alert: t("imports.create.invalid_spreadsheet")
+          return
+        end
+        import.update!(raw_file_str: content, col_sep: ",")
+      else
+        import.update!(raw_file_str: content)
+      end
 
-      redirect_to import_configuration_path(import), notice: t("imports.create.csv_uploaded")
+      preset = Import::BankPreset.apply(import)
+      notice = if preset&.bank_name.present?
+        t("imports.create.bank_preset_applied", bank: preset.bank_name)
+      elsif preset
+        t("imports.create.generic_bank_preset_applied")
+      else
+        t("imports.create.csv_uploaded")
+      end
+
+      redirect_to import_configuration_path(import), notice: notice
     else
       redirect_to import_upload_path(import)
     end
