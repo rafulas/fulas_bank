@@ -1,0 +1,46 @@
+# Lightweight stack for trying Fulas Bank in a GitHub Codespace: the app
+# (web + Sidekiq via Procfile.dev), PostgreSQL and Redis. Unlike the main
+# dev container it skips Selenium, which is only needed for system tests.
+x-db-env: &db_env
+  POSTGRES_USER: postgres
+  POSTGRES_DB: postgres
+  POSTGRES_PASSWORD: postgres
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ../.bashrc:/root/.bashrc:ro,cached
+      - ../..:/workspace:cached
+      - bundle_cache:/bundle
+    command: sleep infinity
+    environment:
+      <<: *db_env
+      DB_HOST: db
+      BINDING: "0.0.0.0"
+      BUNDLE_PATH: /bundle
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    environment:
+      <<: *db_env
+
+volumes:
+  postgres-data:
+  redis-data:
+  bundle_cache:

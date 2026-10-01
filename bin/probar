@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Starts Fulas Bank for a trial run (used by the "Probar Fulas Bank"
+# Codespace, see .devcontainer/probar). Prepares the database, loads the demo
+# family once, then runs the web server and the background worker.
+#
+#   bin/probar               run in the foreground
+#   bin/probar --background  run detached, logging to log/probar.log
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ "${1:-}" == "--background" ]]; then
+  mkdir -p log
+  setsid nohup "$0" > log/probar.log 2>&1 < /dev/null &
+  echo "Fulas Bank está arrancando. Progreso: tail -f log/probar.log"
+  exit 0
+fi
+
+bin/rails db:prepare
+
+marker=tmp/.probar-demo-loaded
+if [[ ! -f "$marker" ]]; then
+  echo "Cargando datos de ejemplo (solo la primera vez, tarda unos minutos)…"
+  SKIP_CLEAR=1 bin/rails demo_data:default
+  mkdir -p tmp && touch "$marker"
+fi
+
+bin/rails tailwindcss:build
+echo "Fulas Bank listo en el puerto 3000."
+exec foreman start -f Procfile.dev
