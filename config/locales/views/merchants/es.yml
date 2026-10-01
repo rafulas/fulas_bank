@@ -29,6 +29,11 @@ es:
         one: A %{count} comercio del proveedor le falta la información del sitio web. Mejora con IA para detectar sitios web, mostrar logotipos y fusionar comercios duplicados.
         other: A %{count} comercios del proveedor les falta la información del sitio web. Mejora con IA para detectar sitios web, mostrar logotipos y fusionar comercios duplicados.
       enhance_button: Mejorar con IA
+      search_family_merchants: Buscar comercios de la familia...
+      search_provider_merchants: Buscar comercios del proveedor...
+      no_family_merchants_found: No hay comercios de la familia que coincidan
+      no_provider_merchants_found: No hay comercios del proveedor que coincidan
+      per_page: por página
       unlinked_title: Desvinculados recientemente
       unlinked_info: Estos comercios se han eliminado recientemente de tus transacciones. Desaparecerán de esta lista tras 30 días, a menos que se vuelvan a asignar a una transacción.
       table:
@@ -40,8 +45,8 @@ es:
       delete: Eliminar
     merchant:
       confirm_accept: Eliminar comercio
-      confirm_body: ¿Estás seguro de que deseas eliminar este comercio? Eliminar este comercio desvinculará todas las transacciones asociadas y puede afectar a tus informes.
-      confirm_title: ¿Eliminar comercio?
+      confirm_body: "¿Estás seguro de que deseas eliminar este comercio? Eliminar este comercio desvinculará todas las transacciones asociadas y puede afectar a tus informes."
+      confirm_title: "¿Eliminar comercio?"
       delete: Eliminar comercio
       edit: Editar comercio
     merge:
@@ -50,6 +55,8 @@ es:
       target_label: Fusionar en (destino)
       select_target: Seleccionar comercio de destino...
       sources_label: Comercios a fusionar
+      sources_search_placeholder: Buscar comercios...
+      no_merchants_found: No hay comercios que coincidan
       sources_hint: Los comercios seleccionados se fusionarán en el de destino. Los comercios familiares se eliminarán y los de proveedores se desvincularán.
       submit: Fusionar seleccionados
     new:
@@ -64,8 +71,8 @@ es:
     provider_merchant:
       edit: Editar
       remove: Eliminar
-      remove_confirm_title: ¿Eliminar comercio?
-      remove_confirm_body: ¿Estás seguro de que quieres eliminar %{name}? Esto desvinculará todas las transacciones asociadas a este comercio, pero no eliminará el comercio en sí.
+      remove_confirm_title: "¿Eliminar comercio?"
+      remove_confirm_body: "¿Estás seguro de que quieres eliminar %{name}? Esto desvinculará todas las transacciones asociadas a este comercio, pero no eliminará el comercio en sí."
     enhance:
       success: Se ha iniciado la mejora de comercios del proveedor. Los comercios se mejorarán y los duplicados se fusionarán en breve.
       already_running: Ya hay una mejora en curso. Espera a que termine.

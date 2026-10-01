@@ -35,6 +35,36 @@ class Import::UploadsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "CSV uploaded successfully.", flash[:notice]
   end
 
+  test "uploads a BBVA Excel statement and configures its columns" do
+    patch import_upload_url(@import), params: {
+      import: {
+        import_file: file_fixture_upload("imports/bbva.xlsx", Import::XLSX_MIME_TYPES.first),
+        col_sep: ";"
+      }
+    }
+
+    assert_redirected_to import_configuration_url(@import, template_hint: true)
+    assert_match "BBVA", flash[:notice]
+
+    @import.reload
+    assert_equal ",", @import.col_sep
+    assert_equal "Fecha", @import.date_col_label
+    assert_equal "Importe", @import.amount_col_label
+    assert_equal "Concepto", @import.name_col_label
+    assert_equal [ "F.Valor", "Fecha", "Concepto", "Movimiento", "Importe", "Divisa", "Disponible", "Divisa (2)", "Observaciones" ], @import.csv_headers
+  end
+
+  test "rejects an unreadable Excel file" do
+    patch import_upload_url(@import), params: {
+      import: {
+        raw_file_str: "PK\x03\x04broken",
+        col_sep: ","
+      }
+    }
+
+    assert_response :unprocessable_entity
+  end
+
   test "account select does not leak unshared family accounts (#1803)" do
     sign_in users(:family_member)
 

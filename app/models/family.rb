@@ -243,6 +243,7 @@ class Family < ApplicationRecord
   validate :timezone_must_be_a_known_zone, if: :timezone_changed?
 
   before_validation :normalize_enabled_currencies!
+  after_initialize :apply_regional_defaults, if: :new_record?
 
   def primary_currency_code
     self.class.normalize_currency_code(currency) || "USD"
@@ -780,5 +781,16 @@ class Family < ApplicationRecord
       return if timezone.blank?
 
       errors.add(:timezone, :invalid) if ActiveSupport::TimeZone[timezone].blank?
+    end
+
+    # Fills in instance-wide regional defaults (see RegionalDefaults) for any
+    # attribute the caller did not set explicitly, so a new family starts in
+    # the instance's language, currency and formats rather than the US ones.
+    def apply_regional_defaults
+      RegionalDefaults.family_attributes.each do |attribute, value|
+        next if attribute_changed?(attribute)
+
+        self[attribute] = value
+      end
     end
 end

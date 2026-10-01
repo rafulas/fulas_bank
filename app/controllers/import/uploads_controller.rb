@@ -20,10 +20,10 @@ class Import::UploadsController < ApplicationController
       update_sure_import_upload
     elsif csv_valid?(csv_str)
       @import.account = import_account_id.present? ? accessible_accounts.find(import_account_id) : nil
-      @import.assign_attributes(raw_file_str: csv_str, col_sep: upload_params[:col_sep])
+      @import.assign_attributes(raw_file_str: csv_str, col_sep: upload_col_sep)
       @import.save!(validate: false)
 
-      redirect_to import_configuration_path(@import, template_hint: true), notice: t("imports.create.csv_uploaded")
+      redirect_to import_configuration_path(@import, template_hint: true), notice: upload_notice(Import::BankPreset.apply(@import))
     else
       flash.now[:alert] = t("import.uploads.show.csv_invalid", default: "Must be valid CSV with headers and at least one row of data")
 
@@ -90,13 +90,36 @@ class Import::UploadsController < ApplicationController
       redirect_to import_qif_category_selection_path(@import), notice: t(".qif_uploaded")
     end
 
+    # Excel (.xlsx) statements are converted to CSV up front, so the rest of the
+    # workflow only ever deals with CSV.
     def csv_str
-      @csv_str ||= upload_params[:import_file]&.read || upload_params[:raw_file_str]
+      return @csv_str if defined?(@csv_str)
+
+      raw = upload_params[:import_file]&.read || upload_params[:raw_file_str]
+      @csv_str = Import::XlsxConverter.xlsx?(raw) ? spreadsheet_to_csv(raw) : raw
+    end
+
+    def spreadsheet_to_csv(raw)
+      @spreadsheet_upload = true
+      Import::XlsxConverter.new(raw).to_csv
+    rescue Import::XlsxConverter::Error
+      nil
+    end
+
+    def upload_col_sep
+      @spreadsheet_upload ? "," : upload_params[:col_sep]
+    end
+
+    def upload_notice(preset)
+      return t("imports.create.csv_uploaded") if preset.nil?
+      return t("imports.create.bank_preset_applied", bank: preset.bank_name) if preset.bank_name.present?
+
+      t("imports.create.generic_bank_preset_applied")
     end
 
     def csv_valid?(str)
       begin
-        csv = Import.parse_csv_str(str, col_sep: upload_params[:col_sep])
+        csv = Import.parse_csv_str(str, col_sep: upload_col_sep)
         return false if csv.headers.empty?
         return false if csv.count == 0
         true

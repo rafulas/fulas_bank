@@ -36,6 +36,8 @@ class Import < ApplicationRecord
   MAX_PDF_SIZE = 25.megabytes
   ALLOWED_CSV_MIME_TYPES = %w[text/csv text/plain application/vnd.ms-excel application/csv].freeze
   ALLOWED_PDF_MIME_TYPES = %w[application/pdf].freeze
+  # Excel statements are converted to CSV on upload (see Import::XlsxConverter).
+  XLSX_MIME_TYPES = %w[application/vnd.openxmlformats-officedocument.spreadsheetml.sheet].freeze
 
   DOCUMENT_TYPES = %w[bank_statement credit_card_statement investment_statement financial_document contract other].freeze
 
@@ -698,7 +700,7 @@ class Import < ApplicationRecord
     end
 
     def set_default_number_format
-      self.number_format ||= "1,234.56" # Default to US/UK format
+      self.number_format ||= RegionalDefaults.number_format || "1,234.56" # Default to US/UK format
     end
 
     def custom_column_import_requires_identifier
