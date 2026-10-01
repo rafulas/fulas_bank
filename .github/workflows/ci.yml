@@ -157,15 +157,19 @@ jobs:
           set -o pipefail
           bin/rails test 2>&1 | tee test-output.log
 
-      - name: Publish failing tests to the job summary
+      - name: Publish failing tests as annotations
         if: failure()
         run: |
-          {
-            echo '```'
-            grep -E -A30 '(Failure|Error):$' test-output.log | head -400
-            grep -E '[0-9]+ runs, [0-9]+ assertions' test-output.log
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          ruby -e '
+            log = File.read("test-output.log")
+            blocks = log.scan(/^(?:Failure|Error):\n.*?(?=\n\n(?:Failure|Error):|\n\nFinished|\z)/m)
+            blocks.first(9).each do |block|
+              msg = block[0, 4000].gsub("%", "%25").gsub("\r", "%0D").gsub("\n", "%0A")
+              puts "::error title=Test failure::#{msg}"
+            end
+            summary = log[/\d+ runs, \d+ assertions.*$/]
+            puts "::error title=Test summary::#{summary}" if summary
+          '
 
   test_system:
     runs-on: ubuntu-latest
