@@ -80,7 +80,7 @@ es:
       no_account_selected: Selecciona una cuenta Up para vincular.
     setup_accounts:
       title: Vincular cuentas Up
-      subtitle: Elige cómo debe aparecer cada cuenta Up en Sure.
+      subtitle: Elige cómo debe aparecer cada cuenta Up en Fulas Bank.
       no_credentials: Configura primero las credenciales de Up.
       api_error: No se pudieron obtener las cuentas Up.
       fetch_failed: No se pudieron obtener las cuentas

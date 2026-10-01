@@ -265,7 +265,7 @@ es:
           body: "¿Estás seguro de que deseas restablecer tu cuenta? Esto eliminará todas tus cuentas, categorías, comerciantes, etiquetas y otros datos. Esta acción no se puede deshacer."
           title: "¿Restablecer cuenta?"
         confirm_reset_with_sample_data:
-          body: "¿Estás seguro de que deseas restablecer tu cuenta y cargar datos de ejemplo? Esto eliminará tus datos existentes y los reemplazará con datos de demostración para que puedas explorar Sure de forma segura."
+          body: "¿Estás seguro de que deseas restablecer tu cuenta y cargar datos de ejemplo? Esto eliminará tus datos existentes y los reemplazará con datos de demostración para que puedas explorar Fulas Bank de forma segura."
           title: "¿Restablecer cuenta y cargar datos de ejemplo?"
         confirm_remove_invitation:
           body: "¿Estás seguro de que deseas eliminar la invitación para %{email}?"
@@ -333,16 +333,16 @@ es:
       show:
         page_title: Servidor MCP
         connect_title: Conecta un asistente de IA
-        connect_subtitle: Pega esta URL en Claude.ai (o en cualquier cliente compatible con MCP) para conectarlo a tu cuenta de Sure.
+        connect_subtitle: Pega esta URL en Claude.ai (o en cualquier cliente compatible con MCP) para conectarlo a tu cuenta de Fulas Bank.
         copy_url: Copiar
         copied: "¡Copiado!"
         how_to_connect_title: Cómo conectar Claude
         step_1: Abre Claude.ai y ve a Ajustes → Integraciones.
         step_2: Haz clic en "Añadir integración" y pega la URL del servidor MCP de arriba.
-        step_3: 'Haz clic en Conectar: se te redirigirá a Sure para iniciar sesión y autorizar el acceso.'
+        step_3: 'Haz clic en Conectar: se te redirigirá a Fulas Bank para iniciar sesión y autorizar el acceso.'
         step_4: Una vez autorizado, Claude podrá leer tus cuentas, transacciones y datos de saldo.
         connected_title: Clientes conectados
-        connected_subtitle: Estas aplicaciones tienen acceso actualmente a tus datos de Sure. Revoca las que ya no uses.
+        connected_subtitle: Estas aplicaciones tienen acceso actualmente a tus datos de Fulas Bank. Revoca las que ya no uses.
         unknown_client: Cliente desconocido
         connected_ago: Conectado hace %{time}
         revoke: Revocar
@@ -400,7 +400,7 @@ es:
       not_authorized: No autorizado
       bank_sync:
         page_title: Sincronización bancaria
-        lede: Conecta cuentas externas para que las transacciones, saldos y posiciones lleguen a Sure automáticamente.
+        lede: Conecta cuentas externas para que las transacciones, saldos y posiciones lleguen a Fulas Bank automáticamente.
       status:
         ok: Conectado
         warn: Requiere acción
@@ -410,8 +410,8 @@ es:
       maturity:
         beta: Beta
         alpha: Alfa
-      drawer_trust_statement: Acceso de solo lectura. Sure nunca puede mover dinero y tus credenciales se guardan cifradas.
-      drawer_trust_statement_encryption_unconfigured: Acceso de solo lectura. Sure nunca puede mover dinero. Configura claves de cifrado explícitas antes de guardar credenciales de proveedores en producción.
+      drawer_trust_statement: Acceso de solo lectura. Fulas Bank nunca puede mover dinero y tus credenciales se guardan cifradas.
+      drawer_trust_statement_encryption_unconfigured: Acceso de solo lectura. Fulas Bank nunca puede mover dinero. Configura claves de cifrado explícitas antes de guardar credenciales de proveedores en producción.
       provider_setup_encryption_warning:
         title: Faltan claves de cifrado
         message: Esta instalación autoalojada no tiene configuradas claves de cifrado explícitas de Active Record. Configura primary_key, deterministic_key y key_derivation_salt antes de guardar credenciales de proveedores en producción.
@@ -431,7 +431,7 @@ es:
         status:
           active: Sincronización activa
           repair_required: 'Requiere reparación: abre la app de Sure para iOS'
-        last_accepted_at: Última aceptación por Sure
+        last_accepted_at: Última aceptación por Fulas Bank
         last_imported_at: Última importación en tu familia
         not_yet: Todavía no
       groups:
@@ -521,7 +521,7 @@ es:
         step2: Crea una nueva clave API solo con el permiso Enable Reading (lectura)
         step3: Pega tu API Key y tu Secret abajo
         no_withdraw_title: Solo claves de lectura
-        no_withdraw_body: No actives permisos de retirada al crear tu clave API de Binance. Sure solo necesita acceso de lectura.
+        no_withdraw_body: No actives permisos de retirada al crear tu clave API de Binance. Fulas Bank solo necesita acceso de lectura.
         ip_hint_title: Se requiere lista blanca de IP
         ip_hint_body: 'Añade la IP de salida del servidor de la aplicación a la lista blanca de la clave API de Binance:'
         ip_hint_contact_admin: Contacta con tu administrador para obtener la IP de salida del servidor de la aplicación.
@@ -542,7 +542,7 @@ es:
         step2: Crea una clave API solo con Query Funds y Query Closed Orders & Trades.
         step3: Pega la clave API y la clave privada abajo.
         read_only_title: Sincronización de exchange solo en lectura
-        read_only_body: No concedas permisos de trading, cancelación, retirada, exportación, libro mayor, Earn, staking ni transferencias. Sure solo importa saldos, posiciones y operaciones spot ejecutadas.
+        read_only_body: No concedas permisos de trading, cancelación, retirada, exportación, libro mayor, Earn, staking ni transferencias. Fulas Bank solo importa saldos, posiciones y operaciones spot ejecutadas.
         default_connection_name: Kraken
         add_connection: Añadir conexión de Kraken
         update_connection: Actualizar conexión
@@ -564,7 +564,7 @@ es:
         step2: Crea una clave de API con acceso de solo lectura a saldos e historial.
         step3: Pega abajo la clave y el secreto de la API.
         read_only_title: Solo sincronización de lectura del exchange
-        read_only_body: No concedas permisos de envío, retirada, trading ni transferencia. Sure solo importa saldos, valores en AUD, transferencias, depósitos, retiradas e historial de órdenes completadas.
+        read_only_body: No concedas permisos de envío, retirada, trading ni transferencia. Fulas Bank solo importa saldos, valores en AUD, transferencias, depósitos, retiradas e historial de órdenes completadas.
         default_connection_name: CoinSpot
         add_connection: Añadir conexión de CoinSpot
         update_connection: Actualizar conexión
@@ -591,7 +591,7 @@ es:
         etherscan_hint: Las consultas de Ethereum funcionan sin clave. Añadir una clave de Etherscan solo aumenta el límite de consultas de Ethereum.
         keep_etherscan_api_key: Déjalo en blanco para mantener la clave actual
         manage_wallets: Gestionar carteras
-        keyless_body: Sure solo lee datos públicos de la cadena. No usa claves, frases semilla ni firmas, y no se puede gastar nada.
+        keyless_body: Fulas Bank solo lee datos públicos de la cadena. No usa claves, frases semilla ni firmas, y no se puede gastar nada.
         keyless_title: Solo lectura, sin claves
         save: Guardar
         sync_start_date_hint: Se ignoran las transferencias anteriores a esta fecha. Déjalo en blanco para importar todo lo que muestre el explorador.
@@ -672,7 +672,7 @@ es:
         steps:
           step_1: En tu Client Portal de IBKR, ve a "Performance & Reports" > "Flex Queries".
           step_2: Haz clic en el icono "+" de la sección "Activity Flex Query" para crear una nueva consulta.
-          step_3: Ponle un nombre a tu consulta (p. ej. "Sure Sync"), luego revisa los detalles de la Flex Query más abajo y activa las secciones, campos y opciones de configuración indicados.
+          step_3: Ponle un nombre a tu consulta (p. ej. "Fulas Bank Sync"), luego revisa los detalles de la Flex Query más abajo y activa las secciones, campos y opciones de configuración indicados.
           step_4: Guarda la consulta, anota tu "Query ID" y usa el icono del engranaje en la sección "Flex Web Service Configuration" para generar un token de acceso.
           step_5: Pega tu Query ID y tu token abajo, guarda la configuración y luego ve a Cuentas para vincular las cuentas de IBKR detectadas.
         flex_query_details:
@@ -708,7 +708,7 @@ es:
           date_time_separator: 'Separador fecha/hora: ; (punto y coma)'
           profit_and_loss: 'Profit and Loss: Default'
           all_other_options: 'Todas las demás opciones de configuración: "No"'
-        report_window_note: Los informes Flex de IBKR se limitan a la ventana de consulta que configuraste en IBKR. Sure importará todas las posiciones actuales más hasta los últimos 365 días de actividad de este informe.
+        report_window_note: Los informes Flex de IBKR se limitan a la ventana de consulta que configuraste en IBKR. Fulas Bank importará todas las posiciones actuales más hasta los últimos 365 días de actividad de este informe.
         sync: Sincronizar
         disconnect_confirm: "¿Desconectar Interactive Brokers?"
         query_id_label: Query ID
@@ -743,10 +743,10 @@ es:
         complete_login: Continuar
         authenticator_code_label: Código de autenticación (si se pide)
         authenticator_code_placeholder: Código de 6 dígitos
-        push_login_notice: Aprueba ahora el inicio de sesión en tu app de Trade Republic. Sure lo comprueba automáticamente en segundo plano. También puedes comprobar el estado tú mismo.
+        push_login_notice: Aprueba ahora el inicio de sesión en tu app de Trade Republic. Fulas Bank lo comprueba automáticamente en segundo plano. También puedes comprobar el estado tú mismo.
         check_login_status: Comprobar estado ahora
         authenticator_code_notice: Introduce el código de tu app de autenticación.
-        approval_pending: Inicio de sesión en marcha. Apruébalo en la app de Trade Republic; Sure lo comprueba automáticamente.
+        approval_pending: Inicio de sesión en marcha. Apruébalo en la app de Trade Republic; Fulas Bank lo comprueba automáticamente.
         awaiting_confirmation: Aprobación pendiente en la app de Trade Republic.
         awaiting_authenticator_code: Se necesita el código de autenticación.
         login_expired: La solicitud de aprobación ha caducado.
@@ -754,14 +754,14 @@ es:
         connection_success:
           title: Trade Republic conectado correctamente
           message: Tu conexión con Trade Republic está lista.
-          description: Sure está sincronizando tus datos de Trade Republic en segundo plano.
+          description: Fulas Bank está sincronizando tus datos de Trade Republic en segundo plano.
           close: Hecho
         qr_login: Iniciar sesión con código QR
         qr_cancel: Cancelar inicio con QR
         qr_back_to_credentials: Volver a teléfono y PIN o contraseña
         qr_loading: Preparando código QR…
         qr_instruction: Escanea el código QR con tu app de Trade Republic y aprueba el inicio de sesión.
-        qr_success: Inicio de sesión aprobado. Sure está actualizando la página del proveedor.
+        qr_success: Inicio de sesión aprobado. Fulas Bank está actualizando la página del proveedor.
         qr_error: No se pudo iniciar el acceso con QR. Inténtalo de nuevo.
         add_account: Añadir otra conexión
         save_configuration: Guardar e iniciar sesión

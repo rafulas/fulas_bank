@@ -1,3 +1,11 @@
+# Fulas Bank
+
+**Fulas Bank** es una versión personal de [Sure](https://github.com/we-promise/sure) adaptada para España: interfaz en español, euros por defecto e importación de extractos de BBVA en Excel.
+
+> Fulas Bank se basa en Sure, que a su vez es un fork comunitario de Maybe Finance. No está afiliado a Sure ni a Maybe Finance Inc., ni cuenta con su respaldo. Se distribuye bajo la misma licencia [AGPLv3](LICENSE).
+
+---
+
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/we-promise/sure)
 [![View performance data on Skylight](https://badges.skylight.io/typical/s6PEZSKwcklL.svg)](https://oss.skylight.io/app/applications/s6PEZSKwcklL)
 [![Dosu](https://raw.githubusercontent.com/dosu-ai/assets/main/dosu-badge.svg)](https://app.dosu.dev/a72bdcfd-15f5-4edc-bd85-ea0daa6c3adc/ask)

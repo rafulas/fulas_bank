@@ -7,18 +7,18 @@ es:
       page_title: Mejorar plan
       account_settings: Ajustes de la cuenta
       sign_out: Cerrar sesión
-      contribute_and_support_sure: Contribuir y apoyar a Sure
+      contribute_and_support_sure: Contribuir y apoyar a Fulas Bank
       cta: ¡Apoya el desarrollo de este proyecto!
       header:
         support: Apoyar
-        sure: Sure
+        sure: Fulas Bank
         today: hoy
       redirect_to_stripe: En el siguiente paso, serás redirigido a Stripe, que gestiona las tarjetas de crédito por nosotros.
       trialing: Tus datos se eliminarán en %{days} días
       trial_over: Tu período de prueba ha terminado
     create:
-      welcome: ¡Bienvenido a Sure!
+      welcome: ¡Bienvenido a Fulas Bank!
       trial_already_used: Ya has iniciado o completado un período de prueba. Mejora tu plan para continuar.
     success:
-      welcome_with_contribution: ¡Bienvenido a Sure!  Agradecemos tu contribución.
+      welcome_with_contribution: ¡Bienvenido a Fulas Bank!  Agradecemos tu contribución.
       contribution_failed: Algo ha ido mal al procesar tu contribución. Inténtalo de nuevo.

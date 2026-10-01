@@ -2,7 +2,7 @@
 es:
   concerns:
     self_hostable:
-      redis_configured: "¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Sure."
+      redis_configured: "¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Fulas Bank."
   shared:
     preview: Vista previa
     dot_separator: "·"

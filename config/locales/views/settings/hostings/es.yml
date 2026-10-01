@@ -71,7 +71,7 @@ es:
         securities_provider_label: Proveedor de valores (Precios de acciones)
       assistant_settings:
         title: Asistente de IA
-        description: Elige cómo responde el asistente del chat. "Integrado" utiliza directamente tu proveedor de LLM configurado. "Externo" delega en un agente remoto que puede interactuar con las herramientas financieras de Sure mediante MCP.
+        description: Elige cómo responde el asistente del chat. "Integrado" utiliza directamente tu proveedor de LLM configurado. "Externo" delega en un agente remoto que puede interactuar con las herramientas financieras de Fulas Bank mediante MCP.
         type_label: Tipo de asistente
         type_builtin: Integrado (LLM directo)
         type_external: Externo (agente remoto)
@@ -98,8 +98,8 @@ es:
           title: Configuración de IA externa
           items:
           - Introduce la URL completa del endpoint compatible con OpenAI, terminada en /v1/chat/completions.
-          - Sure obtiene los agentes disponibles desde /v1/models después de guardar el endpoint y el token.
-          - El servicio externo elige el modelo que hay detrás de cada agente; Sure solo selecciona la ruta del agente.
+          - Fulas Bank obtiene los agentes disponibles desde /v1/models después de guardar el endpoint y el token.
+          - El servicio externo elige el modelo que hay detrás de cada agente; Fulas Bank solo selecciona la ruta del agente.
           - Los errores de autenticación, endpoint o agente los devuelve el servicio externo. Revisa sus registros cuando falle una petición.
         disconnect_title: Conexión externa
         disconnect_description: Elimina la conexión del asistente externo y vuelve al asistente integrado.
@@ -205,7 +205,7 @@ es:
         max_items_per_call_label: Elementos máximos por lote (opcional)
         max_items_per_call_help: 'Límite superior para los lotes de categorización automática / detección de comercios. Predeterminado: 25. Los lotes más grandes se dividen automáticamente para caber en la ventana de contexto.'
         timeout_heading: Tiempos de espera
-        timeout_description: Controla cuánto tiempo pueden ejecutarse las llamadas a modelos compatibles con OpenAI antes de que Sure las cancele. Auméntalos si ejecutas un modelo local en hardware lento.
+        timeout_description: Controla cuánto tiempo pueden ejecutarse las llamadas a modelos compatibles con OpenAI antes de que Fulas Bank las cancele. Auméntalos si ejecutas un modelo local en hardware lento.
         openai_request_timeout_label: Tiempo de espera de solicitud en segundos (opcional)
         openai_request_timeout_help: 'Predeterminado: 60. Se aplica a cada solicitud HTTP compatible con OpenAI, incluida la categorización automática, la detección de comercios, el chat, el procesamiento de PDF y las llamadas al almacén vectorial. OPENAI_REQUEST_TIMEOUT sobrescribe este campo.'
         ai_response_timeout_label: Tiempo de espera de respuesta en segundos (opcional)
@@ -217,7 +217,7 @@ es:
         status_healthy: Yahoo Finance está activo y funcionando.
         status_rate_limited: Yahoo Finance está limitando temporalmente las solicitudes.
         rate_limited_title: Se alcanzó el límite de solicitudes de Yahoo Finance.
-        rate_limited_message: No es necesario realizar ninguna acción. Sure evitará comprobaciones de estado adicionales durante 30 minutos. Las operaciones de precios y tipos de cambio continuarán de forma independiente.
+        rate_limited_message: No es necesario realizar ninguna acción. Fulas Bank evitará comprobaciones de estado adicionales durante 30 minutos. Las operaciones de precios y tipos de cambio continuarán de forma independiente.
         status_unavailable: Yahoo Finance no está disponible en este momento.
         unavailable_title: No se pudo verificar Yahoo Finance.
         unavailable_message: No se pudo contactar con Yahoo Finance o se recibió una respuesta inesperada. Comprueba tu conexión a internet e inténtalo de nuevo más tarde.

@@ -42,8 +42,8 @@ es:
           enqueue_failed: No se pudo poner en cola; revisa Sidekiq
           expired: Caducada sin resultado final
       push_notification:
-        title: Notificación de prueba de Sure
-        body: Esta es una notificación push de prueba para tu cuenta de Sure.
+        title: Notificación de prueba de Fulas Bank
+        body: Esta es una notificación push de prueba para tu cuenta de Fulas Bank.
       verify_worker_ai:
         queued: Comprobación del worker en cola. Aparecerá abajo en cuanto un proceso worker la recoja, normalmente en pocos segundos.
       show:
@@ -95,37 +95,37 @@ es:
               message: El endpoint aceptó el parámetro tools, pero el modelo respondió con texto en lugar de llamar a la herramienta de comprobación. Sin llamadas a herramientas, el asistente de IA no puede leer datos financieros, así que el chat puede no responder nada o inventarse cifras. Mejor elige un modelo cuyo proveedor documente soporte para llamadas a funciones.
             llm_probe_failed:
               title: Falló la comprobación del LLM
-              message: Sure no pudo verificar el endpoint y el modelo configurados. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo verificar el endpoint y el modelo configurados. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             llm_model_not_available:
               title: El modelo de IA configurado no está disponible
               message: El endpoint respondió, pero no incluyó ni sirvió el modelo configurado. Elige un modelo activo del proveedor seleccionado y vuelve a comprobar. Para Gemini a través de una capa compatible con OpenAI, usa un modelo con soporte actual, como gemini-2.5-flash.
             pdf_text_extraction_failed:
               title: Falló la comprobación sintética de extracción de texto de PDF
-              message: Sure no pudo completar el proceso que extrae localmente el texto del PDF y lo envía al modelo configurado. No se ha enviado ningún dato de clientes. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo completar el proceso que extrae localmente el texto del PDF y lo envía al modelo configurado. No se ha enviado ningún dato de clientes. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             pdf_vision_processing_failed:
               title: Falló la comprobación sintética de PDF por visión/nativa
-              message: Sure no pudo completar el procesamiento del PDF como imagen o documento nativo con el modelo configurado. No se ha enviado ningún dato de clientes. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo completar el procesamiento del PDF como imagen o documento nativo con el modelo configurado. No se ha enviado ningún dato de clientes. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             vector_probe_failed:
               title: Falló la comprobación de búsqueda de documentos
-              message: Sure no pudo verificar el almacén vectorial seleccionado ni todos los servicios de embeddings necesarios. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo verificar el almacén vectorial seleccionado ni todos los servicios de embeddings necesarios. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             pgvector_extension_not_enabled:
               title: La extensión vector de PostgreSQL no está activada
               message: El adaptador pgvector está seleccionado, pero PostgreSQL no tiene activada la extensión vector en esta base de datos. Usa una imagen de PostgreSQL que incluya pgvector, activa la extensión como propietario de la base de datos o superusuario y vuelve a ejecutar las migraciones con VECTOR_STORE_PROVIDER=pgvector.
             pgvector_table_not_found:
               title: Falta la tabla vector_store_chunks
-              message: La extensión pgvector está activada, pero no se encontró la tabla de fragmentos. Revisa el estado de las migraciones y vuelve a ejecutar la del almacén vectorial con VECTOR_STORE_PROVIDER=pgvector para que Sure cree vector_store_chunks.
+              message: La extensión pgvector está activada, pero no se encontró la tabla de fragmentos. Revisa el estado de las migraciones y vuelve a ejecutar la del almacén vectorial con VECTOR_STORE_PROVIDER=pgvector para que Fulas Bank cree vector_store_chunks.
             pgvector_probe_failed:
               title: Falló la comprobación de almacenamiento de pgvector
-              message: Sure no pudo consultar la tabla de fragmentos de pgvector. Revisa los permisos de PostgreSQL, la extensión vector y la migración de vector_store_chunks. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo consultar la tabla de fragmentos de pgvector. Revisa los permisos de PostgreSQL, la extensión vector y la migración de vector_store_chunks. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             embedding_dimensions_mismatch:
               title: Las dimensiones de los embeddings no coinciden
-              message: El endpoint de embeddings devolvió un vector cuya longitud no coincide con EMBEDDING_DIMENSIONS. Configura EMBEDDING_MODEL y EMBEDDING_DIMENSIONS con el tamaño de vector documentado del modelo, reinicia Sure para que se aplique el entorno y, si los datos existentes usaban otro tamaño, modifica o vuelve a crear la columna o tabla de embeddings de pgvector y vuelve a generar los embeddings de los documentos.
+              message: El endpoint de embeddings devolvió un vector cuya longitud no coincide con EMBEDDING_DIMENSIONS. Configura EMBEDDING_MODEL y EMBEDDING_DIMENSIONS con el tamaño de vector documentado del modelo, reinicia Fulas Bank para que se aplique el entorno y, si los datos existentes usaban otro tamaño, modifica o vuelve a crear la columna o tabla de embeddings de pgvector y vuelve a generar los embeddings de los documentos.
             embedding_probe_timeout:
               title: La comprobación de embeddings superó el tiempo de espera
-              message: El endpoint de embeddings no respondió antes de AI_HEALTH_PROBE_TIMEOUT. Aumenta ese tiempo de espera si el proveedor es lento y reinicia Sure para que se aplique en todos los procesos. Si las llamadas normales al chat de IA también se agotan, aumenta OPENAI_REQUEST_TIMEOUT por separado.
+              message: El endpoint de embeddings no respondió antes de AI_HEALTH_PROBE_TIMEOUT. Aumenta ese tiempo de espera si el proveedor es lento y reinicia Fulas Bank para que se aplique en todos los procesos. Si las llamadas normales al chat de IA también se agotan, aumenta OPENAI_REQUEST_TIMEOUT por separado.
             embedding_probe_failed:
               title: Falló la comprobación de embeddings
-              message: Sure no pudo crear un embedding de prueba con el endpoint y el modelo configurados. Revisa EMBEDDING_URI_BASE, EMBEDDING_MODEL, EMBEDDING_ACCESS_TOKEN y los registros del proveedor de embeddings. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
+              message: Fulas Bank no pudo crear un embedding de prueba con el endpoint y el modelo configurados. Revisa EMBEDDING_URI_BASE, EMBEDDING_MODEL, EMBEDDING_ACCESS_TOKEN y los registros del proveedor de embeddings. El fallo se ha registrado en Ajustes → Registros de depuración y en Rails.logger.
             qdrant:
               title: Qdrant aún no está implementado
               message: El adaptador de Qdrant está preparado, pero la subida y búsqueda de documentos fallan por ahora. Selecciona OpenAI o pgvector para la búsqueda de documentos.

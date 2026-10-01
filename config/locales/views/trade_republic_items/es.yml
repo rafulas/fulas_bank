@@ -24,7 +24,7 @@ es:
       setup_accounts: Configurar cuentas
       delete: Eliminar
       accounts_need_setup: La cuenta necesita configuración
-      accounts_need_setup_description: Tu cuenta de Trade Republic debe vincularse a una cuenta de Sure.
+      accounts_need_setup_description: Tu cuenta de Trade Republic debe vincularse a una cuenta de Fulas Bank.
       no_accounts_discovered: Aún no se ha descubierto ninguna cuenta de Trade Republic.
       no_accounts_discovered_description: Completa el inicio de sesión y ejecuta una sincronización para descubrir tu cuenta.
       data_quality:
@@ -69,7 +69,7 @@ es:
       status:
         fetching_accounts: Obteniendo la cuenta de Trade Republic...
         no_accounts_found_title: No se encontró ninguna cuenta.
-        no_accounts_found_description: Sure no ha encontrado ninguna cuenta de Trade Republic. Comprueba que tu sesión sigue siendo válida.
+        no_accounts_found_description: Fulas Bank no ha encontrado ninguna cuenta de Trade Republic. Comprueba que tu sesión sigue siendo válida.
       available_accounts:
         title: Cuenta disponible
         account_type_investment: Cartera de inversión

@@ -67,7 +67,7 @@ es:
         no_api_key:
           title: Clave API
           heading: Accede a los datos de tu cuenta de forma programática
-          description: Obtén acceso programático a tus datos de Sure con una clave API segura.
+          description: Obtén acceso programático a tus datos de Fulas Bank con una clave API segura.
           what_you_can_do: 'Qué puedes hacer con la API:'
           feature_1: Accede a los datos de tu cuenta de forma programática
           feature_2: Crea integraciones y aplicaciones personalizadas
@@ -78,7 +78,7 @@ es:
       new:
         title: Crear Clave API
         create_new_api_key: Crear nueva clave API
-        subtitle: Genera una nueva clave API para acceder a tus datos de Sure de forma programática.
+        subtitle: Genera una nueva clave API para acceder a tus datos de Fulas Bank de forma programática.
         description: Configura tu nueva clave API con un nombre descriptivo y permisos adecuados.
         name_label: Nombre de la Clave API
         name_placeholder: p. ej., Aplicación de Producción, Panel de Análisis
