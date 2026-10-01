@@ -43,5 +43,12 @@ if [[ ! -f "$marker" ]]; then
 fi
 
 bin/rails tailwindcss:build
+
+# A Codespace that was stopped leaves the old server's pid file behind, and
+# Rails refuses to start while it exists.
+rm -f tmp/pids/server.pid
+
+# Same port as bin/dev; without it foreman hands the web process port 5000.
+export PORT=3000
 echo "Fulas Bank listo en el puerto 3000."
 exec foreman start -f Procfile.dev
