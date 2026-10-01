@@ -12,7 +12,7 @@ es:
       subtitle: Ahorra para lo que importa.
       new_goal: Nuevo objetivo
       empty_filtered: Ningún objetivo coincide.
-      pending_pledges_callout: Tienes aportaciones pendientes. Sure las confirmará en la próxima sincronización.
+      pending_pledges_callout: Tienes aportaciones pendientes. Fulas Bank las confirmará en la próxima sincronización.
       kpi:
         contributed_label: Aportado · últimos 30 días
         velocity_delta_up: "↑ %{percent}%% vs. 30 días anteriores"
@@ -157,7 +157,7 @@ es:
           zero: 'Pendiente: %{amount} en %{account} · caduca hoy'
           one: 'Pendiente: %{amount} en %{account} · queda 1 día'
           other: 'Pendiente: %{amount} en %{account} · quedan %{count} días'
-        body_transfer: Se confirma automáticamente cuando Sure detecte un ingreso coincidente en la próxima sincronización.
+        body_transfer: Se confirma automáticamente cuando Fulas Bank detecte un ingreso coincidente en la próxima sincronización.
         body_manual: Se confirma con tu próxima edición manual del saldo.
         pledged_at: Registrada hace %{time_ago}
         extend: Ampliar 7 días
@@ -236,7 +236,7 @@ es:
         cta: Establecer fecha objetivo
       empty:
         heading: Aún no hay ingresos
-        body: Haz una transferencia a tu cuenta vinculada. Sure la detectará en la próxima sincronización. O actualiza el saldo de tu cuenta manual.
+        body: Haz una transferencia a tu cuenta vinculada. Fulas Bank la detectará en la próxima sincronización. O actualiza el saldo de tu cuenta manual.
     errors:
       not_found: No se ha encontrado este objetivo. Puede que se haya eliminado.
     states:

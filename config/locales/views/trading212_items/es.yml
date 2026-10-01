@@ -20,7 +20,7 @@ es:
       setup_accounts: Configurar cuentas
       delete: Eliminar
       accounts_need_setup: La cuenta necesita configuración
-      accounts_need_setup_description: Tu cuenta de Trading 212 debe vincularse a una cuenta de Sure.
+      accounts_need_setup_description: Tu cuenta de Trading 212 debe vincularse a una cuenta de Fulas Bank.
       no_accounts_discovered: Aún no se ha detectado ninguna cuenta de Trading 212.
       no_accounts_discovered_description: Ejecuta una sincronización después de guardar tu clave API para detectar tu cuenta.
     setup_accounts:
@@ -36,7 +36,7 @@ es:
       status:
         fetching_accounts: Obteniendo cuenta de Trading 212...
         no_accounts_found_title: No se encontró ninguna cuenta.
-        no_accounts_found_description: Sure no pudo encontrar una cuenta de Trading 212. Comprueba que tu clave API sea válida.
+        no_accounts_found_description: Fulas Bank no pudo encontrar una cuenta de Trading 212. Comprueba que tu clave API sea válida.
       available_accounts:
         title: Cuenta disponible
         account_type_investment: Inversión

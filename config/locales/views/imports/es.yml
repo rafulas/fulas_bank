@@ -100,7 +100,7 @@ es:
         account_label: Cuenta
         name_label: Nombre
         note_label: Nota
-        no_security_provider_warning: El proveedor de precios de valores no está configurado. Tus importaciones de operaciones funcionarán, pero Sure no rellenará el histórico de precios. Ve a tus ajustes para configurarlo.
+        no_security_provider_warning: El proveedor de precios de valores no está configurado. Tus importaciones de operaciones funcionarán, pero Fulas Bank no rellenará el histórico de precios. Ve a tus ajustes para configurarlo.
         date_format_label: Formato de fecha
         apply_configuration: Aplicar configuración
       category_import:
@@ -352,7 +352,7 @@ es:
       merchant_import: Importación de comercios
       pdf_import: Importación PDF
       document_import: Importación de documentos
-      sure_import: Importación de Sure
+      sure_import: Importación de Fulas Bank
     steps:
       upload: Subir
       configure: Configurar
@@ -388,7 +388,7 @@ es:
           merchant_import: Comercio
           pdf_import: PDF
           document_import: Documento
-          sure_import: Sure
+          sure_import: Fulas Bank
         status:
           in_progress: En progreso
           uploading: Procesando filas
@@ -418,7 +418,7 @@ es:
       import_rules: Importar reglas
       import_transactions: Importar transacciones
       import_qif: Importar desde Quicken (QIF)
-      import_sure: Importar desde Sure
+      import_sure: Importar desde Fulas Bank
       import_sure_description: Archivo .ndjson de exportación completa
       import_file: Importar documento
       import_file_description: Análisis potenciado por IA para PDFs y subida con búsqueda para otros archivos compatibles
@@ -457,8 +457,8 @@ es:
       back_to_imports: Volver a importaciones
       missing_merchant_warning_title: Faltan algunos comercios en esta exportación
       missing_merchant_warning_description:
-        one: '1 referencia a comercio de este archivo apunta a un comercio que no está incluido. Puede ocurrir con exportaciones hechas antes de que Sure incluyera los comercios asignados por proveedores. Puedes publicar la importación igualmente: el registro afectado se importará sin comercio y podrás asignarlo después.'
-        other: "%{count} referencias a comercios de este archivo apuntan a comercios que no están incluidos. Puede ocurrir con exportaciones hechas antes de que Sure incluyera los comercios asignados por proveedores. Puedes publicar la importación igualmente: los registros afectados se importarán sin comercio y podrás asignarlo después."
+        one: '1 referencia a comercio de este archivo apunta a un comercio que no está incluido. Puede ocurrir con exportaciones hechas antes de que Fulas Bank incluyera los comercios asignados por proveedores. Puedes publicar la importación igualmente: el registro afectado se importará sin comercio y podrás asignarlo después.'
+        other: "%{count} referencias a comercios de este archivo apuntan a comercios que no están incluidos. Puede ocurrir con exportaciones hechas antes de que Fulas Bank incluyera los comercios asignados por proveedores. Puedes publicar la importación igualmente: los registros afectados se importarán sin comercio y podrás asignarlo después."
       skipped_recurring_description:
         one: 1 transacción recurrente no tiene nombre y le falta el comercio, así que se omitirá. Las transacciones recurrentes detectadas automáticamente se recalculan tras la importación.
         other: "%{count} transacciones recurrentes no tienen nombre y les falta el comercio, así que se omitirán. Las transacciones recurrentes detectadas automáticamente se recalculan tras la importación."

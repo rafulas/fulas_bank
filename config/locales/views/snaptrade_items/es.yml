@@ -32,7 +32,7 @@ es:
       failed: No se pudo completar la autorización de SnapTrade. Inténtalo de nuevo.
     oauth_device_flow:
       title: Conectar SnapTrade
-      subtitle: Autoriza a Sure en SnapTrade con un código de dispositivo.
+      subtitle: Autoriza a Fulas Bank en SnapTrade con un código de dispositivo.
       instructions: Abre SnapTrade, confirma este código de dispositivo y vuelve aquí para terminar.
       code_label: Código de dispositivo
       open_snaptrade: Abrir SnapTrade
@@ -127,7 +127,7 @@ es:
       add_another_brokerage: Conectar otro bróker
       delete: Eliminar
       setup_needed: Las cuentas necesitan configuración
-      setup_description: Algunas cuentas de SnapTrade deben vincularse a cuentas de Sure.
+      setup_description: Algunas cuentas de SnapTrade deben vincularse a cuentas de Fulas Bank.
       setup_action: Configurar cuentas
       setup_accounts_menu: Configurar cuentas
       manage_connections: Gestionar conexiones
@@ -146,8 +146,8 @@ es:
       oauth_setup_step_3: Define SNAPTRADE_OAUTH_CLIENT_ID y SNAPTRADE_OAUTH_CLIENT_SECRET en tu entorno y reinicia
       free_tier_warning: El nivel gratuito de SnapTrade cubre 20 conexiones de bróker.
       oauth_title: OAuth de SnapTrade
-      oauth_status_ready: Autoriza a Sure para leer los datos de tu cuenta de SnapTrade.
-      oauth_status_ready_device: Autoriza a Sure con un código de dispositivo para leer los datos de tu cuenta de SnapTrade.
+      oauth_status_ready: Autoriza a Fulas Bank para leer los datos de tu cuenta de SnapTrade.
+      oauth_status_ready_device: Autoriza a Fulas Bank con un código de dispositivo para leer los datos de tu cuenta de SnapTrade.
       oauth_status_authorized: Autorizado con SnapTrade.
       oauth_connect_button: Conectar con SnapTrade
       oauth_device_button: Usar un código de dispositivo

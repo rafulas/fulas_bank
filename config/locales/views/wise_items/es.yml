@@ -80,7 +80,7 @@ es:
         sign_in_html: Entra en %{link} e inicia sesión en tu cuenta
         open_tokens: Ve a Settings → Connect and manage apps → Developer tools → API tokens
         create_token: Crea un nuevo token de API personal con acceso de solo lectura
-        copy_token_html: Copia el token y pégalo abajo. Sure solo lo usa para sincronizar tus saldos y transacciones.
+        copy_token_html: Copia el token y pégalo abajo. Fulas Bank solo lo usa para sincronizar tus saldos y transacciones.
       sca:
         title: Autenticación reforzada (SCA)
         description: Wise exige firmar un token de un solo uso para leer los extractos completos, incluidos los pagos recibidos. Genera aquí un par de claves y registra la clave pública en Wise para activarlo.
@@ -90,7 +90,7 @@ es:
         copied: "¡Copiado!"
         generate: Generar par de claves
         regenerate: Volver a generar par de claves
-        regenerate_confirm: 'Se generará un nuevo par de claves. Wise seguirá aceptando la clave pública anterior hasta que la elimines tú en tu cuenta de Wise: Sure no puede revocarla a distancia. Tendrás que registrar la nueva clave pública en Wise para que los extractos vuelvan a sincronizarse. ¿Continuar?'
+        regenerate_confirm: 'Se generará un nuevo par de claves. Wise seguirá aceptando la clave pública anterior hasta que la elimines tú en tu cuenta de Wise: Fulas Bank no puede revocarla a distancia. Tendrás que registrar la nueva clave pública en Wise para que los extractos vuelvan a sincronizarse. ¿Continuar?'
     provider_connection:
       default_name: Wise
       default_description: Conecta tu cuenta multidivisa de Wise
@@ -107,7 +107,7 @@ es:
       session_expired: La sesión ha caducado. Vuelve a intentar conectar.
       title: Seleccionar perfiles de Wise
       subtitle: Elige qué perfiles conectar
-      description: Tu cuenta de Wise tiene varios perfiles. Selecciona los que quieras sincronizar con Sure.
+      description: Tu cuenta de Wise tiene varios perfiles. Selecciona los que quieras sincronizar con Fulas Bank.
       unnamed_profile: "(Perfil sin nombre)"
       already_connected_label: Ya conectado
       connect: Conectar perfiles seleccionados
@@ -121,22 +121,22 @@ es:
       status_with_summary: 'Última sincronización hace %{timestamp}: %{summary}'
       delete: Desconectar
       setup_needed: Nuevas cuentas listas para configurar
-      setup_description: "%{linked} de %{total} cuentas vinculadas. Crea cuentas de Sure para tus saldos por divisa de Wise."
+      setup_description: "%{linked} de %{total} cuentas vinculadas. Crea cuentas de Fulas Bank para tus saldos por divisa de Wise."
       setup_action: Configurar cuentas
       no_accounts_title: Aún no hay cuentas vinculadas
-      no_accounts_description: Lanza una sincronización para encontrar tus saldos de Wise y luego vincúlalos a cuentas de Sure.
+      no_accounts_description: Lanza una sincronización para encontrar tus saldos de Wise y luego vincúlalos a cuentas de Fulas Bank.
     setup_accounts:
       title: Configurar cuentas de Wise
       subtitle: Vincula tus saldos por divisa de Wise
-      description: Crea una cuenta de Sure para cada saldo por divisa de Wise que quieras seguir. Cada divisa será una cuenta propia.
+      description: Crea una cuenta de Fulas Bank para cada saldo por divisa de Wise que quieras seguir. Cada divisa será una cuenta propia.
       no_accounts_to_setup: Todas las cuentas están configuradas
-      all_accounts_linked: Todos tus saldos por divisa de Wise están vinculados a cuentas de Sure.
+      all_accounts_linked: Todos tus saldos por divisa de Wise están vinculados a cuentas de Fulas Bank.
       create_account: Crear cuenta
       done: Hecho
     select_accounts:
       title: Seleccionar saldo de Wise
       description: Selecciona el saldo por divisa de Wise que quieres vincular a tu cuenta de %{product_name}.
-      no_accounts_found: Todos los saldos de Wise ya están vinculados a cuentas de Sure.
+      no_accounts_found: Todos los saldos de Wise ya están vinculados a cuentas de Fulas Bank.
       no_connection: No hay ninguna conexión de Wise. Conecta Wise primero en Ajustes de proveedores.
       link_account: Vincular saldo
       cancel: Cancelar

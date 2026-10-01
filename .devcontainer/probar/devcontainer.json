@@ -1,0 +1,40 @@
+{
+  "name": "Probar Fulas Bank",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "containerEnv": {
+    "FULAS_CODESPACE": "true",
+    "SELF_HOSTED": "true",
+    "DEFAULT_LOCALE": "es",
+    "DEFAULT_CURRENCY": "EUR",
+    "DEFAULT_COUNTRY": "ES",
+    "DEFAULT_DATE_FORMAT": "%d/%m/%Y",
+    "DEFAULT_TIMEZONE": "Europe/Madrid",
+    "DEFAULT_NUMBER_FORMAT": "1.234,56"
+  },
+  "remoteEnv": {
+    "PATH": "/workspace/bin:${containerEnv:PATH}"
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb"
+  },
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Fulas Bank",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "bundle install && npm install && mkdir -p tmp && touch tmp/.probar-setup-done",
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        ".devcontainer/probar/LEEME.md"
+      ]
+    }
+  }
+}

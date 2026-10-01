@@ -89,7 +89,7 @@ es:
       akahu_account_already_linked: Esta cuenta de Akahu ya está vinculada.
     setup_accounts:
       title: Configurar cuentas de Akahu
-      subtitle: Elige cómo debe aparecer cada cuenta de Akahu en Sure.
+      subtitle: Elige cómo debe aparecer cada cuenta de Akahu en Fulas Bank.
       no_credentials: Configura primero las credenciales de Akahu.
       api_error: No se han podido obtener las cuentas de Akahu.
       fetch_failed: No se han podido obtener las cuentas

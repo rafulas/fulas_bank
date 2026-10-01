@@ -10,7 +10,7 @@ es:
       none_found: No se han encontrado nuevos pagos recurrentes. Puedes añadir recibos a mano.
       already_running: La detección ya está en marcha. Vuelve en un momento.
     feed:
-      calendar_name: Recibos de Sure
+      calendar_name: Recibos de Fulas Bank
     ai_prompts:
       due_before_paycheck: "¿Qué tengo que pagar antes de la próxima nómina?"
       subscriptions_up: "¿Qué suscripciones han subido este año?"
@@ -308,6 +308,6 @@ es:
         other: "%{count} requieren tu atención"
       empty:
         title: Aún no hay recibos
-        description: Los recibos son tus gastos recurrentes. Sure los encuentra automáticamente en tu historial de transacciones, y puedes añadir un enlace de pago a cada uno para pagarlo directamente desde aquí.
+        description: Los recibos son tus gastos recurrentes. Fulas Bank los encuentra automáticamente en tu historial de transacciones, y puedes añadir un enlace de pago a cada uno para pagarlo directamente desde aquí.
         action: Buscar transacciones recurrentes
-        no_history_description: Aún no hay transacciones. Conecta una cuenta o importa tu historial y Sure encontrará tus recibos automáticamente, o añade uno a mano.
+        no_history_description: Aún no hay transacciones. Conecta una cuenta o importa tu historial y Fulas Bank encontrará tus recibos automáticamente, o añade uno a mano.
