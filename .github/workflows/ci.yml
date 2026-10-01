@@ -153,7 +153,19 @@ jobs:
           bin/rails db:seed
 
       - name: Unit and integration tests
-        run: bin/rails test
+        run: |
+          set -o pipefail
+          bin/rails test 2>&1 | tee test-output.log
+
+      - name: Publish failing tests to the job summary
+        if: failure()
+        run: |
+          {
+            echo '```'
+            grep -E -A30 '(Failure|Error):$' test-output.log | head -400
+            grep -E '[0-9]+ runs, [0-9]+ assertions' test-output.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   test_system:
     runs-on: ubuntu-latest
