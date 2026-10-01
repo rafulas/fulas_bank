@@ -15,7 +15,8 @@ services:
       - ../.bashrc:/root/.bashrc:ro,cached
       - ../..:/workspace:cached
       - bundle_cache:/bundle
-    command: sleep infinity
+    # Waits for the dev container setup, then runs the app (see bin/probar).
+    command: bash /workspace/bin/probar --container
     environment:
       <<: *db_env
       DB_HOST: db

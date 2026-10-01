@@ -24,10 +24,10 @@ En el terminal de abajo:
 tail -f log/probar.log
 ```
 
-Si la app se ha parado, arráncala de nuevo con:
+La app arranca sola cada vez que se abre el Codespace. Si se ha parado, arráncala a mano (deja esa pestaña del terminal abierta):
 
 ```bash
-bin/probar --background
+bin/probar
 ```
 
 ## Importante

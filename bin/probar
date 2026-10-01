@@ -3,15 +3,33 @@
 # Codespace, see .devcontainer/probar). Prepares the database, loads the demo
 # family once, then runs the web server and the background worker.
 #
-#   bin/probar               run in the foreground
-#   bin/probar --background  run detached, logging to log/probar.log
-set -euo pipefail
+#   bin/probar              run in the foreground (from a terminal)
+#   bin/probar --container  main process of the Codespace container: waits for
+#                           the dev container setup to finish, runs the app
+#                           logging to log/probar.log, and keeps the container
+#                           alive if the app stops
+set -uo pipefail
 cd "$(dirname "$0")/.."
 
-if [[ "${1:-}" == "--background" ]]; then
-  mkdir -p log
-  setsid nohup "$0" > log/probar.log 2>&1 < /dev/null &
-  echo "Fulas Bank está arrancando. Progreso: tail -f log/probar.log"
+SETUP_DONE=tmp/.probar-setup-done
+
+if [[ "${1:-}" == "--container" ]]; then
+  mkdir -p log tmp
+  {
+    echo "Esperando a que termine la instalación del Codespace…"
+    until [[ -f "$SETUP_DONE" ]] && bundle check > /dev/null 2>&1; do
+      sleep 10
+    done
+    "$0"
+    echo "Fulas Bank se ha detenido. Para arrancarlo de nuevo: bin/probar"
+  } >> log/probar.log 2>&1
+  exec sleep infinity
+fi
+
+set -e
+
+if pgrep -f "foreman start -f Procfile.dev" > /dev/null; then
+  echo "Fulas Bank ya está en marcha. Ábrelo desde la pestaña Puertos (3000)."
   exit 0
 fi
 

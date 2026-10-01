@@ -20,18 +20,21 @@
     "cpus": 2,
     "memory": "8gb"
   },
-  "forwardPorts": [3000],
+  "forwardPorts": [
+    3000
+  ],
   "portsAttributes": {
     "3000": {
       "label": "Fulas Bank",
       "onAutoForward": "openBrowser"
     }
   },
-  "postCreateCommand": "bundle install && npm install && bin/rails db:prepare",
-  "postStartCommand": "bin/probar --background",
+  "postCreateCommand": "bundle install && npm install && mkdir -p tmp && touch tmp/.probar-setup-done",
   "customizations": {
     "codespaces": {
-      "openFiles": [".devcontainer/probar/LEEME.md"]
+      "openFiles": [
+        ".devcontainer/probar/LEEME.md"
+      ]
     }
   }
 }
