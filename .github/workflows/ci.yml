@@ -153,23 +153,7 @@ jobs:
           bin/rails db:seed
 
       - name: Unit and integration tests
-        run: |
-          set -o pipefail
-          bin/rails test 2>&1 | tee test-output.log
-
-      - name: Publish failing tests as annotations
-        if: failure()
-        run: |
-          ruby -e '
-            log = File.read("test-output.log")
-            blocks = log.scan(/^(?:Failure|Error):\n.*?(?=\n\n(?:Failure|Error):|\n\nFinished|\z)/m)
-            blocks.first(9).each do |block|
-              msg = block[0, 4000].gsub("%", "%25").gsub("\r", "%0D").gsub("\n", "%0A")
-              puts "::error title=Test failure::#{msg}"
-            end
-            summary = log[/\d+ runs, \d+ assertions.*$/]
-            puts "::error title=Test summary::#{summary}" if summary
-          '
+        run: bin/rails test
 
   test_system:
     runs-on: ubuntu-latest
