@@ -158,13 +158,17 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to categories_url
   end
 
-  test "bootstrap" do
-    # 22 default categories minus 2 that already exist in fixtures (Income, Food & Drink)
-    assert_difference "Category.count", 20 do
+  test "bootstrap applies the Fulas Bank category tree" do
+    tree_size = Category::FulasTree.names.size
+
+    # The fixtures' "Income" and "Food & Drink" are old defaults: they are
+    # merged into "Ingresos" and "Comida y bebida" instead of being kept.
+    assert_difference "Category.count", tree_size - 2 do
       post bootstrap_categories_url
     end
 
     assert_redirected_to categories_url
+    assert @family.categories.exists?(name: "Combustible", parent: @family.categories.find_by!(name: "Transporte"))
   end
 
   test "merge renders in the settings layout" do

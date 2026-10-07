@@ -206,7 +206,7 @@ class Category < ApplicationRecord
 
     def icon_codes
       %w[
-        ambulance apple award baby badge-dollar-sign banknote barcode bar-chart-3 bath
+        ambulance apple arrow-left-right award baby badge-dollar-sign ban banknote barcode bar-chart-3 bath
         battery bed-single beer bike bluetooth bone book book-open briefcase building bus
         cake calculator calendar-heart calendar-range camera car cat chart-line
         circle-dollar-sign circle-parking coffee coins compass cookie cooking-pot

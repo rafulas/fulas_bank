@@ -29,6 +29,17 @@ class Transaction < ApplicationRecord
 
   after_save :clear_merchant_unlinked_association, if: :merchant_id_previously_changed?
 
+  # Fulas Bank: the "Excluido" and "Traspasos" categories change how a
+  # transaction counts (see Category::FulasTree). The marker in `extra`
+  # remembers that the change was made by the category, so moving the
+  # transaction to another category undoes it without touching settings the
+  # user chose by hand.
+  FULAS_AUTO_EXCLUDED = "fulas_auto_excluded".freeze
+  FULAS_AUTO_ONE_TIME = "fulas_auto_one_time".freeze
+
+  before_save :apply_fulas_special_category, if: :will_save_change_to_category_id?
+  after_save :sync_fulas_excluded_entry, if: :saved_change_to_category_id?
+
   # Accessors for exchange_rate stored in extra jsonb field
   def exchange_rate
     extra&.dig("exchange_rate")
@@ -438,5 +449,47 @@ class Transaction < ApplicationRecord
       return unless family
 
       FamilyMerchantAssociation.where(family: family, merchant: merchant).delete_all
+    end
+
+    # "Traspasos" keeps the transaction out of income/expense analytics (as a
+    # one-time transaction) without hiding it. "Excluido" marks it for
+    # exclusion; the entry itself is updated in #sync_fulas_excluded_entry.
+    def apply_fulas_special_category
+      data = extra.is_a?(Hash) ? extra.dup : {}
+
+      if Category::FulasTree.transfers?(category)
+        if standard?
+          self.kind = "one_time"
+          data[FULAS_AUTO_ONE_TIME] = true
+        end
+      elsif data.delete(FULAS_AUTO_ONE_TIME)
+        self.kind = "standard" if one_time?
+      end
+
+      if Category::FulasTree.excluded?(category)
+        data[FULAS_AUTO_EXCLUDED] = true unless entry&.excluded?
+      else
+        @fulas_unexclude = data.delete(FULAS_AUTO_EXCLUDED).present?
+      end
+
+      self.extra = data if data != (extra.is_a?(Hash) ? extra : {})
+    end
+
+    def sync_fulas_excluded_entry
+      value = if Category::FulasTree.excluded?(category)
+        true
+      elsif @fulas_unexclude
+        false
+      end
+      @fulas_unexclude = nil
+      return if value.nil?
+
+      target = entry
+      return unless target&.persisted?
+      return if target.excluded == value || target.split_parent?
+
+      Entry.where(id: target.id).update_all(excluded: value, updated_at: Time.current)
+      target.excluded = value
+      target.clear_attribute_changes([ :excluded ])
     end
 end

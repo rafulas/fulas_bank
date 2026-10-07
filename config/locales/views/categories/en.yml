@@ -25,6 +25,10 @@ en:
     destroy_all:
       success: All categories deleted
     index:
+      apply_fulas_tree: Apply Fulas Bank categories
+      apply_fulas_tree_body: This creates the Fulas Bank categories and subcategories. Old default categories are merged into their new equivalent, with their transactions and budgets. Categories you created yourself are left alone.
+      apply_fulas_tree_button: Apply
+      apply_fulas_tree_title: Reorganize categories?
       bootstrap: Use defaults (recommended)
       categories: Categories
       categories_expenses: Expense categories

@@ -2,7 +2,7 @@
 es:
   categories:
     bootstrap:
-      success: Categorías predeterminadas creadas con éxito
+      success: Categorías de Fulas Bank aplicadas
     category:
       delete: Eliminar categoría
       edit: Editar categoría
@@ -25,6 +25,10 @@ es:
     destroy_all:
       success: Todas las categorías eliminadas
     index:
+      apply_fulas_tree: Aplicar categorías de Fulas Bank
+      apply_fulas_tree_body: Se crearán las categorías y subcategorías de Fulas Bank. Las categorías predeterminadas antiguas se fusionarán en su equivalente nueva, con sus transacciones y presupuestos. Las categorías que hayas creado tú no se tocan.
+      apply_fulas_tree_button: Aplicar
+      apply_fulas_tree_title: ¿Reorganizar las categorías?
       bootstrap: Usar predeterminadas (recomendado)
       categories: Categorías
       categories_expenses: Categorías de gastos
