@@ -23,6 +23,25 @@ class LoanInsuranceTest < ActiveSupport::TestCase
     account.loan
   end
 
+  # A premium quoted as a fixed amount a year is spread evenly over the
+  # months, whatever the balance: 600 a year is 50 every month.
+  test "a fixed annual premium is charged as a twelfth every month" do
+    loan = build_loan(insurance_rate: nil, insurance_rate_type: "fixed_amount")
+    loan.update!(insurance_annual_amount: 600)
+    loan = Loan.find(loan.id)
+
+    premiums = loan.insurance.premiums
+    assert_equal 12, premiums.size
+    assert premiums.all? { |premium| premium.amount.amount == BigDecimal("50") }
+    assert_equal BigDecimal("600"), loan.total_insurance.amount
+  end
+
+  test "a fixed annual premium with no amount recorded charges nothing" do
+    loan = build_loan(insurance_rate: 1.2, insurance_rate_type: "fixed_amount")
+
+    assert_nil loan.insurance
+  end
+
   # A level-term premium is charged on what was borrowed, for the life of the
   # loan, so it does not fall as the loan is repaid: 12,000 * 0.1% = 12 every
   # month, twelve times.

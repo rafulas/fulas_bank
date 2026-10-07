@@ -26,7 +26,19 @@ class Loan < ApplicationRecord
   # An annual percentage, matching the bound the rate-change input declares.
   MAX_INTEREST_RATE = 100
 
+  # The asset the loan paid for -- the car behind a car loan, the home behind a
+  # mortgage. Optional, and only ever one of the family's own assets.
+  LINKABLE_ASSET_TYPES = %w[Property Vehicle OtherAsset].freeze
+
+  belongs_to :asset_account, class_name: "Account", optional: true
+
   validates :subtype, inclusion: { in: SUBTYPES.keys }, allow_blank: true
+  # The day of the month the instalment is charged.
+  validates :payment_day, numericality: { only_integer: true, in: 1..31 }, allow_nil: true
+  # The instalment the lender quotes, held as given by a fixed loan's schedule.
+  validates :payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :insurance_annual_amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validate :asset_account_must_be_a_family_asset
   # The form caps the date picker at today; this is the same bound where a
   # crafted request cannot skip it. A loan drawn down in the future has no
   # history to chart and would schedule a first payment months away while
@@ -92,6 +104,26 @@ class Loan < ApplicationRecord
       term_months.to_i.positive? &&
       term_months.to_i <= Loan::Simulator::MAX_PERIODS &&
       original_balance.amount.positive?
+  end
+
+  # Assets the loan can be linked to: the family's properties, vehicles and
+  # other assets.
+  def self.linkable_asset_accounts_for(family)
+    family.accounts.where(accountable_type: LINKABLE_ASSET_TYPES).alphabetically
+  end
+
+  private def asset_account_must_be_a_family_asset
+    return if asset_account.nil?
+
+    # Read the owning account without caching a missing one -- see
+    # rate_changes_precede_origination? for why `account` is not called here.
+    loan_account = association(:account).target || association(:account).scope.first
+    family_id = loan_account&.family_id
+
+    unless LINKABLE_ASSET_TYPES.include?(asset_account.accountable_type) &&
+        (family_id.nil? || asset_account.family_id == family_id)
+      errors.add(:asset_account, :invalid)
+    end
   end
 
   private def rate_changes_must_be_parseable
@@ -242,7 +274,7 @@ class Loan < ApplicationRecord
   # The columns AmortizationSchedule.for reads from the loan itself. Assigning
   # any of them drops the memoised schedule, as reload does, so a read after the
   # change answers with the new terms rather than the ones it was built from.
-  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule].freeze
+  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule payment_day payment_amount].freeze
 
   SCHEDULE_INPUTS.each do |input|
     define_method(:"#{input}=") do |value|
@@ -254,7 +286,7 @@ class Loan < ApplicationRecord
 
   # The premium is charged against the schedule, so it goes stale for both its
   # own inputs and the schedule's.
-  INSURANCE_INPUTS = %i[insurance_rate insurance_rate_type].freeze
+  INSURANCE_INPUTS = %i[insurance_rate insurance_rate_type insurance_annual_amount].freeze
 
   INSURANCE_INPUTS.each do |input|
     define_method(:"#{input}=") do |value|

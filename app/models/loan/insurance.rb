@@ -18,6 +18,10 @@
 #                    overstates the total cost of a policy the borrower has not
 #                    described.
 #
+#   fixed_amount     the premium is a fixed amount a year, whatever the
+#                    balance -- how many Spanish lenders quote a mortgage's
+#                    life or home cover. Spread evenly, a twelfth each month.
+#
 # The rate is annual and in percent, like `interest_rate`, and is charged
 # monthly at a twelfth of it. The base for a decreasing policy is the balance
 # OUTSTANDING AT THE START of the period -- the balance the borrower carried
@@ -28,35 +32,40 @@ class Loan::Insurance
 
   LEVEL_TERM = "level_term".freeze
   DECREASING_LIFE = "decreasing_life".freeze
-  RATE_TYPES = [ LEVEL_TERM, DECREASING_LIFE ].freeze
+  FIXED_AMOUNT = "fixed_amount".freeze
+  RATE_TYPES = [ LEVEL_TERM, DECREASING_LIFE, FIXED_AMOUNT ].freeze
 
   MONTHS_PER_YEAR = 12
 
-  attr_reader :schedule, :annual_rate, :rate_type, :principal, :currency
+  attr_reader :schedule, :annual_rate, :rate_type, :principal, :currency, :annual_amount
 
   class << self
     # Nil when the loan carries no premium to charge, or nothing to charge it
     # against. Callers read `Loan#total_insurance`, which turns that nil into a
     # zero of the right currency.
     def for(loan)
-      return nil unless loan.insurance_rate&.positive?
+      fixed = loan.insurance_rate_type == FIXED_AMOUNT
+      return nil if fixed && !loan.insurance_annual_amount&.positive?
+      return nil if !fixed && !loan.insurance_rate&.positive?
 
       schedule = loan.amortization_schedule
       return nil if schedule.nil?
 
       new(
         schedule: schedule,
-        annual_rate: loan.insurance_rate,
+        annual_rate: fixed ? 0 : loan.insurance_rate,
         rate_type: loan.insurance_rate_type,
         principal: loan.original_balance,
-        currency: loan.account.currency
+        currency: loan.account.currency,
+        annual_amount: (loan.insurance_annual_amount if fixed)
       )
     end
   end
 
-  def initialize(schedule:, annual_rate:, rate_type:, principal:, currency:)
+  def initialize(schedule:, annual_rate:, rate_type:, principal:, currency:, annual_amount: nil)
     @schedule = schedule
     @annual_rate = BigDecimal(annual_rate.to_s)
+    @annual_amount = BigDecimal(annual_amount.to_s) if annual_amount.present?
     @rate_type = rate_type
     @principal = principal
     @currency = currency
@@ -71,10 +80,16 @@ class Loan::Insurance
         base = level_term? ? principal.amount : opening
         opening = payment.ending_balance.amount
 
+        amount = if fixed_amount?
+          annual_amount / MONTHS_PER_YEAR
+        else
+          base * monthly_rate
+        end
+
         Premium.new(
           number: payment.number,
           date: payment.date,
-          amount: money((base * monthly_rate).round(currency_precision))
+          amount: money(amount.round(currency_precision))
         )
       end
     end
@@ -93,6 +108,10 @@ class Loan::Insurance
 
   def level_term?
     rate_type == LEVEL_TERM
+  end
+
+  def fixed_amount?
+    rate_type == FIXED_AMOUNT && annual_amount.present?
   end
 
   private

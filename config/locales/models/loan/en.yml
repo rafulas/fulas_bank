@@ -1,6 +1,12 @@
 ---
 en:
   activerecord:
+    attributes:
+      loan:
+        asset_account: Linked asset
+        payment_day: Payment day
+        payment_amount: Monthly payment
+        insurance_annual_amount: Annual insurance amount
     errors:
       models:
         loan:

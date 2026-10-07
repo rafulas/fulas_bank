@@ -4,9 +4,22 @@ es:
     edit:
       edit: Editar %{account}
     form:
+      name_label: Nombre del préstamo
+      name_placeholder: Ej. Hipoteca vivienda
+      balance_label: Saldo pendiente hoy
+      balance_hint: Lo que te queda por pagar a día de hoy. Escríbelo en positivo o en negativo, da igual; como es una deuda, siempre se resta de tu patrimonio.
+      subtype: Tipo de préstamo
+      payment_day: Día de pago
+      payment_day_placeholder: '30'
+      payment_amount: Cuota mensual
+      payment_amount_hint: Opcional, para préstamos a tipo fijo. Si tu banco te ha dado la cuota, ponla y el cuadro de amortización la usará tal cual; si la dejas en blanco, se calcula.
+      insurance_annual_amount: Importe anual del seguro
+      insurance_rate_type_fixed_amount: Importe anual fijo
+      asset_account: Vincular a un activo
+      asset_account_hint: El bien que financia el préstamo, por ejemplo el coche o la vivienda.
       interest_rate: Tasa de interés
       interest_rate_placeholder: '5.25'
-      initial_balance: Saldo original del préstamo
+      initial_balance: Importe inicial del préstamo
       rate_type: Tipo de interés
       term_months: Plazo (meses)
       term_months_placeholder: '360'
@@ -24,16 +37,38 @@ es:
       rate_change_add: Añadir cambio de tipo
       rate_change_remove: Quitar
       start_date: Fecha de formalización
-      start_date_hint: Cuándo se dispuso el préstamo. Déjalo en blanco para usar la fecha de apertura de la cuenta.
+      start_date_hint: Cuándo se firmó o se dispuso el préstamo. El importe inicial se aplica en esta fecha y el saldo pendiente, hoy.
       down_payment: Entrada
-      insurance_rate: Tipo del seguro
+      insurance_rate: Tipo del seguro (%)
       insurance_rate_placeholder: '0,36'
-      insurance_rate_hint: Un tipo anual que se cobra cada mes junto con la cuota. El seguro de prima constante se calcula sobre el capital inicial; el decreciente, sobre lo que queda por pagar.
-      insurance_rate_type: Tipo de seguro
+      insurance_rate_hint: Con importe anual fijo, rellena solo el importe y se reparte en doce meses. Con prima constante o decreciente, indica el tipo anual en %; la constante se calcula sobre el capital inicial y la decreciente sobre lo que queda por pagar.
+      insurance_rate_type: Seguro
       insurance_rate_type_decreasing_life: Decreciente
       insurance_rate_type_level_term: Prima constante
     new:
-      title: Introduce los detalles del préstamo
+      title: Configurar préstamo
+    subtypes:
+      mortgage:
+        short: Hipoteca
+        long: Hipoteca
+      student:
+        short: Préstamo de estudios
+        long: Préstamo de estudios
+      auto:
+        short: Préstamo de coche
+        long: Préstamo de coche
+      home_equity:
+        short: Préstamo con garantía hipotecaria
+        long: Préstamo con garantía hipotecaria
+      line_of_credit:
+        short: Línea de crédito
+        long: Línea de crédito
+      business:
+        short: Préstamo empresarial
+        long: Préstamo empresarial
+      other:
+        short: Otro préstamo
+        long: Otro préstamo
     overview:
       interest_rate: Tasa de interés
       monthly_payment: Pago mensual
@@ -89,3 +124,6 @@ es:
         type: Tipo
         unknown: Desconocido
         edit_loan_details: Editar detalles del préstamo
+        asset_account: Activo vinculado
+        payment_day: Día de pago
+        payment_day_value: Día %{day} de cada mes

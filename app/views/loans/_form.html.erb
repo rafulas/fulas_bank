@@ -1,13 +1,22 @@
 <%# locals: (account:, url:) %>
 
-<%= render "accounts/form", account: account, url: url do |form| %>
+<%# The loan words the shared fields in its own terms. The balance is what is
+    owed today; the opening date is not asked for, because the loan's own
+    formalisation date below is when its original principal applies (see
+    LoansController#account_params). %>
+<%= render "accounts/form", account: account, url: url,
+           name_label: t("loans.form.name_label"),
+           name_placeholder: t("loans.form.name_placeholder"),
+           balance_label: t("loans.form.balance_label"),
+           balance_hint: t("loans.form.balance_hint"),
+           show_opening_balance_date: false do |form| %>
   <%= form.fields_for :accountable do |loan_form| %>
     <%# What kind of loan it is sits with the account's own fields, straight
         after the balance, above the divider and the loan's terms. %>
     <div>
       <%= loan_form.select :subtype,
                 Loan.subtype_options_for_select,
-                { label: true, prompt: t("loans.form.subtype_prompt"), include_blank: t("loans.form.none") } %>
+                { label: t("loans.form.subtype"), prompt: t("loans.form.subtype_prompt"), include_blank: t("loans.form.none") } %>
     </div>
 
     <%= render "shared/ruler", classes: "my-4" %>
@@ -20,6 +29,30 @@
                                  label: t("loans.form.initial_balance"),
                                  default_currency: Current.family.currency,
                                  required: true %>
+      </div>
+
+      <%# Required when the loan is created: it is the date the original
+          principal is anchored to, with today's balance anchored today. %>
+      <%= loan_form.date_field :start_date,
+                               label: t("loans.form.start_date"),
+                               max: Date.current,
+                               required: account.new_record?,
+                               help_text: t("loans.form.start_date_hint") %>
+
+      <div class="flex items-center gap-2">
+        <%# Bounded here rather than validated on Loan: PlaidAccount::Liabilities::StudentLoanProcessor
+            writes this column from provider dates, and a term the simulator will not walk is
+            answered tolerantly there (no schedule, as for an unknown rate type). %>
+        <%= loan_form.number_field :term_months,
+                                 label: t("loans.form.term_months"),
+                                 placeholder: t("loans.form.term_months_placeholder"),
+                                 min: 1,
+                                 max: Loan::Simulator::MAX_PERIODS %>
+        <%= loan_form.number_field :payment_day,
+                                 label: t("loans.form.payment_day"),
+                                 placeholder: t("loans.form.payment_day_placeholder"),
+                                 min: 1,
+                                 max: 31 %>
       </div>
 
       <div class="flex items-center gap-2">
@@ -38,48 +71,12 @@
                                      action: "change->loan-rate-changes#toggle" } } %>
       </div>
 
-      <div class="flex items-center gap-2">
-        <%# What the borrower put in up front. Not part of the amortisation --
-            the loan amortises what was lent -- but it is what makes the
-            leverage figure on the overview readable. %>
-        <%= loan_form.money_field :down_payment,
-                                 label: t("loans.form.down_payment"),
-                                 default_currency: Current.family.currency %>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <%= loan_form.date_field :start_date,
-                                 label: t("loans.form.start_date"),
-                                 max: Date.current %>
-      </div>
-      <p class="text-xs text-secondary"><%= t("loans.form.start_date_hint") %></p>
-
-      <div class="flex items-center gap-2">
-        <%# Bounded here rather than validated on Loan: PlaidAccount::Liabilities::StudentLoanProcessor
-            writes this column from provider dates, and a term the simulator will not walk is
-            answered tolerantly there (no schedule, as for an unknown rate type). %>
-        <%= loan_form.number_field :term_months,
-                                 label: t("loans.form.term_months"),
-                                 placeholder: t("loans.form.term_months_placeholder"),
-                                 min: 1,
-                                 max: Loan::Simulator::MAX_PERIODS %>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <%# The premium many lenders quote beside the instalment. Charged
-            alongside it rather than inside it, so it moves the loan's total
-            cost without moving its repayment. %>
-        <%= loan_form.number_field :insurance_rate,
-                                 label: t("loans.form.insurance_rate"),
-                                 placeholder: t("loans.form.insurance_rate_placeholder"),
-                                 min: 0,
-                                 step: 0.005 %>
-        <%= loan_form.select :insurance_rate_type,
-                           loan_insurance_rate_type_options,
-                           { label: t("loans.form.insurance_rate_type"),
-                             include_blank: t("loans.form.none") } %>
-      </div>
-      <p class="text-xs text-secondary"><%= t("loans.form.insurance_rate_hint") %></p>
+      <%# The instalment the lender quotes. A fixed loan's schedule holds it as
+          given; left blank, the schedule sizes its own level payment. %>
+      <%= loan_form.money_field :payment_amount,
+                               label: t("loans.form.payment_amount"),
+                               default_currency: Current.family.currency %>
+      <p class="text-xs text-secondary"><%= t("loans.form.payment_amount_hint") %></p>
 
       <%# Rate changes only mean something for a loan whose rate can move. The
           section is rendered for every rate type, retained rows included, and
@@ -131,6 +128,39 @@
                                     disabled: rate_changes_disabled, data: { action: "loan-rate-changes#add" }) %>
         <% end %>
       </div>
+
+      <%= render "shared/ruler", classes: "my-4" %>
+
+      <%# The premium many lenders quote beside the instalment. Charged
+          alongside it rather than inside it, so it moves the loan's total
+          cost without moving its repayment. Quoted either as a fixed yearly
+          amount or as a rate on the principal. %>
+      <%= loan_form.select :insurance_rate_type,
+                           loan_insurance_rate_type_options,
+                           { label: t("loans.form.insurance_rate_type"),
+                             include_blank: t("loans.form.none") } %>
+
+      <div class="flex items-center gap-2">
+        <%= loan_form.money_field :insurance_annual_amount,
+                                 label: t("loans.form.insurance_annual_amount"),
+                                 default_currency: Current.family.currency %>
+        <%= loan_form.number_field :insurance_rate,
+                                 label: t("loans.form.insurance_rate"),
+                                 placeholder: t("loans.form.insurance_rate_placeholder"),
+                                 min: 0,
+                                 step: 0.005 %>
+      </div>
+      <p class="text-xs text-secondary"><%= t("loans.form.insurance_rate_hint") %></p>
+
+      <%= render "shared/ruler", classes: "my-4" %>
+
+      <%# The asset the loan paid for: the car behind a car loan, the home
+          behind a mortgage. %>
+      <%= loan_form.select :asset_account_id,
+                           loan_asset_account_options(Current.family),
+                           { label: t("loans.form.asset_account"),
+                             include_blank: t("loans.form.none"),
+                             help_text: t("loans.form.asset_account_hint") } %>
     </div>
   <% end %>
 <% end %>

@@ -15,7 +15,7 @@
 class Loan::AmortizationSchedule
   Payment = Data.define(:number, :date, :payment, :principal, :interest, :ending_balance)
 
-  attr_reader :principal, :annual_rate, :term_months, :start_date, :currency
+  attr_reader :principal, :annual_rate, :term_months, :start_date, :currency, :payment_day, :fixed_payment
 
   class << self
     # Returns a schedule for the loan, or nil when the loan isn't amortizable
@@ -29,7 +29,12 @@ class Loan::AmortizationSchedule
         term_months: loan.term_months,
         start_date: loan.origination_date,
         currency: loan.account.currency,
-        rate_resolver: (Loan::RateResolver.for(loan) if loan.variable_rate_type?)
+        rate_resolver: (Loan::RateResolver.for(loan) if loan.variable_rate_type?),
+        payment_day: loan.payment_day,
+        # Only a fixed loan holds one instalment for its whole life; a variable
+        # one is re-sized at every rate change, so a quoted figure would be
+        # overridden at the first of them anyway.
+        fixed_payment: (loan.payment_amount unless loan.variable_rate_type?)
       )
     end
   end
@@ -37,7 +42,13 @@ class Loan::AmortizationSchedule
   # `rate_resolver` is how a variable loan's recorded rate changes reach the
   # simulator. Omitted, the schedule runs at one rate for its whole life, which
   # is what a fixed loan does.
-  def initialize(principal:, annual_rate:, term_months:, start_date:, currency:, rate_resolver: nil)
+  #
+  # `payment_day` is the day of the month the instalment is charged (clamped
+  # to the month's last day), and `fixed_payment` the instalment the lender
+  # quotes. Without them the schedule pays on the origination day of each
+  # month and sizes its own level payment, as before.
+  def initialize(principal:, annual_rate:, term_months:, start_date:, currency:, rate_resolver: nil,
+                 payment_day: nil, fixed_payment: nil)
     @currency = currency
     # Rounded to the currency at the door. A balance carrying more fractional
     # units than the currency has -- `first_valuation_amount` is decimal(19,4)
@@ -50,6 +61,8 @@ class Loan::AmortizationSchedule
     @term_months = term_months.to_i
     @start_date = start_date
     @rate_resolver = rate_resolver
+    @payment_day = payment_day.presence&.to_i
+    @fixed_payment = BigDecimal(fixed_payment.to_s).round(currency_precision) if fixed_payment.present? && fixed_payment.to_d.positive?
   end
 
   # True when this schedule re-amortises part-way through, i.e. the repayment
@@ -128,8 +141,16 @@ class Loan::AmortizationSchedule
     # One payment per month of the term, stepping from origination. `>>` gives
     # the calendar-correct answer at month ends: 31 January plus one month is
     # 28 February, not 3 March.
+    #
+    # With a payment day recorded, each payment moves to that day of its month,
+    # clamped to the month's last day -- a loan paid "on the 30th" is paid on
+    # 28 or 29 February. The first payment still falls in the month after
+    # origination, so the term keeps its number of payments.
     def payment_schedule
-      @payment_schedule ||= (1..term_months).map { |number| start_date >> number }
+      @payment_schedule ||= (1..term_months).map do |number|
+        date = start_date >> number
+        payment_day ? date.change(day: [ payment_day, date.end_of_month.day ].min) : date
+      end
     end
 
     # The simulator refuses an empty schedule rather than inventing a
@@ -142,7 +163,12 @@ class Loan::AmortizationSchedule
           payment_schedule: payment_schedule,
           accrual_rate_for: @rate_resolver ? @rate_resolver.method(:accrual_rate_for) : ->(_date) { annual_rate },
           re_amortisation_events: @rate_resolver&.method(:re_amortisation_events),
-          currency_precision: currency_precision
+          currency_precision: currency_precision,
+          # A quoted instalment is held as given rather than re-derived, so the
+          # table agrees with what the bank actually charges. The final payment
+          # still settles whatever is left.
+          payment_strategy: fixed_payment ? :hold : :reamortize,
+          payment_amount: fixed_payment
         ).run
       else
         Loan::SimulationResult.new(payments: [], currency_precision: currency_precision)
