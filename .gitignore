@@ -134,3 +134,6 @@ logs/security/
 # Ignore Playwright artifacts
 playwright-report/
 .playwright-mcp
+
+# Vehicle logbook views live in a folder called "logs"
+!app/views/vehicles/logs/

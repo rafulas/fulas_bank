@@ -1,0 +1,67 @@
+<%# locals: (account:, log:) %>
+
+<% vehicle = account.vehicle %>
+<% url = log.persisted? ? vehicle_log_path(account, log) : vehicle_logs_path(account) %>
+
+<%= styled_form_with model: log, scope: :vehicle_log, url: url, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <%= form.hidden_field :kind %>
+
+  <% if log.errors.any? %>
+    <%= render DS::Alert.new(message: log.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <% if log.service? %>
+      <%= form.select :maintenance_item_id,
+                      vehicle.maintenance_items.alphabetically.map { |item| [ item.name, item.id ] },
+                      { label: t(".maintenance_item"), include_blank: t(".other_service") } %>
+    <% elsif log.expense? %>
+      <%= form.select :category, vehicle_log_category_options, { label: t(".category") }, required: true %>
+    <% end %>
+
+    <div class="flex items-center gap-2">
+      <%= form.date_field :date, label: t(".date"), required: true, max: Date.current %>
+      <%= form.number_field :odometer, label: t(".odometer", unit: vehicle.mileage_unit), min: 0, step: 1, required: log.fuel? %>
+    </div>
+
+    <% if log.fuel? %>
+      <p class="text-xs text-secondary"><%= t(".fuel_hint") %></p>
+      <div class="flex items-center gap-2">
+        <%= form.number_field :quantity, label: t(".quantity", unit: vehicle.energy_unit), min: 0, step: "any" %>
+        <%= form.money_field :unit_price, label: t(".unit_price", unit: vehicle.energy_unit), precision: 3, step: "any", disable_currency: true %>
+      </div>
+      <%= form.money_field :amount, label: t(".amount"), disable_currency: true %>
+      <div class="flex items-center justify-between gap-3 py-2">
+        <div class="space-y-1">
+          <p class="text-sm text-primary"><%= t(".full_tank") %></p>
+          <p class="text-secondary text-xs"><%= t(".full_tank_hint") %></p>
+        </div>
+        <%= form.toggle :full_tank %>
+      </div>
+    <% else %>
+      <%= form.money_field :amount, label: t(".amount"), disable_currency: true %>
+    <% end %>
+
+    <%= form.select :entry_id,
+                    vehicle_log_entry_options(log),
+                    { label: t(".bank_charge"), include_blank: t(".no_bank_charge") } %>
+    <p class="text-xs text-secondary"><%= t(".bank_charge_hint") %></p>
+
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if log.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: vehicle_log_path(account, log),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>
