@@ -3,6 +3,11 @@
 # Codespace, see .devcontainer/probar). Prepares the database, loads the demo
 # family once, then runs the web server and the background worker.
 #
+# By default it runs in production mode: code is loaded once and assets are
+# precompiled, which is much faster than development mode on a small
+# Codespace. Both modes share the same database, so data is kept when
+# switching. PROBAR_MODE=development runs the usual development setup.
+#
 #   bin/probar              run in the foreground (from a terminal)
 #   bin/probar --container  main process of the Codespace container: waits for
 #                           the dev container setup to finish, runs the app
@@ -28,21 +33,36 @@ fi
 
 set -e
 
-if pgrep -f "foreman start -f Procfile.dev" > /dev/null; then
+if pgrep -f "foreman start -f Procfile" > /dev/null; then
   echo "Fulas Bank ya está en marcha. Ábrelo desde la pestaña Puertos (3000)."
   exit 0
 fi
 
-bin/rails db:prepare
+mkdir -p tmp
+mkdir -p storage/.probar && chmod 700 storage/.probar
+mode="${PROBAR_MODE:-production}"
+
+# Development and production use one database, whatever the container calls it.
+export POSTGRES_DB="${POSTGRES_DB:-sure_development}"
+export FULAS_CODESPACE=true SELF_HOSTED=true
+export DEFAULT_LOCALE="${DEFAULT_LOCALE:-es}" DEFAULT_CURRENCY="${DEFAULT_CURRENCY:-EUR}"
+export DEFAULT_COUNTRY="${DEFAULT_COUNTRY:-ES}" DEFAULT_DATE_FORMAT="${DEFAULT_DATE_FORMAT:-%d/%m/%Y}"
+export DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE:-Europe/Madrid}" DEFAULT_NUMBER_FORMAT="${DEFAULT_NUMBER_FORMAT:-1.234,56}"
+
+# No ActiveRecord encryption keys are set, in either mode: data stays
+# readable whichever mode runs, as it was before this mode existed. A real
+# server should set them (see .env.example).
+
+# Schema changes and the demo family are handled in development mode, which
+# the database was created with.
+RAILS_ENV=development bin/rails db:prepare
 
 marker=tmp/.probar-demo-loaded
 if [[ ! -f "$marker" ]]; then
   echo "Cargando datos de ejemplo (solo la primera vez, tarda unos minutos)…"
-  SKIP_CLEAR=1 bin/rails demo_data:default
-  mkdir -p tmp && touch "$marker"
+  SKIP_CLEAR=1 RAILS_ENV=development bin/rails demo_data:default
+  touch "$marker"
 fi
-
-bin/rails tailwindcss:build
 
 # A Codespace that was stopped leaves the old server's pid file behind, and
 # Rails refuses to start while it exists.
@@ -50,5 +70,33 @@ rm -f tmp/pids/server.pid
 
 # Same port as bin/dev; without it foreman hands the web process port 5000.
 export PORT=3000
+
+if [[ "$mode" == "development" ]]; then
+  # Precompiled assets from production mode would shadow live changes.
+  rm -rf public/assets
+  bin/rails tailwindcss:build
+  echo "Fulas Bank listo en el puerto 3000 (modo desarrollo)."
+  exec foreman start -f Procfile.dev
+fi
+
+export RAILS_ENV=production
+# The Codespace proxy terminates HTTPS in front of the app.
+export RAILS_FORCE_SSL=false RAILS_ASSUME_SSL=true
+export RAILS_LOG_LEVEL="${RAILS_LOG_LEVEL:-warn}"
+
+secret_file=storage/.probar/secret-key-base
+[[ -s "$secret_file" ]] || ruby -rsecurerandom -e 'puts SecureRandom.hex(64)' > "$secret_file"
+SECRET_KEY_BASE="$(cat "$secret_file")"
+export SECRET_KEY_BASE
+
+# Precompiling takes a minute or two, so only when the code has changed.
+assets_marker=tmp/.probar-assets-built
+current="$(git rev-parse HEAD 2>/dev/null || echo unknown)-$(git status --porcelain -- app/assets app/javascript config/importmap.rb 2>/dev/null | md5sum | cut -c1-8)"
+if [[ ! -d public/assets || "$(cat "$assets_marker" 2>/dev/null)" != "$current" ]]; then
+  echo "Preparando la app (solo cuando hay cambios, tarda un par de minutos)…"
+  bin/rails assets:precompile
+  echo "$current" > "$assets_marker"
+fi
+
 echo "Fulas Bank listo en el puerto 3000."
-exec foreman start -f Procfile.dev
+exec foreman start -f Procfile.probar

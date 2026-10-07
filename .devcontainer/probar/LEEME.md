@@ -30,6 +30,16 @@ La app arranca sola cada vez que se abre el Codespace. Si se ha parado, arránca
 bin/probar
 ```
 
+## Modo rápido y modo desarrollo
+
+`bin/probar` arranca la app en **modo producción**, que es el rápido. Cuando el código cambia, la primera vez tarda un par de minutos más en prepararse. Para programar con recarga automática:
+
+```bash
+PROBAR_MODE=development bin/probar
+```
+
+Los dos modos usan la misma base de datos, así que tus datos son los mismos.
+
 ## Importante
 
 - Los Codespaces se **detienen solos tras 30 minutos sin uso**. Tus datos se conservan; al volver a abrirlo, la app arranca de nuevo.

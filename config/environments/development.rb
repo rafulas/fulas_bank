@@ -85,12 +85,4 @@ Rails.application.configure do
 
   # Allow connection from any host in development
   config.hosts = nil
-
-  # GitHub Codespaces (see .devcontainer/probar) serves the app from
-  # https://<codespace>-3000.app.github.dev through a proxy, so the browser's
-  # Origin header never matches the URL Rails sees. Development only.
-  if ENV["CODESPACES"] == "true" || ENV["FULAS_CODESPACE"] == "true"
-    config.action_controller.forgery_protection_origin_check = false
-    config.action_cable.disable_request_forgery_protection = true
-  end
 end
