@@ -49,13 +49,19 @@ jobs:
       - name: Log in through the production server
         run: |
           jar=/tmp/cookies
-          page=$(curl -s -c $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/sessions/new)
+          # The app marks cookies Secure (it sits behind HTTPS in Codespaces);
+          # curl talks plain HTTP here, so clear the flag to send them back.
+          unsecure() { sed -i -E 's/^([^#\t]*\t[^\t]*\t[^\t]*\t)TRUE\t/\1FALSE\t/; s/^#HttpOnly_([^\t]*\t[^\t]*\t[^\t]*\t)TRUE\t/#HttpOnly_\1FALSE\t/' $jar; }
+          page=$(curl -s -c $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/sessions/new); unsecure
           token=$(echo "$page" | grep -o 'name="authenticity_token" value="[^"]*"' | head -1 | sed 's/.*value="//;s/"$//')
-          code=$(curl -s -o /dev/null -w '%{http_code}' -b $jar -c $jar -H 'X-Forwarded-Proto: https' -H 'Origin: https://elsewhere.app.github.dev' \
+          code=$(curl -s -o /tmp/login.html -w '%{http_code}' -b $jar -c $jar -H 'X-Forwarded-Proto: https' -H 'Origin: https://elsewhere.app.github.dev' \
             --data-urlencode "authenticity_token=$token" --data-urlencode "email=smoke@example.com" --data-urlencode "password=Password1!x" \
-            http://localhost:3000/sessions)
-          echo "login status $code"
-          test "$code" = "302" || test "$code" = "303"
-          code=$(curl -s -o /tmp/home.html -w '%{http_code}' -b $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/)
-          echo "home status $code"; tail -40 probar.log
-          test "$code" = "200"
+            http://localhost:3000/sessions); unsecure
+          echo "::notice title=login::status $code token=${#token}"
+          code2=$(curl -s -o /tmp/home.html -w '%{http_code}' -b $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/)
+          echo "::notice title=home::status $code2 $(grep -o '<title>[^<]*' /tmp/home.html)"
+          if [ "$code2" != "200" ] || ! { [ "$code" = "302" ] || [ "$code" = "303" ]; }; then
+            echo "::error title=log::$(tail -60 probar.log | tr '\n' '|' | cut -c1-3500)"
+            echo "::error title=login body::$(head -c 1500 /tmp/login.html | tr '\n' ' ')"
+            exit 1
+          fi
