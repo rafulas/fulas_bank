@@ -15,6 +15,9 @@ es:
       year_placeholder: '2025'
       mileage_unit_kilometers: Kilómetros
       mileage_unit_miles: Millas
+      fuel_type: Combustible
+      license_plate: Matrícula
+      license_plate_placeholder: 1234 ABC
     new:
       title: Introduce los detalles del vehículo
     overview:
@@ -35,3 +38,164 @@ es:
         unknown: Desconocido
         year: Año
         edit_account_details: Editar detalles de la cuenta
+        logbook_empty_title: Empieza el cuaderno del coche
+        logbook_empty_description: Apunta repostajes, servicios de taller y otros gastos para ver tu consumo real y cuánto te cuesta cada kilómetro.
+        add_refuel: Añadir repostaje
+        average_consumption: Consumo medio
+        not_enough_data: Faltan datos
+        cost_per_distance: Coste por %{unit}
+        spent_this_year: Gastado en %{year}
+        year_breakdown: Gastos de %{year}
+        consumption_chart: Consumo (%{unit}/100 %{distance})
+        workshop_alerts: Taller pendiente
+        recent: Últimos registros
+      refuels:
+        hint: Apunta los kilómetros y los litros cada vez que llenes.
+        add: Añadir repostaje
+        empty_title: Sin repostajes todavía
+        empty_description: Con dos repostajes con el depósito lleno ya verás tu consumo real.
+        title: Repostajes
+        date: Fecha
+        odometer: Km
+        quantity: "%{unit}"
+        partial: parcial
+        unit_price: Precio/%{unit}
+        amount: Total
+        consumption: "%{unit}/100 %{distance}"
+        bank: Banco
+      running_costs:
+        hint: Seguro, impuesto de circulación, ITV, parking, peajes, multas…
+        add: Añadir gasto
+        empty_title: Sin gastos todavía
+        empty_description: Apunta aquí lo que cuesta el coche aparte del combustible y el taller.
+        title: Gastos
+        date: Fecha
+        category: Categoría
+        notes: Notas
+        amount: Importe
+        bank: Banco
+      workshop:
+        hint: Mantenimientos periódicos con aviso por kilómetros o por tiempo.
+        add_item: Mantenimiento
+        add_service: Apuntar servicio
+        presets_title: "¿Qué quieres controlar?"
+        presets_description: Elige un mantenimiento habitual para empezar. Podrás ajustar los intervalos.
+        items_title: Mantenimientos
+        item: Mantenimiento
+        status: Estado
+        next: Próximo
+        action: Acción
+        record: Apuntar
+        history: Historial de taller
+        date: Fecha
+        service: Servicio
+        odometer: Km
+        amount: Importe
+        bank: Banco
+    fuel_types:
+      gasoline: Gasolina
+      diesel: Diésel
+      hybrid: Híbrido
+      electric: Eléctrico
+      lpg: GLP
+    logbook:
+      consumption_value: "%{value} %{unit}/100 %{distance}"
+    logs:
+      kinds:
+        fuel: Repostaje
+        service: Taller
+        expense: Gasto
+      kinds_plural:
+        fuel: Combustible
+        service: Taller
+        expense: Otros gastos
+      categories:
+        insurance: Seguro
+        road_tax: Impuesto de circulación
+        inspection: ITV
+        parking: Parking
+        toll: Peaje
+        washing: Lavado
+        fine: Multa
+        accessories: Accesorios
+        other: Otros
+      bank_link:
+        linked: Vinculado
+        link: Vincular
+      form:
+        maintenance_item: Mantenimiento
+        other_service: Otro trabajo de taller
+        category: Categoría
+        date: Fecha
+        odometer: Kilómetros (%{unit})
+        fuel_hint: Rellena dos de los tres datos (cantidad, precio o total) y se calcula el tercero.
+        quantity: Cantidad (%{unit})
+        unit_price: Precio por %{unit}
+        amount: Total
+        full_tank: Depósito lleno
+        full_tank_hint: El consumo real se calcula entre dos repostajes con el depósito lleno.
+        bank_charge: Cargo del banco
+        no_bank_charge: Sin vincular
+        bank_charge_hint: Elige el movimiento con el que lo pagaste para no contar el gasto dos veces. Se proponen los cargos de fechas e importes parecidos.
+        notes: Notas
+        submit: Guardar
+        delete: Eliminar
+        resource: registro
+      new:
+        title:
+          fuel: Nuevo repostaje
+          service: Nuevo servicio de taller
+          expense: Nuevo gasto
+      edit:
+        title:
+          fuel: Editar repostaje
+          service: Editar servicio de taller
+          expense: Editar gasto
+      create:
+        success: Registro guardado
+      update:
+        success: Registro actualizado
+      destroy:
+        success: Registro eliminado
+    maintenance_items:
+      presets:
+        oil_change: Cambio de aceite y filtro
+        air_filter: Filtro de aire
+        cabin_filter: Filtro de habitáculo
+        tyres: Neumáticos
+        brake_pads: Pastillas de freno
+        timing_belt: Correa de distribución
+        inspection: ITV
+      states:
+        overdue: Vencido
+        soon: Pronto
+        ok: Al día
+        unknown: Sin registrar
+      status:
+        km_over: pasado por %{distance}
+        km_left: faltan %{distance}
+        was_due: venció el %{date}
+        due_by: antes del %{date}
+        not_recorded: Indica cuándo se hizo por última vez
+      form:
+        name: Nombre
+        name_placeholder: Cambio de aceite
+        interval_hint: 'Cada cuánto toca: por distancia, por tiempo o ambos (lo que llegue antes).'
+        interval_km: Cada (%{unit})
+        interval_months: Cada (meses)
+        last_done_hint: Última vez que se hizo, si no está apuntada como servicio.
+        last_done_on: Fecha
+        last_done_odometer: Kilómetros (%{unit})
+        notes: Notas
+        submit: Guardar
+        delete: Eliminar
+      new:
+        title: Nuevo mantenimiento
+      edit:
+        title: Editar mantenimiento
+      create:
+        success: Mantenimiento guardado
+      update:
+        success: Mantenimiento actualizado
+      destroy:
+        success: Mantenimiento eliminado

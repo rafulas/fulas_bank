@@ -1,0 +1,52 @@
+<%# locals: (account:, logbook:) %>
+
+<% vehicle = account.vehicle %>
+<% services = logbook.logs.select(&:service?).reverse %>
+
+<div class="space-y-4">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <div class="flex items-center gap-2">
+      <%= render DS::Link.new(text: t(".add_item"), variant: "outline", icon: "plus", href: new_vehicle_maintenance_item_path(account), frame: :modal) %>
+      <%= render DS::Link.new(text: t(".add_service"), icon: "wrench", href: new_vehicle_log_path(account, kind: "service"), frame: :modal) %>
+    </div>
+  </div>
+
+  <% if logbook.maintenance_statuses.empty? %>
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <h3 class="text-sm font-medium text-primary"><%= t(".presets_title") %></h3>
+      <p class="text-sm text-secondary"><%= t(".presets_description") %></p>
+      <div class="flex flex-wrap gap-2">
+        <% Vehicle::MaintenanceItem::PRESETS.each do |preset| %>
+          <%= render DS::Link.new(
+            text: t("vehicles.maintenance_items.presets.#{preset[:key]}"),
+            variant: "outline",
+            size: "sm",
+            href: new_vehicle_maintenance_item_path(account, preset: preset[:key]),
+            frame: :modal
+          ) %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <%= render DS::Table.new(rows: logbook.maintenance_statuses, label: t(".items_title")) do |table| %>
+      <% table.with_column(t(".item")) { |(item, _status)| link_to item.name, edit_vehicle_maintenance_item_path(account, item), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
+      <% table.with_column(t(".status")) { |(_item, status)| maintenance_status_pill(status) } %>
+      <% table.with_column(t(".next")) { |(_item, status)| maintenance_status_detail(status, vehicle) } %>
+      <% table.with_column(t(".action"), align: :right) do |(item, _status)| %>
+        <%= link_to t(".record"), new_vehicle_log_path(account, kind: "service", maintenance_item_id: item.id), data: { turbo_frame: :modal }, class: "text-secondary hover:underline" %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if services.any? %>
+    <h3 class="text-sm font-medium text-primary"><%= t(".history") %></h3>
+    <%= render DS::Table.new(rows: services, label: t(".history")) do |table| %>
+      <% table.with_column(t(".date")) { |log| link_to format_date(log.date), edit_vehicle_log_path(account, log), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
+      <% table.with_column(t(".service")) { |log| vehicle_log_title(log) } %>
+      <% table.with_column(t(".odometer"), numeric: true) { |log| vehicle_distance(log.odometer, vehicle).to_s } %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |log| format_money(log.amount_money) } %>
+      <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,32 @@
+<%# locals: (account:, logbook:) %>
+
+<% vehicle = account.vehicle %>
+<% refuels = logbook.logs.select(&:fuel?).reverse %>
+<% consumption_by_odometer = logbook.consumption_series.index_by(&:odometer) %>
+
+<div class="space-y-4">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+  </div>
+
+  <% if refuels.empty? %>
+    <%= render DS::EmptyState.new(icon: "fuel", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <%= render DS::Table.new(rows: refuels, label: t(".title")) do |table| %>
+      <% table.with_column(t(".date")) { |log| link_to format_date(log.date), edit_vehicle_log_path(account, log), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
+      <% table.with_column(t(".odometer"), numeric: true) { |log| vehicle_distance(log.odometer, vehicle).to_s } %>
+      <% table.with_column(t(".quantity", unit: vehicle.energy_unit), numeric: true) do |log| %>
+        <%= log.quantity ? number_with_precision(log.quantity, precision: 2) : "–" %>
+        <% unless log.full_tank? %><span class="text-secondary text-xs"><%= t(".partial") %></span><% end %>
+      <% end %>
+      <% table.with_column(t(".unit_price", unit: vehicle.energy_unit), numeric: true, class: "privacy-sensitive") { |log| log.unit_price ? format_money(log.unit_price_money, precision: 3) : "–" } %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |log| format_money(log.amount_money) } %>
+      <% table.with_column(t(".consumption", unit: vehicle.energy_unit, distance: vehicle.mileage_unit), numeric: true) do |log| %>
+        <% point = consumption_by_odometer[log.odometer] if log.full_tank? %>
+        <%= point ? number_with_precision(point.per_100, precision: 1) : "–" %>
+      <% end %>
+      <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+    <% end %>
+  <% end %>
+</div>

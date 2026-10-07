@@ -28,6 +28,15 @@
                               [[t("vehicles.form.mileage_unit_miles"), "mi"], [t("vehicles.form.mileage_unit_kilometers"), "km"]],
                               { label: t("vehicles.form.mileage_unit") } %>
       </div>
+
+      <div class="flex items-center gap-2">
+        <%= vehicle_form.select :fuel_type,
+                              vehicle_fuel_type_options,
+                              { label: t("vehicles.form.fuel_type"), include_blank: true } %>
+        <%= vehicle_form.text_field :license_plate,
+                                  label: t("vehicles.form.license_plate"),
+                                  placeholder: t("vehicles.form.license_plate_placeholder") %>
+      </div>
     <% end %>
   </div>
 <% end %>

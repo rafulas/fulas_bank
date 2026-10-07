@@ -57,8 +57,10 @@ class UI::AccountPage < ApplicationComponent
       [ :activity, :holdings ]
     when "Loan"
       account.loan.amortizable? ? [ :activity, :overview, :schedule ] : [ :activity, :overview ]
-    when "Property", "Vehicle"
+    when "Property"
       [ :activity, :overview ]
+    when "Vehicle"
+      [ :activity, :overview, :refuels, :workshop, :running_costs ]
     else
       [ :activity ]
     end
@@ -89,6 +91,12 @@ class UI::AccountPage < ApplicationComponent
     @loan_projection ||= account.loan.payoff_projection(as_of: as_of)
   end
 
+  # Built once per render and shared by the vehicle's tabs, which are all in
+  # the page at once.
+  def vehicle_logbook
+    @vehicle_logbook ||= account.vehicle.logbook(as_of: as_of)
+  end
+
   def tab_content_for(tab)
     case tab
     when :activity
@@ -99,7 +107,10 @@ class UI::AccountPage < ApplicationComponent
       # page's one reference date, like its Schedule tab.
       locals = { account: account }
       locals[:as_of] = as_of if account.accountable_type == "Loan"
+      locals[:logbook] = vehicle_logbook if account.accountable_type == "Vehicle"
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", **locals
+    when :refuels, :workshop, :running_costs
+      render "vehicles/tabs/#{tab}", account: account, logbook: vehicle_logbook
     when :holdings
       # Accountable is responsible for implementing the partial in the correct folder
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", account: account

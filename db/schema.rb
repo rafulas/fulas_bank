@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -2859,8 +2859,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "vehicle_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.date "date", null: false
+    t.uuid "entry_id"
+    t.boolean "full_tank", default: true, null: false
+    t.string "kind", null: false
+    t.uuid "maintenance_item_id"
+    t.text "notes"
+    t.integer "odometer"
+    t.decimal "quantity", precision: 10, scale: 3
+    t.decimal "unit_price", precision: 10, scale: 4
+    t.datetime "updated_at", null: false
+    t.uuid "vehicle_id", null: false
+    t.index ["entry_id"], name: "index_vehicle_logs_on_entry_id", unique: true
+    t.index ["maintenance_item_id"], name: "index_vehicle_logs_on_maintenance_item_id"
+    t.index ["vehicle_id", "date"], name: "index_vehicle_logs_on_vehicle_id_and_date"
+    t.index ["vehicle_id"], name: "index_vehicle_logs_on_vehicle_id"
+    t.check_constraint "amount >= 0::numeric", name: "chk_vehicle_logs_amount_non_negative"
+    t.check_constraint "kind::text = ANY (ARRAY['fuel'::character varying::text, 'service'::character varying::text, 'expense'::character varying::text])", name: "chk_vehicle_logs_kind"
+  end
+
+  create_table "vehicle_maintenance_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "interval_km"
+    t.integer "interval_months"
+    t.integer "last_done_odometer"
+    t.date "last_done_on"
+    t.string "name", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.uuid "vehicle_id", null: false
+    t.index ["vehicle_id"], name: "index_vehicle_maintenance_items_on_vehicle_id"
+  end
+
   create_table "vehicles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "fuel_type"
+    t.string "license_plate"
     t.jsonb "locked_attributes", default: {}
     t.string "make"
     t.string "mileage_unit"
@@ -3104,6 +3143,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   add_foreign_key "users", "accounts", column: "default_account_id", on_delete: :nullify
   add_foreign_key "users", "chats", column: "last_viewed_chat_id"
   add_foreign_key "users", "families"
+  add_foreign_key "vehicle_logs", "entries", on_delete: :nullify
+  add_foreign_key "vehicle_logs", "vehicle_maintenance_items", column: "maintenance_item_id", on_delete: :nullify
+  add_foreign_key "vehicle_logs", "vehicles", on_delete: :cascade
+  add_foreign_key "vehicle_maintenance_items", "vehicles", on_delete: :cascade
   add_foreign_key "webauthn_credentials", "users"
   add_foreign_key "wise_accounts", "wise_items", on_delete: :cascade
   add_foreign_key "wise_items", "families"

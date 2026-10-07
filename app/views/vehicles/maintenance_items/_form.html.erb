@@ -1,0 +1,43 @@
+<%# locals: (account:, item:) %>
+
+<% vehicle = account.vehicle %>
+<% url = item.persisted? ? vehicle_maintenance_item_path(account, item) : vehicle_maintenance_items_path(account) %>
+
+<%= styled_form_with model: item, scope: :vehicle_maintenance_item, url: url, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if item.errors.any? %>
+    <%= render DS::Alert.new(message: item.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.text_field :name, label: t(".name"), required: true, placeholder: t(".name_placeholder") %>
+
+    <p class="text-xs text-secondary"><%= t(".interval_hint") %></p>
+    <div class="flex items-center gap-2">
+      <%= form.number_field :interval_km, label: t(".interval_km", unit: vehicle.mileage_unit), min: 1, step: 1 %>
+      <%= form.number_field :interval_months, label: t(".interval_months"), min: 1, step: 1 %>
+    </div>
+
+    <p class="text-xs text-secondary"><%= t(".last_done_hint") %></p>
+    <div class="flex items-center gap-2">
+      <%= form.date_field :last_done_on, label: t(".last_done_on"), max: Date.current %>
+      <%= form.number_field :last_done_odometer, label: t(".last_done_odometer", unit: vehicle.mileage_unit), min: 0, step: 1 %>
+    </div>
+
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if item.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: vehicle_maintenance_item_path(account, item),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(item.name)
+    ) %>
+  </div>
+<% end %>

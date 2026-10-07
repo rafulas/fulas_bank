@@ -1,0 +1,22 @@
+<%# locals: (account:, logbook:) %>
+
+<% expenses = logbook.logs.select(&:expense?).reverse %>
+
+<div class="space-y-4">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "expense"), frame: :modal) %>
+  </div>
+
+  <% if expenses.empty? %>
+    <%= render DS::EmptyState.new(icon: "receipt", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <%= render DS::Table.new(rows: expenses, label: t(".title")) do |table| %>
+      <% table.with_column(t(".date")) { |log| link_to format_date(log.date), edit_vehicle_log_path(account, log), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
+      <% table.with_column(t(".category")) { |log| vehicle_log_title(log) } %>
+      <% table.with_column(t(".notes")) { |log| log.notes.to_s.truncate(60) } %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |log| format_money(log.amount_money) } %>
+      <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+    <% end %>
+  <% end %>
+</div>
