@@ -52,6 +52,7 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     assert_includes candidates, supermarket
     assert_not_includes candidates, old
     assert_not_includes candidates, refund
+    assert_not_includes candidates, entries(:transfer_out), "paying off the card is not a vehicle cost"
 
     log.assign_attributes(amount: 0, entry: match, quantity: 35)
     log.save!
@@ -63,7 +64,7 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     charge = create_transaction(name: "REPSOL", date: Date.current, amount: 50)
     @vehicle.logs.create!(kind: "fuel", date: Date.current, amount: 50, entry: charge)
 
-    assert_empty @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 50).candidate_entries
+    assert_not_includes @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 50).candidate_entries, charge
   end
 
   test "rejects a bank charge from another family" do

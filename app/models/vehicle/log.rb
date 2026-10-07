@@ -49,7 +49,7 @@ class Vehicle::Log < ApplicationRecord
     vehicle.account.family
   end
 
-  # Outgoing bank transactions of the family around this log's date that are
+  # Outgoing purchases of the family around this log's date that are
   # not already linked to another log: closest amount first (when the log has
   # one), then closest date.
   def candidate_entries(scope: family.entries, limit: MATCH_LIMIT)
@@ -57,7 +57,13 @@ class Vehicle::Log < ApplicationRecord
 
     linked = Vehicle::Log.where.not(entry_id: nil).where.not(id: id).select(:entry_id)
 
-    candidates = scope.where(entryable_type: "Transaction")
+    # Purchases only: transfers between the family's own accounts (paying off
+    # the card, moving savings) and excluded entries are never a vehicle cost.
+    purchases = Transaction.where.not(kind: Transaction::TRANSFER_KINDS)
+                           .where.not(id: Transfer.select(:outflow_transaction_id))
+                           .select(:id)
+
+    candidates = scope.where(entryable_type: "Transaction", entryable_id: purchases, excluded: false)
                       .where(date: (date - MATCH_WINDOW)..(date + MATCH_WINDOW))
                       .where("entries.amount > 0")
                       .where.not(id: linked)
