@@ -29,6 +29,28 @@ class Loan::AmortizationScheduleTest < ActiveSupport::TestCase
     assert_equal BigDecimal("0"), schedule.payments.last.ending_balance.amount
   end
 
+  # A variable loan's quoted instalment is what the borrower pays under the
+  # rate in force now. It applies from the latest change on or before today;
+  # before that the schedule sizes its own payment as usual.
+  test "a variable loan's quoted payment applies to the rate period in force today" do
+    travel_to Date.new(2026, 6, 15) do
+      account = Account.create!(
+        family: families(:dylan_family), name: "Variable #{SecureRandom.hex(3)}", balance: 15_000, currency: "EUR",
+        accountable: Loan.create!(
+          rate_type: "variable", interest_rate: 5, term_months: 24, initial_balance: 20_000,
+          start_date: Date.new(2025, 1, 1), variable_rate_schedule: { "2026-01-01" => "6" },
+          payment_amount: 600
+        )
+      )
+      payments = account.loan.amortization_schedule.payments
+
+      assert payments.select { |payment| payment.date.year == 2026 }.all? { |payment| payment.payment.amount == BigDecimal("600") },
+             "the quoted instalment, under today's rate"
+      assert payments.select { |payment| payment.date.year == 2025 }.none? { |payment| payment.payment.amount == BigDecimal("600") },
+             "a payment sized at the opening rate before it"
+    end
+  end
+
   test "builds one payment per month of the term" do
     schedule = build_schedule
 

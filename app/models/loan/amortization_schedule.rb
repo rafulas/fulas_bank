@@ -15,7 +15,8 @@
 class Loan::AmortizationSchedule
   Payment = Data.define(:number, :date, :payment, :principal, :interest, :ending_balance)
 
-  attr_reader :principal, :annual_rate, :term_months, :start_date, :currency, :payment_day, :fixed_payment
+  attr_reader :principal, :annual_rate, :term_months, :start_date, :currency, :payment_day, :fixed_payment,
+              :fixed_payment_window
 
   class << self
     # Returns a schedule for the loan, or nil when the loan isn't amortizable
@@ -31,11 +32,21 @@ class Loan::AmortizationSchedule
         currency: loan.account.currency,
         rate_resolver: (Loan::RateResolver.for(loan) if loan.variable_rate_type?),
         payment_day: loan.payment_day,
-        # Only a fixed loan holds one instalment for its whole life; a variable
-        # one is re-sized at every rate change, so a quoted figure would be
-        # overridden at the first of them anyway.
-        fixed_payment: (loan.payment_amount unless loan.variable_rate_type?)
+        fixed_payment: loan.payment_amount,
+        fixed_payment_window: (quoted_payment_window(loan) if loan.variable_rate_type?)
       )
+    end
+
+    # The payment dates a variable loan's quoted instalment applies to: those
+    # under the rate in force today, from the latest change on or before today
+    # up to the next recorded one. The borrower quotes what they pay NOW; a
+    # rate before or after that is re-sized as usual.
+    def quoted_payment_window(loan, as_of: Date.current)
+      change_dates = loan.variable_rates.map(&:first)
+      from = change_dates.select { |date| date <= as_of }.max
+      to = change_dates.select { |date| date > as_of }.min
+
+      Range.new(from, to, true)
     end
   end
 
@@ -47,8 +58,12 @@ class Loan::AmortizationSchedule
   # to the month's last day), and `fixed_payment` the instalment the lender
   # quotes. Without them the schedule pays on the origination day of each
   # month and sizes its own level payment, as before.
+  #
+  # `fixed_payment_window` limits the quoted instalment to the payment dates
+  # it covers -- a variable loan's current rate period. Omitted, a quoted
+  # instalment holds for the whole term, which is what a fixed loan does.
   def initialize(principal:, annual_rate:, term_months:, start_date:, currency:, rate_resolver: nil,
-                 payment_day: nil, fixed_payment: nil)
+                 payment_day: nil, fixed_payment: nil, fixed_payment_window: nil)
     @currency = currency
     # Rounded to the currency at the door. A balance carrying more fractional
     # units than the currency has -- `first_valuation_amount` is decimal(19,4)
@@ -63,6 +78,7 @@ class Loan::AmortizationSchedule
     @rate_resolver = rate_resolver
     @payment_day = payment_day.presence&.to_i
     @fixed_payment = BigDecimal(fixed_payment.to_s).round(currency_precision) if fixed_payment.present? && fixed_payment.to_d.positive?
+    @fixed_payment_window = fixed_payment_window
   end
 
   # True when this schedule re-amortises part-way through, i.e. the repayment
@@ -164,15 +180,43 @@ class Loan::AmortizationSchedule
           accrual_rate_for: @rate_resolver ? @rate_resolver.method(:accrual_rate_for) : ->(_date) { annual_rate },
           re_amortisation_events: @rate_resolver&.method(:re_amortisation_events),
           currency_precision: currency_precision,
-          # A quoted instalment is held as given rather than re-derived, so the
-          # table agrees with what the bank actually charges. The final payment
-          # still settles whatever is left.
-          payment_strategy: fixed_payment ? :hold : :reamortize,
-          payment_amount: fixed_payment
+          # A quoted instalment is used as given rather than re-derived, so
+          # the table agrees with what the bank actually charges. The final
+          # payment still settles whatever is left.
+          payment_strategy: payment_strategy,
+          payment_amount: payment_amount
         ).run
       else
         Loan::SimulationResult.new(payments: [], currency_precision: currency_precision)
       end
+    end
+
+    # No quoted instalment: the schedule sizes its own and re-sizes it at each
+    # rate change. Quoted for the whole term: held as given. Quoted for one
+    # rate period only: given within it, sized from the balance outside it.
+    def payment_strategy
+      if fixed_payment.nil? then :reamortize
+      elsif fixed_payment_window.nil? then :hold
+      else :scheduled
+      end
+    end
+
+    def payment_amount
+      case payment_strategy
+      when :hold then fixed_payment
+      when :scheduled then method(:windowed_payment)
+      end
+    end
+
+    def windowed_payment(index:, balance:, sizing_rate:, remaining_payments:)
+      return fixed_payment if fixed_payment_window.cover?(payment_schedule[index])
+
+      Loan::AmortizationMath.level_payment(
+        balance: balance,
+        monthly_rate: sizing_rate,
+        remaining_payments: remaining_payments,
+        currency_precision: currency_precision
+      )
     end
 
     def schedulable?

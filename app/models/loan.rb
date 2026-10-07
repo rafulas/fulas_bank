@@ -32,6 +32,14 @@ class Loan < ApplicationRecord
 
   belongs_to :asset_account, class_name: "Account", optional: true
 
+  # Bank movements recorded as payments of this loan's instalments.
+  has_many :payment_links, class_name: "Loan::PaymentLink", dependent: :destroy
+
+  # Movements this far either side of the expected instalment, in amount, are
+  # offered as candidates on the loan's Payments tab.
+  PAYMENT_MATCH_TOLERANCE = BigDecimal("0.25")
+  PAYMENT_MATCH_LIMIT = 15
+
   validates :subtype, inclusion: { in: SUBTYPES.keys }, allow_blank: true
   # The day of the month the instalment is charged.
   validates :payment_day, numericality: { only_integer: true, in: 1..31 }, allow_nil: true
@@ -106,10 +114,73 @@ class Loan < ApplicationRecord
       original_balance.amount.positive?
   end
 
+  # Records a bank movement as the payment of this loan's instalment for that
+  # month, and brings the loan's balance to what the schedule says is owed
+  # after it. The movement itself is left where it is: it was paid from the
+  # bank account and is counted there.
+  #
+  # The balance moves to the schedule rather than down by the amount paid,
+  # because an instalment is part interest: subtracting all of it would
+  # understate the debt by the interest on every payment.
+  def link_payment!(entry)
+    transaction do
+      link = payment_links.create!(entry: entry)
+      adjust_balance_to_schedule(entry.date)
+      link
+    end
+  end
+
+  # Bank movements that look like this loan's instalment: outgoing, not a
+  # transfer, not linked to any loan yet, paid since origination, and close in
+  # amount to the instalment the schedule expects (any amount when there is no
+  # schedule). Most recent first.
+  def payment_candidates(scope: account.family.entries, limit: PAYMENT_MATCH_LIMIT)
+    linked = Loan::PaymentLink.select(:entry_id)
+    purchases = Transaction.where.not(kind: Transaction::TRANSFER_KINDS)
+                           .where.not(id: Transfer.select(:outflow_transaction_id))
+                           .select(:id)
+
+    candidates = scope.where(entryable_type: "Transaction", entryable_id: purchases, excluded: false)
+                      .where("entries.amount > 0")
+                      .where.not(account_id: account.id)
+                      .where.not(id: linked)
+    origin = origination_date
+    candidates = candidates.where(date: origin..) if origin
+    candidates = candidates.includes(:account).order(date: :desc).limit(500).to_a
+
+    schedule = amortization_schedule
+    return candidates.first(limit) if schedule.nil?
+
+    candidates.select do |entry|
+      expected = (schedule.payment_for(entry.date) || schedule.payments.last)&.payment&.amount
+      expected.present? && expected.positive? &&
+        ((entry.amount - expected).abs / expected) <= PAYMENT_MATCH_TOLERANCE
+    end.first(limit)
+  end
+
   # Assets the loan can be linked to: the family's properties, vehicles and
   # other assets.
   def self.linkable_asset_accounts_for(family)
     family.accounts.where(accountable_type: LINKABLE_ASSET_TYPES).alphabetically
+  end
+
+  # Anchors the loan's balance on `date` at what the schedule says is still
+  # owed after that month's instalment. Nothing to anchor without a schedule
+  # or an instalment in that month.
+  private def adjust_balance_to_schedule(date)
+    scheduled = amortization_schedule&.payment_for(date)
+    return if scheduled.nil?
+
+    result = Account::ReconciliationManager.new(account).reconcile_balance(
+      balance: scheduled.ending_balance.amount,
+      date: date
+    )
+    unless result.success?
+      errors.add(:base, result.error_message)
+      raise ActiveRecord::RecordInvalid.new(self)
+    end
+
+    account.sync_later
   end
 
   private def asset_account_must_be_a_family_asset

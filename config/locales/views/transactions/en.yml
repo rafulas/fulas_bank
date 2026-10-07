@@ -1,6 +1,14 @@
 ---
 en:
   transactions:
+    loan_payment:
+      title: Loan payment
+      description: If this charge is a loan instalment, link it and it will show on the loan's Payments tab. The outstanding balance moves to the amortization schedule's.
+      loan: Loan
+      link: Link
+      linked_title: Loan payment
+      linked_to: Linked to
+      unlink: Unlink
     bulk_updates:
       new:
         cancel: Cancel

@@ -225,6 +225,37 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='account[accountable_attributes][insurance_rate]'][step='0.0001']", count: 1
   end
 
+  test "the payments tab links a charge to the loan and unlinks it" do
+    @account.loan.update!(interest_rate: 0, rate_type: "fixed", term_months: 12, initial_balance: 12_000,
+                          start_date: 2.months.ago.to_date.beginning_of_month)
+    charge = Entry.create!(account: accounts(:depository), name: "Recibo préstamo", date: Date.current,
+                           amount: 1_000, currency: "USD", entryable: Transaction.new)
+
+    get account_path(@account, tab: "payments")
+    assert_response :success
+    assert_match(/Recibo préstamo/, response.body)
+
+    post loan_payment_links_path, params: { loan_account_id: @account.id, entry_id: charge.id }
+    assert_redirected_to account_path(@account, tab: "payments")
+    link = @account.loan.payment_links.sole
+    assert_equal charge, link.entry
+
+    get account_path(@account, tab: "payments")
+    assert_select "a[href='#{transaction_path(charge)}']"
+
+    delete loan_payment_link_path(link)
+    assert_empty @account.loan.payment_links.reload
+  end
+
+  test "a transaction's details offer to link it to a loan" do
+    charge = Entry.create!(account: accounts(:depository), name: "Recibo", date: Date.current,
+                           amount: 1_000, currency: "USD", entryable: Transaction.new)
+
+    get transaction_path(charge)
+    assert_response :success
+    assert_select "form[action='#{loan_payment_links_path}'] select[name='loan_account_id'] option[value='#{@account.id}']"
+  end
+
   test "creates with loan details" do
     assert_difference -> { Account.count } => 1,
       -> { Loan.count } => 1,

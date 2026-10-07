@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_07_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1577,6 +1577,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_180000) do
     t.check_constraint "cache_read_tokens IS NULL OR cache_read_tokens >= 0", name: "chk_llm_usages_cache_read_tokens_non_negative"
   end
 
+  create_table "loan_payment_links", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "entry_id", null: false
+    t.uuid "loan_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["entry_id"], name: "index_loan_payment_links_on_entry_id", unique: true
+    t.index ["loan_id"], name: "index_loan_payment_links_on_loan_id"
+  end
+
   create_table "loans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "asset_account_id"
     t.datetime "created_at", null: false
@@ -3074,6 +3083,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_180000) do
   add_foreign_key "kraken_accounts", "kraken_items"
   add_foreign_key "kraken_items", "families"
   add_foreign_key "llm_usages", "families"
+  add_foreign_key "loan_payment_links", "entries", on_delete: :cascade
+  add_foreign_key "loan_payment_links", "loans", on_delete: :cascade
   add_foreign_key "loans", "accounts", column: "asset_account_id", on_delete: :nullify
   add_foreign_key "lunchflow_accounts", "lunchflow_items"
   add_foreign_key "lunchflow_items", "families"

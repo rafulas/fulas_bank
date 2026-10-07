@@ -74,8 +74,9 @@
                                      action: "change->loan-rate-changes#toggle" } } %>
       </div>
 
-      <%# The instalment the lender quotes. A fixed loan's schedule holds it as
-          given; left blank, the schedule sizes its own level payment. %>
+      <%# The instalment the borrower pays now. A fixed loan's schedule holds it
+          for the whole term; a variable one for the rate period in force
+          today. Left blank, the schedule sizes its own level payment. %>
       <%= loan_form.money_field :payment_amount,
                                label: t("loans.form.payment_amount"),
                                default_currency: Current.family.currency %>

@@ -363,6 +363,9 @@
               frame: :modal
             ) %>
           </div>
+          <% if @entry.entryable.is_a?(Transaction) %>
+            <%= render "transactions/loan_payment", entry: @entry %>
+          <% end %>
           <!-- Pending Duplicate Merger -->
           <% if @entry.entryable.is_a?(Transaction) && @entry.entryable.pending? %>
             <div class="flex items-center justify-between gap-4 p-3">

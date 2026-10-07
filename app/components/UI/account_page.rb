@@ -56,7 +56,7 @@ class UI::AccountPage < ApplicationComponent
     when "Investment", "Crypto"
       [ :activity, :holdings ]
     when "Loan"
-      account.loan.amortizable? ? [ :activity, :overview, :schedule ] : [ :activity, :overview ]
+      account.loan.amortizable? ? [ :activity, :overview, :schedule, :payments ] : [ :activity, :overview, :payments ]
     when "Property"
       [ :activity, :overview ]
     when "Vehicle"
@@ -116,6 +116,8 @@ class UI::AccountPage < ApplicationComponent
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", account: account
     when :schedule
       render "loans/tabs/schedule", account: account, as_of: as_of, projection: loan_projection
+    when :payments
+      render "loans/tabs/payments", account: account
     when :statements
       render_statement_tab
     end

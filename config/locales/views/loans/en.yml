@@ -12,7 +12,7 @@ en:
       payment_day: Payment day
       payment_day_placeholder: '30'
       payment_amount: Monthly payment
-      payment_amount_hint: Optional, for fixed-rate loans. If your lender quoted the payment, enter it and the amortization schedule uses it as given; leave blank to have it calculated.
+      payment_amount_hint: Optional. If you know the payment you make now, enter it and the amortization schedule uses it as given; leave blank to have it calculated. On a variable loan it applies while the current rate lasts and is re-sized at each rate change you record.
       insurance_annual_amount: Annual insurance amount
       insurance_rate_type_fixed_amount: Fixed annual amount
       asset_account: Link to an asset
@@ -58,6 +58,24 @@ en:
       type: Type
       unknown: Unknown
     tabs:
+      payments:
+        linked_title: Linked payments
+        hint: Movements from your accounts recorded as instalments of this loan, beside the instalment the amortization schedule expected that month.
+        empty_title: No linked payments yet
+        empty_description: Link the instalment charge below, or from any transaction's details.
+        date: Date
+        name: Description
+        from_account: Account
+        paid: Paid
+        scheduled: Scheduled instalment
+        principal: Principal
+        interest: Interest
+        not_applicable: N/A
+        unlink: Unlink
+        link: Link
+        candidates_title: Movements that may be instalments
+        candidates_hint: Charges since origination with an amount close to the instalment. Linking one moves the loan's outstanding balance to the schedule's after that instalment.
+        candidates_empty: No unlinked charges look like the instalment.
       repayment_progress:
         instalment: Payment %{number} · %{date}
         insurance: Insurance
