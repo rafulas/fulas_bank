@@ -15,6 +15,16 @@ class Vehicles::LogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "suggests bank charges for the date and amount being entered" do
+    charge = create_transaction(name: "REPSOL CARD", amount: 61.2, date: 12.days.ago.to_date, account: accounts(:credit_card))
+
+    get bank_charges_vehicle_logs_url(@account, date: 12.days.ago.to_date.iso8601, amount: "61.20")
+
+    assert_response :success
+    assert_select "option[value='#{charge.id}']", text: /REPSOL CARD/
+    assert_select "option[value='']"
+  end
+
   test "records a refuel linked to a bank charge" do
     charge = create_transaction(name: "REPSOL", amount: 54.37)
 
