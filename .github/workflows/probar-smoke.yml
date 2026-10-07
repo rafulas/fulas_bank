@@ -40,7 +40,7 @@ jobs:
       - name: Start bin/probar in production mode (skip demo data)
         run: |
           mkdir -p tmp && touch tmp/.probar-demo-loaded
-          nohup bin/probar > probar.log 2>&1 &
+          RAILS_LOG_LEVEL=info nohup bin/probar > probar.log 2>&1 &
           for i in $(seq 1 90); do curl -fsS -o /dev/null http://localhost:3000/sessions/new && break; sleep 5; done
           cat probar.log | tail -40
           code=$(curl -s -o /tmp/page.html -w '%{http_code}' -H 'X-Forwarded-Proto: https' http://localhost:3000/sessions/new)
@@ -57,7 +57,8 @@ jobs:
           code=$(curl -s -o /tmp/login.html -w '%{http_code}' -b $jar -c $jar -H 'X-Forwarded-Proto: https' -H 'Origin: https://elsewhere.app.github.dev' \
             --data-urlencode "authenticity_token=$token" --data-urlencode "email=smoke@example.com" --data-urlencode "password=Password1!x" \
             http://localhost:3000/sessions); unsecure
-          echo "::notice title=login::status $code token=${#token}"
+          echo "::notice title=login::status $code token=${#token} jar=$(grep -v '^# ' $jar | tr '\t\n' ' |' | cut -c1-600)"
+          echo "::notice title=csrf::$(grep -iE 'csrf|authenticity|origin|InvalidAuth|422' probar.log | tail -8 | tr '\n' '|' | cut -c1-2500)"
           code2=$(curl -s -o /tmp/home.html -w '%{http_code}' -b $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/)
           echo "::notice title=home::status $code2 $(grep -o '<title>[^<]*' /tmp/home.html)"
           if [ "$code2" != "200" ] || ! { [ "$code" = "302" ] || [ "$code" = "303" ]; }; then
