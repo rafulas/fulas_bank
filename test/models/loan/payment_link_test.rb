@@ -3,8 +3,8 @@ require "test_helper"
 class Loan::PaymentLinkTest < ActiveSupport::TestCase
   include EntriesTestHelper
 
-  # 12,000 at 0% over 12 months from 1 January: 1,000 a month, so after the
-  # March instalment 9,000 is still owed.
+  # 12,000 at 0% over 12 months from 1 January: 1,000 a month from 1
+  # February, so after the March instalment (the second) 10,000 is still owed.
   setup do
     @loan_account = accounts(:loan)
     @loan = @loan_account.loan
@@ -21,7 +21,7 @@ class Loan::PaymentLinkTest < ActiveSupport::TestCase
     assert_equal BigDecimal("1000"), link.scheduled_payment.payment.amount
     valuation = @loan_account.entries.find_by(entryable_type: "Valuation", date: Date.new(2026, 3, 1))
     assert_not_nil valuation, "the loan is anchored on the payment date"
-    assert_equal BigDecimal("9000"), valuation.amount
+    assert_equal BigDecimal("10000"), valuation.amount
     assert_equal accounts(:depository), entry.reload.account, "the movement stays where it was paid from"
   end
 

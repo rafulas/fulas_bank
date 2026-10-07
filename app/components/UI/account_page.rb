@@ -117,10 +117,19 @@ class UI::AccountPage < ApplicationComponent
     when :schedule
       render "loans/tabs/schedule", account: account, as_of: as_of, projection: loan_projection
     when :payments
-      render "loans/tabs/payments", account: account
+      render_payments_tab
     when :statements
       render_statement_tab
     end
+  end
+
+  # Loaded when opened, like the statements tab: finding candidate payments
+  # searches the family's movements, which no other tab needs.
+  def render_payments_tab
+    frame_id = dom_id(account, :payments_tab)
+    return turbo_frame_tag(frame_id) { render("loans/tabs/payments", account: account) } if active_tab == :payments
+
+    turbo_frame_tag frame_id, src: helpers.account_path(account, tab: "payments"), loading: :lazy
   end
 
   def render_statement_tab

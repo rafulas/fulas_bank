@@ -132,9 +132,13 @@ class Loan < ApplicationRecord
 
   # Bank movements that look like this loan's instalment: outgoing, not a
   # transfer, not linked to any loan yet, paid since origination, and close in
-  # amount to the instalment the schedule expects (any amount when there is no
-  # schedule). Most recent first.
+  # amount to the instalment the schedule expects. None without a schedule:
+  # there is no instalment to compare against, and every charge would be one.
+  # Most recent first.
   def payment_candidates(scope: account.family.entries, limit: PAYMENT_MATCH_LIMIT)
+    schedule = amortization_schedule
+    return [] if schedule.nil?
+
     linked = Loan::PaymentLink.select(:entry_id)
     purchases = Transaction.where.not(kind: Transaction::TRANSFER_KINDS)
                            .where.not(id: Transfer.select(:outflow_transaction_id))
@@ -147,9 +151,6 @@ class Loan < ApplicationRecord
     origin = origination_date
     candidates = candidates.where(date: origin..) if origin
     candidates = candidates.includes(:account).order(date: :desc).limit(500).to_a
-
-    schedule = amortization_schedule
-    return candidates.first(limit) if schedule.nil?
 
     candidates.select do |entry|
       expected = (schedule.payment_for(entry.date) || schedule.payments.last)&.payment&.amount
