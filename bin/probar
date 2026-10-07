@@ -49,23 +49,9 @@ export DEFAULT_LOCALE="${DEFAULT_LOCALE:-es}" DEFAULT_CURRENCY="${DEFAULT_CURREN
 export DEFAULT_COUNTRY="${DEFAULT_COUNTRY:-ES}" DEFAULT_DATE_FORMAT="${DEFAULT_DATE_FORMAT:-%d/%m/%Y}"
 export DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE:-Europe/Madrid}" DEFAULT_NUMBER_FORMAT="${DEFAULT_NUMBER_FORMAT:-1.234,56}"
 
-# Fixed encryption keys, shared by both modes, so data saved in one stays
-# readable in the other. Rows saved before the keys existed stay readable too.
-# Kept in storage/ (not tmp/) because losing them makes encrypted data
-# unreadable.
-keys_file=storage/.probar/encryption-keys
-if [[ ! -s "$keys_file" ]]; then
-  {
-    for name in PRIMARY_KEY DETERMINISTIC_KEY KEY_DERIVATION_SALT; do
-      echo "ACTIVE_RECORD_ENCRYPTION_${name}=$(ruby -rsecurerandom -e 'puts SecureRandom.hex(32)')"
-    done
-  } > "$keys_file"
-fi
-set -a
-# shellcheck disable=SC1090
-source "$keys_file"
-set +a
-export ACTIVE_RECORD_ENCRYPTION_SUPPORT_UNENCRYPTED_DATA=true
+# No ActiveRecord encryption keys are set, in either mode: data stays
+# readable whichever mode runs, as it was before this mode existed. A real
+# server should set them (see .env.example).
 
 # Schema changes and the demo family are handled in development mode, which
 # the database was created with.
