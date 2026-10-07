@@ -85,6 +85,7 @@ class AccountsTest < ApplicationSystemTestCase
   test "can create loan account" do
     assert_account_created "Loan" do
       fill_in "account[accountable_attributes][initial_balance]", with: 1000
+      fill_in "account[accountable_attributes][start_date]", with: 2.years.ago.to_date
       fill_in "Interest rate", with: 5.25
       select "Fixed", from: "Rate type"
       fill_in "Term (months)", with: 360
@@ -114,7 +115,7 @@ class AccountsTest < ApplicationSystemTestCase
     def open_account_edit_dialog
       3.times do
         # A prior (slow) attempt may have already opened the edit form.
-        return if has_field?("Account name", wait: 0)
+        return if has_field?("account[name]", wait: 0)
 
         begin
           within_testid("account-menu") do
@@ -133,21 +134,22 @@ class AccountsTest < ApplicationSystemTestCase
           )
           next
         end
-        return if has_field?("Account name", wait: 2)
+        return if has_field?("account[name]", wait: 2)
       end
-      assert_field "Account name"
+      assert_field "account[name]"
     end
 
     def assert_account_created(accountable_type, &block)
       click_link Accountable.from_type(accountable_type).singular_display_name
-      click_link "Enter account balance" if accountable_type.in?(%w[Depository Investment Crypto Loan CreditCard])
+      # Loans skip the method selector and open their setup form directly.
+      click_link "Enter account balance" if accountable_type.in?(%w[Depository Investment Crypto CreditCard])
 
       account_name = "[system test] #{accountable_type} Account"
       institution_name = "[system test] Institution"
       institution_domain = "example.com"
       notes = "Test notes for #{accountable_type}"
 
-      fill_in "Account name*", with: account_name
+      fill_in "account[name]", with: account_name
       fill_in "account[balance]", with: 100.99
       find("summary", text: "Additional details").click
       fill_in "Institution name", with: institution_name
@@ -200,9 +202,9 @@ class AccountsTest < ApplicationSystemTestCase
     def update_account_details(name:, institution_name:, institution_domain:, notes:)
       3.times do
         begin
-          open_account_edit_dialog unless has_field?("Account name", wait: 0)
+          open_account_edit_dialog unless has_field?("account[name]", wait: 0)
 
-          fill_in "Account name", with: name
+          fill_in "account[name]", with: name
           unless has_field?("Institution name", wait: 0)
             find("summary", text: "Additional details").click
           end
