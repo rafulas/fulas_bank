@@ -706,7 +706,9 @@ Rails.application.routes.draw do
   end
   resources :vehicles, only: %i[new create edit update] do
     scope module: :vehicles do
-      resources :logs, only: %i[new create edit update destroy]
+      resources :logs, only: %i[new create edit update destroy] do
+        get :bank_charges, on: :collection
+      end
       resources :maintenance_items, only: %i[new create edit update destroy]
     end
   end

@@ -10,10 +10,10 @@ class Vehicle::Log < ApplicationRecord
   KINDS = %w[fuel service expense].freeze
   CATEGORIES = %w[insurance road_tax inspection parking toll washing fine accessories other].freeze
 
-  # How far a bank charge may be from the log's date and amount to be offered
-  # as its payment.
-  MATCH_WINDOW = 5.days
-  MATCH_TOLERANCE = BigDecimal("0.02")
+  # Bank charges up to this many days either side of the log's date are
+  # offered as its payment, closest amount first.
+  MATCH_WINDOW = 15.days
+  MATCH_LIMIT = 15
 
   monetize :amount, :unit_price
 
@@ -49,27 +49,34 @@ class Vehicle::Log < ApplicationRecord
     vehicle.account.family
   end
 
-  # Outgoing bank transactions of the family close to this log in date and
-  # amount, best match first, that are not already linked to another log.
-  def candidate_entries(scope: family.entries)
-    return Entry.none if date.blank?
+  # Outgoing purchases of the family around this log's date that are
+  # not already linked to another log: closest amount first (when the log has
+  # one), then closest date.
+  def candidate_entries(scope: family.entries, limit: MATCH_LIMIT)
+    return [] if date.blank?
 
     linked = Vehicle::Log.where.not(entry_id: nil).where.not(id: id).select(:entry_id)
 
-    candidates = scope.where(entryable_type: "Transaction")
+    # Purchases only: transfers between the family's own accounts (paying off
+    # the card, moving savings) and excluded entries are never a vehicle cost.
+    purchases = Transaction.where.not(kind: Transaction::TRANSFER_KINDS)
+                           .where.not(id: Transfer.select(:outflow_transaction_id))
+                           .select(:id)
+
+    candidates = scope.where(entryable_type: "Transaction", entryable_id: purchases, excluded: false)
                       .where(date: (date - MATCH_WINDOW)..(date + MATCH_WINDOW))
                       .where("entries.amount > 0")
                       .where.not(id: linked)
                       .includes(:account)
-                      .limit(50)
+                      .order(date: :desc)
+                      .limit(200)
+                      .to_a
 
-    if amount.to_d.positive?
-      low = amount.to_d * (1 - MATCH_TOLERANCE)
-      high = amount.to_d * (1 + MATCH_TOLERANCE)
-      candidates = candidates.where(amount: low..high)
-    end
-
-    candidates.sort_by { |entry| [ (entry.amount - amount.to_d).abs, (entry.date - date).abs ] }.first(10)
+    target = amount.to_d
+    candidates.sort_by do |entry|
+      amount_gap = target.positive? ? ((entry.amount - target).abs / target) : 0
+      [ amount_gap, (entry.date - date).abs ]
+    end.first(limit)
   end
 
   private

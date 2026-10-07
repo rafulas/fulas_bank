@@ -39,14 +39,20 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     assert log.errors.of_kind?(:category, :inclusion)
   end
 
-  test "offers nearby bank charges of a similar amount and copies the amount when linked" do
-    match = create_transaction(name: "REPSOL", date: Date.current, amount: 54.37)
-    create_transaction(name: "Supermarket", date: Date.current, amount: 120)
-    create_transaction(name: "Old refuel", date: 20.days.ago.to_date, amount: 54.37)
+  test "offers nearby bank charges, closest amount first, and copies the amount when linked" do
+    supermarket = create_transaction(name: "Supermarket", date: Date.current, amount: 120)
+    match = create_transaction(name: "REPSOL", date: 3.days.ago.to_date, amount: 54.37)
+    old = create_transaction(name: "Old refuel", date: 20.days.ago.to_date, amount: 54.37)
+    refund = create_transaction(name: "Refund", date: Date.current, amount: -54)
 
     log = @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 54)
+    candidates = log.candidate_entries
 
-    assert_equal [ match ], log.candidate_entries
+    assert_equal match, candidates.first
+    assert_includes candidates, supermarket
+    assert_not_includes candidates, old
+    assert_not_includes candidates, refund
+    assert_not_includes candidates, entries(:transfer_out), "paying off the card is not a vehicle cost"
 
     log.assign_attributes(amount: 0, entry: match, quantity: 35)
     log.save!
@@ -58,7 +64,7 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     charge = create_transaction(name: "REPSOL", date: Date.current, amount: 50)
     @vehicle.logs.create!(kind: "fuel", date: Date.current, amount: 50, entry: charge)
 
-    assert_empty @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 50).candidate_entries
+    assert_not_includes @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 50).candidate_entries, charge
   end
 
   test "rejects a bank charge from another family" do

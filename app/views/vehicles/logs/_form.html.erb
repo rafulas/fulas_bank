@@ -3,7 +3,13 @@
 <% vehicle = account.vehicle %>
 <% url = log.persisted? ? vehicle_log_path(account, log) : vehicle_logs_path(account) %>
 
-<%= styled_form_with model: log, scope: :vehicle_log, url: url, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+<%= styled_form_with model: log, scope: :vehicle_log, url: url, class: "space-y-4",
+      data: {
+        turbo_frame: :_top,
+        controller: "vehicle-log-bank-charges",
+        action: "change->vehicle-log-bank-charges#refresh",
+        vehicle_log_bank_charges_url_value: bank_charges_vehicle_logs_path(account, log_id: log.id)
+      } do |form| %>
   <%= form.hidden_field :kind %>
 
   <% if log.errors.any? %>
@@ -44,7 +50,8 @@
 
     <%= form.select :entry_id,
                     vehicle_log_entry_options(log),
-                    { label: t(".bank_charge"), include_blank: t(".no_bank_charge") } %>
+                    { label: t(".bank_charge"), include_blank: t(".no_bank_charge") },
+                    { data: { vehicle_log_bank_charges_target: "select" } } %>
     <p class="text-xs text-secondary"><%= t(".bank_charge_hint") %></p>
 
     <%= form.text_area :notes, label: t(".notes"), rows: 2 %>

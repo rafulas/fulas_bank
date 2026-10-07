@@ -1,0 +1,3 @@
+<%# locals: (log:) %>
+
+<%= options_for_select([ [ t("vehicles.logs.form.no_bank_charge"), "" ], *vehicle_log_entry_options(log) ], log.entry_id) %>

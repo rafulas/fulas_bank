@@ -4,6 +4,18 @@ class Vehicles::LogsController < Vehicles::BaseController
   before_action :require_write_access!
   before_action :set_log, only: %i[edit update destroy]
 
+  # The "Bank charge" options for the date and amount being typed in the
+  # form, so the suggestions follow the log rather than the day it was opened.
+  def bank_charges
+    log = params[:log_id].present? ? @vehicle.logs.find(params[:log_id]) : @vehicle.logs.new
+    log.date = parsed_date(params[:date]) || log.date
+    amount = params[:amount].to_s.tr(",", ".")
+    log.amount = amount.to_d if amount.match?(/\A\d+(\.\d+)?\z/)
+    log.entry = Current.accessible_entries.find_by(id: params[:selected]) if params[:selected].present?
+
+    render partial: "vehicles/logs/bank_charge_options", locals: { log: log }
+  end
+
   def new
     kind = Vehicle::Log::KINDS.include?(params[:kind]) ? params[:kind] : "fuel"
 
@@ -44,6 +56,12 @@ class Vehicles::LogsController < Vehicles::BaseController
   end
 
   private
+    def parsed_date(value)
+      Date.iso8601(value.to_s)
+    rescue Date::Error
+      nil
+    end
+
     def set_log
       @log = @vehicle.logs.find(params[:id])
     end
