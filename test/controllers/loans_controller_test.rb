@@ -216,6 +216,15 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     assert_nil @account.loan.reload.asset_account_id
   end
 
+  # The browser rejects a value that is not a multiple of the input's step,
+  # so the step must be no coarser than the column: 3.446% is a real rate.
+  test "the rate inputs accept rates to the precision the columns store" do
+    get new_loan_path
+
+    assert_select "input[name='account[accountable_attributes][interest_rate]'][step='0.001']", count: 1
+    assert_select "input[name='account[accountable_attributes][insurance_rate]'][step='0.0001']", count: 1
+  end
+
   test "creates with loan details" do
     assert_difference -> { Account.count } => 1,
       -> { Loan.count } => 1,
