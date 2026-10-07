@@ -1,0 +1,8 @@
+---
+en:
+  loan_payment_links:
+    create:
+      success: Payment linked to %{loan}.
+      failure: The movement could not be linked. It must be a charge from one of your accounts that is not linked already.
+    destroy:
+      success: Payment unlinked.

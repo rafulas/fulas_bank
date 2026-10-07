@@ -1,0 +1,34 @@
+<%# locals: (entry:) %>
+
+<%# Records this movement as the payment of one of the family's loans, so it
+    shows on the loan's Payments tab. Outgoing movements only: an instalment
+    is money leaving the account it was paid from. %>
+<% link = Loan::PaymentLink.includes(loan: :account).find_by(entry: entry) %>
+<% loan_accounts = accessible_accounts.where(accountable_type: "Loan").visible.alphabetically %>
+
+<% if link %>
+  <div class="flex items-center justify-between gap-4 p-3">
+    <div class="text-sm space-y-1">
+      <h4 class="text-primary"><%= t(".linked_title") %></h4>
+      <p class="text-secondary">
+        <%= t(".linked_to") %>
+        <%= link_to link.loan.account.name, account_path(link.loan.account, tab: "payments"),
+                    class: "text-primary font-medium hover:underline", data: { turbo_frame: "_top" } %>
+      </p>
+    </div>
+    <%= render DS::Button.new(text: t(".unlink"), variant: "outline", icon: "unlink",
+                              href: loan_payment_link_path(link), method: :delete) %>
+  </div>
+<% elsif entry.amount.positive? && loan_accounts.any? %>
+  <%= styled_form_with url: loan_payment_links_path, method: :post, class: "p-3 space-y-2", data: { turbo_frame: "_top" } do |form| %>
+    <div class="text-sm space-y-1">
+      <h4 class="text-primary"><%= t(".title") %></h4>
+      <p class="text-secondary"><%= t(".description") %></p>
+    </div>
+    <%= form.hidden_field :entry_id, value: entry.id %>
+    <%= form.select :loan_account_id,
+                    loan_accounts.map { |account| [ account.name, account.id ] },
+                    { label: t(".loan") } %>
+    <%= render DS::Button.new(text: t(".link"), variant: "outline", icon: "link", type: "submit") %>
+  <% end %>
+<% end %>

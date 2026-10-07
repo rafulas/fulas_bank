@@ -1,0 +1,8 @@
+---
+es:
+  loan_payment_links:
+    create:
+      success: Pago vinculado a %{loan}.
+      failure: No se pudo vincular el movimiento. Debe ser un cargo de una de tus cuentas que no esté vinculado ya.
+    destroy:
+      success: Pago desvinculado.

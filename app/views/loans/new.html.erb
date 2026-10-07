@@ -1,13 +1,9 @@
-<% if params[:step] == "method_select" %>
-  <%= render "accounts/new/method_selector",
-             path: new_loan_path(return_to: params[:return_to]),
-             provider_configs: @provider_configs,
-             accountable_type: "Loan" %>
-<% else %>
-  <%= render DS::Dialog.new do |dialog| %>
-    <% dialog.with_header(title: t(".title")) %>
-    <% dialog.with_body do %>
-      <%= render "loans/form", account: @account, url: loans_path %>
-    <% end %>
+<%# Loans are always entered by hand: the provider method selector is skipped
+    whatever `step` the link carries, so "Nuevo préstamo" opens the loan's own
+    setup form straight away. %>
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= render "loans/form", account: @account, url: loans_path %>
   <% end %>
 <% end %>

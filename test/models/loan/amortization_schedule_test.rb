@@ -1,6 +1,56 @@
 require "test_helper"
 
 class Loan::AmortizationScheduleTest < ActiveSupport::TestCase
+  # A loan paid "on the 30th" is paid on the 30th of every month, or on the
+  # month's last day when it is shorter. The first payment still falls in the
+  # month after origination, so the term keeps its number of payments.
+  test "a payment day moves each payment to that day of its month" do
+    schedule = Loan::AmortizationSchedule.new(
+      principal: 3_000, annual_rate: 0, term_months: 3,
+      start_date: Date.new(2026, 1, 15), currency: "EUR", payment_day: 30
+    )
+
+    assert_equal [ Date.new(2026, 2, 28), Date.new(2026, 3, 30), Date.new(2026, 4, 30) ],
+                 schedule.payments.map(&:date)
+  end
+
+  # The instalment the lender quotes is held as given rather than re-derived.
+  # 1,000 at 12% (1% a month) over 12 months levels at 88.85; a quoted 100
+  # clears it sooner, and the last payment settles what is left.
+  test "a quoted fixed payment is held as given" do
+    schedule = Loan::AmortizationSchedule.new(
+      principal: 1_000, annual_rate: 12, term_months: 12,
+      start_date: Date.new(2026, 1, 1), currency: "EUR", fixed_payment: 100
+    )
+
+    assert_equal BigDecimal("100"), schedule.periodic_payment.amount
+    assert schedule.payments[0...-1].all? { |payment| payment.payment.amount == BigDecimal("100") }
+    assert_operator schedule.payments.size, :<, 12
+    assert_equal BigDecimal("0"), schedule.payments.last.ending_balance.amount
+  end
+
+  # A variable loan's quoted instalment is what the borrower pays under the
+  # rate in force now. It applies from the latest change on or before today;
+  # before that the schedule sizes its own payment as usual.
+  test "a variable loan's quoted payment applies to the rate period in force today" do
+    travel_to Date.new(2026, 6, 15) do
+      account = Account.create!(
+        family: families(:dylan_family), name: "Variable #{SecureRandom.hex(3)}", balance: 15_000, currency: "EUR",
+        accountable: Loan.create!(
+          rate_type: "variable", interest_rate: 5, term_months: 24, initial_balance: 20_000,
+          start_date: Date.new(2025, 1, 1), variable_rate_schedule: { "2026-01-01" => "6" },
+          payment_amount: 600
+        )
+      )
+      payments = account.loan.amortization_schedule.payments
+
+      assert payments.select { |payment| payment.date.year == 2026 }.all? { |payment| payment.payment.amount == BigDecimal("600") },
+             "the quoted instalment, under today's rate"
+      assert payments.select { |payment| payment.date.year == 2025 }.none? { |payment| payment.payment.amount == BigDecimal("600") },
+             "a payment sized at the opening rate before it"
+    end
+  end
+
   test "builds one payment per month of the term" do
     schedule = build_schedule
 

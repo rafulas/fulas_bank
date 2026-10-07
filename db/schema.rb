@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_07_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1577,23 +1577,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_100000) do
     t.check_constraint "cache_read_tokens IS NULL OR cache_read_tokens >= 0", name: "chk_llm_usages_cache_read_tokens_non_negative"
   end
 
+  create_table "loan_payment_links", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "entry_id", null: false
+    t.uuid "loan_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["entry_id"], name: "index_loan_payment_links_on_entry_id", unique: true
+    t.index ["loan_id"], name: "index_loan_payment_links_on_loan_id"
+  end
+
   create_table "loans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "asset_account_id"
     t.datetime "created_at", null: false
     t.decimal "down_payment", precision: 19, scale: 4
     t.decimal "initial_balance", precision: 19, scale: 4
+    t.decimal "insurance_annual_amount", precision: 19, scale: 4
     t.decimal "insurance_rate", precision: 8, scale: 4
     t.string "insurance_rate_type"
     t.decimal "interest_rate", precision: 10, scale: 3
     t.jsonb "locked_attributes", default: {}
+    t.decimal "payment_amount", precision: 19, scale: 4
+    t.integer "payment_day"
     t.string "rate_type"
     t.date "start_date"
     t.string "subtype"
     t.integer "term_months"
     t.datetime "updated_at", null: false
     t.jsonb "variable_rate_schedule", default: {}, null: false
+    t.index ["asset_account_id"], name: "index_loans_on_asset_account_id"
     t.check_constraint "down_payment IS NULL OR down_payment >= 0::numeric", name: "chk_loans_down_payment_non_negative"
+    t.check_constraint "insurance_annual_amount IS NULL OR insurance_annual_amount >= 0::numeric", name: "chk_loans_insurance_annual_amount_non_negative"
     t.check_constraint "insurance_rate IS NULL OR insurance_rate >= 0::numeric", name: "chk_loans_insurance_rate_non_negative"
-    t.check_constraint "insurance_rate_type IS NULL OR (insurance_rate_type::text = ANY (ARRAY['level_term'::character varying, 'decreasing_life'::character varying]::text[]))", name: "chk_loans_insurance_rate_type"
+    t.check_constraint "insurance_rate_type IS NULL OR (insurance_rate_type::text = ANY (ARRAY['level_term'::character varying, 'decreasing_life'::character varying, 'fixed_amount'::character varying]::text[]))", name: "chk_loans_insurance_rate_type"
+    t.check_constraint "payment_amount IS NULL OR payment_amount > 0::numeric", name: "chk_loans_payment_amount_positive"
+    t.check_constraint "payment_day IS NULL OR payment_day >= 1 AND payment_day <= 31", name: "chk_loans_payment_day_range"
   end
 
   create_table "lunchflow_accounts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3066,6 +3083,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_100000) do
   add_foreign_key "kraken_accounts", "kraken_items"
   add_foreign_key "kraken_items", "families"
   add_foreign_key "llm_usages", "families"
+  add_foreign_key "loan_payment_links", "entries", on_delete: :cascade
+  add_foreign_key "loan_payment_links", "loans", on_delete: :cascade
+  add_foreign_key "loans", "accounts", column: "asset_account_id", on_delete: :nullify
   add_foreign_key "lunchflow_accounts", "lunchflow_items"
   add_foreign_key "lunchflow_items", "families"
   add_foreign_key "merchants", "families"

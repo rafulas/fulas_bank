@@ -4,6 +4,19 @@ en:
     edit:
       edit: Edit %{account}
     form:
+      name_label: Loan name
+      name_placeholder: E.g. Home mortgage
+      balance_label: Outstanding balance today
+      balance_hint: What you still owe today. Enter it as a positive or negative figure; as a debt it is always subtracted from your net worth.
+      subtype: Loan type
+      payment_day: Payment day
+      payment_day_placeholder: '30'
+      payment_amount: Monthly payment
+      payment_amount_hint: Optional. If you know the payment you make now, enter it and the amortization schedule uses it as given; leave blank to have it calculated. On a variable loan it applies while the current rate lasts and is re-sized at each rate change you record.
+      insurance_annual_amount: Annual insurance amount
+      insurance_rate_type_fixed_amount: Fixed annual amount
+      asset_account: Link to an asset
+      asset_account_hint: The asset the loan pays for, such as the car or the home.
       interest_rate: Interest rate
       interest_rate_placeholder: '5.25'
       initial_balance: Original loan balance
@@ -24,16 +37,16 @@ en:
       rate_change_add: Add rate change
       rate_change_remove: Remove
       start_date: Origination date
-      start_date_hint: When the loan was drawn down. Leave blank to use the account's opening date.
+      start_date_hint: When the loan was signed or drawn down. The original balance applies on this date and the outstanding balance today.
       down_payment: Down payment
       insurance_rate: Insurance rate
       insurance_rate_placeholder: '0.36'
-      insurance_rate_hint: An annual rate, charged monthly alongside the repayment. Level term is charged on the original balance; decreasing on what is still owed.
+      insurance_rate_hint: For a fixed annual amount, fill in the amount only; it is spread over twelve months. For level term or decreasing, enter the annual rate in %; level term is charged on the original balance, decreasing on what is still owed.
       insurance_rate_type: Insurance type
       insurance_rate_type_decreasing_life: Decreasing
       insurance_rate_type_level_term: Level term
     new:
-      title: Enter loan details
+      title: Set up loan
     overview:
       interest_rate: Interest Rate
       monthly_payment: Monthly Payment
@@ -45,6 +58,24 @@ en:
       type: Type
       unknown: Unknown
     tabs:
+      payments:
+        linked_title: Linked payments
+        hint: Movements from your accounts recorded as instalments of this loan, beside the instalment the amortization schedule expected that month.
+        empty_title: No linked payments yet
+        empty_description: Link the instalment charge below, or from any transaction's details.
+        date: Date
+        name: Description
+        from_account: Account
+        paid: Paid
+        scheduled: Scheduled instalment
+        principal: Principal
+        interest: Interest
+        not_applicable: N/A
+        unlink: Unlink
+        link: Link
+        candidates_title: Movements that may be instalments
+        candidates_hint: Charges since origination with an amount close to the instalment. Linking one moves the loan's outstanding balance to the schedule's after that instalment.
+        candidates_empty: No unlinked charges look like the instalment.
       repayment_progress:
         instalment: Payment %{number} · %{date}
         insurance: Insurance
@@ -89,3 +120,6 @@ en:
         type: Type
         unknown: Unknown
         edit_loan_details: "Edit loan details"
+        asset_account: Linked asset
+        payment_day: Payment day
+        payment_day_value: Day %{day} of each month

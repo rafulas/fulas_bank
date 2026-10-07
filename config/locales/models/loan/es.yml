@@ -1,6 +1,12 @@
 ---
 es:
   activerecord:
+    attributes:
+      loan:
+        asset_account: Activo vinculado
+        payment_day: Día de pago
+        payment_amount: Cuota mensual
+        insurance_annual_amount: Importe anual del seguro
     errors:
       models:
         loan:

@@ -135,6 +135,127 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     assert_nil @account.loan.reload.insurance_rate_type
   end
 
+  # Loans are entered by hand, so "New loan" opens the loan's setup form
+  # straight away rather than asking how to add it.
+  test "the new loan form skips the provider method selector" do
+    get new_loan_path(step: "method_select")
+
+    assert_response :success
+    assert_select "input[name='account[accountable_attributes][initial_balance]']", count: 1
+    assert_select "input[name='account[opening_balance_date]']", count: 0,
+                  message: "the formalisation date stands in for the opening date"
+    assert_select "input[name='account[accountable_attributes][down_payment]']", count: 0
+  end
+
+  # A debt is naturally typed as a negative figure; it is stored as the
+  # positive liability balance the app works with. The original principal is
+  # anchored on the formalisation date and today's balance today.
+  test "creates a loan typed as a negative debt, anchored at its formalisation date" do
+    start_date = 3.years.ago.to_date
+
+    post loans_path, params: {
+      account: {
+        name: "Hipoteca", balance: "-40000", currency: "EUR", accountable_type: "Loan",
+        accountable_attributes: {
+          initial_balance: "-50000", start_date: start_date.iso8601,
+          interest_rate: 3, term_months: 300, rate_type: "fixed"
+        }
+      }
+    }
+
+    account = Account.order(:created_at).last
+    assert_redirected_to account
+    assert_equal 40_000, account.balance
+    assert_equal 50_000, account.loan.initial_balance
+    assert_equal start_date, account.entries.where(entryable_type: "Valuation").minimum(:date)
+  end
+
+  test "creates a loan with its payment day, quoted payment, annual insurance and linked asset" do
+    asset = accounts(:vehicle)
+
+    post loans_path, params: {
+      account: {
+        name: "Préstamo coche", balance: 15_000, currency: "USD", accountable_type: "Loan",
+        accountable_attributes: {
+          subtype: "auto", initial_balance: 20_000, start_date: 1.year.ago.to_date.iso8601,
+          interest_rate: 5, term_months: 60, rate_type: "fixed",
+          payment_day: 30, payment_amount: "377.42",
+          insurance_rate_type: "fixed_amount", insurance_annual_amount: 240,
+          asset_account_id: asset.id
+        }
+      }
+    }
+
+    loan = Account.order(:created_at).last.loan
+    assert_equal 30, loan.payment_day
+    assert_equal BigDecimal("377.42"), loan.payment_amount
+    assert_equal BigDecimal("377.42"), loan.monthly_payment.amount
+    assert_equal "fixed_amount", loan.insurance_rate_type
+    assert_equal BigDecimal("240"), loan.insurance_annual_amount
+    assert_equal asset, loan.asset_account
+    assert loan.amortization_schedule.payments.all? { |payment| payment.date.day == 30 || payment.date == payment.date.end_of_month }
+
+    get account_path(loan.account)
+    assert_response :success
+    assert_select "a[href='#{account_path(asset)}']", text: asset.name
+  end
+
+  test "a loan cannot be linked to another family's asset" do
+    other_family = families(:empty)
+    foreign_asset = Account.create!(family: other_family, name: "Foreign car", balance: 1_000, currency: "USD",
+                                    accountable: Vehicle.new)
+
+    patch loan_path(@account), params: {
+      account: {
+        accountable_type: "Loan",
+        accountable_attributes: { id: @account.accountable_id, asset_account_id: foreign_asset.id }
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_nil @account.loan.reload.asset_account_id
+  end
+
+  # The browser rejects a value that is not a multiple of the input's step,
+  # so the step must be no coarser than the column: 3.446% is a real rate.
+  test "the rate inputs accept rates to the precision the columns store" do
+    get new_loan_path
+
+    assert_select "input[name='account[accountable_attributes][interest_rate]'][step='0.001']", count: 1
+    assert_select "input[name='account[accountable_attributes][insurance_rate]'][step='0.0001']", count: 1
+  end
+
+  test "the payments tab links a charge to the loan and unlinks it" do
+    @account.loan.update!(interest_rate: 0, rate_type: "fixed", term_months: 12, initial_balance: 12_000,
+                          start_date: 2.months.ago.to_date.beginning_of_month)
+    charge = Entry.create!(account: accounts(:depository), name: "Recibo préstamo", date: Date.current,
+                           amount: 1_000, currency: "USD", entryable: Transaction.new)
+
+    get account_path(@account, tab: "payments")
+    assert_response :success
+    assert_match(/Recibo préstamo/, response.body)
+
+    post loan_payment_links_path, params: { loan_account_id: @account.id, entry_id: charge.id }
+    assert_redirected_to account_path(@account, tab: "payments")
+    link = @account.loan.payment_links.sole
+    assert_equal charge, link.entry
+
+    get account_path(@account, tab: "payments")
+    assert_select "a[href='#{transaction_path(charge)}']"
+
+    delete loan_payment_link_path(link)
+    assert_empty @account.loan.payment_links.reload
+  end
+
+  test "a transaction's details offer to link it to a loan" do
+    charge = Entry.create!(account: accounts(:depository), name: "Recibo", date: Date.current,
+                           amount: 1_000, currency: "USD", entryable: Transaction.new)
+
+    get transaction_path(charge)
+    assert_response :success
+    assert_select "form[action='#{loan_payment_links_path}'] select[name='loan_account_id'] option[value='#{@account.id}']"
+  end
+
   test "creates with loan details" do
     assert_difference -> { Account.count } => 1,
       -> { Loan.count } => 1,

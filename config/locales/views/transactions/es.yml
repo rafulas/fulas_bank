@@ -1,6 +1,14 @@
 ---
 es:
   transactions:
+    loan_payment:
+      title: Pago de préstamo
+      description: Si este cargo es la cuota de un préstamo, vincúlalo y aparecerá en la pestaña Pagos del préstamo. El saldo pendiente se ajusta al del cuadro de amortización.
+      loan: Préstamo
+      link: Vincular
+      linked_title: Pago de préstamo
+      linked_to: Vinculado a
+      unlink: Desvincular
     bulk_updates:
       new:
         cancel: Cancelar

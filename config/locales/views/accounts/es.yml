@@ -87,7 +87,8 @@ es:
         activity: Actividad
         holdings: Posiciones
         overview: Resumen
-        schedule: Calendario
+        schedule: Cuadro de amortización
+        payments: Pagos
         refuels: Repostajes
         running_costs: Gastos
         workshop: Taller

@@ -26,7 +26,27 @@ class Loan < ApplicationRecord
   # An annual percentage, matching the bound the rate-change input declares.
   MAX_INTEREST_RATE = 100
 
+  # The asset the loan paid for -- the car behind a car loan, the home behind a
+  # mortgage. Optional, and only ever one of the family's own assets.
+  LINKABLE_ASSET_TYPES = %w[Property Vehicle OtherAsset].freeze
+
+  belongs_to :asset_account, class_name: "Account", optional: true
+
+  # Bank movements recorded as payments of this loan's instalments.
+  has_many :payment_links, class_name: "Loan::PaymentLink", dependent: :destroy
+
+  # Movements this far either side of the expected instalment, in amount, are
+  # offered as candidates on the loan's Payments tab.
+  PAYMENT_MATCH_TOLERANCE = BigDecimal("0.25")
+  PAYMENT_MATCH_LIMIT = 15
+
   validates :subtype, inclusion: { in: SUBTYPES.keys }, allow_blank: true
+  # The day of the month the instalment is charged.
+  validates :payment_day, numericality: { only_integer: true, in: 1..31 }, allow_nil: true
+  # The instalment the lender quotes, held as given by a fixed loan's schedule.
+  validates :payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :insurance_annual_amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validate :asset_account_must_be_a_family_asset
   # The form caps the date picker at today; this is the same bound where a
   # crafted request cannot skip it. A loan drawn down in the future has no
   # history to chart and would schedule a first payment months away while
@@ -92,6 +112,90 @@ class Loan < ApplicationRecord
       term_months.to_i.positive? &&
       term_months.to_i <= Loan::Simulator::MAX_PERIODS &&
       original_balance.amount.positive?
+  end
+
+  # Records a bank movement as the payment of this loan's instalment for that
+  # month, and brings the loan's balance to what the schedule says is owed
+  # after it. The movement itself is left where it is: it was paid from the
+  # bank account and is counted there.
+  #
+  # The balance moves to the schedule rather than down by the amount paid,
+  # because an instalment is part interest: subtracting all of it would
+  # understate the debt by the interest on every payment.
+  def link_payment!(entry)
+    transaction do
+      link = payment_links.create!(entry: entry)
+      adjust_balance_to_schedule(entry.date)
+      link
+    end
+  end
+
+  # Bank movements that look like this loan's instalment: outgoing, not a
+  # transfer, not linked to any loan yet, paid since origination, and close in
+  # amount to the instalment the schedule expects. None without a schedule:
+  # there is no instalment to compare against, and every charge would be one.
+  # Most recent first.
+  def payment_candidates(scope: account.family.entries, limit: PAYMENT_MATCH_LIMIT)
+    schedule = amortization_schedule
+    return [] if schedule.nil?
+
+    linked = Loan::PaymentLink.select(:entry_id)
+    purchases = Transaction.where.not(kind: Transaction::TRANSFER_KINDS)
+                           .where.not(id: Transfer.select(:outflow_transaction_id))
+                           .select(:id)
+
+    candidates = scope.where(entryable_type: "Transaction", entryable_id: purchases, excluded: false)
+                      .where("entries.amount > 0")
+                      .where.not(account_id: account.id)
+                      .where.not(id: linked)
+    origin = origination_date
+    candidates = candidates.where(date: origin..) if origin
+    candidates = candidates.includes(:account).order(date: :desc).limit(500).to_a
+
+    candidates.select do |entry|
+      expected = (schedule.payment_for(entry.date) || schedule.payments.last)&.payment&.amount
+      expected.present? && expected.positive? &&
+        ((entry.amount - expected).abs / expected) <= PAYMENT_MATCH_TOLERANCE
+    end.first(limit)
+  end
+
+  # Assets the loan can be linked to: the family's properties, vehicles and
+  # other assets.
+  def self.linkable_asset_accounts_for(family)
+    family.accounts.where(accountable_type: LINKABLE_ASSET_TYPES).alphabetically
+  end
+
+  # Anchors the loan's balance on `date` at what the schedule says is still
+  # owed after that month's instalment. Nothing to anchor without a schedule
+  # or an instalment in that month.
+  private def adjust_balance_to_schedule(date)
+    scheduled = amortization_schedule&.payment_for(date)
+    return if scheduled.nil?
+
+    result = Account::ReconciliationManager.new(account).reconcile_balance(
+      balance: scheduled.ending_balance.amount,
+      date: date
+    )
+    unless result.success?
+      errors.add(:base, result.error_message)
+      raise ActiveRecord::RecordInvalid.new(self)
+    end
+
+    account.sync_later
+  end
+
+  private def asset_account_must_be_a_family_asset
+    return if asset_account.nil?
+
+    # Read the owning account without caching a missing one -- see
+    # rate_changes_precede_origination? for why `account` is not called here.
+    loan_account = association(:account).target || association(:account).scope.first
+    family_id = loan_account&.family_id
+
+    unless LINKABLE_ASSET_TYPES.include?(asset_account.accountable_type) &&
+        (family_id.nil? || asset_account.family_id == family_id)
+      errors.add(:asset_account, :invalid)
+    end
   end
 
   private def rate_changes_must_be_parseable
@@ -242,7 +346,7 @@ class Loan < ApplicationRecord
   # The columns AmortizationSchedule.for reads from the loan itself. Assigning
   # any of them drops the memoised schedule, as reload does, so a read after the
   # change answers with the new terms rather than the ones it was built from.
-  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule].freeze
+  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule payment_day payment_amount].freeze
 
   SCHEDULE_INPUTS.each do |input|
     define_method(:"#{input}=") do |value|
@@ -254,7 +358,7 @@ class Loan < ApplicationRecord
 
   # The premium is charged against the schedule, so it goes stale for both its
   # own inputs and the schedule's.
-  INSURANCE_INPUTS = %i[insurance_rate insurance_rate_type].freeze
+  INSURANCE_INPUTS = %i[insurance_rate insurance_rate_type insurance_annual_amount].freeze
 
   INSURANCE_INPUTS.each do |input|
     define_method(:"#{input}=") do |value|

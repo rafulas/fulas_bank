@@ -91,6 +91,19 @@
     <% end %>
   <% end %>
 
+  <% if account.loan.payment_day.present? %>
+    <%= summary_card title: t(".payment_day") do %>
+      <%= t(".payment_day_value", day: account.loan.payment_day) %>
+    <% end %>
+  <% end %>
+
+  <%# The asset the loan paid for, linked so the two can be read together. %>
+  <% if account.loan.asset_account.present? %>
+    <%= summary_card title: t(".asset_account") do %>
+      <%= link_to account.loan.asset_account.name, account_path(account.loan.asset_account), class: "hover:underline" %>
+    <% end %>
+  <% end %>
+
   <%# Leverage needs a down payment to be a ratio at all, and a loan with none
       recorded is not unleveraged -- it is one nobody has told us about. %>
   <% if account.loan.initial_leverage_ratio.present? %>

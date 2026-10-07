@@ -1,0 +1,62 @@
+<%# locals: (account:) %>
+
+<%# Bank movements recorded as this loan's payments, beside the instalment the
+    schedule expected for that month, and below them the movements that look
+    like one and are not linked yet. %>
+<% loan = account.loan %>
+<% links = loan.payment_links.includes(entry: :account).reverse_chronological.to_a %>
+<% candidates = loan.payment_candidates(scope: Current.accessible_entries) %>
+<% can_link = account.permission_for(Current.user).in?([ :owner, :full_control ]) %>
+
+<div class="space-y-6">
+  <div class="space-y-3">
+    <div>
+      <h3 class="text-sm font-medium text-primary"><%= t(".linked_title") %></h3>
+      <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    </div>
+
+    <% if links.empty? %>
+      <%= render DS::EmptyState.new(icon: "hand-coins", title: t(".empty_title"), description: t(".empty_description")) %>
+    <% else %>
+      <%= render DS::Table.new(rows: links, label: t(".linked_title")) do |table| %>
+        <% table.with_column(t(".date")) { |link| link_to format_date(link.entry.date), transaction_path(link.entry), data: { turbo_frame: :drawer }, class: "text-primary hover:underline" } %>
+        <% table.with_column(t(".from_account")) { |link| link.entry.account.name } %>
+        <% table.with_column(t(".paid"), numeric: true, class: "privacy-sensitive") { |link| format_money(link.entry.amount_money) } %>
+        <% table.with_column(t(".scheduled"), numeric: true, class: "privacy-sensitive") { |link| (scheduled = link.scheduled_payment) ? format_money(scheduled.payment) : t(".not_applicable") } %>
+        <% table.with_column(t(".principal"), numeric: true, class: "privacy-sensitive") { |link| (scheduled = link.scheduled_payment) ? format_money(scheduled.principal) : t(".not_applicable") } %>
+        <% table.with_column(t(".interest"), numeric: true, class: "privacy-sensitive") { |link| (scheduled = link.scheduled_payment) ? format_money(scheduled.interest) : t(".not_applicable") } %>
+        <% if can_link %>
+          <% table.with_column("") do |link| %>
+            <%= render DS::Button.new(text: t(".unlink"), variant: "ghost", size: :sm,
+                                      href: loan_payment_link_path(link), method: :delete) %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if can_link %>
+    <div class="space-y-3">
+      <div>
+        <h3 class="text-sm font-medium text-primary"><%= t(".candidates_title") %></h3>
+        <p class="text-sm text-secondary"><%= t(".candidates_hint") %></p>
+      </div>
+
+      <% if candidates.empty? %>
+        <p class="text-sm text-subdued"><%= t(".candidates_empty") %></p>
+      <% else %>
+        <%= render DS::Table.new(rows: candidates, label: t(".candidates_title")) do |table| %>
+          <% table.with_column(t(".date")) { |entry| format_date(entry.date) } %>
+          <% table.with_column(t(".name")) { |entry| entry.name.to_s.truncate(50) } %>
+          <% table.with_column(t(".from_account")) { |entry| entry.account.name } %>
+          <% table.with_column(t(".paid"), numeric: true, class: "privacy-sensitive") { |entry| format_money(entry.amount_money) } %>
+          <% table.with_column("") do |entry| %>
+            <%= render DS::Button.new(text: t(".link"), variant: "outline", size: :sm, icon: "link",
+                                      href: loan_payment_links_path,
+                                      params: { loan_account_id: account.id, entry_id: entry.id }) %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
