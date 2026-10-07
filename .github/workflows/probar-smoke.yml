@@ -58,7 +58,7 @@ jobs:
             --data-urlencode "authenticity_token=$token" --data-urlencode "email=smoke@example.com" --data-urlencode "password=Password1!x" \
             http://localhost:3000/sessions); unsecure
           echo "::notice title=login::status $code token=${#token} jar=$(grep -v '^# ' $jar | tr '\t\n' ' |' | cut -c1-600)"
-          echo "::notice title=csrf::$(grep -iE 'csrf|authenticity|origin|InvalidAuth|422' probar.log | tail -8 | tr '\n' '|' | cut -c1-2500)"
+          echo "::notice title=csrf::$(grep -iE "verify|Origin header|InvalidAuthenticity|POST" probar.log | grep -v 'Completed 200' | tail -6 | tr '\n' '|' | cut -c1-2500)"
           code2=$(curl -s -o /tmp/home.html -w '%{http_code}' -b $jar -H 'X-Forwarded-Proto: https' http://localhost:3000/)
           echo "::notice title=home::status $code2 $(grep -o '<title>[^<]*' /tmp/home.html)"
           if [ "$code2" != "200" ] || ! { [ "$code" = "302" ] || [ "$code" = "303" ]; }; then
