@@ -1,42 +1,127 @@
-<%# locals: (account:) %>
+<%# locals: (account:, logbook: account.vehicle.logbook) %>
 
-<div class="grid grid-cols-3 gap-2">
-  <%= summary_card title: t(".make_model") do %>
-    <%= [account.vehicle.make, account.vehicle.model].compact.join(" ").presence || t(".unknown") %>
-  <% end %>
+<% vehicle = account.vehicle %>
 
-  <%= summary_card title: t(".year") do %>
-    <%= account.vehicle.year || t(".unknown") %>
-  <% end %>
+<div class="space-y-4">
+  <div class="grid grid-cols-3 gap-2">
+    <%= summary_card title: t(".make_model") do %>
+      <%= [vehicle.make, vehicle.model].compact.join(" ").presence || t(".unknown") %>
+    <% end %>
 
-  <%= summary_card title: t(".mileage") do %>
-    <%= account.vehicle.mileage || t(".unknown") %>
-  <% end %>
+    <%= summary_card title: t(".year") do %>
+      <%= vehicle.year || t(".unknown") %>
+    <% end %>
 
-  <%= summary_card title: t(".purchase_price") do %>
-    <%= format_money account.vehicle.purchase_price %>
-  <% end %>
+    <%= summary_card title: t(".mileage") do %>
+      <%= vehicle_distance(logbook.odometer, vehicle) || t(".unknown") %>
+    <% end %>
 
-  <%= summary_card title: t(".current_price") do %>
-    <%= format_money account.balance_money %>
-  <% end %>
+    <%= summary_card title: t(".purchase_price") do %>
+      <%= format_money vehicle.purchase_price %>
+    <% end %>
 
-  <%= summary_card title: t(".trend") do %>
-    <div class="flex items-center gap-1" style="color: <%= account.vehicle.trend.color %>">
-      <p class="text-xl font-medium">
-        <%= account.vehicle.trend.value %>
-      </p>
+    <%= summary_card title: t(".current_price") do %>
+      <%= format_money account.balance_money %>
+    <% end %>
 
-      <p>(<%= account.vehicle.trend.percent %>%)</p>
+    <%= summary_card title: t(".trend") do %>
+      <div class="flex items-center gap-1" style="color: <%= vehicle.trend.color %>">
+        <p class="text-xl font-medium">
+          <%= vehicle.trend.value %>
+        </p>
+
+        <p>(<%= vehicle.trend.percent %>%)</p>
+      </div>
+    <% end %>
+  </div>
+
+  <% if logbook.empty? %>
+    <%= render DS::EmptyState.new(icon: "fuel", title: t(".logbook_empty_title"), description: t(".logbook_empty_description")) do |empty| %>
+      <% empty.with_action do %>
+        <%= render DS::Link.new(text: t(".add_refuel"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <div class="grid grid-cols-3 gap-2">
+      <%= summary_card title: t(".average_consumption") do %>
+        <%= vehicle_consumption(logbook.average_consumption, vehicle) || t(".not_enough_data") %>
+      <% end %>
+
+      <%= summary_card title: t(".cost_per_distance", unit: vehicle.mileage_unit) do %>
+        <%= logbook.cost_per_km ? format_money(logbook.cost_per_km, precision: 3) : t(".not_enough_data") %>
+      <% end %>
+
+      <%= summary_card title: t(".spent_this_year", year: logbook.as_of.year) do %>
+        <%= format_money logbook.year_total %>
+      <% end %>
     </div>
-  <% end %>
-</div>
 
-<div class="flex justify-center py-8">
-  <%= render DS::Link.new(
-    text: t(".edit_account_details"),
-    variant: "ghost",
-    href: edit_vehicle_path(account),
-    frame: :modal
-  ) %>
+    <% year_totals = logbook.year_totals %>
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <h3 class="text-sm font-medium text-primary"><%= t(".year_breakdown", year: logbook.as_of.year) %></h3>
+      <dl class="space-y-2">
+        <% Vehicle::Log::KINDS.each do |kind| %>
+          <%= render DS::DetailRow.new(label: t("vehicles.logs.kinds_plural.#{kind}"), value: format_money(year_totals[kind]), align: :center, value_class: "privacy-sensitive") %>
+        <% end %>
+      </dl>
+    <% end %>
+
+    <% series = logbook.consumption_series.last(12) %>
+    <% if series.size >= 2 %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <h3 class="text-sm font-medium text-primary"><%= t(".consumption_chart", unit: vehicle.energy_unit, distance: vehicle.mileage_unit) %></h3>
+        <%= render DS::Sparkline.new(
+          series: series.map { |point| [ point.date, point.per_100 ] },
+          aria_label: t(".consumption_chart", unit: vehicle.energy_unit, distance: vehicle.mileage_unit),
+          css: "w-full text-primary"
+        ) %>
+      <% end %>
+    <% end %>
+
+    <% if (alerts = logbook.maintenance_alerts).any? %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <h3 class="text-sm font-medium text-primary"><%= t(".workshop_alerts") %></h3>
+        <ul class="space-y-2">
+          <% alerts.each do |item, status| %>
+            <li class="flex items-center justify-between gap-2 text-sm">
+              <div>
+                <p class="text-primary"><%= item.name %></p>
+                <p class="text-secondary"><%= maintenance_status_detail(status, vehicle) %></p>
+              </div>
+              <%= maintenance_status_pill(status) %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% end %>
+
+    <% if (recent = logbook.recent).any? %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <h3 class="text-sm font-medium text-primary"><%= t(".recent") %></h3>
+        <ul class="space-y-2">
+          <% recent.each do |log| %>
+            <li class="flex items-center justify-between gap-2 text-sm">
+              <div class="flex items-center gap-2">
+                <%= icon vehicle_log_icon(log), size: "sm" %>
+                <div>
+                  <p class="text-primary"><%= vehicle_log_title(log) %></p>
+                  <p class="text-secondary"><%= format_date(log.date) %></p>
+                </div>
+              </div>
+              <span class="text-primary privacy-sensitive"><%= format_money(log.amount_money) %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <div class="flex justify-center py-8">
+    <%= render DS::Link.new(
+      text: t(".edit_account_details"),
+      variant: "ghost",
+      href: edit_vehicle_path(account),
+      frame: :modal
+    ) %>
+  </div>
 </div>

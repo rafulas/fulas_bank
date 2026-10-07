@@ -1,0 +1,7 @@
+<%# locals: (account:, log:) %>
+
+<% if log.entry %>
+  <span class="inline-flex items-center gap-1 text-secondary" title="<%= log.entry.account.name %>"><%= icon "link", size: "xs" %><%= t("vehicles.logs.bank_link.linked") %></span>
+<% else %>
+  <%= link_to t("vehicles.logs.bank_link.link"), edit_vehicle_log_path(account, log), data: { turbo_frame: :modal }, class: "text-secondary hover:underline" %>
+<% end %>

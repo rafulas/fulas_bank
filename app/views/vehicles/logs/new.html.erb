@@ -1,0 +1,6 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title.#{@log.kind}")) %>
+  <% dialog.with_body do %>
+    <%= render "form", account: @account, log: @log %>
+  <% end %>
+<% end %>

@@ -15,6 +15,9 @@ en:
       year_placeholder: '2023'
       mileage_unit_kilometers: Kilometers
       mileage_unit_miles: Miles
+      fuel_type: Fuel
+      license_plate: Licence plate
+      license_plate_placeholder: AB12 CDE
     new:
       title: Enter vehicle details
     overview:
@@ -34,4 +37,165 @@ en:
         trend: Trend
         unknown: Unknown
         year: Year
-        edit_account_details: "Edit account details"
+        edit_account_details: Edit account details
+        logbook_empty_title: Start the vehicle logbook
+        logbook_empty_description: Record refuels, workshop services and other costs to see your real consumption and what each kilometre costs.
+        add_refuel: Add refuel
+        average_consumption: Average consumption
+        not_enough_data: Not enough data
+        cost_per_distance: Cost per %{unit}
+        spent_this_year: Spent in %{year}
+        year_breakdown: "%{year} costs"
+        consumption_chart: Consumption (%{unit}/100 %{distance})
+        workshop_alerts: Workshop due
+        recent: Recent records
+      refuels:
+        hint: Record the odometer and quantity every time you fill up.
+        add: Add refuel
+        empty_title: No refuels yet
+        empty_description: Two full-tank refuels are enough to see your real consumption.
+        title: Refuels
+        date: Date
+        odometer: Odometer
+        quantity: "%{unit}"
+        partial: partial
+        unit_price: Price/%{unit}
+        amount: Total
+        consumption: "%{unit}/100 %{distance}"
+        bank: Bank
+      running_costs:
+        hint: Insurance, road tax, inspection, parking, tolls, fines…
+        add: Add expense
+        empty_title: No expenses yet
+        empty_description: Record what the vehicle costs besides fuel and the workshop.
+        title: Expenses
+        date: Date
+        category: Category
+        notes: Notes
+        amount: Amount
+        bank: Bank
+      workshop:
+        hint: Recurring maintenance with reminders by distance or time.
+        add_item: Maintenance item
+        add_service: Record service
+        presets_title: What do you want to track?
+        presets_description: Pick a common maintenance job to start. You can adjust the intervals.
+        items_title: Maintenance
+        item: Maintenance
+        status: Status
+        next: Next
+        action: Action
+        record: Record
+        history: Workshop history
+        date: Date
+        service: Service
+        odometer: Odometer
+        amount: Amount
+        bank: Bank
+    fuel_types:
+      gasoline: Petrol
+      diesel: Diesel
+      hybrid: Hybrid
+      electric: Electric
+      lpg: LPG
+    logbook:
+      consumption_value: "%{value} %{unit}/100 %{distance}"
+    logs:
+      kinds:
+        fuel: Refuel
+        service: Workshop
+        expense: Expense
+      kinds_plural:
+        fuel: Fuel
+        service: Workshop
+        expense: Other costs
+      categories:
+        insurance: Insurance
+        road_tax: Road tax
+        inspection: Inspection
+        parking: Parking
+        toll: Toll
+        washing: Car wash
+        fine: Fine
+        accessories: Accessories
+        other: Other
+      bank_link:
+        linked: Linked
+        link: Link
+      form:
+        maintenance_item: Maintenance
+        other_service: Other workshop job
+        category: Category
+        date: Date
+        odometer: Odometer (%{unit})
+        fuel_hint: Fill in two of quantity, price and total; the third is calculated.
+        quantity: Quantity (%{unit})
+        unit_price: Price per %{unit}
+        amount: Total
+        full_tank: Full tank
+        full_tank_hint: Real consumption is measured between two full-tank refuels.
+        bank_charge: Bank charge
+        no_bank_charge: Not linked
+        bank_charge_hint: Pick the transaction that paid for it so the cost is not counted twice. Charges with a similar date and amount are offered.
+        notes: Notes
+        submit: Save
+        delete: Delete
+        resource: record
+      new:
+        title:
+          fuel: New refuel
+          service: New workshop service
+          expense: New expense
+      edit:
+        title:
+          fuel: Edit refuel
+          service: Edit workshop service
+          expense: Edit expense
+      create:
+        success: Record saved
+      update:
+        success: Record updated
+      destroy:
+        success: Record deleted
+    maintenance_items:
+      presets:
+        oil_change: Oil and filter change
+        air_filter: Air filter
+        cabin_filter: Cabin filter
+        tyres: Tyres
+        brake_pads: Brake pads
+        timing_belt: Timing belt
+        inspection: Inspection
+      states:
+        overdue: Overdue
+        soon: Due soon
+        ok: Up to date
+        unknown: Not recorded
+      status:
+        km_over: "%{distance} overdue"
+        km_left: "%{distance} left"
+        was_due: was due %{date}
+        due_by: due by %{date}
+        not_recorded: Enter when it was last done
+      form:
+        name: Name
+        name_placeholder: Oil change
+        interval_hint: 'How often it is due: by distance, by time or both (whichever comes first).'
+        interval_km: Every (%{unit})
+        interval_months: Every (months)
+        last_done_hint: When it was last done, if not recorded as a service.
+        last_done_on: Date
+        last_done_odometer: Odometer (%{unit})
+        notes: Notes
+        submit: Save
+        delete: Delete
+      new:
+        title: New maintenance item
+      edit:
+        title: Edit maintenance item
+      create:
+        success: Maintenance item saved
+      update:
+        success: Maintenance item updated
+      destroy:
+        success: Maintenance item deleted

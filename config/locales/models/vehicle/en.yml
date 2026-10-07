@@ -1,0 +1,24 @@
+---
+en:
+  activerecord:
+    attributes:
+      vehicle/log:
+        date: Date
+        amount: Amount
+        quantity: Quantity
+        unit_price: Price
+        odometer: Odometer
+        category: Category
+        entry: Bank charge
+        maintenance_item: Maintenance item
+      vehicle/maintenance_item:
+        name: Name
+        interval_km: Distance interval
+        interval_months: Interval in months
+        last_done_odometer: Odometer
+    errors:
+      models:
+        vehicle/maintenance_item:
+          attributes:
+            base:
+              interval_required: Enter how many kilometres or months apart it is due.

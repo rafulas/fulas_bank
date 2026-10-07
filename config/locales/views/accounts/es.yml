@@ -88,6 +88,9 @@ es:
         holdings: Posiciones
         overview: Resumen
         schedule: Calendario
+        refuels: Repostajes
+        running_costs: Gastos
+        workshop: Taller
         statements: Extractos
       activity:
         amount: Cantidad

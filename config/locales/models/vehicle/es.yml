@@ -1,0 +1,24 @@
+---
+es:
+  activerecord:
+    attributes:
+      vehicle/log:
+        date: Fecha
+        amount: Importe
+        quantity: Cantidad
+        unit_price: Precio
+        odometer: Kilómetros
+        category: Categoría
+        entry: Cargo del banco
+        maintenance_item: Mantenimiento
+      vehicle/maintenance_item:
+        name: Nombre
+        interval_km: Intervalo de distancia
+        interval_months: Intervalo en meses
+        last_done_odometer: Kilómetros
+    errors:
+      models:
+        vehicle/maintenance_item:
+          attributes:
+            base:
+              interval_required: Indica cada cuántos kilómetros o meses toca.

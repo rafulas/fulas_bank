@@ -704,7 +704,12 @@ Rails.application.routes.draw do
       patch :update_address
     end
   end
-  resources :vehicles, only: %i[new create edit update]
+  resources :vehicles, only: %i[new create edit update] do
+    scope module: :vehicles do
+      resources :logs, only: %i[new create edit update destroy]
+      resources :maintenance_items, only: %i[new create edit update destroy]
+    end
+  end
   resources :credit_cards, only: %i[new create edit update]
   resources :loans, only: %i[new create edit update]
   resources :cryptos, only: %i[new create edit update]

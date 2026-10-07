@@ -88,6 +88,9 @@ en:
         holdings: Holdings
         overview: Overview
         schedule: Schedule
+        refuels: Refuels
+        running_costs: Running costs
+        workshop: Workshop
         statements: Statements
       activity:
         amount: Amount
