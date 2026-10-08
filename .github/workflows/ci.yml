@@ -26,14 +26,7 @@ jobs:
           bundler-cache: true
 
       - name: Scan for security vulnerabilities in Ruby dependencies
-        run: |
-          set -o pipefail
-          bin/brakeman --no-pager 2>&1 | tee brakeman-output.log
-
-      - name: Publish Brakeman warnings as annotations
-        if: failure()
-        run: |
-          ruby -e 'puts "::error title=Brakeman::#{File.read("brakeman-output.log")[-6000..].to_s.gsub("%", "%25").gsub("\n", "%0A")}"'
+        run: bin/brakeman --no-pager
 
   scan_js:
     runs-on: ubuntu-latest
@@ -160,19 +153,7 @@ jobs:
           bin/rails db:seed
 
       - name: Unit and integration tests
-        run: |
-          set -o pipefail
-          bin/rails test 2>&1 | tee test-output.log
-
-      - name: Publish failing tests as annotations
-        if: failure()
-        run: |
-          ruby -e '
-            log = File.read("test-output.log")
-            log.scan(/^(?:Failure|Error):\n.*?(?=\n\n)/m).first(9).each do |block|
-              puts "::error title=Test failure::#{block[0, 3000].gsub("%", "%25").gsub("\n", "%0A")}"
-            end
-          '
+        run: bin/rails test
 
   test_system:
     runs-on: ubuntu-latest
