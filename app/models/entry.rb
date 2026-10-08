@@ -36,6 +36,10 @@ class Entry < ApplicationRecord
 
   before_destroy :prevent_individual_child_deletion, if: :split_child?
 
+  # Fulas Bank: a transaction created straight into the "Excluido" category
+  # starts excluded (existing ones are handled by Transaction).
+  before_save :exclude_for_fulas_excluded_category, if: -> { new_record? && transaction? }
+
   scope :visible, -> {
     joins(:account).where(accounts: { status: [ "draft", "active" ] })
   }
@@ -570,6 +574,10 @@ class Entry < ApplicationRecord
   end
 
   private
+
+    def exclude_for_fulas_excluded_category
+      self.excluded = true if Category::FulasTree.excluded?(entryable.category)
+    end
 
     def cannot_unexclude_split_parent
       return unless excluded_changed?(from: true, to: false) && split_parent?

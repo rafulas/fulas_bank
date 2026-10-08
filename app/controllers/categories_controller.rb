@@ -95,7 +95,7 @@ class CategoriesController < ApplicationController
   end
 
   def bootstrap
-    Current.family.categories.bootstrap!
+    Category::FulasTree.new(Current.family).apply!
 
     redirect_back_or_to categories_path, notice: t(".success")
   end
