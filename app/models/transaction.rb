@@ -94,7 +94,7 @@ class Transaction < ApplicationRecord
   # Leaves out transactions in "Excluido" and "Traspasos" (see Category), which
   # count neither as income nor as expense.
   scope :counted_in_analytics, -> {
-    where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category.analytics_neutral_ids_sql})")
+    where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
   }
 
   # Kinds excluded from budget/income-statement analytics.

@@ -56,7 +56,7 @@ module IncomeStatement::ScopedTransactionsQuery
     # Fulas Bank: transactions in "Excluido" or "Traspasos" (by their special
     # marker, see Category) are neither income nor expense.
     def analytics_neutral_categories_sql(t)
-      "AND (#{t}.category_id IS NULL OR #{t}.category_id NOT IN (#{Category.analytics_neutral_ids_sql}))"
+      "AND (#{t}.category_id IS NULL OR #{t}.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL}))"
     end
 
     def budget_excluded_kinds_sql

@@ -39,6 +39,9 @@ class Category < ApplicationRecord
 
   # Specials whose transactions are left out of income/expense figures.
   ANALYTICS_NEUTRAL_SPECIALS = %w[excluded transfers].freeze
+  # Their ids, as a subquery for SQL fragments. A constant so static analysis
+  # can see it holds no user input.
+  ANALYTICS_NEUTRAL_IDS_SQL = "SELECT id FROM categories WHERE special IN ('excluded', 'transfers')".freeze
 
   before_save :inherit_color_from_parent
   before_destroy :prevent_special_destroy
@@ -245,12 +248,6 @@ class Category < ApplicationRecord
           category.lucide_icon = icon
         end
       end
-    end
-
-    # Ids of the categories whose transactions don't count as income or
-    # expense (Excluido, Traspasos), as a subquery for SQL fragments.
-    def analytics_neutral_ids_sql
-      "SELECT id FROM categories WHERE special IN (#{ANALYTICS_NEUTRAL_SPECIALS.map { |s| "'#{s}'" }.join(", ")})"
     end
 
     def uncategorized
