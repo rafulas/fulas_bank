@@ -33,11 +33,12 @@ class Category::SummaryTest < ActiveSupport::TestCase
     create_transaction(account: @checking, amount: 50, category: category("Combustible"))
     create_transaction(account: @checking, amount: 300, category: category("Comunidad"))
 
-    names = summary_for.rows.map { |row| row.category.display_name }
+    rows = summary_for.rows
+    names = rows.map { |row| row.category.name }
 
     assert_equal [ "Hogar", "Transporte", "Traspasos" ], names.first(3)
     assert_equal "Excluido", names.last
-    assert_includes names, Category.uncategorized_name
+    assert rows.one?(&:uncategorized?)
   end
 
   test "Traspasos counts its own transactions and matched transfers" do
