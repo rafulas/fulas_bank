@@ -13,6 +13,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Codespaces created before this change still call `bin/probar --container`
+# as their main process: keep the container alive without starting the app.
+if [[ "${1:-}" == "--container" ]]; then
+  exec sleep infinity
+fi
+
 if [[ ! -f tmp/.probar-setup-done ]] || ! bundle check > /dev/null 2>&1; then
   echo "El Codespace todavía se está instalando. Espera a que termine y vuelve a ejecutar bin/probar."
   exit 1
