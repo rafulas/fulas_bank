@@ -14,6 +14,16 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
   end
 
+  test "create starts the new family with the default categories" do
+    post registration_url, params: { user: {
+      email: "categories@example.com",
+      password: "Password1!" } }
+
+    family = User.find_by!(email: "categories@example.com").family
+    assert_equal Category::FulasTree.names.sort, family.categories.pluck(:name).sort
+    assert family.categories.find_by!(special: "excluded")
+  end
+
   test "create rolls back registration when session creation fails" do
     RegistrationsController.any_instance.stubs(:create_session_for).returns(false)
 

@@ -23,7 +23,7 @@ class RegistrationsController < ApplicationController
       @user.family = default_family
       @user.role = :member
     else
-      family = Family.new
+      family = Family.new(with_default_categories: true)
       @user.family = family
       @creating_new_family = true
     end

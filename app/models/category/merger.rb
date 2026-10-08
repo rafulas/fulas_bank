@@ -14,6 +14,8 @@ class Category::Merger
     sources.each { |category| validate_category_belongs_to_family!(category, "Source category '#{category.name}'") }
 
     @source_categories = sources.reject { |category| category.id == target_category.id }
+    validate_no_special_sources!
+    validate_special_target!
     validate_hierarchy!
     validate_reparenting!
   end
@@ -40,6 +42,21 @@ class Category::Merger
       return if category&.family_id == family.id
 
       raise UnauthorizedCategoryError, "#{label} does not belong to this family"
+    end
+
+    # Merging deletes the sources, and the special categories can't be deleted.
+    def validate_no_special_sources!
+      return unless source_categories.any?(&:special?)
+
+      raise UnauthorizedCategoryError, I18n.t("activerecord.errors.models.category.attributes.base.special_cannot_be_deleted")
+    end
+
+    # A source's subcategories move to the target, and a special can't have any.
+    def validate_special_target!
+      return unless target_category.special?
+      return unless source_categories.any? { |source| family.categories.exists?(parent_id: source.id) }
+
+      raise UnauthorizedCategoryError, I18n.t("activerecord.errors.models.category.attributes.parent.cannot_nest_under_special")
     end
 
     def validate_hierarchy!

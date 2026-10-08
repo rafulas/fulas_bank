@@ -9,6 +9,8 @@ class Category::DeletionsController < ApplicationController
     @category.replace_and_destroy! @replacement_category
 
     redirect_back_or_to transactions_path, notice: t(".success")
+  rescue ActiveRecord::RecordNotDestroyed
+    redirect_back_or_to categories_path, alert: @category.errors.full_messages.to_sentence
   end
 
   private

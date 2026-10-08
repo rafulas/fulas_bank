@@ -1,0 +1,27 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-4 pb-6">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".category") %></p>
+    <%= render UI::PeriodPicker.new(selected: @period, url: category_summaries_path) %>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <% @summary.rows.each_with_index do |row, index| %>
+      <%= render "shared/ruler" unless index.zero? %>
+      <%= render "category_summaries/row", row: row, href: category_summary_root_path(row, @period) %>
+    <% end %>
+  </div>
+
+  <%= render DS::Link.new(
+    text: t(".edit_categories"),
+    icon: "folder-pen",
+    variant: "ghost",
+    href: categories_path
+  ) %>
+</div>

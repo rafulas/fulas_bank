@@ -158,17 +158,33 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to categories_url
   end
 
-  test "bootstrap applies the Fulas Bank category tree" do
-    tree_size = Category::FulasTree.names.size
-
-    # The fixtures' "Income" and "Food & Drink" are old defaults: they are
-    # merged into "Ingresos" and "Comida y bebida" instead of being kept.
-    assert_difference "Category.count", tree_size - 2 do
+  test "bootstrap restores the default categories" do
+    assert_difference "Category.count", Category::FulasTree.names.size do
       post bootstrap_categories_url
     end
 
     assert_redirected_to categories_url
     assert @family.categories.exists?(name: "Combustible", parent: @family.categories.find_by!(name: "Transporte"))
+  end
+
+  test "special categories can't be deleted" do
+    @family.apply_default_categories!
+    excluded = @family.categories.find_by!(special: "excluded")
+
+    assert_no_difference "Category.count" do
+      delete category_url(excluded)
+    end
+
+    assert_redirected_to categories_url
+    assert flash[:alert].present?
+  end
+
+  test "destroy_all keeps the special categories" do
+    @family.apply_default_categories!
+
+    delete destroy_all_categories_url
+
+    assert_equal %w[excluded other transfers], @family.categories.pluck(:special).sort
   end
 
   test "merge renders in the settings layout" do

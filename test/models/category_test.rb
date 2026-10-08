@@ -222,4 +222,46 @@ class CategoryTest < ActiveSupport::TestCase
 
     assert_equal [ c ], result.to_a
   end
+
+  test "special categories can't be deleted" do
+    excluded = @family.categories.create!(name: "Excluido", special: "excluded")
+
+    assert_not excluded.destroy
+    assert Category.exists?(excluded.id)
+  end
+
+  test "special categories go away with their family" do
+    family = Family.create!(name: "Family With Specials")
+    family.apply_default_categories!
+
+    assert_difference "Category.count", -Category::FulasTree.names.size do
+      family.destroy
+    end
+  end
+
+  test "a special category can't be a subcategory or have subcategories" do
+    parent = @family.categories.create!(name: "Parent For Special", color: "#000000")
+    special = @family.categories.new(name: "Traspasos", special: "transfers", parent: parent)
+    assert_not special.valid?
+
+    transfers = @family.categories.create!(name: "Traspasos", special: "transfers")
+    child = @family.categories.new(name: "Child Of Special", parent: transfers)
+    assert_not child.valid?
+  end
+
+  test "each special appears once per family" do
+    @family.categories.create!(name: "Otros", special: "other")
+
+    assert_not @family.categories.new(name: "Otros 2", special: "other").valid?
+  end
+
+  test "groups follow the categories' order, then the name" do
+    second = @family.categories.create!(name: "Alpha Ordered", position: 2)
+    first = @family.categories.create!(name: "Zeta Ordered", position: 1)
+
+    names = Category::Group.for(@family.categories.reload).map(&:name)
+
+    assert_operator names.index(first.name), :<, names.index(second.name)
+    assert_operator names.index(second.name), :<, names.index("Food & Drink")
+  end
 end

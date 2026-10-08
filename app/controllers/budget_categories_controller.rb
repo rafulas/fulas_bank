@@ -19,6 +19,7 @@ class BudgetCategoriesController < ApplicationController
     # category -- even though the aggregate ignores it. See issue #1059.
     @recent_transactions = @budget.transactions
                                   .where.not(transactions: { kind: Transaction::BUDGET_EXCLUDED_KINDS })
+                                  .merge(Transaction.counted_in_analytics)
 
     if params[:id] == BudgetCategory.uncategorized.id
       @budget_category = @budget.uncategorized_budget_category

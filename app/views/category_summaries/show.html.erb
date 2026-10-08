@@ -1,0 +1,43 @@
+<% content_for :page_header do %>
+  <div class="mb-6 flex flex-col items-center gap-2 text-center">
+    <div class="self-start">
+      <%= render DS::Link.new(
+        text: t(".back"),
+        icon: "arrow-left",
+        variant: "ghost",
+        href: category_summaries_path(category_summary_period_params(@period))
+      ) %>
+    </div>
+
+    <%= render DS::FilledIcon.new(variant: :solid, icon: @category.lucide_icon, hex_color: @category.color, size: "xl", rounded: true) %>
+    <h1 class="text-xl lg:text-2xl font-medium text-primary"><%= @category.display_name %></h1>
+    <p class="text-2xl lg:text-3xl font-semibold text-primary privacy-sensitive">
+      <%= format_money(Money.new(@summary.total_for(@category), Current.family.currency)) %>
+    </p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-4 pb-6">
+  <div class="flex items-center justify-end">
+    <%= render UI::PeriodPicker.new(selected: @period, url: category_summary_path(@category)) %>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-container-inset shadow-border-xs">
+    <%= render "category_summaries/row",
+               row: @own_row,
+               href: category_summary_transactions_path(@category, @period),
+               subtitle: t(".own_transactions") %>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <% @subcategory_rows.each do |row| %>
+      <%= render "category_summaries/row", row: row, href: category_summary_transactions_path(row.category, @period) %>
+      <%= render "shared/ruler" %>
+    <% end %>
+
+    <%= link_to categories_path, class: "flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary hover:bg-container-hover" do %>
+      <%= icon("folder-pen") %>
+      <span><%= t(".edit_categories") %></span>
+    <% end %>
+  </div>
+</div>

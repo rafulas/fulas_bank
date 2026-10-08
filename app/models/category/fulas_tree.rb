@@ -1,26 +1,31 @@
-# Fulas Bank's own category tree (categories and subcategories), in Spanish.
+# Fulas Bank's default categories: 13 root categories, most with their
+# subcategories, in Spanish. They are the starting point for every family,
+# not a fixed structure: they can be renamed, restyled and extended.
 #
-# `apply!` is idempotent and safe to run on a family that already has data:
-#   1. Folds Sure's old default categories (in any supported locale) into
-#      their new equivalent, moving their transactions and budgets with them.
-#   2. Creates every missing category and puts existing ones with the same
-#      name under the right parent, with the tree's color and icon.
-# Categories the user created that are not in the tree are left untouched.
+# Three root categories carry a built-in behavior, recorded in
+# `categories.special` (see Category):
+#   - Otros      (other)     catch-all, counts like any other category
+#   - Excluido   (excluded)  kept, but left out of reports and statistics
+#   - Traspasos  (transfers) money between own accounts, not income/expense
 #
-# Two root categories have special behavior (see Transaction):
-#   - "Excluido": its transactions are excluded from reports and budgets.
-#   - "Traspasos": its transactions are kept out of income/expense analytics.
+# `apply!` is idempotent and safe on a family with data. It creates the
+# missing categories and puts existing ones with a tree name under the right
+# parent. Specials are found by their marker, so a renamed "Excluido" is
+# still found. Categories the family created that aren't in the tree are left
+# untouched.
+#
+# `apply!(first_rollout: true)` is used once, when the tree replaces Sure's
+# defaults in an existing family: it also folds Sure's old default categories
+# (in any supported locale) into their new equivalent, moving their
+# transactions and budgets with them, and resets the color, icon and order of
+# the tree's categories.
 #
 # Category names are unique per family, so the four "Regalos" subcategories
 # carry a short qualifier.
 class Category::FulasTree
-  EXCLUDED_NAME = "Excluido".freeze
-  TRANSFERS_NAME = "Traspasos".freeze
-  OTHER_NAME = "Otros".freeze
-
-  # [ name, color, icon, [ [ subcategory name, icon ], ... ] ]
+  # [ name, color, icon, special, [ [ subcategory name, icon ], ... ] ]
   TREE = [
-    [ "Salud y educación", "#e0875a", "heart-pulse", [
+    [ "Salud y educación", "#d88450", "heart-pulse", nil, [
       [ "Atención médica", "stethoscope" ],
       [ "Gimnasio", "dumbbell" ],
       [ "Fitness y deporte", "bike" ],
@@ -29,7 +34,7 @@ class Category::FulasTree
       [ "Educación y desarrollo personal", "book-open" ],
       [ "Dentista", "shield-plus" ]
     ] ],
-    [ "Hogar", "#a3b43a", "home", [
+    [ "Hogar", "#b0bc3c", "home", nil, [
       [ "Comunidad", "building" ],
       [ "Seguridad", "video" ],
       [ "Alquiler e hipoteca", "house" ],
@@ -41,35 +46,35 @@ class Category::FulasTree
       [ "Seguro de hogar", "umbrella" ],
       [ "Jardín y plantas", "sprout" ]
     ] ],
-    [ "Gastos financieros", "#c4605f", "landmark", [
+    [ "Gastos financieros", "#b86460", "badge-dollar-sign", nil, [
       [ "Seguros", "shield" ],
       [ "Préstamos e intereses", "banknote" ],
       [ "Cargos y comisiones", "receipt" ],
-      [ "Impuestos", "percent" ],
+      [ "Impuestos", "landmark" ],
       [ "Multas", "receipt-text" ],
       [ "Asesoramiento", "calculator" ]
     ] ],
-    [ "Comida y bebida", "#4fae42", "apple", [
+    [ "Comida y bebida", "#68b448", "apple", nil, [
       [ "Supermercado", "shopping-cart" ],
       [ "Restaurantes y comida a domicilio", "utensils" ],
       [ "Café y aperitivos", "coffee" ],
       [ "Cañas y vinos", "beer" ],
       [ "Alcohol y tabaco", "wine" ]
     ] ],
-    [ "Transporte", "#5470dc", "car", [
+    [ "Transporte", "#506cd8", "car", nil, [
       [ "Combustible", "fuel" ],
       [ "Aparcamiento", "circle-parking" ],
       [ "Leasing", "calendar-range" ],
-      [ "Peajes", "badge-dollar-sign" ],
+      [ "Peajes", "coins" ],
       [ "Alquileres", "key" ],
-      [ "Vehículo y mantenimiento", "settings" ],
+      [ "Vehículo y mantenimiento", "wrench" ],
       [ "Seguro del vehículo", "shield" ],
       [ "Transporte público", "bus" ],
       [ "Taxi", "car" ],
       [ "Accesorios Vehículos", "package" ],
       [ "Larga distancia", "plane" ]
     ] ],
-    [ "Ocio y entretenimiento", "#45a0e6", "drama", [
+    [ "Ocio y entretenimiento", "#489ce0", "drama", nil, [
       [ "Teléfono", "phone" ],
       [ "Cuotas Socio", "wallet-cards" ],
       [ "Donaciones", "hand-heart" ],
@@ -85,35 +90,35 @@ class Category::FulasTree
       [ "Celebraciones", "cake" ],
       [ "Libros, audiolibros y noticias", "book" ]
     ] ],
-    [ "Compras", "#2e9e7a", "shopping-basket", [
+    [ "Compras", "#449c78", "shopping-basket", nil, [
       [ "Otras Compras", "shopping-bag" ],
       [ "Ropa y accesorios", "shirt" ],
       [ "Regalos (compras)", "gift" ],
       [ "Productos de belleza", "flower" ],
       [ "Electrónica", "laptop" ]
     ] ],
-    [ TRANSFERS_NAME, "#7779a6", "arrow-left-right", [] ],
-    [ "Ingresos", "#f0a93a", "briefcase", [
+    [ "Traspasos", "#7c7ca0", "arrow-right-left", "transfers", [] ],
+    [ "Ingresos", "#e8a838", "briefcase", nil, [
       [ "Nómina", "banknote" ],
       [ "Regalos recibidos", "gift" ],
-      [ "Otros Ingresos", "circle-dollar-sign" ],
+      [ "Otros Ingresos", "briefcase" ],
       [ "Intereses y dividendos", "percent" ],
       [ "Ventas", "store" ],
       [ "Devolución de impuestos", "landmark" ],
       [ "Herencia", "gem" ],
       [ "Venta Acciones", "trending-up" ]
     ] ],
-    [ "Inversiones", "#ae4be0", "chart-line", [
+    [ "Inversiones", "#a448d8", "chart-line", nil, [
       [ "Inversiones financieras", "trending-up" ],
       [ "Planes de pensiones", "landmark" ],
       [ "Ahorros", "piggy-bank" ],
       [ "Bienes inmuebles", "building" ]
     ] ],
-    [ OTHER_NAME, "#a06a50", "tag", [] ],
-    [ "Niños", "#d45e8b", "baby", [
+    [ "Otros", "#a46c54", "layout-grid", "other", [] ],
+    [ "Niños", "#c86084", "baby", nil, [
       [ "Ropa", "shirt" ],
       [ "Pensión de alimentos y compensatoria", "scale" ],
-      [ "Salud", "thermometer" ],
+      [ "Salud", "stethoscope" ],
       [ "Paga", "coins" ],
       [ "Juguetes y electrónica", "gamepad-2" ],
       [ "Regalos (niños)", "gift" ],
@@ -121,7 +126,7 @@ class Category::FulasTree
       [ "Educación y colegio", "graduation-cap" ],
       [ "Aficiones y actividades", "trophy" ]
     ] ],
-    [ EXCLUDED_NAME, "#a8a6b0", "ban", [] ]
+    [ "Excluido", "#bcbcc0", "eye-off", "excluded", [] ]
   ].freeze
 
   # Sure's previous default categories (by i18n key) and where they go now.
@@ -144,31 +149,15 @@ class Category::FulasTree
     "gifts_and_donations" => "Donaciones",
     "taxes" => "Impuestos",
     "loan_payments" => "Préstamos e intereses",
-    "services" => OTHER_NAME,
+    "services" => "Otros",
     "fees" => "Cargos y comisiones",
     "savings_and_investments" => "Inversiones"
   }.freeze
 
-  # Root categories with no subcategories.
-  LEAF_ROOTS = [ OTHER_NAME, EXCLUDED_NAME, TRANSFERS_NAME ].freeze
-
   class << self
     def names
-      TREE.flat_map { |name, _color, _icon, children| [ name ] + children.map(&:first) }
+      TREE.flat_map { |name, _color, _icon, _special, children| [ name ] + children.map(&:first) }
     end
-
-    def excluded?(category)
-      root_named?(category, EXCLUDED_NAME)
-    end
-
-    def transfers?(category)
-      root_named?(category, TRANSFERS_NAME)
-    end
-
-    private
-      def root_named?(category, name)
-        category.present? && category.parent_id.nil? && category.name == name
-      end
   end
 
   attr_reader :family
@@ -177,9 +166,13 @@ class Category::FulasTree
     @family = family
   end
 
-  def apply!
+  # Without `first_rollout`, only new categories get the tree's appearance and
+  # order, so a family's own changes are kept.
+  def apply!(first_rollout: false)
+    @restyle = first_rollout
+
     Category.transaction do
-      fold_legacy_categories!
+      fold_legacy_categories! if first_rollout
       build_tree!
     end
   end
@@ -192,9 +185,9 @@ class Category::FulasTree
 
           legacy = categories.find_by(name: legacy_name)
           next unless legacy
-          # Already a tree category in its place (e.g. "Salud" under "Niños"
-          # on a second run), not a leftover default.
-          next if in_tree_position?(legacy)
+          # Already a tree category in its place (e.g. "Salud" under "Niños"),
+          # not a leftover default.
+          next if in_tree_position?(legacy) || legacy.special?
 
           target = ensure_category!(target_name)
           next if target.id == legacy.id
@@ -203,7 +196,7 @@ class Category::FulasTree
             Category::Merger.new(family: family, target_category: target, source_categories: [ legacy ]).merge!
           rescue Category::Merger::UnauthorizedCategoryError
             # e.g. the old category has its own subcategories and the target is
-            # a subcategory: leave it for the user to sort out by hand.
+            # a subcategory: leave it for the family to sort out by hand.
             next
           end
         end
@@ -211,34 +204,40 @@ class Category::FulasTree
     end
 
     def build_tree!
-      TREE.each do |name, color, icon, children|
-        parent = upsert!(name, color: color, icon: icon, parent: nil)
+      TREE.each_with_index do |(name, color, icon, special, children), index|
+        parent = upsert!(name, color: color, icon: icon, special: special, parent: nil, position: index + 1)
 
-        children.each do |child_name, child_icon|
-          upsert!(child_name, color: color, icon: child_icon, parent: parent)
+        children.each_with_index do |(child_name, child_icon), child_index|
+          upsert!(child_name, color: color, icon: child_icon, special: nil, parent: parent, position: child_index + 1)
         end
       end
     end
 
     # Finds a tree category by name, creating it (and its parent) in place.
     def ensure_category!(name)
-      TREE.each do |root_name, color, icon, children|
-        return upsert!(root_name, color: color, icon: icon, parent: nil) if root_name == name
+      TREE.each_with_index do |(root_name, color, icon, special, children), index|
+        root = -> { upsert!(root_name, color: color, icon: icon, special: special, parent: nil, position: index + 1) }
+        return root.call if root_name == name
 
-        child = children.find { |child_name, _| child_name == name }
-        next unless child
+        child_index = children.index { |child_name, _| child_name == name }
+        next unless child_index
 
-        parent = upsert!(root_name, color: color, icon: icon, parent: nil)
-        return upsert!(name, color: color, icon: child.last, parent: parent)
+        return upsert!(name, color: color, icon: children[child_index].last, special: nil, parent: root.call, position: child_index + 1)
       end
 
       raise ArgumentError, "#{name} is not part of the Fulas Bank category tree"
     end
 
-    def upsert!(name, color:, icon:, parent:)
-      category = categories.find_or_initialize_by(name: name)
-      category.color = color
-      category.lucide_icon = icon
+    def upsert!(name, color:, icon:, special:, parent:, position:)
+      category = (special && categories.find_by(special: special)) || categories.find_or_initialize_by(name: name)
+      fresh = category.new_record?
+
+      if fresh || @restyle
+        category.color = color
+        category.lucide_icon = icon
+        category.position = position
+      end
+      category.special = special if special
 
       # A category that already has subcategories can't become one itself.
       unless parent && category.persisted? && category.parent?
@@ -254,7 +253,7 @@ class Category::FulasTree
     end
 
     def in_tree_position?(category)
-      TREE.any? do |root_name, _color, _icon, children|
+      TREE.any? do |root_name, _color, _icon, _special, children|
         if category.parent_id.nil?
           root_name == category.name
         else

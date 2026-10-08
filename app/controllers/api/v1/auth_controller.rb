@@ -42,7 +42,7 @@ module Api
 
         # Create family for new user
         # First user of an instance becomes super_admin
-        family = Family.new
+        family = Family.new(with_default_categories: true)
         user.family = family
 
         # Atomic: user creation, invite-code claim, and device/token issuance
@@ -260,7 +260,7 @@ module Api
           user.family_id = invitation.family_id
           user.role = invitation.role
         else
-          user.family = Family.new
+          user.family = Family.new(with_default_categories: true)
 
           # New family creators must be able to administer their own family.
           # Lower provider defaults are promoted to admin by role_for_new_family_creator,

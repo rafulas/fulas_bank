@@ -1,0 +1,15 @@
+---
+es:
+  category_summaries:
+    transactions_count:
+      one: 1 transacción
+      other: "%{count} transacciones"
+    index:
+      category: Categoría
+      edit_categories: Editar/añadir categorías
+      subtitle: Lo que has gastado e ingresado en cada categoría
+      title: Resumen
+    show:
+      back: Volver
+      edit_categories: Editar/añadir categorías
+      own_transactions: Categoría principal transacciones

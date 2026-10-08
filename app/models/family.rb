@@ -17,6 +17,11 @@ class Family < ApplicationRecord
   include OnchainWalletConnectable
   include AiPromptable
 
+  # Set when a person signs up and starts a new family, so it begins with
+  # Fulas Bank's categories and subcategories (see Category::FulasTree).
+  attr_accessor :with_default_categories
+  after_create :apply_default_categories!, if: :with_default_categories
+
   DATE_FORMATS = [
     [ "MM-DD-YYYY", "%m-%d-%Y" ],
     [ "DD.MM.YYYY", "%d.%m.%Y" ],
@@ -100,6 +105,10 @@ class Family < ApplicationRecord
   # 30d window and the prior 30d window; without this helper the
   # `accounts.joins(:goal_accounts)…pluck(:id)` query runs twice per
   # request even though the answer is identical.
+  def apply_default_categories!
+    Category::FulasTree.new(self).apply!
+  end
+
   def savings_inflow_windows(window_days: 30, now: Date.current)
     ids = goal_linked_account_ids
     {

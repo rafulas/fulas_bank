@@ -1,7 +1,8 @@
 class DS::FilledIcon < DesignSystemComponent
   attr_reader :icon, :text, :hex_color, :size, :rounded, :variant, :description, :aria_hidden, :text_length, :class_name
 
-  VARIANTS = %i[default text surface container inverse].freeze
+  # :solid fills the shape with `hex_color` and draws the icon in white.
+  VARIANTS = %i[default text surface container inverse solid].freeze
 
   SIZES = {
     sm: {
@@ -21,6 +22,12 @@ class DS::FilledIcon < DesignSystemComponent
       container_radius: "rounded-xl",
       icon_size: "lg",
       text_size: "text-sm"
+    },
+    xl: {
+      container_size: "w-16 h-16",
+      container_radius: "rounded-2xl",
+      icon_size: "2xl",
+      text_size: "text-lg"
     }
   }.freeze
 
@@ -70,6 +77,8 @@ class DS::FilledIcon < DesignSystemComponent
   end
 
   def container_styles
+    return "background-color: #{custom_fg_color}; color: var(--color-white);" if solid?
+
     <<~STYLE.strip
       background-color: #{transparent_bg_color};
       border-color: #{transparent_border_color};
@@ -79,6 +88,10 @@ class DS::FilledIcon < DesignSystemComponent
 
   def transparent?
     variant.in?(%i[default text])
+  end
+
+  def solid?
+    variant == :solid
   end
 
   private

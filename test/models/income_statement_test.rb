@@ -270,6 +270,20 @@ class IncomeStatementTest < ActiveSupport::TestCase
     assert_equal Money.new(900, @family.currency), totals.expense_money
   end
 
+  test "leaves Traspasos and Excluido transactions out of income and expense" do
+    transfers = @family.categories.create!(name: "Traspasos", special: "transfers")
+    excluded = @family.categories.create!(name: "Excluido", special: "excluded")
+    create_transaction(account: @checking_account, amount: 500, category: transfers)
+    create_transaction(account: @checking_account, amount: -700, category: transfers)
+    create_transaction(account: @checking_account, amount: 250, category: excluded)
+
+    totals = IncomeStatement.new(@family).totals(date_range: Period.last_30_days.date_range)
+
+    assert_equal 4, totals.transactions_count
+    assert_equal Money.new(1000, @family.currency), totals.income_money
+    assert_equal Money.new(900, @family.currency), totals.expense_money
+  end
+
   test "excludes payment transactions from income statement calculations" do
     # Create a payment transaction (credit card payment)
     create_transaction(account: @checking_account, amount: 300, category: nil, kind: "cc_payment")

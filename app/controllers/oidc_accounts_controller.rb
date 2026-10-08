@@ -140,7 +140,7 @@ class OidcAccountsController < ApplicationController
       @user.role = invitation.role
     else
       # Create new family for this user
-      @user.family = Family.new
+      @user.family = Family.new(with_default_categories: true)
 
       # New family creators must be able to administer their own family.
       # Lower provider defaults are promoted to admin by role_for_new_family_creator,
