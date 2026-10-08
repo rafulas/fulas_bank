@@ -8,30 +8,15 @@
 # Codespace. Both modes share the same database, so data is kept when
 # switching. PROBAR_MODE=development runs the usual development setup.
 #
-#   bin/probar              run in the foreground (from a terminal)
-#   bin/probar --container  main process of the Codespace container: waits for
-#                           the dev container setup to finish, runs the app
-#                           logging to log/probar.log, and keeps the container
-#                           alive if the app stops
-set -uo pipefail
+# The Codespace does not start the app on its own: run bin/probar from a
+# terminal and leave it open.
+set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SETUP_DONE=tmp/.probar-setup-done
-
-if [[ "${1:-}" == "--container" ]]; then
-  mkdir -p log tmp
-  {
-    echo "Esperando a que termine la instalación del Codespace…"
-    until [[ -f "$SETUP_DONE" ]] && bundle check > /dev/null 2>&1; do
-      sleep 10
-    done
-    "$0"
-    echo "Fulas Bank se ha detenido. Para arrancarlo de nuevo: bin/probar"
-  } >> log/probar.log 2>&1
-  exec sleep infinity
+if [[ ! -f tmp/.probar-setup-done ]] || ! bundle check > /dev/null 2>&1; then
+  echo "El Codespace todavía se está instalando. Espera a que termine y vuelve a ejecutar bin/probar."
+  exit 1
 fi
-
-set -e
 
 if pgrep -f "foreman start -f Procfile" > /dev/null; then
   echo "Fulas Bank ya está en marcha. Ábrelo desde la pestaña Puertos (3000)."
