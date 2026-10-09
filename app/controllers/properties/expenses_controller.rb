@@ -22,6 +22,10 @@ class Properties::ExpensesController < Properties::BaseController
     @expense = @property.expenses.new(kind: kind, date: Date.current, currency: @account.currency)
 
     if (entry = linkable_entry(params[:entry_id]))
+      if (match = AssetLinker.new(@account.family).match_for(@account, kind, entry))
+        return redirect_to edit_property_expense_path(@account, match, entry_id: entry.id)
+      end
+
       @expense.assign_attributes(entry: entry, date: entry.date, amount: entry.amount.abs, notes: entry.name)
     end
   end
@@ -37,7 +41,13 @@ class Properties::ExpensesController < Properties::BaseController
     end
   end
 
+  # Opened from a bank movement for an expense that already exists: the
+  # charge comes preselected, and is saved with the rest of the form.
   def edit
+    if (entry = linkable_entry(params[:entry_id])) && @expense.entry_id.nil?
+      @expense.entry = entry
+      @linking_entry = entry
+    end
   end
 
   # Saving the form confirms a link the app had proposed.

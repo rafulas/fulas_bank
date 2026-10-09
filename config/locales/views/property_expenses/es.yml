@@ -63,6 +63,7 @@ es:
         title: Nuevo gasto de la vivienda
       edit:
         title: Editar gasto de la vivienda
+        linking: "Ya tenías este gasto del %{date} sin cargo del banco. Se le vinculará «%{name}» al guardar, en vez de crear otro."
         suggested: La app ha vinculado este gasto con un cargo del banco. Revisa el tipo y el importe y pulsa Guardar para confirmarlo.
       create:
         success: Gasto guardado

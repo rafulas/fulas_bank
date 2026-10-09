@@ -63,6 +63,7 @@ en:
         title: New property expense
       edit:
         title: Edit property expense
+        linking: "You already had this expense of %{date} without a bank charge. \"%{name}\" will be linked to it when you save, instead of creating another one."
         suggested: The app linked this expense to a bank charge. Check the kind and amount and press Save to confirm it.
       create:
         success: Expense saved

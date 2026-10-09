@@ -32,6 +32,12 @@ class Vehicles::LogsController < Vehicles::BaseController
     )
 
     if (entry = linkable_entry(params[:entry_id]))
+      # A refuel already typed for those days takes the charge instead of a
+      # second, duplicate one.
+      if (match = AssetLinker.new(@account.family).match_for(@account, kind, entry))
+        return redirect_to edit_vehicle_log_path(@account, match, entry_id: entry.id)
+      end
+
       @log.assign_attributes(entry: entry, date: entry.date, amount: entry.amount.abs)
       @log.notes = entry.name unless @log.fuel?
     end
@@ -48,7 +54,13 @@ class Vehicles::LogsController < Vehicles::BaseController
     end
   end
 
+  # Opened from a bank movement for a record that already exists: the charge
+  # comes preselected, and is saved with the rest of the form.
   def edit
+    if (entry = linkable_entry(params[:entry_id])) && @log.entry_id.nil?
+      @log.entry = entry
+      @linking_entry = entry
+    end
   end
 
   # Saving the form confirms a link the app had proposed.

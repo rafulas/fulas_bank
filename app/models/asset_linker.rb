@@ -137,6 +137,12 @@ class AssetLinker
     rule_for(account, transaction)
   end
 
+  # The record of `account` a charge should go to instead of a new one: same
+  # kind, a few days away, with no charge yet (see existing_match).
+  def match_for(account, kind, entry)
+    existing_match(account, kind, entry)
+  end
+
   private
     def assets
       @assets ||= family.accounts.visible
