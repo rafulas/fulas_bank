@@ -177,6 +177,7 @@ es:
     transaction:
       pending: Pendiente
       pending_tooltip: Transacción pendiente — puede cambiar al confirmarse
+      recurring_tooltip: "Recurrente: %{name}"
       linked_with_provider: Vinculado con %{provider}
       activity_type_tooltip: Tipo de actividad de inversión
       possible_duplicate: "¿Duplicada?"

@@ -1,4 +1,12 @@
 module TransactionsHelper
+  # The recurring series (a bill, a salary, a subscription) this movement was
+  # matched to, if any, for the mark in the transaction list. Uses the
+  # allocations the list preloads; elsewhere it loads them.
+  def entry_recurring_series(entry)
+    allocation = entry.recurring_allocations.find { |candidate| candidate.recurring_occurrence.present? }
+    allocation&.recurring_occurrence&.recurring_transaction
+  end
+
   # @return [Array<Hash>] the filters offered above the transaction list, each
   #   with the key its partial is named for, a translated label and an icon
   def transaction_search_filters

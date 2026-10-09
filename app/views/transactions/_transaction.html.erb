@@ -92,6 +92,13 @@
                       </span>
                     <% end %>
 
+                    <%# Recurring indicator: the movement belongs to a recurring series %>
+                    <% if (series = entry_recurring_series(entry)) %>
+                      <span class="text-secondary" title="<%= t("transactions.transaction.recurring_tooltip", name: series.display_name) %>">
+                        <%= icon "repeat", size: "sm", color: "current" %>
+                      </span>
+                    <% end %>
+
                     <%# Pending indicator %>
                     <% if transaction.pending? %>
                       <%= render DS::Pill.new(
