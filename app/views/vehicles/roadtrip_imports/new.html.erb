@@ -1,0 +1,21 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= styled_form_with url: vehicle_roadtrip_import_path(@account), method: :post, multipart: true, class: "space-y-4" do |form| %>
+      <% if @error %>
+        <%= render DS::Alert.new(message: @error, variant: :error) %>
+      <% end %>
+
+      <div class="space-y-2 text-sm text-secondary">
+        <p><%= t(".intro") %></p>
+        <p><%= t(".how_to_export") %></p>
+      </div>
+
+      <%= form.file_field :file, label: t(".file"), accept: ".csv,text/csv", required: true %>
+
+      <p class="text-xs text-secondary"><%= t(".safe_hint") %></p>
+
+      <%= form.submit t(".submit") %>
+    <% end %>
+  <% end %>
+<% end %>

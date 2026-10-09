@@ -41,6 +41,7 @@ en:
         logbook_empty_title: Start the vehicle logbook
         logbook_empty_description: Record refuels, workshop services and other costs to see your real consumption and what each kilometre costs.
         add_refuel: Add refuel
+        import_roadtrip: Import from RoadTrip
         average_consumption: Average consumption
         not_enough_data: Not enough data
         cost_per_distance: Cost per %{unit}
@@ -52,6 +53,7 @@ en:
       refuels:
         hint: Record the odometer and quantity every time you fill up.
         add: Add refuel
+        import: Import from RoadTrip
         empty_title: No refuels yet
         empty_description: Two full-tank refuels are enough to see your real consumption.
         title: Refuels
@@ -199,3 +201,34 @@ en:
         success: Maintenance item updated
       destroy:
         success: Maintenance item deleted
+    roadtrip_imports:
+      new:
+        title: Import from RoadTrip
+        intro: Bring over the refuels, workshop services and expenses you recorded in the RoadTrip app.
+        how_to_export: In RoadTrip, export the vehicle as CSV and upload that file here.
+        file: RoadTrip CSV file
+        safe_hint: You will see a summary before anything is saved. Records this vehicle already has are skipped.
+        submit: Check file
+      preview:
+        title: Import from RoadTrip
+        period: From %{from} to %{to}.
+        license_plate: Licence plate
+        duplicates:
+          one: 1 record is already in the logbook and will be skipped.
+          other: "%{count} records are already in the logbook and will be skipped."
+        issues_title: Readings left out
+        issues_description: These odometer readings cannot be right, so the record is imported without its km. You can fix them afterwards by editing the record.
+        issue:
+          lower: "%{date}: %{odometer}, lower than the previous refuel"
+          jump: "%{date}: %{odometer}, far beyond the previous refuel"
+        not_imported: Trips, tyres and valuations from RoadTrip are not imported.
+        nothing_new: Everything in this file is already in the logbook.
+        submit:
+          one: Import 1 record
+          other: Import %{count} records
+      create:
+        success:
+          one: 1 record imported from RoadTrip
+          other: "%{count} records imported from RoadTrip"
+        missing_file: Choose the CSV file exported from RoadTrip.
+        invalid_file: This file does not look like a RoadTrip export. Export the vehicle as CSV in RoadTrip and try again.

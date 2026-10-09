@@ -713,6 +713,7 @@ Rails.application.routes.draw do
         get :bank_charges, on: :collection
       end
       resources :maintenance_items, only: %i[new create edit update destroy]
+      resource :roadtrip_import, only: %i[new create]
     end
   end
   resources :credit_cards, only: %i[new create edit update]

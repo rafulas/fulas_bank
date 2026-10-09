@@ -41,6 +41,7 @@ es:
         logbook_empty_title: Empieza el cuaderno del coche
         logbook_empty_description: Apunta repostajes, servicios de taller y otros gastos para ver tu consumo real y cuánto te cuesta cada kilómetro.
         add_refuel: Añadir repostaje
+        import_roadtrip: Importar de RoadTrip
         average_consumption: Consumo medio
         not_enough_data: Faltan datos
         cost_per_distance: Coste por %{unit}
@@ -52,6 +53,7 @@ es:
       refuels:
         hint: Apunta los kilómetros y los litros cada vez que llenes.
         add: Añadir repostaje
+        import: Importar de RoadTrip
         empty_title: Sin repostajes todavía
         empty_description: Con dos repostajes con el depósito lleno ya verás tu consumo real.
         title: Repostajes
@@ -199,3 +201,34 @@ es:
         success: Mantenimiento actualizado
       destroy:
         success: Mantenimiento eliminado
+    roadtrip_imports:
+      new:
+        title: Importar de RoadTrip
+        intro: Trae los repostajes, servicios de taller y gastos que apuntaste en la app RoadTrip.
+        how_to_export: En RoadTrip, exporta el vehículo en CSV y sube aquí ese archivo.
+        file: Archivo CSV de RoadTrip
+        safe_hint: Antes de guardar nada verás un resumen. Lo que este vehículo ya tenga apuntado se salta.
+        submit: Revisar archivo
+      preview:
+        title: Importar de RoadTrip
+        period: Del %{from} al %{to}.
+        license_plate: Matrícula
+        duplicates:
+          one: 1 registro ya está en el cuaderno y se saltará.
+          other: "%{count} registros ya están en el cuaderno y se saltarán."
+        issues_title: Kilómetros descartados
+        issues_description: Estas lecturas del cuentakilómetros no pueden ser correctas, así que el registro se importa sin sus km. Luego puedes corregirlas editando el registro.
+        issue:
+          lower: "%{date}: %{odometer}, menos que en el repostaje anterior"
+          jump: "%{date}: %{odometer}, muy por encima del repostaje anterior"
+        not_imported: No se importan los viajes, los neumáticos ni las valoraciones de RoadTrip.
+        nothing_new: Todo lo de este archivo ya está en el cuaderno.
+        submit:
+          one: Importar 1 registro
+          other: Importar %{count} registros
+      create:
+        success:
+          one: 1 registro importado de RoadTrip
+          other: "%{count} registros importados de RoadTrip"
+        missing_file: Elige el archivo CSV que exportaste de RoadTrip.
+        invalid_file: Este archivo no parece una exportación de RoadTrip. Exporta el vehículo en CSV desde RoadTrip y vuelve a probar.
