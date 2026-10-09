@@ -1,0 +1,83 @@
+<%# locals: (account:) %>
+
+<% suggestions = AssetLink.suggestions_for(account).includes(entry: :account).reverse_chronological.to_a %>
+
+<% if suggestions.any? %>
+  <%= render DS::Card.new(class: "gap-3", id: dom_id(account, :asset_link_suggestions)) do %>
+    <div class="flex flex-wrap items-start justify-between gap-2">
+      <div class="space-y-1">
+        <h3 class="text-sm font-medium text-primary"><%= t(".title", count: suggestions.size) %></h3>
+        <p class="text-xs text-secondary"><%= t(account.vehicle? ? ".hint_vehicle" : ".hint_property") %></p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <%= render DS::Button.new(
+          text: t(".confirm_all"),
+          icon: "check-check",
+          variant: :outline,
+          size: :sm,
+          href: confirm_all_asset_links_path(account_id: account.id),
+          method: :patch,
+          frame: :_top
+        ) %>
+        <%= render DS::Button.new(
+          text: t(".reject_all"),
+          icon: "x",
+          variant: :ghost,
+          size: :sm,
+          href: reject_all_asset_links_path(account_id: account.id),
+          method: :delete,
+          frame: :_top,
+          confirm: CustomConfirm.new(title: t(".reject_all_confirm_title"), body: t(".reject_all_confirm_body"), btn_text: t(".reject_all"), destructive: true)
+        ) %>
+      </div>
+    </div>
+
+    <ul class="divide-y divide-primary">
+      <% suggestions.each do |record| %>
+        <% entry = record.entry %>
+        <li class="flex items-center justify-between gap-3 py-2">
+          <div class="flex items-center gap-3 min-w-0">
+            <%= icon asset_record_icon(record), size: "sm" %>
+            <div class="min-w-0">
+              <p class="text-sm text-primary truncate"><%= asset_record_title(record) %></p>
+              <p class="text-xs text-secondary truncate">
+                <% if entry.nil? %>
+                  <%= t(".no_charge") %>
+                <% elsif record.pending? %>
+                  <%= t(".from_charge", name: entry.name, date: format_date(entry.date), account: entry.account.name) %>
+                <% else %>
+                  <%= t(".matched", date: format_date(record.date), amount: format_money(record.amount_money), name: entry.name, charge_date: format_date(entry.date)) %>
+                <% end %>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0">
+            <% if entry %>
+              <span class="text-sm text-primary privacy-sensitive mr-2"><%= format_money(entry.amount_money) %></span>
+            <% end %>
+            <%= render DS::Link.new(text: t(".review"), variant: :ghost, size: :sm, href: asset_record_edit_path(record), frame: :modal) %>
+            <%= render DS::Button.new(
+              icon: "check",
+              variant: :icon,
+              size: :sm,
+              href: confirm_asset_link_path(record),
+              method: :patch,
+              frame: :_top,
+              aria_label: t(".confirm")
+            ) %>
+            <%= render DS::Button.new(
+              icon: "x",
+              variant: :icon,
+              size: :sm,
+              href: reject_asset_link_path(record),
+              method: :delete,
+              frame: :_top,
+              aria_label: t(".reject")
+            ) %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

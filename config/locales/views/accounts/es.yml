@@ -93,6 +93,7 @@ es:
         refuels: Repostajes
         running_costs: Gastos
         workshop: Taller
+        expenses: Gastos
         statements: Extractos
       activity:
         amount: Cantidad

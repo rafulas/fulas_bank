@@ -33,6 +33,10 @@ class RuleJob < ApplicationJob
       # Apply the rule and get the result
       result = rule.apply(ignore_attribute_locks: ignore_attribute_locks, rule_run: rule_run)
 
+      # A rule may have just given charges a category such as "Combustible":
+      # propose them for the vehicle or the property right away.
+      AssetLinker.run_quietly(rule.family)
+
       if result.is_a?(Hash) && result[:async]
         # Async actions were executed
         transactions_processed = result[:modified_count] || 0

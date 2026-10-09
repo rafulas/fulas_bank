@@ -289,7 +289,7 @@ class Vehicle::RoadtripImport
     end
 
     def existing_keys
-      Set.new(vehicle.logs.map { |log| key_for(log) })
+      Set.new(vehicle.logs.settled.map { |log| key_for(log) })
     end
 
     def key_for(record)

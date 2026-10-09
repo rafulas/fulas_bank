@@ -1,0 +1,75 @@
+---
+en:
+  properties:
+    tabs:
+      expenses:
+        hint: Mortgage, insurance, renovations, community fees, property tax… linked to the bank charge that paid them.
+        add: Add expense
+        empty_title: No expenses yet
+        empty_description: Link the property's payments here (from the transaction itself or with "Search the bank") to see what it costs.
+        total: Total expenses
+        this_year: Spent in %{year}
+        by_kind: By kind
+        title: Property expenses
+        date: Date
+        kind: Kind
+        notes: Notes
+        amount: Amount
+        bank: Bank
+        detail_column: Detail
+    expenses:
+      kinds:
+        mortgage: Mortgage
+        insurance: Insurance
+        renovation: Renovations
+        maintenance: Maintenance and repairs
+        community: Community fees
+        tax: Property tax
+        utilities: Utilities
+        furniture: Furniture and decor
+        other: Other
+      bank_link:
+        linked: Linked
+        link: Link
+        suggested: Suggested
+        suggested_hint: "Matched by the app with \"%{name}\". Confirm it in the suggestions box."
+      detail_link:
+        detail: View
+        attachments:
+          one: 1 attachment
+          other: "%{count} attachments"
+      attachments:
+        title:
+          one: 1 attachment
+          other: "%{count} attachments"
+        open: Open %{filename}
+        download: Download %{filename}
+        delete: Delete %{filename}
+        resource: file
+      form:
+        kind: Kind of expense
+        date: Date
+        amount: Amount
+        bank_charge: Bank charge
+        no_bank_charge: Not linked
+        bank_charge_hint: Pick the transaction that paid for it so the cost is not counted twice. Charges with similar dates and amounts are offered.
+        notes: Notes
+        attachments: Attach files
+        attachments_hint: Invoice or receipt as a PDF or photo. Up to %{count} files of %{size} MB at most.
+        submit: Save
+        delete: Delete
+        resource: expense
+      new:
+        title: New property expense
+      edit:
+        title: Edit property expense
+        suggested: The app linked this expense to a bank charge. Check the kind and amount and press Save to confirm it.
+      create:
+        success: Expense saved
+      update:
+        success: Expense updated
+      destroy:
+        success: Expense deleted
+    expense_attachments:
+      destroy:
+        success: File deleted

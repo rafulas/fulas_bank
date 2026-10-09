@@ -1,11 +1,16 @@
 import { Controller } from "@hotwired/stimulus";
 
-// Reloads the "Bank charge" options of a vehicle log form whenever its date
+// Reloads the "Bank charge" options of a vehicle log (or property expense)
+// form whenever its date
 // or amounts change, so the suggested charges are the ones around the date
 // and amount being entered rather than those of the day the form was opened.
 export default class extends Controller {
   static targets = ["select"];
-  static values = { url: String };
+  // `scope` is the form's parameter prefix: vehicle_log or property_expense.
+  static values = {
+    url: String,
+    scope: { type: String, default: "vehicle_log" },
+  };
 
   refresh(event) {
     if (event.target === this.selectTarget) return;
@@ -45,7 +50,9 @@ export default class extends Controller {
   }
 
   field(name) {
-    const input = this.element.querySelector(`[name="vehicle_log[${name}]"]`);
+    const input = this.element.querySelector(
+      `[name="${this.scopeValue}[${name}]"]`,
+    );
     return input ? input.value : "";
   }
 }

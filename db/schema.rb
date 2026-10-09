@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -251,6 +251,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
     t.datetime "updated_at", null: false
     t.index ["download_token_digest"], name: "index_archived_exports_on_download_token_digest", unique: true
     t.index ["expires_at"], name: "index_archived_exports_on_expires_at"
+  end
+
+  create_table "asset_link_rejections", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id", null: false
+    t.datetime "created_at", null: false
+    t.uuid "entry_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_asset_link_rejections_on_account_id"
+    t.index ["entry_id", "account_id"], name: "index_asset_link_rejections_on_entry_id_and_account_id", unique: true
   end
 
   create_table "balances", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -1978,6 +1987,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
     t.check_constraint "avm_provider IS NULL OR (avm_provider::text = ANY (ARRAY['rentcast'::character varying::text, 'realie'::character varying::text]))", name: "properties_avm_provider_check"
   end
 
+  create_table "property_expenses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.date "date", null: false
+    t.uuid "entry_id"
+    t.string "kind", null: false
+    t.text "notes"
+    t.uuid "property_id", null: false
+    t.string "suggestion"
+    t.datetime "updated_at", null: false
+    t.index ["entry_id"], name: "index_property_expenses_on_entry_id", unique: true
+    t.index ["property_id", "date"], name: "index_property_expenses_on_property_id_and_date"
+    t.index ["property_id"], name: "index_property_expenses_on_property_id"
+    t.check_constraint "amount >= 0::numeric", name: "chk_property_expenses_amount_non_negative"
+    t.check_constraint "suggestion IS NULL OR (suggestion::text = ANY (ARRAY['link'::character varying::text, 'new'::character varying::text]))", name: "chk_property_expenses_suggestion"
+  end
+
   create_table "provider_request_counts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.integer "count", default: 0, null: false
     t.datetime "created_at", null: false
@@ -2893,6 +2920,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
     t.integer "odometer"
     t.decimal "quantity", precision: 10, scale: 3
     t.decimal "unit_price", precision: 10, scale: 4
+    t.string "suggestion"
     t.datetime "updated_at", null: false
     t.uuid "vehicle_id", null: false
     t.index ["entry_id"], name: "index_vehicle_logs_on_entry_id", unique: true
@@ -2901,6 +2929,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
     t.index ["vehicle_id"], name: "index_vehicle_logs_on_vehicle_id"
     t.check_constraint "amount >= 0::numeric", name: "chk_vehicle_logs_amount_non_negative"
     t.check_constraint "kind::text = ANY (ARRAY['fuel'::character varying::text, 'service'::character varying::text, 'expense'::character varying::text])", name: "chk_vehicle_logs_kind"
+    t.check_constraint "suggestion IS NULL OR (suggestion::text = ANY (ARRAY['link'::character varying::text, 'new'::character varying::text]))", name: "chk_vehicle_logs_suggestion"
   end
 
   create_table "vehicle_maintenance_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -2998,6 +3027,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
   add_foreign_key "akahu_accounts", "akahu_items"
   add_foreign_key "akahu_items", "families"
   add_foreign_key "api_keys", "users"
+  add_foreign_key "asset_link_rejections", "accounts", on_delete: :cascade
+  add_foreign_key "asset_link_rejections", "entries", on_delete: :cascade
   add_foreign_key "balances", "accounts", on_delete: :cascade
   add_foreign_key "binance_accounts", "binance_items"
   add_foreign_key "binance_items", "families"
@@ -3110,6 +3141,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_180000) do
   add_foreign_key "plaid_accounts", "plaid_items"
   add_foreign_key "plaid_items", "families"
   add_foreign_key "plaid_items", "users", column: "owner_id", on_delete: :nullify
+  add_foreign_key "property_expenses", "entries", on_delete: :nullify
+  add_foreign_key "property_expenses", "properties", on_delete: :cascade
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "questrade_accounts", "questrade_items"
   add_foreign_key "questrade_items", "families"

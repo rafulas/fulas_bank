@@ -706,6 +706,13 @@ Rails.application.routes.draw do
       get :address
       patch :update_address
     end
+
+    scope module: :properties do
+      resources :expenses, only: %i[new create edit update destroy] do
+        get :bank_charges, on: :collection
+        resources :attachments, only: %i[show destroy], controller: "expense_attachments"
+      end
+    end
   end
   resources :vehicles, only: %i[new create edit update] do
     scope module: :vehicles do
@@ -720,6 +727,20 @@ Rails.application.routes.draw do
   resources :credit_cards, only: %i[new create edit update]
   resources :loans, only: %i[new create edit update]
   resources :loan_payment_links, only: %i[create destroy]
+  # Links between bank charges and vehicle logs or property expenses that the
+  # app proposed (AssetLinker): confirm, reject or undo them, and search again.
+  resources :asset_links, only: [] do
+    member do
+      patch :confirm
+      delete :reject
+      delete :unlink
+    end
+    collection do
+      post :search
+      patch :confirm_all
+      delete :reject_all
+    end
+  end
   resources :cryptos, only: %i[new create edit update]
   resources :other_assets, only: %i[new create edit update]
   resources :other_liabilities, only: %i[new create edit update]

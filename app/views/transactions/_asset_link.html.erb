@@ -1,0 +1,54 @@
+<%# locals: (entry:, record:, accounts:) %>
+
+<div class="px-3 py-2 space-y-3">
+  <% if record %>
+    <% account = record.asset_account %>
+    <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-primary bg-container">
+      <div class="flex items-start gap-3 min-w-0">
+        <%= icon asset_record_icon(record), size: "md" %>
+        <div class="min-w-0 space-y-1">
+          <p class="text-sm font-medium text-primary truncate"><%= t(".linked_to", name: account.name) %></p>
+          <p class="text-xs text-secondary">
+            <%= asset_record_title(record) %> · <%= format_date(record.date) %> · <span class="privacy-sensitive"><%= format_money(record.amount_money) %></span>
+          </p>
+          <% if record.suggested? %>
+            <%= render DS::Pill.new(label: t(".suggested"), tone: :warning, marker: false) %>
+          <% end %>
+        </div>
+      </div>
+      <%= render DS::Link.new(text: t(".view"), variant: :ghost, size: :sm, href: asset_record_edit_path(record), frame: :modal) %>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <% if record.suggested? %>
+        <%= render DS::Button.new(text: t(".confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_asset_link_path(record), method: :patch, frame: :_top) %>
+        <%= render DS::Button.new(text: t(".reject"), icon: "x", variant: :outline, size: :sm, href: reject_asset_link_path(record), method: :delete, frame: :_top) %>
+      <% else %>
+        <%= render DS::Button.new(
+          text: t(".unlink"),
+          icon: "unlink",
+          variant: :outline,
+          size: :sm,
+          href: unlink_asset_link_path(record),
+          method: :delete,
+          frame: :_top,
+          confirm: CustomConfirm.new(title: t(".unlink_confirm_title"), body: t(".unlink_confirm_body", name: account.name), btn_text: t(".unlink"))
+        ) %>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <div class="flex flex-wrap items-center gap-2">
+      <% accounts.each do |account| %>
+        <%= render DS::Link.new(
+          text: t(".link_to", name: account.name),
+          icon: account.vehicle? ? "car-front" : "home",
+          variant: :outline,
+          size: :sm,
+          href: asset_link_new_path(account, entry),
+          frame: :modal
+        ) %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

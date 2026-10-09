@@ -93,6 +93,7 @@ en:
         refuels: Refuels
         running_costs: Running costs
         workshop: Workshop
+        expenses: Expenses
         statements: Statements
       activity:
         amount: Amount

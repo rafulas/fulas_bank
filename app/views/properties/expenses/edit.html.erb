@@ -1,0 +1,9 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <% if @expense.suggested? %>
+      <%= render DS::Alert.new(message: t(".suggested"), variant: :info) %>
+    <% end %>
+    <%= render "form", account: @account, expense: @expense %>
+  <% end %>
+<% end %>

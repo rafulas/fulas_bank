@@ -1,0 +1,55 @@
+<%# locals: (account:, expense:) %>
+
+<% url = expense.persisted? ? property_expense_path(account, expense) : property_expenses_path(account) %>
+
+<%= styled_form_with model: expense, scope: :property_expense, url: url, class: "space-y-4", multipart: true,
+      data: {
+        turbo_frame: :_top,
+        controller: "vehicle-log-bank-charges",
+        action: "change->vehicle-log-bank-charges#refresh",
+        vehicle_log_bank_charges_url_value: bank_charges_property_expenses_path(account, expense_id: expense.id),
+        vehicle_log_bank_charges_scope_value: "property_expense"
+      } do |form| %>
+  <% if expense.errors.any? %>
+    <%= render DS::Alert.new(message: expense.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.select :kind, property_expense_kind_options, { label: t(".kind") }, required: true %>
+    <%= form.date_field :date, label: t(".date"), required: true %>
+    <%= form.money_field :amount, label: t(".amount"), disable_currency: true %>
+
+    <%= form.select :entry_id,
+                    property_expense_entry_options(expense),
+                    { label: t(".bank_charge"), include_blank: t(".no_bank_charge") },
+                    { data: { vehicle_log_bank_charges_target: "select" } } %>
+    <p class="text-xs text-secondary"><%= t(".bank_charge_hint") %></p>
+
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+
+    <%= form.file_field :attachments,
+                        label: t(".attachments"),
+                        multiple: true,
+                        accept: Property::Expense::ATTACHMENT_TYPES.join(",") %>
+    <p class="text-xs text-secondary">
+      <%= t(".attachments_hint", count: Property::Expense::MAX_ATTACHMENTS, size: Property::Expense::MAX_ATTACHMENT_SIZE / 1.megabyte) %>
+    </p>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if expense.persisted? %>
+  <%= render "properties/expenses/attachments", account: account, expense: expense %>
+
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: property_expense_path(account, expense),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

@@ -21,6 +21,7 @@ class Family::Syncer
 
   def perform_post_sync
     family.auto_match_transfers!
+    AssetLinker.run_quietly(family)
 
     Rails.logger.info("Applying rules for family #{family.id}")
     family.rules.where(active: true).each do |rule|

@@ -15,7 +15,7 @@ class Vehicle::Logbook
   end
 
   def logs
-    @logs ||= vehicle.logs.includes(:maintenance_item, entry: :account).with_attached_attachments.chronological.to_a
+    @logs ||= vehicle.logs.settled.includes(:maintenance_item, entry: :account).with_attached_attachments.chronological.to_a
   end
 
   def empty?

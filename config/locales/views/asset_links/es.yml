@@ -1,0 +1,59 @@
+---
+es:
+  asset_links:
+    suggestions:
+      title:
+        one: 1 cargo del banco por revisar
+        other: "%{count} cargos del banco por revisar"
+      hint_vehicle: La app ha encontrado estos cargos que parecen de este coche. Confírmalos o recházalos. Con «Revisar» puedes añadir los km y los litros, o corregir el total si echaste menos combustible del que pagaste.
+      hint_property: La app ha encontrado estos cargos que parecen de esta vivienda. Confírmalos o recházalos. Con «Revisar» puedes cambiar el tipo de gasto o añadir notas y facturas.
+      from_charge: "Creado a partir del cargo «%{name}» del %{date} (%{account})"
+      matched: "Tu apunte del %{date} (%{amount}) emparejado con «%{name}» del %{charge_date}"
+      no_charge: El cargo del banco ya no existe
+      review: Revisar
+      confirm: Confirmar
+      reject: Rechazar
+      confirm_all: Confirmar todas
+      reject_all: Rechazar todas
+      reject_all_confirm_title: "¿Rechazar todas las sugerencias?"
+      reject_all_confirm_body: Los apuntes creados por la app se borran y los cargos no se volverán a proponer para esta cuenta. Tus propios apuntes no se tocan.
+    search_button:
+      label: Buscar en el banco
+      hint: Busca en todos tus movimientos cargos que parezcan de esta cuenta, por categoría, etiqueta y fecha.
+    confirm:
+      success: Vínculo confirmado
+    reject:
+      success: Sugerencia rechazada. Ese cargo no se volverá a proponer aquí.
+    unlink:
+      success: Movimiento desvinculado
+    confirm_all:
+      success: Sugerencias confirmadas
+    reject_all:
+      success: Sugerencias rechazadas
+    search:
+      success:
+        zero: No hay cargos nuevos que vincular
+        one: 1 cargo nuevo por revisar
+        other: "%{count} cargos nuevos por revisar"
+  vehicles:
+    logs:
+      bank_link:
+        suggested: Sugerido
+        suggested_hint: "Emparejado por la app con «%{name}». Confírmalo en la caja de sugerencias del Resumen."
+      edit:
+        suggested: La app ha vinculado este apunte con un cargo del banco. Revisa los datos y pulsa Guardar para confirmarlo.
+        suggested_fuel: La app ha creado este repostaje a partir de un cargo del banco. Añade los km y los litros y pulsa Guardar para confirmarlo. Si echaste menos combustible del que pagaste (descuentos, otras compras), corrige el total; el cargo del banco no cambia.
+  transactions:
+    show:
+      asset_link: Coche o vivienda
+    asset_link:
+      hint: "¿Es un gasto de tu coche o de tu vivienda? Vincúlalo para verlo en su ficha sin contarlo dos veces."
+      link_to: Vincular a %{name}
+      linked_to: Vinculado a %{name}
+      suggested: Sugerido por la app
+      view: Ver
+      confirm: Confirmar
+      reject: Rechazar
+      unlink: Desvincular
+      unlink_confirm_title: "¿Desvincular este movimiento?"
+      unlink_confirm_body: El apunte de %{name} se queda, pero sin este cargo del banco.

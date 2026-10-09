@@ -15,6 +15,7 @@ class Property < ApplicationRecord
   }.freeze
 
   has_one :address, as: :addressable, dependent: :destroy
+  has_many :expenses, class_name: "Property::Expense", dependent: :destroy
 
   accepts_nested_attributes_for :address
 

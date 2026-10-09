@@ -3,6 +3,8 @@
 <% vehicle = account.vehicle %>
 
 <div class="space-y-4">
+  <%= render "asset_links/suggestions", account: account %>
+
   <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
     <%= summary_card title: t(".make_model") do %>
       <%= [vehicle.make, vehicle.model].compact.join(" ").presence || t(".unknown") %>
