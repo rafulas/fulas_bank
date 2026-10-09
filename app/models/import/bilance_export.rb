@@ -52,8 +52,10 @@ class Import::BilanceExport
 
   # Adjusts the rows built from the CSV (Import#generate_rows_from_csv):
   # subcategories and both sides of each transfer.
+  # Rows are numbered again at the end: a row number is unique per import,
+  # and a transfer's second side is an extra row.
   def adjust(mapped_rows, csv_rows)
-    mapped_rows.zip(csv_rows).flat_map do |row, csv_row|
+    adjusted = mapped_rows.zip(csv_rows).flat_map do |row, csv_row|
       row = row.merge(category: category_for(row, csv_row))
 
       origin, destination = transfer_accounts(csv_row)
@@ -74,6 +76,8 @@ class Import::BilanceExport
         [ row ]
       end
     end
+
+    adjusted.each.with_index(1).map { |row, index| row.merge(source_row_number: index) }
   end
 
   private
