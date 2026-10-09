@@ -19,9 +19,11 @@ if [[ "${1:-}" == "--container" ]]; then
   exec sleep infinity
 fi
 
-if [[ ! -f tmp/.probar-setup-done ]] || ! bundle check > /dev/null 2>&1; then
-  echo "El Codespace todavía se está instalando. Espera a que termine y vuelve a ejecutar bin/probar."
-  exit 1
+# Installs whatever gems are missing (e.g. after a git pull that added one)
+# instead of refusing to start.
+if ! bundle check > /dev/null 2>&1; then
+  echo "Instalando lo que falta (solo esta vez)…"
+  bundle install
 fi
 
 if pgrep -f "foreman start -f Procfile" > /dev/null; then
