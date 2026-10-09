@@ -1,0 +1,34 @@
+<%# locals: (forecast:, account:) %>
+
+<% flows = forecast.flows %>
+<% flows = flows.select { |flow| flow.account == account } if account %>
+<% variable = account ? forecast.variable_monthly.slice(account) : forecast.variable_monthly %>
+
+<%= render DS::Card.new(class: "gap-3") do %>
+  <h3 class="text-sm font-medium text-primary"><%= t(".title") %></h3>
+
+  <% if variable.any? %>
+    <div class="text-xs text-secondary space-y-1">
+      <% variable.each do |variable_account, monthly| %>
+        <p><%= t(monthly.positive? ? ".variable_spending" : ".variable_income", account: variable_account.name, amount: format_money(Money.new(monthly.abs, variable_account.currency))) %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if flows.empty? %>
+    <p class="text-sm text-secondary"><%= t(".empty") %></p>
+  <% else %>
+    <%= render DS::Table.new(rows: flows.first(ForecastsController::MAX_LISTED_FLOWS), label: t(".title")) do |table| %>
+      <% table.with_column(t(".date")) { |flow| format_date(flow.date) } %>
+      <% table.with_column(t(".name")) { |flow| flow.name } %>
+      <% table.with_column(t(".account")) { |flow| flow.account&.name || t(".no_account") } %>
+      <% table.with_column(t(".source")) { |flow| t(".sources.#{flow.source}") } %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") do |flow| %>
+        <span class="<%= flow.inflow? ? "text-success" : "text-primary" %>"><%= forecast_signed_amount(-flow.amount, flow.account&.currency || forecast.currency) %></span>
+      <% end %>
+    <% end %>
+    <% if flows.size > ForecastsController::MAX_LISTED_FLOWS %>
+      <p class="text-xs text-secondary"><%= t(".truncated", count: ForecastsController::MAX_LISTED_FLOWS) %></p>
+    <% end %>
+  <% end %>
+<% end %>

@@ -1,0 +1,9 @@
+---
+es:
+  activerecord:
+    attributes:
+      forecast_item:
+        name: Concepto
+        amount: Importe
+        date: Fecha
+        account: Cuenta

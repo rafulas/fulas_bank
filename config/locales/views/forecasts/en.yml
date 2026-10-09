@@ -1,0 +1,73 @@
+---
+en:
+  forecasts:
+    show:
+      title: Forecast
+      subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and your usual variable spending.
+      no_accounts_title: No accounts to forecast
+      no_accounts_description: The forecast uses your current accounts and credit cards. Add one to see its expected balance.
+      periods:
+        1m: 1 month
+        3m: 3 months
+        6m: 6 months
+        1y: 1 year
+        2y: 2 years
+        5y: 5 years
+      until: Until
+      account: Account
+      all_accounts: All accounts
+      variable: Variable spending
+      variable_on: Include the average
+      variable_off: Recurring and one-off only
+      today: Balance today
+      on_date: Expected on %{date}
+      difference: Difference
+      lowest: Lowest point
+      lowest_on: on %{date}
+      total_hint: The total adds what is in current accounts and subtracts what is owed on cards.
+      chart_total: Expected balance of all accounts
+      chart_account: Expected balance of %{name}
+      accounts_title: By account
+      planned_title: Expected one-off movements
+      planned_hint: Expenses or income you know are coming and are not recurring (a tax refund, a trip, a tuition fee…).
+      planned_add: Add
+      edit: Edit
+    flows:
+      title: Expected movements
+      empty: No recurring or one-off movements expected in this period.
+      variable_spending: "Variable spending of %{account}: about %{amount} a month (average of recent months without recurring movements), spread day by day."
+      variable_income: "Variable income of %{account}: about %{amount} a month (average of recent months without recurring movements), spread day by day."
+      date: Date
+      name: Description
+      account: Account
+      source: Source
+      amount: Amount
+      no_account: No account
+      sources:
+        recurring: Recurring
+        planned: One-off
+      truncated: Showing the first %{count} movements; the chart and balances take all of them into account.
+  forecast_items:
+    form:
+      name: Description
+      name_placeholder: Tax refund
+      nature: Type
+      outflow: Expense
+      inflow: Income
+      amount: Amount
+      date: Expected date
+      account: Account
+      notes: Notes
+      submit: Save
+      delete: Delete
+      resource: expected movement
+    new:
+      title: New expected movement
+    edit:
+      title: Edit expected movement
+    create:
+      success: Expected movement saved
+    update:
+      success: Expected movement updated
+    destroy:
+      success: Expected movement deleted

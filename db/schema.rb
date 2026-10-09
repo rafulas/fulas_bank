@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1121,6 +1121,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
     t.datetime "updated_at", null: false
     t.index ["family_id"], name: "index_fio_items_on_family_id"
     t.index ["status"], name: "index_fio_items_on_status"
+  end
+
+  create_table "forecast_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id", null: false
+    t.decimal "amount", precision: 19, scale: 4, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.date "date", null: false
+    t.uuid "family_id", null: false
+    t.string "name", null: false
+    t.string "nature", default: "outflow", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_forecast_items_on_account_id"
+    t.index ["family_id", "date"], name: "index_forecast_items_on_family_id_and_date"
+    t.index ["family_id"], name: "index_forecast_items_on_family_id"
+    t.check_constraint "amount > 0::numeric", name: "chk_forecast_items_amount_positive"
+    t.check_constraint "nature::text = ANY (ARRAY['inflow'::character varying::text, 'outflow'::character varying::text])", name: "chk_forecast_items_nature"
   end
 
   create_table "goal_accounts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3089,6 +3107,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
   add_foreign_key "financekit_transactions", "financekit_accounts", on_delete: :nullify
   add_foreign_key "fio_accounts", "fio_items"
   add_foreign_key "fio_items", "families"
+  add_foreign_key "forecast_items", "accounts", on_delete: :cascade
+  add_foreign_key "forecast_items", "families", on_delete: :cascade
   add_foreign_key "goal_accounts", "accounts", on_delete: :restrict
   add_foreign_key "goal_accounts", "goals", on_delete: :cascade
   add_foreign_key "goal_pledges", "accounts", on_delete: :restrict

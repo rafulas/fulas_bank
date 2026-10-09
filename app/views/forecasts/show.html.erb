@@ -1,0 +1,118 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% forecast = @forecast %>
+<% selected = @account %>
+<% today_value = selected ? Money.new(selected.balance, selected.currency) : forecast.total_on(Date.current) %>
+<% end_value = selected ? forecast.balances_on(@through)[selected] : forecast.total_on(@through) %>
+<% lowest_date, lowest_value = forecast.lowest_total %>
+
+<div class="space-y-4 pb-6 lg:pb-12">
+  <% if @accounts.empty? %>
+    <%= render DS::EmptyState.new(icon: "trending-up", title: t(".no_accounts_title"), description: t(".no_accounts_description")) %>
+  <% else %>
+    <div class="flex flex-wrap items-center gap-2">
+      <% ForecastsController::PERIODS.each_key do |period| %>
+        <%= render DS::Link.new(
+          text: t(".periods.#{period}"),
+          variant: @period == period ? :primary : :outline,
+          size: :sm,
+          href: forecast_path(period: period, account_id: selected&.id, variable: (@include_variable ? nil : "0"))
+        ) %>
+      <% end %>
+    </div>
+
+    <%= form_with url: forecast_path, method: :get,
+          data: { controller: "auto-submit-form" },
+          class: "flex flex-wrap items-end gap-2" do |form| %>
+      <label class="text-sm text-secondary flex flex-col gap-1">
+        <%= t(".until") %>
+        <%= form.date_field :until, value: @through, min: Date.current + 1,
+              class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" %>
+      </label>
+      <label class="text-sm text-secondary flex flex-col gap-1">
+        <%= t(".account") %>
+        <%= form.select :account_id,
+              options_for_select([ [ t(".all_accounts"), "" ] ] + @accounts.map { |account| [ account.name, account.id ] }, selected&.id),
+              {},
+              { class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" } %>
+      </label>
+      <label class="text-sm text-secondary flex flex-col gap-1">
+        <%= t(".variable") %>
+        <%= form.select :variable,
+              options_for_select([ [ t(".variable_on"), "1" ], [ t(".variable_off"), "0" ] ], @include_variable ? "1" : "0"),
+              {},
+              { class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" } %>
+      </label>
+    <% end %>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <%= summary_card title: t(".today") do %>
+        <%= format_money today_value %>
+      <% end %>
+      <%= summary_card title: t(".on_date", date: format_date(@through)) do %>
+        <%= format_money end_value %>
+      <% end %>
+      <%= summary_card title: t(".difference") do %>
+        <%= format_money(end_value - today_value) %>
+      <% end %>
+      <%= summary_card title: t(".lowest") do %>
+        <% if lowest_value %>
+          <%= format_money lowest_value %>
+          <span class="block text-xs text-secondary font-normal mt-1"><%= t(".lowest_on", date: format_date(lowest_date)) %></span>
+        <% end %>
+      <% end %>
+    </div>
+    <% if selected.nil? %>
+      <p class="text-xs text-secondary"><%= t(".total_hint") %></p>
+    <% end %>
+
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <h3 class="text-sm font-medium text-primary"><%= selected ? t(".chart_account", name: selected.name) : t(".chart_total") %></h3>
+      <div id="forecast-chart" class="h-64 w-full"
+           data-controller="time-series-chart"
+           data-time-series-chart-data-value="<%= forecast.series(account: selected).to_json %>"></div>
+    <% end %>
+
+    <% if selected.nil? %>
+      <%= render DS::Table.new(rows: @accounts, label: t(".accounts_title")) do |table| %>
+        <% end_balances = forecast.balances_on(@through) %>
+        <% table.with_column(t(".account")) { |account| link_to account.name, forecast_path(account_id: account.id, period: @period, until: (@through unless @period), variable: (@include_variable ? nil : "0")), class: "text-primary hover:underline" } %>
+        <% table.with_column(t(".today"), numeric: true, class: "privacy-sensitive") { |account| format_money(Money.new(account.balance, account.currency)) } %>
+        <% table.with_column(t(".on_date", date: format_date(@through)), numeric: true, class: "privacy-sensitive") { |account| format_money(end_balances[account]) } %>
+      <% end %>
+    <% end %>
+
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="space-y-1">
+          <h3 class="text-sm font-medium text-primary"><%= t(".planned_title") %></h3>
+          <p class="text-xs text-secondary"><%= t(".planned_hint") %></p>
+        </div>
+        <%= render DS::Link.new(text: t(".planned_add"), icon: "plus", size: :sm, href: new_forecast_item_path, frame: :modal) %>
+      </div>
+      <% if @forecast_items.any? %>
+        <ul class="divide-y divide-primary">
+          <% @forecast_items.each do |item| %>
+            <li class="flex items-center justify-between gap-3 py-2">
+              <div class="min-w-0">
+                <p class="text-sm text-primary truncate"><%= item.name %></p>
+                <p class="text-xs text-secondary"><%= format_date(item.date) %> · <%= item.account.name %></p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-sm privacy-sensitive <%= item.outflow? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(-item.signed_amount, item.currency) %></span>
+                <%= render DS::Link.new(text: t(".edit"), variant: :ghost, size: :sm, href: edit_forecast_item_path(item), frame: :modal) %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% end %>
+
+    <%= render "forecasts/flows", forecast: forecast, account: selected %>
+  <% end %>
+</div>
