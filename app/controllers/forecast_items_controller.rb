@@ -43,13 +43,14 @@ class ForecastItemsController < ApplicationController
     end
     helper_method :forecast_accounts
 
-    # The account must be one of the user's forecast accounts; anything else
-    # is dropped and fails validation.
+    # The account is not mass-assigned: it must be one of the user's forecast
+    # accounts, and anything else is dropped and fails validation.
     def item_params
-      permitted = params.require(:forecast_item).permit(:name, :nature, :amount, :date, :account_id, :notes)
-      return permitted unless permitted.key?(:account_id)
+      permitted = params.require(:forecast_item).permit(:name, :nature, :amount, :date, :notes)
+      account_param = params[:forecast_item]
+      return permitted unless account_param.respond_to?(:key?) && account_param.key?(:account_id)
 
-      account = forecast_accounts.find { |candidate| candidate.id == permitted[:account_id] }
+      account = forecast_accounts.find { |candidate| candidate.id == account_param[:account_id].to_s }
       permitted.merge(account_id: account&.id, currency: account&.currency)
     end
 end
