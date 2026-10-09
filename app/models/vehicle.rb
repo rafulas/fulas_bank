@@ -15,7 +15,7 @@ class Vehicle < ApplicationRecord
   has_many :maintenance_items, class_name: "Vehicle::MaintenanceItem", dependent: :destroy
 
   validates :fuel_type, inclusion: { in: FUEL_TYPES }, allow_blank: true
-  validate :purchase_price_not_negative
+  validates :purchase_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   normalizes :license_plate, with: ->(value) { value.strip.upcase.presence }
 
@@ -43,20 +43,21 @@ class Vehicle < ApplicationRecord
   end
 
   # What the car cost: the price typed in its details or, failing that, the
-  # first value the account was given.
-  def purchase_price
-    return Money.new(self[:purchase_price], account.currency) if self[:purchase_price].present?
+  # first value the account was given. (`purchase_price` stays the plain
+  # column, which the details form edits.)
+  def purchase_cost
+    return Money.new(purchase_price, account.currency) if purchase_price.present?
 
     first_valuation_amount
   end
 
   def purchase_price_recorded?
-    self[:purchase_price].present?
+    purchase_price.present?
   end
 
   # Value lost since the purchase (negative if it is worth more now).
   def depreciation
-    purchase_price - account.balance_money
+    purchase_cost - account.balance_money
   end
 
   class << self
@@ -74,13 +75,6 @@ class Vehicle < ApplicationRecord
   end
 
   private
-    # Checked on the stored number: `purchase_price` itself answers a Money.
-    def purchase_price_not_negative
-      return if self[:purchase_price].nil? || self[:purchase_price] >= 0
-
-      errors.add(:purchase_price, :greater_than_or_equal_to, count: 0)
-    end
-
     def first_valuation_amount
       account.entries.valuations.order(:date).first&.amount_money || account.balance_money
     end

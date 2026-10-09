@@ -17,7 +17,7 @@
     <% end %>
 
     <%= summary_card title: t(".purchase_price") do %>
-      <%= format_money vehicle.purchase_price %>
+      <%= format_money vehicle.purchase_cost %>
       <% unless vehicle.purchase_price_recorded? %>
         <span class="block text-xs text-secondary font-normal mt-1"><%= t(".purchase_price_hint") %></span>
       <% end %>
