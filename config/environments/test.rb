@@ -74,5 +74,9 @@ Rails.application.configure do
 
   config.autoload_paths += %w[test/support]
 
+  # The provider linking flows keep their upstream test coverage; tests of the
+  # manual-only selector switch this off themselves.
+  config.x.account_provider_links = true
+
   config.action_mailer.default_url_options = { host: "example.com" }
 end

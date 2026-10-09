@@ -114,13 +114,49 @@ class Balance::ForwardCalculator < Balance::BaseCalculator
       # earliest reconciliation and the opening anchor each reset the absolute
       # balance on their own dates via the valuation-override path, so the seed
       # only affects the pre-anchor opening day's adjustment, not later totals.
-      return [ 0, 0 ] if calculation_start_date < account.opening_anchor_date
+      if calculation_start_date < account.opening_anchor_date
+        return [ back_derived_cash_seed, 0 ] if back_derive_from_opening_anchor?
+
+        return [ 0, 0 ]
+      end
 
       cash = derive_cash_balance_on_date_from_total(
         total_balance: account.opening_anchor_balance,
         date: account.opening_anchor_date
       )
       [ cash, account.opening_anchor_balance - cash ]
+    end
+
+    # Fulas Bank: a manual account is created with the balance it has on a
+    # given day ("Saldo actual" + "Fecha del saldo actual", usually today).
+    # Statements imported afterwards often start earlier than that day. Seeding
+    # those earlier days at zero would show a made-up history that jumps to the
+    # entered balance on its date. Instead, the entered balance is treated as a
+    # known end-of-day point and the days before it are worked out backwards:
+    #
+    #   seed = entered balance - (net movements from the first day up to and
+    #                             including the anchor day)
+    #
+    # Walking forward from that seed lands exactly on the entered balance on its
+    # date, so the anchor's own reset is a no-op there and nothing is counted
+    # twice. Movements after the anchor date add on top as before.
+    #
+    # Only for cash accounts (current accounts, credit cards), whose balance is
+    # just the running sum of their movements, and only when no other valuation
+    # (a reconciliation) sits before the anchor: such a valuation already fixes
+    # the balance on its own date, and the zero seed stays correct for it.
+    def back_derive_from_opening_anchor?
+      account.balance_type == :cash &&
+        account.has_opening_anchor? &&
+        !account.entries.valuations.excluding_pending.where("entries.date < ?", account.opening_anchor_date).exists?
+    end
+
+    def back_derived_cash_seed
+      net_flows = calculation_start_date.upto(account.opening_anchor_date).sum do |date|
+        signed_entry_flows(sync_cache.get_entries(date))
+      end
+
+      account.opening_anchor_balance - net_flows
     end
 
     # The balance record for the day immediately before the incremental window.

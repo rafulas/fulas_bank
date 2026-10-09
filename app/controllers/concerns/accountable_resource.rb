@@ -7,6 +7,8 @@ module AccountableResource
     before_action :set_account, only: [ :show ]
     before_action :set_manageable_account, only: [ :edit, :update ]
     before_action :set_link_options, only: :new
+
+    helper_method :show_method_selector?
   end
 
   class_methods do
@@ -128,7 +130,19 @@ module AccountableResource
   end
 
   private
+    # The "how would you like to add it?" step only makes sense when there is
+    # something besides typing the balance. With bank linking switched off
+    # (see config.x.account_provider_links) the form opens straight away.
+    def show_method_selector?
+      params[:step] == "method_select" && Rails.configuration.x.account_provider_links
+    end
+
     def set_link_options
+      unless Rails.configuration.x.account_provider_links
+        @provider_configs = []
+        return
+      end
+
       account_type_name = accountable_type.name
 
       # Get all available provider configs dynamically for this account type

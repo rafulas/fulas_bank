@@ -105,4 +105,20 @@ class DepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", new_depository_path, count: 1
   end
+
+  test "with bank linking switched off the account form opens without the method selector" do
+    original = Rails.configuration.x.account_provider_links
+    Rails.configuration.x.account_provider_links = false
+    Provider::Registry.stubs(:plaid_provider_for_region).returns(stub("plaid"))
+    Family.any_instance.stubs(:can_connect_plaid_us?).returns(true)
+
+    get new_depository_path(step: "method_select")
+
+    assert_response :success
+    assert_select "a[href=?]", new_plaid_item_path(region: "us", accountable_type: "Depository"), count: 0
+    assert_select "form[action=?]", depositories_path
+    assert_select "input[name=?][value=?]", "account[opening_balance_date]", Time.zone.today.iso8601
+  ensure
+    Rails.configuration.x.account_provider_links = original
+  end
 end
