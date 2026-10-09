@@ -58,6 +58,10 @@ en:
       merchant_search_placeholder: Search or create merchant
       submit: Add transaction
       tag_search_placeholder: Search or create tag
+      recent_tags: Recent tags
+      all_tags: All tags
+      tags_accept: Save
+      tags_cancel: Cancel
       tags_label: Tags
       transfer: Transfer
     create:

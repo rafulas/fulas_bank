@@ -1,10 +1,19 @@
 class TagsController < ApplicationController
-  before_action :set_tag, only: %i[edit update destroy]
+  include Periodable
+
+  skip_before_action :set_period, except: :show
+  before_action :set_tag, only: %i[show edit update destroy]
 
   def index
     @tags = Current.family.tags.alphabetically
 
     render layout: "settings"
+  end
+
+  # Everything carrying the tag: total for the period, by category, the last
+  # months and the transactions.
+  def show
+    @report = Tag::Report.new(@tag, period: @period, user: Current.user)
   end
 
   def new

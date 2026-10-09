@@ -10,6 +10,7 @@ export default class extends Controller {
     "selectionContainer",
     "createForm",
     "createError",
+    "heading",
   ];
 
   static values = {
@@ -26,6 +27,7 @@ export default class extends Controller {
   connect() {
     this.creating = false;
     this.isOpen = false;
+    this.dirty = false;
     this.selectedIds = new Set(
       this.optionTargets
         .filter((option) => option.getAttribute("aria-selected") === "true")
@@ -36,7 +38,14 @@ export default class extends Controller {
   }
 
   disconnect() {
-    if (this.submitAbortController) this.submitAbortController.abort();
+    if (this.dirty) {
+      // The drawer closed with the menu still open: save what was ticked.
+      // keepalive lets the request finish after this element is gone.
+      this.dirty = false;
+      this.submitForm({ keepalive: true });
+    } else if (this.submitAbortController) {
+      this.submitAbortController.abort();
+    }
     this.stopAutoUpdate();
     if (this.resizeObserver) this.resizeObserver.disconnect();
   }
@@ -50,6 +59,8 @@ export default class extends Controller {
 
   open(focusOption = false) {
     this.isOpen = true;
+    // Snapshot so "Cancel" can put back the tags the menu opened with.
+    this.selectionAtOpen = new Set(this.selectedIds);
     this.buttonTarget.setAttribute("aria-expanded", "true");
     this.menuTarget.classList.remove("hidden");
     this.searchTarget.value = "";
@@ -70,8 +81,35 @@ export default class extends Controller {
     });
   }
 
+  // With auto-submit (the transaction drawer) toggling only changes the
+  // selection; the whole set is saved once, when the menu closes ("Accept"
+  // or a click outside). "Cancel" restores the tags the menu opened with.
+  accept(event) {
+    event?.preventDefault();
+    this.close();
+    this.buttonTarget.focus();
+  }
+
+  cancel(event) {
+    event?.preventDefault();
+    if (this.selectionAtOpen) {
+      this.selectedIds = new Set(this.selectionAtOpen);
+      this.optionTargets.forEach((option) => this.updateOption(option));
+      this.renderSelection();
+    }
+    this.dirty = false;
+    this.close();
+    this.buttonTarget.focus();
+  }
+
   close() {
+    if (!this.isOpen) return;
+
     this.isOpen = false;
+    if (this.dirty) {
+      this.dirty = false;
+      this.submitForm();
+    }
     this.stopAutoUpdate();
     this.buttonTarget.setAttribute("aria-expanded", "false");
     this.menuTarget.classList.remove("opacity-100", "translate-y-0");
@@ -99,7 +137,7 @@ export default class extends Controller {
 
     this.updateOption(option);
     this.renderSelection();
-    this.submitForm();
+    this.dirty = true;
   }
 
   filter() {
@@ -114,6 +152,10 @@ export default class extends Controller {
       option.classList.toggle("hidden", !isMatch);
 
       if (name === query) hasExactMatch = true;
+    });
+
+    this.headingTargets.forEach((heading) => {
+      heading.classList.toggle("hidden", query.length > 0);
     });
 
     const canCreate = query.length > 0 && !hasExactMatch;
@@ -172,7 +214,7 @@ export default class extends Controller {
       this.renderSelection();
       this.searchTarget.value = "";
       this.filter();
-      this.submitForm();
+      this.dirty = true;
     } finally {
       this.creating = false;
       this.createFormTarget.disabled = false;
@@ -226,7 +268,7 @@ export default class extends Controller {
     if (this.isOpen && !this.element.contains(event.target)) this.close();
   }
 
-  async submitForm() {
+  async submitForm({ keepalive = false } = {}) {
     if (!this.autoSubmitValue) return;
     if (!this.hasUpdateUrlValue || !this.updateUrlValue) return;
 
@@ -248,6 +290,7 @@ export default class extends Controller {
           tag_ids: Array.from(this.selectedIds),
         }),
         credentials: "same-origin",
+        keepalive,
         signal: abortController.signal,
       });
     } catch (error) {

@@ -57,9 +57,22 @@
            role="listbox"
            aria-multiselectable="true"
            tabindex="-1">
-        <% tags.each do |tag| %>
-          <% selected = selected_ids.include?(tag.id.to_s) %>
-          <%= render partial: "DS/tag_select/option", locals: { tag: tag, selected: selected, view_helpers: helpers } %>
+        <% if show_group_headings? %>
+          <p class="px-3 pt-1 text-xs font-medium text-secondary uppercase tracking-wide" data-tag-select-target="heading">
+            <%= helpers.t("transactions.form.recent_tags") %>
+          </p>
+        <% end %>
+        <% recent_tags.each do |tag| %>
+          <%= render partial: "DS/tag_select/option", locals: { tag: tag, selected: selected_ids.include?(tag.id.to_s), view_helpers: helpers } %>
+        <% end %>
+
+        <% if show_group_headings? %>
+          <p class="px-3 pt-2 text-xs font-medium text-secondary uppercase tracking-wide" data-tag-select-target="heading">
+            <%= helpers.t("transactions.form.all_tags") %>
+          </p>
+        <% end %>
+        <% other_tags.each do |tag| %>
+          <%= render partial: "DS/tag_select/option", locals: { tag: tag, selected: selected_ids.include?(tag.id.to_s), view_helpers: helpers } %>
         <% end %>
 
         <button type="button"
@@ -74,6 +87,23 @@
            aria-live="assertive"
            aria-atomic="true"></p>
       </div>
+
+      <% if auto_submit %>
+        <div class="flex items-center justify-end gap-2 pt-1.5 mt-1.5 border-t border-divider">
+          <%= render DS::Button.new(
+                text: helpers.t("transactions.form.tags_cancel"),
+                variant: :ghost,
+                size: :sm,
+                data: { action: "tag-select#cancel" }
+              ) %>
+          <%= render DS::Button.new(
+                text: helpers.t("transactions.form.tags_accept"),
+                variant: :primary,
+                size: :sm,
+                data: { action: "tag-select#accept", tag_select_target: "accept" }
+              ) %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </div>

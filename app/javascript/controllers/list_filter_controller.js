@@ -153,6 +153,14 @@ export default class extends Controller {
       return;
 
     const item = items[this.highlightedIndex];
+    // Checkbox lists (e.g. the tag picker) toggle the box; Enter never
+    // submits them, so several items can be ticked before saving.
+    const checkbox = item.querySelector("input[type='checkbox']");
+    if (checkbox) {
+      checkbox.click();
+      return;
+    }
+
     const form = item.querySelector("form");
     if (form) {
       form.requestSubmit();

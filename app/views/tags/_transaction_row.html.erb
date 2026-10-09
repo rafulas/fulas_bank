@@ -1,0 +1,18 @@
+<%# locals: (transaction:) %>
+<% entry = transaction.entry %>
+<% category = transaction.category || Category.uncategorized %>
+
+<%= link_to transaction_path(entry),
+      class: "flex items-center gap-3 px-4 py-3 hover:bg-container-hover",
+      data: { turbo_frame: "drawer", turbo_prefetch: false } do %>
+  <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "lg", rounded: true) %>
+
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-medium text-primary"><%= entry.name %></p>
+    <p class="truncate text-xs text-secondary">
+      <%= l(entry.date, format: :long) %> · <%= category.display_name %>
+    </p>
+  </div>
+
+  <p class="shrink-0 text-sm font-medium text-primary privacy-sensitive"><%= format_money(-entry.amount_money) %></p>
+<% end %>

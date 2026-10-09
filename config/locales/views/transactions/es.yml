@@ -58,6 +58,10 @@ es:
       merchant_search_placeholder: Buscar o crear comercio
       submit: Añadir transacción
       tag_search_placeholder: Buscar o crear etiqueta
+      recent_tags: Etiquetas recientes
+      all_tags: Todas las etiquetas
+      tags_accept: Aceptar
+      tags_cancel: Cancelar
       tags_label: Etiquetas
       transfer: Transferencia
     create:

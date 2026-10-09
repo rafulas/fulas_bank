@@ -3,7 +3,11 @@ es:
   tag:
     dropdowns:
       show:
+        all: Todas las etiquetas
+        cancel: Cancelar
         empty: Aún no hay etiquetas
         manage: Gestionar etiquetas
         no_tags: No se encontraron etiquetas
+        recent: Etiquetas recientes
+        save: Aceptar
         search_placeholder: Buscar

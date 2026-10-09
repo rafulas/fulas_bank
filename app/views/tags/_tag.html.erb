@@ -1,13 +1,14 @@
 <%# locals: (tag:) %>
 
 <div id="<%= dom_id(tag) %>" class="flex justify-between items-center p-4 bg-container hover:bg-surface-hover">
-  <div class="flex w-full items-center gap-2.5">
+  <%= link_to tag_path(tag), class: "flex w-full min-w-0 items-center gap-2.5", data: { turbo_frame: "_top" } do %>
     <p class="text-primary text-sm truncate">
       <%= render partial: "tags/badge", locals: { tag: tag } %>
     </p>
-  </div>
+  <% end %>
   <div class="justify-self-end">
     <%= render DS::Menu.new do |menu| %>
+      <% menu.with_item(variant: "link", text: t(".show"), href: tag_path(tag), icon: "list", data: { turbo_frame: "_top" }) %>
       <% menu.with_item(variant: "link", text: t(".edit"), href: edit_tag_path(tag), icon: "pencil", data: { turbo_frame: "modal" }) %>
 
       <% if tag.transactions.any? %>

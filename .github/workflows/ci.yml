@@ -153,7 +153,16 @@ jobs:
           bin/rails db:seed
 
       - name: Unit and integration tests
-        run: bin/rails test
+        run: |
+          set -o pipefail
+          bin/rails test 2>&1 | tee test-output.log
+
+      - name: Report failing tests
+        if: failure()
+        run: |
+          # Shows each failure as an annotation, readable without the raw log.
+          msg=$(grep -A14 -E "^(Failure|Error):" test-output.log | head -200 | sed -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"} {print}')
+          echo "::error title=Failing tests::${msg:-No failure details found}"
 
   test_system:
     runs-on: ubuntu-latest
@@ -211,7 +220,16 @@ jobs:
           bin/rails db:seed
 
       - name: System tests
-        run: DISABLE_PARALLELIZATION=true bin/rails test:system
+        run: |
+          set -o pipefail
+          DISABLE_PARALLELIZATION=true bin/rails test:system 2>&1 | tee test-output.log
+
+      - name: Report failing tests
+        if: failure()
+        run: |
+          # Shows each failure as an annotation, readable without the raw log.
+          msg=$(grep -A14 -E "^(Failure|Error):" test-output.log | head -200 | sed -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"} {print}')
+          echo "::error title=Failing tests::${msg:-No failure details found}"
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

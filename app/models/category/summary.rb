@@ -33,10 +33,12 @@ class Category::Summary
 
   attr_reader :family, :period
 
-  def initialize(family, period:, account_ids: nil)
+  # `tag:` limits the totals to transactions carrying that tag (the tag page).
+  def initialize(family, period:, account_ids: nil, tag: nil)
     @family = family
     @period = period
     @account_ids = account_ids
+    @tag = tag
   end
 
   # Root categories, the ones with an amount first (largest first), then the
@@ -198,6 +200,7 @@ class Category::Summary
           #{pending_providers_sql}
           #{exclude_tax_advantaged_sql}
           #{account_scope_sql}
+          #{tag_scope_sql}
         GROUP BY t.category_id, ae.excluded, transfer_kind
       SQL
     end
@@ -206,9 +209,21 @@ class Category::Summary
       @account_ids.nil? ? "" : "AND a.id IN (:account_ids)"
     end
 
+    def tag_scope_sql
+      return "" if @tag.nil?
+
+      <<~SQL
+        AND EXISTS (
+          SELECT 1 FROM taggings tg
+          WHERE tg.taggable_type = 'Transaction' AND tg.taggable_id = t.id AND tg.tag_id = :tag_id
+        )
+      SQL
+    end
+
     def sql_params
       base_sql_params(start_date: period.date_range.begin, end_date: period.date_range.end).tap do |params|
         params[:account_ids] = @account_ids.presence || [ nil ] unless @account_ids.nil?
+        params[:tag_id] = @tag.id if @tag
       end
     end
 end

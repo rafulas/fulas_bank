@@ -22,10 +22,24 @@ en:
       loading: Loading tags...
     new:
       new: New tag
+    show:
+      average: 'Average (%{from} – %{to})'
+      back: Tags
+      by_category: By category
+      edit: Edit
+      empty_period: No transactions with this tag in this period
+      last_months: Last %{count} months
+      open_in_transactions: Open in Transactions
+      see_all: See all %{count} transactions
+      transactions_title: Transactions
+      transactions:
+        one: one transaction
+        other: "%{count} transactions"
     summary:
       add: Add tags
       title: 'Tags: %{names}'
     tag:
+      show: View transactions
       delete: Delete
       edit: Edit
     update:
