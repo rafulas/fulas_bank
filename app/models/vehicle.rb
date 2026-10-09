@@ -15,6 +15,7 @@ class Vehicle < ApplicationRecord
   has_many :maintenance_items, class_name: "Vehicle::MaintenanceItem", dependent: :destroy
 
   validates :fuel_type, inclusion: { in: FUEL_TYPES }, allow_blank: true
+  validates :purchase_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   normalizes :license_plate, with: ->(value) { value.strip.upcase.presence }
 
@@ -41,12 +42,22 @@ class Vehicle < ApplicationRecord
     Measurement.new(mileage_value, mileage_unit) if mileage_value.present?
   end
 
-  def purchase_price
+  # What the car cost: the price typed in its details or, failing that, the
+  # first value the account was given. (`purchase_price` stays the plain
+  # column, which the details form edits.)
+  def purchase_cost
+    return Money.new(purchase_price, account.currency) if purchase_price.present?
+
     first_valuation_amount
   end
 
-  def trend
-    Trend.new(current: account.balance_money, previous: first_valuation_amount)
+  def purchase_price_recorded?
+    purchase_price.present?
+  end
+
+  # Value lost since the purchase (negative if it is worth more now).
+  def depreciation
+    purchase_cost - account.balance_money
   end
 
   class << self

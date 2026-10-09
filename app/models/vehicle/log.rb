@@ -17,6 +17,13 @@ class Vehicle::Log < ApplicationRecord
 
   monetize :amount, :unit_price
 
+  # Scanned invoices and receipts: same formats and limits as a transaction's.
+  MAX_ATTACHMENTS = Transaction::MAX_ATTACHMENTS_PER_TRANSACTION
+  MAX_ATTACHMENT_SIZE = Transaction::MAX_ATTACHMENT_SIZE
+  ATTACHMENT_TYPES = Transaction::ALLOWED_CONTENT_TYPES
+
+  has_many_attached :attachments
+
   belongs_to :vehicle
   belongs_to :maintenance_item, class_name: "Vehicle::MaintenanceItem", optional: true
   belongs_to :entry, optional: true
@@ -31,6 +38,7 @@ class Vehicle::Log < ApplicationRecord
   validates :entry_id, uniqueness: true, allow_nil: true
   validate :maintenance_item_belongs_to_vehicle
   validate :entry_belongs_to_family
+  validate :attachments_are_acceptable, if: -> { attachments.attached? }
 
   before_validation :inherit_currency
   before_validation :take_amount_from_entry
@@ -110,6 +118,18 @@ class Vehicle::Log < ApplicationRecord
       return if maintenance_item.blank? || maintenance_item.vehicle_id == vehicle_id
 
       errors.add(:maintenance_item, :invalid)
+    end
+
+    def attachments_are_acceptable
+      errors.add(:attachments, :too_many, max: MAX_ATTACHMENTS) if attachments.size > MAX_ATTACHMENTS
+
+      attachments.each do |attachment|
+        if attachment.byte_size > MAX_ATTACHMENT_SIZE
+          errors.add(:attachments, :too_large, filename: attachment.filename.to_s, max_mb: MAX_ATTACHMENT_SIZE / 1.megabyte)
+        elsif ATTACHMENT_TYPES.exclude?(attachment.content_type)
+          errors.add(:attachments, :invalid_format, filename: attachment.filename.to_s)
+        end
+      end
     end
 
     def entry_belongs_to_family

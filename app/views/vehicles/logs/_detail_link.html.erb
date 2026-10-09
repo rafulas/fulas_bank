@@ -1,0 +1,18 @@
+<%# locals: (account:, log:) %>
+
+<div class="flex items-center justify-end gap-2">
+  <% if log.attachments.attached? %>
+    <span title="<%= t("vehicles.logs.detail_link.attachments", count: log.attachments.size) %>">
+      <%= icon "paperclip", size: "sm" %>
+    </span>
+  <% end %>
+  <%= render DS::Link.new(
+    text: t("vehicles.logs.detail_link.detail"),
+    icon: "chevron-right",
+    icon_position: :right,
+    variant: :ghost,
+    size: :sm,
+    href: edit_vehicle_log_path(account, log),
+    frame: :modal
+  ) %>
+</div>

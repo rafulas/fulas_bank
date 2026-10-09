@@ -30,6 +30,7 @@
         <%= point ? number_with_precision(point.per_100, precision: 1) : "–" %>
       <% end %>
       <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+      <% table.with_column(t("vehicles.logs.detail_link.column"), align: :right) { |log| render "vehicles/logs/detail_link", account: account, log: log } %>
     <% end %>
   <% end %>
 </div>

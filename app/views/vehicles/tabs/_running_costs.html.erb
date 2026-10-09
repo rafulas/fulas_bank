@@ -17,6 +17,7 @@
       <% table.with_column(t(".notes")) { |log| log.notes.to_s.truncate(60) } %>
       <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |log| format_money(log.amount_money) } %>
       <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+      <% table.with_column(t("vehicles.logs.detail_link.column"), align: :right) { |log| render "vehicles/logs/detail_link", account: account, log: log } %>
     <% end %>
   <% end %>
 </div>

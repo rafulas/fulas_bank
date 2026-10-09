@@ -4,6 +4,9 @@ en:
     edit:
       edit: Edit %{account}
     form:
+      purchase_price: Purchase price
+      purchase_date: Purchase date
+      purchase_hint: The purchase price shows how much value the car has lost and its total cost.
       make: Make
       make_placeholder: Toyota
       mileage: Mileage
@@ -29,7 +32,33 @@ en:
       unknown: Unknown
       year: Year
     tabs:
+      consumption_chart:
+        distance: Distance
+        quantity: Fuel
+        odometer: Odometer
+        average: Average
+        range: Period
+        last_year: 1 year
+        last_three_years: 3 years
+        all: All
+        hint: One point per full tank. Hover or tap the chart to see the details.
+      vehicle_sheet:
+        title: Vehicle sheet
+        edit: Edit
+        license_plate: Licence plate
+        fuel_type: Fuel
+        purchase_date: Purchase date
+        maintenance: Maintenance
+        last_done: "Last done: %{when}"
+        never_recorded: Last time not recorded
+        no_maintenance: Add the maintenance jobs you want to follow (oil, tyres, brakes…) to see when each was last done.
+        go_to_workshop: Go to Workshop
       overview:
+        purchase_price_hint: Enter the real price in “Edit account details”.
+        total_cost: Total cost
+        total_cost_breakdown: "%{depreciation} of lost value + %{spent} spent"
+        total_spent: Total spent
+        import_roadtrip: Import from RoadTrip
         current_price: Current Price
         make_model: Make & Model
         mileage: Mileage
@@ -41,7 +70,6 @@ en:
         logbook_empty_title: Start the vehicle logbook
         logbook_empty_description: Record refuels, workshop services and other costs to see your real consumption and what each kilometre costs.
         add_refuel: Add refuel
-        import_roadtrip: Import from RoadTrip
         average_consumption: Average consumption
         not_enough_data: Not enough data
         cost_per_distance: Cost per %{unit}
@@ -103,6 +131,20 @@ en:
     logbook:
       consumption_value: "%{value} %{unit}/100 %{distance}"
     logs:
+      detail_link:
+        column: Details
+        detail: View
+        attachments:
+          one: 1 attached file
+          other: "%{count} attached files"
+      attachments:
+        title:
+          one: 1 attached file
+          other: "%{count} attached files"
+        open: Open %{filename}
+        download: Download %{filename}
+        delete: Delete %{filename}
+        resource: file
       kinds:
         fuel: Refuel
         service: Workshop
@@ -125,6 +167,8 @@ en:
         linked: Linked
         link: Link
       form:
+        attachments: Attach files
+        attachments_hint: Invoice or receipt as a PDF or photo. Up to %{count} files of %{size} MB each.
         maintenance_item: Maintenance
         other_service: Other workshop job
         category: Category
@@ -192,6 +236,7 @@ en:
         submit: Save
         delete: Delete
       new:
+        prefilled: "Date and odometer of the last time taken from “%{title}” on %{date}. Correct them if needed."
         title: New maintenance item
       edit:
         title: Edit maintenance item
@@ -201,6 +246,9 @@ en:
         success: Maintenance item updated
       destroy:
         success: Maintenance item deleted
+    log_attachments:
+      destroy:
+        success: File deleted
     roadtrip_imports:
       new:
         title: Import from RoadTrip
@@ -210,6 +258,8 @@ en:
         safe_hint: You will see a summary before anything is saved. Records this vehicle already has are skipped.
         submit: Check file
       preview:
+        purchase: Purchase
+        submit_details: Fill in vehicle details
         title: Import from RoadTrip
         period: From %{from} to %{to}.
         license_plate: Licence plate
@@ -221,7 +271,7 @@ en:
         issue:
           lower: "%{date}: %{odometer}, lower than the previous refuel"
           jump: "%{date}: %{odometer}, far beyond the previous refuel"
-        not_imported: Trips, tyres and valuations from RoadTrip are not imported.
+        not_imported: Trips and tyres from RoadTrip are not imported. Of the valuations, only the purchase is used, as the purchase price.
         nothing_new: Everything in this file is already in the logbook.
         submit:
           one: Import 1 record

@@ -90,6 +90,63 @@ class Vehicles::LogsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Oil"
   end
 
+  test "attaches an invoice to a workshop service" do
+    post vehicle_logs_url(@account), params: {
+      vehicle_log: {
+        kind: "service", date: Date.current, amount: 250,
+        attachments: [ fixture_file_upload("profile_image.png", "image/png") ]
+      }
+    }
+
+    log = @vehicle.logs.last
+    assert_redirected_to account_url(@account, tab: "workshop")
+    assert_equal [ "profile_image.png" ], log.attachments.map { |attachment| attachment.filename.to_s }
+  end
+
+  test "adds files to a log that already has some, and removes one" do
+    log = @vehicle.logs.create!(kind: "service", date: Date.current, amount: 100)
+    log.attachments.attach(fixture_file_upload("profile_image.png", "image/png"))
+
+    patch vehicle_log_url(@account, log), params: {
+      vehicle_log: { amount: 100, attachments: [ fixture_file_upload("profile_image.png", "image/png") ] }
+    }
+    assert_equal 2, log.reload.attachments.count
+
+    get vehicle_log_attachment_url(@account, log, log.attachments.first)
+    assert_response :redirect
+
+    assert_difference -> { log.reload.attachments.count } => -1 do
+      delete vehicle_log_attachment_url(@account, log, log.attachments.first)
+    end
+    assert_redirected_to edit_vehicle_log_url(@account, log)
+  end
+
+  test "rejects a file that is not an image or a PDF" do
+    assert_no_difference -> { @vehicle.logs.count } do
+      post vehicle_logs_url(@account), params: {
+        vehicle_log: {
+          kind: "service", date: Date.current, amount: 250,
+          attachments: [ fixture_file_upload("test.txt", "text/plain") ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "the overview shows the vehicle sheet, total cost and consumption chart" do
+    @vehicle.logs.create!(kind: "fuel", date: 20.days.ago.to_date, odometer: 10_000, quantity: 40, amount: 60)
+    @vehicle.logs.create!(kind: "fuel", date: 10.days.ago.to_date, odometer: 10_500, quantity: 30, amount: 45)
+    @vehicle.logs.create!(kind: "fuel", date: Date.current, odometer: 11_000, quantity: 35, amount: 52)
+
+    get account_url(@account)
+
+    assert_response :success
+    assert_select "[data-controller='vehicle-consumption-chart']"
+    assert_includes response.body, I18n.t("vehicles.tabs.vehicle_sheet.title")
+    assert_includes response.body, I18n.t("vehicles.tabs.overview.total_cost")
+  end
+
   test "a read-only member cannot add logs" do
     sign_in users(:family_member)
 

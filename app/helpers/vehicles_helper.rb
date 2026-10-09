@@ -38,6 +38,16 @@ module VehiclesHelper
     end
   end
 
+  # The usual workshop jobs the vehicle does not track yet, offered as
+  # one-click starting points.
+  def vehicle_missing_presets(vehicle)
+    tracked = vehicle.maintenance_items.map { |item| item.name.to_s.downcase.strip }
+
+    Vehicle::MaintenanceItem::PRESETS.reject do |preset|
+      tracked.include?(t("vehicles.maintenance_items.presets.#{preset[:key]}").downcase)
+    end
+  end
+
   def vehicle_distance(value, vehicle)
     return if value.nil?
 
@@ -48,6 +58,26 @@ module VehiclesHelper
     return if value.nil?
 
     t("vehicles.logbook.consumption_value", value: number_with_precision(value, precision: 1), unit: vehicle.energy_unit, distance: vehicle.mileage_unit)
+  end
+
+  # What the consumption chart draws and shows on hover, already formatted in
+  # the user's locale so the script only places it.
+  def vehicle_consumption_chart_data(logbook, vehicle)
+    {
+      points: logbook.consumption_series.map do |point|
+        {
+          date: point.date.iso8601,
+          date_label: format_date(point.date),
+          value: point.per_100.to_f,
+          value_label: vehicle_consumption(point.per_100, vehicle),
+          distance_label: vehicle_distance(point.distance, vehicle),
+          quantity_label: "#{number_with_precision(point.quantity, precision: 2)} #{vehicle.energy_unit}",
+          odometer_label: vehicle_distance(point.odometer, vehicle)
+        }
+      end,
+      average: logbook.average_consumption&.to_f,
+      average_label: vehicle_consumption(logbook.average_consumption, vehicle)
+    }
   end
 
   def maintenance_status_pill(status)

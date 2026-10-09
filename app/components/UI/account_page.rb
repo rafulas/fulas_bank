@@ -60,7 +60,7 @@ class UI::AccountPage < ApplicationComponent
     when "Property"
       [ :activity, :overview ]
     when "Vehicle"
-      [ :activity, :overview, :refuels, :workshop, :running_costs ]
+      [ :overview, :activity, :refuels, :workshop, :running_costs ]
     else
       [ :activity ]
     end

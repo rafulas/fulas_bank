@@ -1,0 +1,39 @@
+<%# locals: (vehicle:, logbook:) %>
+
+<% title = t("vehicles.tabs.overview.consumption_chart", unit: vehicle.energy_unit, distance: vehicle.mileage_unit) %>
+
+<%= render DS::Card.new(class: "gap-3") do %>
+  <div data-controller="vehicle-consumption-chart"
+       data-vehicle-consumption-chart-data-value="<%= vehicle_consumption_chart_data(logbook, vehicle).to_json %>"
+       data-vehicle-consumption-chart-distance-label-value="<%= t(".distance") %>"
+       data-vehicle-consumption-chart-quantity-label-value="<%= t(".quantity") %>"
+       data-vehicle-consumption-chart-odometer-label-value="<%= t(".odometer") %>"
+       data-vehicle-consumption-chart-average-label-value="<%= t(".average") %>"
+       class="space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-sm font-medium text-primary"><%= title %></h3>
+      <div class="flex items-center gap-1" role="group" aria-label="<%= t(".range") %>">
+        <% [ [ "12", t(".last_year") ], [ "36", t(".last_three_years") ], [ "all", t(".all") ] ].each do |months, label| %>
+          <%= render DS::Button.new(
+            text: label,
+            variant: :ghost,
+            size: :sm,
+            type: :button,
+            data: {
+              action: "vehicle-consumption-chart#selectRange",
+              vehicle_consumption_chart_months_param: months,
+              vehicle_consumption_chart_target: "rangeButton"
+            }
+          ) %>
+        <% end %>
+      </div>
+    </div>
+
+    <div data-vehicle-consumption-chart-target="canvas"
+         class="relative w-full h-64"
+         role="img"
+         aria-label="<%= title %>"></div>
+
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  </div>
+<% end %>

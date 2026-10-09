@@ -4,6 +4,9 @@ es:
     edit:
       edit: Editar %{account}
     form:
+      purchase_price: Precio de compra
+      purchase_date: Fecha de compra
+      purchase_hint: Con el precio de compra se calcula cuánto valor ha perdido el coche y su coste total.
       make: Marca
       make_placeholder: Toyota
       mileage: Kilometraje
@@ -29,7 +32,33 @@ es:
       unknown: Desconocido
       year: Año
     tabs:
+      consumption_chart:
+        distance: Recorrido
+        quantity: Combustible
+        odometer: Cuentakilómetros
+        average: Media
+        range: Periodo
+        last_year: 1 año
+        last_three_years: 3 años
+        all: Todo
+        hint: Un punto por cada depósito lleno. Pasa el ratón o pulsa sobre el gráfico para ver el detalle.
+      vehicle_sheet:
+        title: Ficha del coche
+        edit: Editar
+        license_plate: Matrícula
+        fuel_type: Combustible
+        purchase_date: Fecha de compra
+        maintenance: Mantenimiento
+        last_done: "Última vez: %{when}"
+        never_recorded: Sin fecha de la última vez
+        no_maintenance: Añade los mantenimientos que quieras seguir (aceite, neumáticos, frenos…) y aquí verás cuándo se hizo cada uno.
+        go_to_workshop: Ir a Taller
       overview:
+        purchase_price_hint: Pon el precio real en «Editar detalles de la cuenta».
+        total_cost: Coste total
+        total_cost_breakdown: "%{depreciation} de pérdida de valor + %{spent} de gastos"
+        total_spent: Gastos totales
+        import_roadtrip: Importar de RoadTrip
         current_price: Precio actual
         make_model: Marca y modelo
         mileage: Kilometraje
@@ -41,7 +70,6 @@ es:
         logbook_empty_title: Empieza el cuaderno del coche
         logbook_empty_description: Apunta repostajes, servicios de taller y otros gastos para ver tu consumo real y cuánto te cuesta cada kilómetro.
         add_refuel: Añadir repostaje
-        import_roadtrip: Importar de RoadTrip
         average_consumption: Consumo medio
         not_enough_data: Faltan datos
         cost_per_distance: Coste por %{unit}
@@ -103,6 +131,20 @@ es:
     logbook:
       consumption_value: "%{value} %{unit}/100 %{distance}"
     logs:
+      detail_link:
+        column: Detalle
+        detail: Ver
+        attachments:
+          one: 1 archivo adjunto
+          other: "%{count} archivos adjuntos"
+      attachments:
+        title:
+          one: 1 archivo adjunto
+          other: "%{count} archivos adjuntos"
+        open: Abrir %{filename}
+        download: Descargar %{filename}
+        delete: Eliminar %{filename}
+        resource: archivo
       kinds:
         fuel: Repostaje
         service: Taller
@@ -125,6 +167,8 @@ es:
         linked: Vinculado
         link: Vincular
       form:
+        attachments: Adjuntar archivos
+        attachments_hint: Factura o ticket en PDF o foto. Hasta %{count} archivos de %{size} MB como máximo.
         maintenance_item: Mantenimiento
         other_service: Otro trabajo de taller
         category: Categoría
@@ -192,6 +236,7 @@ es:
         submit: Guardar
         delete: Eliminar
       new:
+        prefilled: "Fecha y km de la última vez sacados de «%{title}» del %{date}. Corrígelos si no es así."
         title: Nuevo mantenimiento
       edit:
         title: Editar mantenimiento
@@ -201,6 +246,9 @@ es:
         success: Mantenimiento actualizado
       destroy:
         success: Mantenimiento eliminado
+    log_attachments:
+      destroy:
+        success: Archivo eliminado
     roadtrip_imports:
       new:
         title: Importar de RoadTrip
@@ -210,6 +258,8 @@ es:
         safe_hint: Antes de guardar nada verás un resumen. Lo que este vehículo ya tenga apuntado se salta.
         submit: Revisar archivo
       preview:
+        purchase: Compra
+        submit_details: Completar datos del coche
         title: Importar de RoadTrip
         period: Del %{from} al %{to}.
         license_plate: Matrícula
@@ -221,7 +271,7 @@ es:
         issue:
           lower: "%{date}: %{odometer}, menos que en el repostaje anterior"
           jump: "%{date}: %{odometer}, muy por encima del repostaje anterior"
-        not_imported: No se importan los viajes, los neumáticos ni las valoraciones de RoadTrip.
+        not_imported: No se importan los viajes ni los neumáticos de RoadTrip. De las valoraciones se toma solo la compra, como precio de compra.
         nothing_new: Todo lo de este archivo ya está en el cuaderno.
         submit:
           one: Importar 1 registro

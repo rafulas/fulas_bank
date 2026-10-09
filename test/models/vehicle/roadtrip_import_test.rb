@@ -3,7 +3,7 @@ require "test_helper"
 class Vehicle::RoadtripImportTest < ActiveSupport::TestCase
   setup do
     @vehicle = vehicles(:one)
-    @vehicle.update!(mileage_value: nil, mileage_unit: "km", license_plate: nil)
+    @vehicle.update!(mileage_value: nil, mileage_unit: "km", license_plate: nil, purchase_price: nil, purchase_date: nil)
     @content = file_fixture("roadtrip_export.csv").binread
   end
 
@@ -45,6 +45,7 @@ class Vehicle::RoadtripImportTest < ActiveSupport::TestCase
 
     @vehicle.reload
     assert_equal "1234BCD", @vehicle.license_plate
+    assert_equal [ BigDecimal("36000"), Date.new(2019, 9, 13) ], [ @vehicle[:purchase_price], @vehicle.purchase_date ]
     assert_equal 11_100, @vehicle.mileage_value
     assert_equal 2, @vehicle.logs.expenses.count
     assert_equal BigDecimal("5.05"), @vehicle.logbook.average_consumption
@@ -56,6 +57,7 @@ class Vehicle::RoadtripImportTest < ActiveSupport::TestCase
     second = Vehicle::RoadtripImport.new(@vehicle.reload, @content)
 
     assert_equal 8, second.summary.duplicates
+    assert_not second.anything_new?
     assert_no_difference -> { @vehicle.logs.count } do
       assert_equal 0, second.import!
     end

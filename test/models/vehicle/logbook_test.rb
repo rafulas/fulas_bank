@@ -65,6 +65,42 @@ class Vehicle::LogbookTest < ActiveSupport::TestCase
     assert_not alerts.key?(itv)
   end
 
+  test "total cost adds the value lost since the purchase to everything spent" do
+    @vehicle.update!(purchase_price: 20_000)
+    @vehicle.account.update!(balance: 18_000)
+    refuel(date: 10.days.ago, odometer: 10_000, quantity: 40, amount: 60)
+    @vehicle.logs.create!(kind: "service", date: 5.days.ago.to_date, amount: 240)
+
+    logbook = @vehicle.reload.logbook
+
+    assert_equal Money.new(2_000, @vehicle.account.currency), @vehicle.depreciation
+    assert_equal BigDecimal("300"), logbook.total_spent.amount
+    assert_equal BigDecimal("2300"), logbook.total_cost.amount
+  end
+
+  test "consumption points carry the distance and fuel they measure" do
+    refuel(date: 20.days.ago, odometer: 10_000, quantity: 40)
+    refuel(date: 10.days.ago, odometer: 10_500, quantity: 30)
+
+    point = @vehicle.logbook.consumption_series.sole
+
+    assert_equal [ 500, BigDecimal("30") ], [ point.distance, point.quantity ]
+  end
+
+  test "finds the last service that looks like a workshop job" do
+    @vehicle.logs.create!(kind: "service", date: 300.days.ago.to_date, odometer: 80_000, amount: 200, notes: "Revisión\nCambio aceite")
+    latest = @vehicle.logs.create!(kind: "service", date: 30.days.ago.to_date, odometer: 95_000, amount: 400, notes: "Cambio de aceite y filtro")
+    @vehicle.logs.create!(kind: "service", date: 10.days.ago.to_date, odometer: 96_000, amount: 900, notes: "Cambio neumáticos")
+    itv = @vehicle.logs.create!(kind: "expense", category: "inspection", date: 60.days.ago.to_date, amount: 42)
+
+    presets = Vehicle::MaintenanceItem::PRESETS.index_by { |preset| preset[:key] }
+    logbook = @vehicle.logbook
+
+    assert_equal latest, logbook.last_log_matching(presets["oil_change"])
+    assert_equal itv, logbook.last_log_matching(presets["inspection"])
+    assert_nil logbook.last_log_matching(presets["timing_belt"])
+  end
+
   private
     def refuel(date:, odometer:, quantity:, amount: nil, full_tank: true)
       @vehicle.logs.create!(kind: "fuel", date: date.to_date, odometer: odometer, quantity: quantity,

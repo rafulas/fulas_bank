@@ -3,7 +3,7 @@
 <% vehicle = account.vehicle %>
 
 <div class="space-y-4">
-  <div class="grid grid-cols-3 gap-2">
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
     <%= summary_card title: t(".make_model") do %>
       <%= [vehicle.make, vehicle.model].compact.join(" ").presence || t(".unknown") %>
     <% end %>
@@ -17,21 +17,21 @@
     <% end %>
 
     <%= summary_card title: t(".purchase_price") do %>
-      <%= format_money vehicle.purchase_price %>
+      <%= format_money vehicle.purchase_cost %>
+      <% unless vehicle.purchase_price_recorded? %>
+        <span class="block text-xs text-secondary font-normal mt-1"><%= t(".purchase_price_hint") %></span>
+      <% end %>
     <% end %>
 
     <%= summary_card title: t(".current_price") do %>
       <%= format_money account.balance_money %>
     <% end %>
 
-    <%= summary_card title: t(".trend") do %>
-      <div class="flex items-center gap-1" style="color: <%= vehicle.trend.color %>">
-        <p class="text-xl font-medium">
-          <%= vehicle.trend.value %>
-        </p>
-
-        <p>(<%= vehicle.trend.percent %>%)</p>
-      </div>
+    <%= summary_card title: t(".total_cost") do %>
+      <%= format_money logbook.total_cost %>
+      <span class="block text-xs text-secondary font-normal mt-1">
+        <%= t(".total_cost_breakdown", depreciation: format_money(vehicle.depreciation), spent: format_money(logbook.total_spent)) %>
+      </span>
     <% end %>
   </div>
 
@@ -45,7 +45,7 @@
       <% end %>
     <% end %>
   <% else %>
-    <div class="grid grid-cols-3 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
       <%= summary_card title: t(".average_consumption") do %>
         <%= vehicle_consumption(logbook.average_consumption, vehicle) || t(".not_enough_data") %>
       <% end %>
@@ -56,6 +56,10 @@
 
       <%= summary_card title: t(".spent_this_year", year: logbook.as_of.year) do %>
         <%= format_money logbook.year_total %>
+      <% end %>
+
+      <%= summary_card title: t(".total_spent") do %>
+        <%= format_money logbook.total_spent %>
       <% end %>
     </div>
 
@@ -69,16 +73,8 @@
       </dl>
     <% end %>
 
-    <% series = logbook.consumption_series.last(12) %>
-    <% if series.size >= 2 %>
-      <%= render DS::Card.new(class: "gap-3") do %>
-        <h3 class="text-sm font-medium text-primary"><%= t(".consumption_chart", unit: vehicle.energy_unit, distance: vehicle.mileage_unit) %></h3>
-        <%= render DS::Sparkline.new(
-          series: series.map { |point| [ point.date, point.per_100 ] },
-          aria_label: t(".consumption_chart", unit: vehicle.energy_unit, distance: vehicle.mileage_unit),
-          css: "w-full text-primary"
-        ) %>
-      <% end %>
+    <% if logbook.consumption_series.size >= 2 %>
+      <%= render "vehicles/tabs/consumption_chart", vehicle: vehicle, logbook: logbook %>
     <% end %>
 
     <% if (alerts = logbook.maintenance_alerts).any? %>
@@ -97,25 +93,27 @@
         </ul>
       <% end %>
     <% end %>
+  <% end %>
 
-    <% if (recent = logbook.recent).any? %>
-      <%= render DS::Card.new(class: "gap-3") do %>
-        <h3 class="text-sm font-medium text-primary"><%= t(".recent") %></h3>
-        <ul class="space-y-2">
-          <% recent.each do |log| %>
-            <li class="flex items-center justify-between gap-2 text-sm">
-              <div class="flex items-center gap-2">
-                <%= icon vehicle_log_icon(log), size: "sm" %>
-                <div>
-                  <p class="text-primary"><%= vehicle_log_title(log) %></p>
-                  <p class="text-secondary"><%= format_date(log.date) %></p>
-                </div>
+  <%= render "vehicles/tabs/vehicle_sheet", account: account, logbook: logbook %>
+
+  <% if !logbook.empty? && (recent = logbook.recent).any? %>
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <h3 class="text-sm font-medium text-primary"><%= t(".recent") %></h3>
+      <ul class="space-y-2">
+        <% recent.each do |log| %>
+          <li class="flex items-center justify-between gap-2 text-sm">
+            <div class="flex items-center gap-2">
+              <%= icon vehicle_log_icon(log), size: "sm" %>
+              <div>
+                <p class="text-primary"><%= vehicle_log_title(log) %></p>
+                <p class="text-secondary"><%= format_date(log.date) %></p>
               </div>
-              <span class="text-primary privacy-sensitive"><%= format_money(log.amount_money) %></span>
-            </li>
-          <% end %>
-        </ul>
-      <% end %>
+            </div>
+            <span class="text-primary privacy-sensitive"><%= format_money(log.amount_money) %></span>
+          </li>
+        <% end %>
+      </ul>
     <% end %>
   <% end %>
 

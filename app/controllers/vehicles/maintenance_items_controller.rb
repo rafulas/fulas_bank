@@ -5,11 +5,18 @@ class Vehicles::MaintenanceItemsController < Vehicles::BaseController
   def new
     preset = Vehicle::MaintenanceItem::PRESETS.find { |candidate| candidate[:key] == params[:preset] }
 
+    # Starts from the last time the logbook shows this job was done (a service
+    # imported from RoadTrip, say), so its status is right from the start.
+    last = @vehicle.logbook.last_log_matching(preset) if preset
+
     @item = @vehicle.maintenance_items.new(
       name: (t("vehicles.maintenance_items.presets.#{preset[:key]}") if preset),
       interval_km: preset&.dig(:interval_km),
-      interval_months: preset&.dig(:interval_months)
+      interval_months: preset&.dig(:interval_months),
+      last_done_on: last&.date,
+      last_done_odometer: last&.odometer
     )
+    @prefilled_from = last
   end
 
   def create
