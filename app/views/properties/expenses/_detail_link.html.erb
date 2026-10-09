@@ -1,0 +1,18 @@
+<%# locals: (account:, expense:) %>
+
+<div class="flex items-center justify-end gap-2">
+  <% if expense.attachments.attached? %>
+    <span title="<%= t("properties.expenses.detail_link.attachments", count: expense.attachments.size) %>">
+      <%= icon "paperclip", size: "sm" %>
+    </span>
+  <% end %>
+  <%= render DS::Link.new(
+    text: t("properties.expenses.detail_link.detail"),
+    icon: "chevron-right",
+    icon_position: :right,
+    variant: :ghost,
+    size: :sm,
+    href: edit_property_expense_path(account, expense),
+    frame: :modal
+  ) %>
+</div>

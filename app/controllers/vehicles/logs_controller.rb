@@ -16,17 +16,25 @@ class Vehicles::LogsController < Vehicles::BaseController
     render partial: "vehicles/logs/bank_charge_options", locals: { log: log }
   end
 
+  # Also opened from a bank movement ("Link to my car"), with that charge
+  # already chosen: `entry_id` fills in the date, amount and charge.
   def new
     kind = Vehicle::Log::KINDS.include?(params[:kind]) ? params[:kind] : "fuel"
+    category = Vehicle::Log::CATEGORIES.include?(params[:category]) ? params[:category] : "other"
 
     @log = @vehicle.logs.new(
       kind: kind,
       date: Date.current,
       currency: @account.currency,
       maintenance_item_id: params[:maintenance_item_id].presence,
-      category: ("other" if kind == "expense"),
+      category: (category if kind == "expense"),
       odometer: @vehicle.logbook.odometer
     )
+
+    if (entry = linkable_entry(params[:entry_id]))
+      @log.assign_attributes(entry: entry, date: entry.date, amount: entry.amount.abs)
+      @log.notes = entry.name unless @log.fuel?
+    end
   end
 
   def create
@@ -43,9 +51,10 @@ class Vehicles::LogsController < Vehicles::BaseController
   def edit
   end
 
+  # Saving the form confirms a link the app had proposed.
   def update
     kept = @log.attachments.map(&:id)
-    @log.assign_attributes(log_params)
+    @log.assign_attributes(log_params.merge(suggestion: nil))
     @log.attachments.attach(attachment_files) if attachment_files.any?
 
     if @log.save
@@ -74,6 +83,12 @@ class Vehicles::LogsController < Vehicles::BaseController
       @log = @vehicle.logs.find(params[:id])
     end
 
+    def linkable_entry(id)
+      return if id.blank?
+
+      Current.accessible_entries.where(entryable_type: "Transaction").find_by(id: id)
+    end
+
     # Invoices and receipts chosen in the form, added to the ones the log has.
     def attachment_files
       @attachment_files ||= Array(params.dig(:vehicle_log, :attachments)).select { |file| file.respond_to?(:read) }
@@ -87,10 +102,7 @@ class Vehicles::LogsController < Vehicles::BaseController
         :category, :maintenance_item_id, :entry_id, :notes
       )
 
-      if permitted.key?(:entry_id)
-        entry_id = permitted[:entry_id].presence
-        permitted[:entry_id] = entry_id && Current.accessible_entries.where(entryable_type: "Transaction").find_by(id: entry_id)&.id
-      end
+      permitted[:entry_id] = linkable_entry(permitted[:entry_id])&.id if permitted.key?(:entry_id)
 
       permitted.merge(currency: @account.currency)
     end

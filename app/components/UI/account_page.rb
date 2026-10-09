@@ -58,7 +58,7 @@ class UI::AccountPage < ApplicationComponent
     when "Loan"
       account.loan.amortizable? ? [ :activity, :overview, :schedule, :payments ] : [ :activity, :overview, :payments ]
     when "Property"
-      [ :activity, :overview ]
+      [ :activity, :overview, :expenses ]
     when "Vehicle"
       [ :overview, :activity, :refuels, :workshop, :running_costs ]
     else
@@ -111,6 +111,8 @@ class UI::AccountPage < ApplicationComponent
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", **locals
     when :refuels, :workshop, :running_costs
       render "vehicles/tabs/#{tab}", account: account, logbook: vehicle_logbook
+    when :expenses
+      render "properties/tabs/expenses", account: account, summary: Property::ExpenseSummary.new(account.property, as_of: as_of)
     when :holdings
       # Accountable is responsible for implementing the partial in the correct folder
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", account: account

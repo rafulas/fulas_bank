@@ -137,6 +137,14 @@
       </div>
     <% end %>
 
+    <% asset_link_record = AssetLink.for_entry(@entry) %>
+    <% asset_link_accounts = asset_link_accounts_for(@entry) %>
+    <% if asset_link_record || asset_link_accounts.any? %>
+      <% dialog.with_section(title: t(".asset_link"), open: true) do %>
+        <%= render "transactions/asset_link", entry: @entry, record: asset_link_record, accounts: asset_link_accounts %>
+      <% end %>
+    <% end %>
+
     <% dialog.with_section(title: t(".attachments")) do %>
       <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
     <% end %>

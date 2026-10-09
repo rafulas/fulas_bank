@@ -1,0 +1,9 @@
+<%# locals: (account:, expense:) %>
+
+<% if expense.entry && expense.suggested? %>
+  <span class="inline-flex items-center gap-1 text-warning" title="<%= t("properties.expenses.bank_link.suggested_hint", name: expense.entry.name) %>"><%= icon "sparkles", size: "xs" %><%= t("properties.expenses.bank_link.suggested") %></span>
+<% elsif expense.entry %>
+  <span class="inline-flex items-center gap-1 text-secondary" title="<%= expense.entry.account.name %>"><%= icon "link", size: "xs" %><%= t("properties.expenses.bank_link.linked") %></span>
+<% else %>
+  <%= link_to t("properties.expenses.bank_link.link"), edit_property_expense_path(account, expense), data: { turbo_frame: :modal }, class: "text-secondary hover:underline" %>
+<% end %>

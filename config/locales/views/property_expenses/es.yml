@@ -1,0 +1,75 @@
+---
+es:
+  properties:
+    tabs:
+      expenses:
+        hint: Hipoteca, seguro, reformas, comunidad, IBI… vinculados a su cargo del banco.
+        add: Añadir gasto
+        empty_title: Sin gastos todavía
+        empty_description: Vincula aquí los pagos de la vivienda (desde el propio movimiento o con «Buscar en el banco») para ver cuánto te cuesta.
+        total: Gastos totales
+        this_year: Gastado en %{year}
+        by_kind: Por tipo
+        title: Gastos de la vivienda
+        date: Fecha
+        kind: Tipo
+        notes: Notas
+        amount: Importe
+        bank: Banco
+        detail_column: Detalle
+    expenses:
+      kinds:
+        mortgage: Hipoteca
+        insurance: Seguro
+        renovation: Reformas
+        maintenance: Mantenimiento y reparaciones
+        community: Comunidad
+        tax: Impuestos (IBI…)
+        utilities: Suministros
+        furniture: Muebles y decoración
+        other: Otros
+      bank_link:
+        linked: Vinculado
+        link: Vincular
+        suggested: Sugerido
+        suggested_hint: "Emparejado por la app con «%{name}». Confírmalo en la caja de sugerencias."
+      detail_link:
+        detail: Ver
+        attachments:
+          one: 1 archivo adjunto
+          other: "%{count} archivos adjuntos"
+      attachments:
+        title:
+          one: 1 archivo adjunto
+          other: "%{count} archivos adjuntos"
+        open: Abrir %{filename}
+        download: Descargar %{filename}
+        delete: Eliminar %{filename}
+        resource: archivo
+      form:
+        kind: Tipo de gasto
+        date: Fecha
+        amount: Importe
+        bank_charge: Cargo del banco
+        no_bank_charge: Sin vincular
+        bank_charge_hint: Elige el movimiento con el que lo pagaste para no contar el gasto dos veces. Se proponen los cargos de fechas e importes parecidos.
+        notes: Notas
+        attachments: Adjuntar archivos
+        attachments_hint: Factura o recibo en PDF o foto. Hasta %{count} archivos de %{size} MB como máximo.
+        submit: Guardar
+        delete: Eliminar
+        resource: gasto
+      new:
+        title: Nuevo gasto de la vivienda
+      edit:
+        title: Editar gasto de la vivienda
+        suggested: La app ha vinculado este gasto con un cargo del banco. Revisa el tipo y el importe y pulsa Guardar para confirmarlo.
+      create:
+        success: Gasto guardado
+      update:
+        success: Gasto actualizado
+      destroy:
+        success: Gasto eliminado
+    expense_attachments:
+      destroy:
+        success: Archivo eliminado

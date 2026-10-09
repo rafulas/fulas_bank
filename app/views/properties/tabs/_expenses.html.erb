@@ -1,0 +1,45 @@
+<%# locals: (account:, summary:) %>
+
+<div class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= render "asset_links/search_button", account: account %>
+      <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_property_expense_path(account), frame: :modal) %>
+    </div>
+  </div>
+
+  <%= render "asset_links/suggestions", account: account %>
+
+  <% if summary.empty? %>
+    <%= render DS::EmptyState.new(icon: "home", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= summary_card title: t(".total") do %>
+        <%= format_money summary.total %>
+      <% end %>
+
+      <%= summary_card title: t(".this_year", year: summary.as_of.year) do %>
+        <%= format_money summary.total_this_year %>
+      <% end %>
+    </div>
+
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <h3 class="text-sm font-medium text-primary"><%= t(".by_kind") %></h3>
+      <dl class="space-y-2">
+        <% summary.by_kind.each do |kind, amount| %>
+          <%= render DS::DetailRow.new(label: property_expense_kind_label(kind), value: format_money(amount), align: :center, value_class: "privacy-sensitive") %>
+        <% end %>
+      </dl>
+    <% end %>
+
+    <%= render DS::Table.new(rows: summary.expenses, label: t(".title")) do |table| %>
+      <% table.with_column(t(".date")) { |expense| link_to format_date(expense.date), edit_property_expense_path(account, expense), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
+      <% table.with_column(t(".kind")) { |expense| property_expense_kind_label(expense.kind) } %>
+      <% table.with_column(t(".notes")) { |expense| expense.notes.to_s.truncate(60) } %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |expense| format_money(expense.amount_money) } %>
+      <% table.with_column(t(".bank")) { |expense| render "properties/expenses/bank_link", account: account, expense: expense } %>
+      <% table.with_column(t(".detail_column"), align: :right) { |expense| render "properties/expenses/detail_link", account: account, expense: expense } %>
+    <% end %>
+  <% end %>
+</div>

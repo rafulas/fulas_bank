@@ -5,7 +5,10 @@
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-2">
     <p class="text-sm text-secondary"><%= t(".hint") %></p>
-    <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "expense"), frame: :modal) %>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= render "asset_links/search_button", account: account %>
+      <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "expense"), frame: :modal) %>
+    </div>
   </div>
 
   <% if expenses.empty? %>

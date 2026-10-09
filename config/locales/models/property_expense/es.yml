@@ -1,0 +1,18 @@
+---
+es:
+  activerecord:
+    attributes:
+      property/expense:
+        kind: Tipo
+        date: Fecha
+        amount: Importe
+        entry: Cargo del banco
+        attachments: Adjuntos
+    errors:
+      models:
+        property/expense:
+          attributes:
+            attachments:
+              too_many: "no pueden ser más de %{max} archivos"
+              too_large: "«%{filename}» supera los %{max_mb} MB"
+              invalid_format: "«%{filename}» no es una imagen ni un PDF"

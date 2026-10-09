@@ -1,0 +1,59 @@
+---
+en:
+  asset_links:
+    suggestions:
+      title:
+        one: 1 bank charge to review
+        other: "%{count} bank charges to review"
+      hint_vehicle: The app found these charges that look like this vehicle's. Confirm or reject them. Use "Review" to add the odometer and litres, or to correct the total if you put in less fuel than you paid for.
+      hint_property: The app found these charges that look like this property's. Confirm or reject them. Use "Review" to change the kind of expense or add notes and invoices.
+      from_charge: "Created from the charge \"%{name}\" on %{date} (%{account})"
+      matched: "Your record of %{date} (%{amount}) matched with \"%{name}\" on %{charge_date}"
+      no_charge: The bank charge no longer exists
+      review: Review
+      confirm: Confirm
+      reject: Reject
+      confirm_all: Confirm all
+      reject_all: Reject all
+      reject_all_confirm_title: Reject every suggestion?
+      reject_all_confirm_body: Records the app created are deleted and these charges will not be proposed for this account again. Your own records are not touched.
+    search_button:
+      label: Search the bank
+      hint: Looks through all your transactions for charges that seem to belong to this account, by category, tag and date.
+    confirm:
+      success: Link confirmed
+    reject:
+      success: Suggestion rejected. That charge will not be proposed here again.
+    unlink:
+      success: Transaction unlinked
+    confirm_all:
+      success: Suggestions confirmed
+    reject_all:
+      success: Suggestions rejected
+    search:
+      success:
+        zero: No new charges to link
+        one: 1 new charge to review
+        other: "%{count} new charges to review"
+  vehicles:
+    logs:
+      bank_link:
+        suggested: Suggested
+        suggested_hint: "Matched by the app with \"%{name}\". Confirm it in the suggestions box on the Overview."
+      edit:
+        suggested: The app linked this record to a bank charge. Check the details and press Save to confirm it.
+        suggested_fuel: The app created this refuel from a bank charge. Add the odometer and litres and press Save to confirm it. If you put in less fuel than you paid for (discounts, other purchases), correct the total; the bank charge does not change.
+  transactions:
+    show:
+      asset_link: Vehicle or property
+    asset_link:
+      hint: Is this a cost of your vehicle or your property? Link it to see it there without counting it twice.
+      link_to: Link to %{name}
+      linked_to: Linked to %{name}
+      suggested: Suggested by the app
+      view: View
+      confirm: Confirm
+      reject: Reject
+      unlink: Unlink
+      unlink_confirm_title: Unlink this transaction?
+      unlink_confirm_body: The %{name} record stays, without this bank charge.

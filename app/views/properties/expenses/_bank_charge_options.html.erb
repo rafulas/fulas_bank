@@ -1,0 +1,3 @@
+<%# locals: (expense:) %>
+
+<%= options_for_select([ [ t("properties.expenses.form.no_bank_charge"), "" ], *property_expense_entry_options(expense) ], expense.entry_id) %>
