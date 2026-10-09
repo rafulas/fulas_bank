@@ -17,6 +17,7 @@ es:
         home: Inicio
         plan: Plan
         reports: Informes
+        summary: Resumen
         goals: Objetivos
         transactions: Transacciones
     auth:

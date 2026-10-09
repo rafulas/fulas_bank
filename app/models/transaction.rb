@@ -29,13 +29,13 @@ class Transaction < ApplicationRecord
 
   after_save :clear_merchant_unlinked_association, if: :merchant_id_previously_changed?
 
-  # Fulas Bank: the "Excluido" and "Traspasos" categories change how a
-  # transaction counts (see Category::FulasTree). The marker in `extra`
-  # remembers that the change was made by the category, so moving the
-  # transaction to another category undoes it without touching settings the
-  # user chose by hand.
+  # Fulas Bank: a transaction in the "Excluido" category (Category#special
+  # "excluded") is also marked excluded, so every report, statistic and goal
+  # that already skips excluded entries skips it, while the account balance
+  # still counts it. The marker in `extra` remembers that the category did it,
+  # so moving the transaction elsewhere undoes it without touching an
+  # exclusion the user set by hand.
   FULAS_AUTO_EXCLUDED = "fulas_auto_excluded".freeze
-  FULAS_AUTO_ONE_TIME = "fulas_auto_one_time".freeze
 
   before_save :apply_fulas_special_category, if: :will_save_change_to_category_id?
   after_save :sync_fulas_excluded_entry, if: :saved_change_to_category_id?
@@ -90,6 +90,12 @@ class Transaction < ApplicationRecord
   # All kinds where money moves between accounts (transfer? returns true).
   # Used for search filters, rule conditions, and UI display.
   TRANSFER_KINDS = %w[funds_movement cc_payment loan_payment investment_contribution].freeze
+
+  # Leaves out transactions in "Excluido" and "Traspasos" (see Category), which
+  # count neither as income nor as expense.
+  scope :counted_in_analytics, -> {
+    where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
+  }
 
   # Kinds excluded from budget/income-statement analytics.
   # loan_payment and investment_contribution are intentionally NOT here —
@@ -451,22 +457,13 @@ class Transaction < ApplicationRecord
       FamilyMerchantAssociation.where(family: family, merchant: merchant).delete_all
     end
 
-    # "Traspasos" keeps the transaction out of income/expense analytics (as a
-    # one-time transaction) without hiding it. "Excluido" marks it for
-    # exclusion; the entry itself is updated in #sync_fulas_excluded_entry.
+    # Records whether "Excluido" excludes this transaction; the entry itself
+    # is updated in #sync_fulas_excluded_entry. ("Traspasos" needs nothing
+    # here: income/expense queries leave its transactions out by category.)
     def apply_fulas_special_category
       data = extra.is_a?(Hash) ? extra.dup : {}
 
-      if Category::FulasTree.transfers?(category)
-        if standard?
-          self.kind = "one_time"
-          data[FULAS_AUTO_ONE_TIME] = true
-        end
-      elsif data.delete(FULAS_AUTO_ONE_TIME)
-        self.kind = "standard" if one_time?
-      end
-
-      if Category::FulasTree.excluded?(category)
+      if category&.special_excluded?
         data[FULAS_AUTO_EXCLUDED] = true unless entry&.excluded?
       else
         @fulas_unexclude = data.delete(FULAS_AUTO_EXCLUDED).present?
@@ -476,7 +473,7 @@ class Transaction < ApplicationRecord
     end
 
     def sync_fulas_excluded_entry
-      value = if Category::FulasTree.excluded?(category)
+      value = if category&.special_excluded?
         true
       elsif @fulas_unexclude
         false

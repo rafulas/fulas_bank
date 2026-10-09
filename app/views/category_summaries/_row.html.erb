@@ -1,0 +1,20 @@
+<%# locals: (row:, href:, subtitle: nil) %>
+
+<%= link_to href, class: class_names("flex items-center gap-3 px-4 py-3 hover:bg-container-hover", "opacity-60" => row.excluded?), data: { turbo_frame: "_top" } do %>
+  <%= render DS::FilledIcon.new(
+    variant: :solid,
+    icon: row.uncategorized? ? "help-circle" : row.category.lucide_icon,
+    hex_color: row.category.color,
+    size: "lg",
+    rounded: true
+  ) %>
+
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-medium text-primary"><%= row.category.display_name %></p>
+    <% if subtitle %>
+      <p class="truncate text-xs text-secondary"><%= subtitle %></p>
+    <% end %>
+  </div>
+
+  <p class="shrink-0 text-sm font-medium text-primary privacy-sensitive"><%= category_summary_value(row) %></p>
+<% end %>

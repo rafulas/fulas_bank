@@ -84,18 +84,22 @@ class CategoriesController < ApplicationController
   end
 
   def destroy
-    @category.destroy
-
-    redirect_back_or_to categories_path, notice: t(".success")
+    if @category.destroy
+      redirect_back_or_to categories_path, notice: t(".success")
+    else
+      redirect_back_or_to categories_path, alert: @category.errors.full_messages.to_sentence
+    end
   end
 
+  # Keeps the special categories (Otros, Excluido, Traspasos), which can't be
+  # deleted.
   def destroy_all
-    Current.family.categories.destroy_all
+    Current.family.categories.not_special.destroy_all
     redirect_back_or_to categories_path, notice: t(".success")
   end
 
   def bootstrap
-    Category::FulasTree.new(Current.family).apply!
+    Current.family.apply_default_categories!
 
     redirect_back_or_to categories_path, notice: t(".success")
   end
@@ -130,7 +134,7 @@ class CategoriesController < ApplicationController
 
     def set_categories
       @categories = unless @category.parent?
-        Current.family.categories.alphabetically.roots.where.not(id: @category.id)
+        Current.family.categories.alphabetically.roots.not_special.where.not(id: @category.id)
       else
         []
       end

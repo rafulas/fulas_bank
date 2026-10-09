@@ -576,7 +576,7 @@ class Entry < ApplicationRecord
   private
 
     def exclude_for_fulas_excluded_category
-      self.excluded = true if Category::FulasTree.excluded?(entryable.category)
+      self.excluded = true if entryable.category&.special_excluded?
     end
 
     def cannot_unexclude_split_parent

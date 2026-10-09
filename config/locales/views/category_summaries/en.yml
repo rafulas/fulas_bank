@@ -1,0 +1,15 @@
+---
+en:
+  category_summaries:
+    transactions_count:
+      one: 1 transaction
+      other: "%{count} transactions"
+    index:
+      category: Category
+      edit_categories: Edit/add categories
+      subtitle: What you spent and earned in each category
+      title: Summary
+    show:
+      back: Back
+      edit_categories: Edit/add categories
+      own_transactions: Main category transactions

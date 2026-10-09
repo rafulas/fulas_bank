@@ -1,5 +1,15 @@
 ---
 en:
+  activerecord:
+    errors:
+      models:
+        category:
+          attributes:
+            parent:
+              special_cannot_be_subcategory: a special category cannot be a subcategory
+              cannot_nest_under_special: a special category cannot have subcategories
+            base:
+              special_cannot_be_deleted: Special categories (Other, Excluded and Transfers) cannot be deleted
   models:
     category:
       uncategorized: Uncategorized

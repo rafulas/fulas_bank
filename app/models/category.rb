@@ -27,8 +27,24 @@ class Category < ApplicationRecord
   validates :name, exclusion: { in: [ UNCATEGORIZED_FILTER_VALUE ] }
 
   validate :category_level_limit
+  validate :special_category_shape
+
+  # Fulas Bank's three categories with a built-in behavior (see
+  # Category::FulasTree). The behavior follows this marker, never the name.
+  #   other     - catch-all; counts like any other category
+  #   excluded  - its transactions are kept but left out of reports
+  #   transfers - money moved between own accounts; neither income nor expense
+  enum :special, { other: "other", excluded: "excluded", transfers: "transfers" }, prefix: true, validate: { allow_nil: true }
+  validates :special, uniqueness: { scope: :family_id }, allow_nil: true
+
+  # Specials whose transactions are left out of income/expense figures.
+  ANALYTICS_NEUTRAL_SPECIALS = %w[excluded transfers].freeze
+  # Their ids, as a subquery for SQL fragments. A constant so static analysis
+  # can see it holds no user input.
+  ANALYTICS_NEUTRAL_IDS_SQL = "SELECT id FROM categories WHERE special IN ('excluded', 'transfers')".freeze
 
   before_save :inherit_color_from_parent
+  before_destroy :prevent_special_destroy
 
   scope :alphabetically, -> { order(:name) }
   scope :recently_used, -> { where.not(last_used_at: nil).order(last_used_at: :desc) }
@@ -39,6 +55,7 @@ class Category < ApplicationRecord
       .order(:name, :id)
   }
   scope :roots, -> { where(parent_id: nil) }
+  scope :not_special, -> { where(special: nil) }
   # Legacy scopes - classification removed; these now return all categories
   scope :incomes, -> { all }
   scope :expenses, -> { all }
@@ -141,10 +158,10 @@ class Category < ApplicationRecord
     def self.for(categories)
       categories_by_parent_id = categories.to_a.group_by(&:parent_id)
 
-      roots = categories_by_parent_id[nil].to_a.sort_by { |category| category.name.downcase }
+      roots = categories_by_parent_id[nil].to_a.sort_by(&:display_sort_key)
 
       roots.map do |category|
-        subcategories = categories_by_parent_id[category.id].to_a.sort_by { |sub| sub.name.downcase }
+        subcategories = categories_by_parent_id[category.id].to_a.sort_by(&:display_sort_key)
         new(category, subcategories)
       end
     end
@@ -340,6 +357,19 @@ class Category < ApplicationRecord
       end
   end
 
+  # Positioned categories first, in their order; the rest after, by name.
+  def display_sort_key
+    [ position.nil? ? 1 : 0, position.to_i, name.to_s.downcase ]
+  end
+
+  def special?
+    special.present?
+  end
+
+  def analytics_neutral?
+    ANALYTICS_NEUTRAL_SPECIALS.include?(special)
+  end
+
   def inherit_color_from_parent
     self.color = parent.color if subcategory? && parent
   end
@@ -406,6 +436,25 @@ class Category < ApplicationRecord
   end
 
   private
+    def special_category_shape
+      if special? && parent_id.present?
+        errors.add(:parent, :special_cannot_be_subcategory)
+      end
+
+      if parent&.special?
+        errors.add(:parent, :cannot_nest_under_special)
+      end
+    end
+
+    def prevent_special_destroy
+      return unless special?
+      # The family is going away with all its categories.
+      return if destroyed_by_association
+
+      errors.add(:base, :special_cannot_be_deleted)
+      throw :abort
+    end
+
     def category_level_limit
       if (subcategory? && parent&.subcategory?) || (parent? && subcategory?)
         errors.add(:parent, "can't have more than 2 levels of subcategories")

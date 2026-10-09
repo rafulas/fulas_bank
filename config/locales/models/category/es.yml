@@ -1,8 +1,18 @@
 ---
 es:
+  activerecord:
+    errors:
+      models:
+        category:
+          attributes:
+            parent:
+              special_cannot_be_subcategory: una categoría especial no puede ser una subcategoría
+              cannot_nest_under_special: una categoría especial no puede tener subcategorías
+            base:
+              special_cannot_be_deleted: Las categorías especiales (Otros, Excluido y Traspasos) no se pueden borrar
   models:
     category:
-      uncategorized: Sin clasificar
+      uncategorized: Sin definir
       other_investments: Otras inversiones
       investment_contributions: Aportaciones a inversiones
       defaults:

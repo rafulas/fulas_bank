@@ -444,6 +444,9 @@ Rails.application.routes.draw do
     delete :destroy_all, on: :collection
   end
 
+  # Fulas Bank: spending by category and subcategory ("Resumen").
+  resources :category_summaries, only: %i[index show], path: "resumen"
+
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection
     get :export_transactions, on: :collection

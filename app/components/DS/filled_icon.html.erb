@@ -1,4 +1,4 @@
-<%= tag.div style: transparent? ? container_styles : nil,
+<%= tag.div style: (transparent? || solid?) ? container_styles : nil,
             class: container_classes,
             role: (!aria_hidden && description.present?) ? "img" : nil,
             "aria-label": aria_hidden ? nil : description.presence,
