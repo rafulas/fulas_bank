@@ -27,7 +27,7 @@ class TransactionsController < ApplicationController
     base_scope = @search.transactions_scope
                        .reverse_chronological
                        .includes(
-                         { entry: :account },
+                         { entry: [ :account, { recurring_allocations: { recurring_occurrence: :recurring_transaction } } ] },
                          :category, :merchant, :tags,
                          # Union of #2643 counterpart UI + Skylight category-menu N+1:
                          # - outflow rows need inflow_transaction (to_account) for both
