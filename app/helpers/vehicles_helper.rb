@@ -10,7 +10,7 @@ module VehiclesHelper
   def vehicle_log_title(log)
     case log.kind
     when "fuel" then t("vehicles.logs.kinds.fuel")
-    when "service" then log.maintenance_item&.name || t("vehicles.logs.kinds.service")
+    when "service" then log.maintenance_item&.name || log.notes.to_s.lines.first&.strip.presence || t("vehicles.logs.kinds.service")
     else t("vehicles.logs.categories.#{log.category}", default: t("vehicles.logs.kinds.expense"))
     end
   end

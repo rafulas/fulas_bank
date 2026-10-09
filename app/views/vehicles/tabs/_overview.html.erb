@@ -38,7 +38,10 @@
   <% if logbook.empty? %>
     <%= render DS::EmptyState.new(icon: "fuel", title: t(".logbook_empty_title"), description: t(".logbook_empty_description")) do |empty| %>
       <% empty.with_action do %>
-        <%= render DS::Link.new(text: t(".add_refuel"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <%= render DS::Link.new(text: t(".add_refuel"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+          <%= render DS::Link.new(text: t(".import_roadtrip"), icon: "upload", variant: :outline, href: new_vehicle_roadtrip_import_path(account), frame: :modal) %>
+        </div>
       <% end %>
     <% end %>
   <% else %>

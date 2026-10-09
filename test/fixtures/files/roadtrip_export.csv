@@ -1,0 +1,36 @@
+﻿ROAD TRIP CSV ";,"
+Version;Language
+2000;es
+
+
+COMBUSTIBLE
+Cuentakilómetros (km);Distancia de viaje;Fecha;Cantidad;Unidades;Precio por unidad;Precio total;Tanque lleno;l/100 km;Notas;Octano;Ubicación;Pago;Condiciones;Restablecer Estadísticas;Categorías;Flags;Código de moneda;Tipo de cambio;Latitud;Longitud;ID;Trip Comp Fuel Economy;Trip Comp Avg. Speed;Trip Comp Temperature;Trip Comp Drive Time;Tank Number
+10000;;"2024-1-5 11:18";40;L;1,5;60;;;;;;;;Reset;;9;;1;40,47;-3,68;1;;;;;0
+10500;500;"2024-1-20";20;L;1,5;30;Partial;;;;;;;;;0;;1;;;2;;;;;0
+11000;500;"2024-2-3 9:55";30,5;L;1,6;48,8;;;Repsol;"98";;;;;;0;;1;;;3;;;;;0
+110000;99000;"2024-2-20 8:00";35;L;1,6;56;;;;;;;;;;0;;1;;;4;;;;;0
+
+
+MANTENIMIENTO
+Descripción;Fecha;Cuentakilómetros (km);Costo;Notas;Ubicación;Tipo;Subtipo;Pago;Categorías;Repita (Tiempo);Repita (Distancia);Flags;Código de moneda;Tipo de cambio;Latitud;Longitud;ID;Notification Interval;Notification Distance;Repeat End Date
+"Revisión Coche";"2024-1-26 8:49";10800;429,45;"Cambio aceite
+Cambio filtros";"Taller Pepe";Servicio;;;;;;0;;1;;;1;;
+"Pago IVTM 2024";"2024-2-9 11:53";11000;129;;;Gastos;"Recurrente";;;;;0;;1;;;2;;
+"ITV 2024";"2024-2-11 10:26";11050;42;;;Servicio;;;;;;0;;1;;;3;;
+"Rellenar Líquido";"2024-2-12 20:29";11100;;;;Servicio;;;;;;0;;1;;;4;;
+
+
+Viajes por carretera
+Nombre;Fecha de inicio;Inicio cuentakilómetros (km);La fecha de finalización;Fin cuentakilómetros;Notas;Distancia;ID;Tipo;Categorías;Flags
+"Invierno, 2024";"2024-1-1";10000;"2024-3-31";11000;;1000;1;Informe;;14
+
+
+Vehículo
+Nombre;Odómetro;Unidades;Notas;Capacidad del depósito;Unidades depósito;Moneda local;Flags;IconID;FuelUnits;TripComp Units;TripComp Speed;TripComp Temperature;TripComp Time Enabled;Odometer Shift
+"Coche de prueba";"km";"l/100 km";"Placa: 1234bcd
+VIN:";;L;EUR;1;1000;1;;;;;
+
+
+VALUATIONS
+Type;Date;Odometer;Price;Notes;Flags
+Purchase;"2019-9-13";4000;36000;;0

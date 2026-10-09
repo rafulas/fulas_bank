@@ -7,7 +7,10 @@
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-2">
     <p class="text-sm text-secondary"><%= t(".hint") %></p>
-    <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= render DS::Link.new(text: t(".import"), icon: "upload", variant: :outline, href: new_vehicle_roadtrip_import_path(account), frame: :modal) %>
+      <%= render DS::Link.new(text: t(".add"), icon: "plus", href: new_vehicle_log_path(account, kind: "fuel"), frame: :modal) %>
+    </div>
   </div>
 
   <% if refuels.empty? %>

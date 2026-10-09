@@ -1,0 +1,50 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <% vehicle = @account.vehicle %>
+
+    <div class="space-y-4">
+      <% if @summary.first_date %>
+        <p class="text-sm text-secondary">
+          <%= t(".period", from: format_date(@summary.first_date), to: format_date(@summary.last_date)) %>
+        </p>
+      <% end %>
+
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <dl class="space-y-2">
+          <% Vehicle::Log::KINDS.each do |kind| %>
+            <%= render DS::DetailRow.new(label: t("vehicles.logs.kinds_plural.#{kind}"), value: @summary.counts[kind].to_s, align: :center) %>
+          <% end %>
+          <% if @summary.license_plate %>
+            <%= render DS::DetailRow.new(label: t(".license_plate"), value: @summary.license_plate, align: :center) %>
+          <% end %>
+        </dl>
+      <% end %>
+
+      <% if @summary.duplicates.positive? %>
+        <%= render DS::Alert.new(message: t(".duplicates", count: @summary.duplicates), variant: :info) %>
+      <% end %>
+
+      <% if @summary.issues.any? %>
+        <%= render DS::Alert.new(title: t(".issues_title"), message: t(".issues_description"), variant: :warning) %>
+        <ul class="space-y-1 text-sm text-primary">
+          <% @summary.issues.each do |issue| %>
+            <li><%= t(".issue.#{issue.reason}", date: format_date(issue.date), odometer: vehicle_distance(issue.odometer, vehicle)) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <p class="text-xs text-secondary"><%= t(".not_imported") %></p>
+
+      <% if @summary.counts.values.sum.zero? %>
+        <%= render DS::Alert.new(message: t(".nothing_new"), variant: :info) %>
+      <% else %>
+        <%= styled_form_with url: vehicle_roadtrip_import_path(@account), method: :post, data: { turbo_frame: :_top } do |form| %>
+          <%= hidden_field_tag :content, @content %>
+          <%= hidden_field_tag :confirm, "1" %>
+          <%= form.submit t(".submit", count: @summary.counts.values.sum) %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
