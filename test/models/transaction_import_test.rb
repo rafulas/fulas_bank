@@ -203,7 +203,7 @@ class TransactionImportTest < ActiveSupport::TestCase
       01/02/2024,-20,Hotel,"Verano 2026;Viaje La Manga"
     CSV
 
-    @import.update!(raw_file_str: csv, date_col_label: "date", amount_col_label: "amount", date_format: "%m/%d/%Y")
+    @import.update!(raw_file_str: csv, date_col_label: "date", amount_col_label: "amount", name_col_label: "name", tags_col_label: "tags", date_format: "%m/%d/%Y")
     @import.generate_rows_from_csv
 
     assert_equal [ "Cupra", "Verano 2026", "Viaje La Manga" ],
