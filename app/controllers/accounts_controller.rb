@@ -69,8 +69,12 @@ class AccountsController < ApplicationController
 
   def new
     # Get all registered providers with any credentials configured
-    @provider_configs = Provider::Factory.registered_adapters.flat_map do |adapter_class|
-      adapter_class.connection_configs(family: family)
+    @provider_configs = if Rails.configuration.x.account_provider_links
+      Provider::Factory.registered_adapters.flat_map do |adapter_class|
+        adapter_class.connection_configs(family: family)
+      end
+    else
+      []
     end
   end
 

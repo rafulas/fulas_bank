@@ -40,7 +40,8 @@ es:
       no_accounts: Aún no hay cuentas
     form:
       balance: Saldo actual
-      opening_balance_date_label: Fecha del saldo inicial
+      opening_balance_date_label: Fecha del saldo actual
+      opening_balance_date_hint: Normalmente hoy. Si luego importas movimientos de días anteriores, la app calcula sola el saldo de esos días.
       name_label: Nombre de la cuenta
       name_placeholder: Ejemplo de nombre de cuenta
       additional_details: Detalles adicionales

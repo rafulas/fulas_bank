@@ -73,6 +73,12 @@ module Sure
     retention_days = ENV.fetch("DEBUG_LOG_RETENTION_DAYS", "90").to_i
     config.x.debug_log.retention_days = retention_days.positive? ? retention_days : 90
 
+    # Fulas Bank: accounts are entered by hand (balance + imported
+    # statements). The "link with Brex / Enable Banking / SimpleFIN…" options
+    # stay hidden until bank linking is set up; ACCOUNT_PROVIDER_LINKS=true
+    # brings them back.
+    config.x.account_provider_links = ActiveModel::Type::Boolean.new.cast(ENV.fetch("ACCOUNT_PROVIDER_LINKS", "false"))
+
     # Handle OmniAuth/OIDC errors gracefully (must be before OmniAuth middleware)
     require_relative "../app/middleware/omniauth_error_handler"
     config.middleware.use OmniauthErrorHandler

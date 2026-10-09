@@ -40,7 +40,8 @@ en:
       no_accounts: No accounts yet
     form:
       balance: "Balance on date:"
-      opening_balance_date_label: Opening balance date
+      opening_balance_date_label: Current balance date
+      opening_balance_date_hint: Usually today. If you later import earlier transactions, the balance for those days is worked out from this one.
       name_label: Account name
       name_placeholder: Example account name
       additional_details: Additional details

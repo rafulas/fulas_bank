@@ -933,6 +933,90 @@ class Balance::ForwardCalculatorTest < ActiveSupport::TestCase
     )
   end
 
+  # Fulas Bank: the account is created with today's balance, then a statement
+  # with older movements is imported. The entered balance stays as it is on
+  # its date and the earlier days are worked out backwards from it.
+  test "movements imported before the entered balance date are worked out backwards from it" do
+    account = create_account_with_ledger(
+      account: { type: Depository, currency: "EUR" },
+      entries: [
+        { type: "transaction", date: 4.days.ago.to_date, amount: -500 }, # income
+        { type: "transaction", date: 2.days.ago.to_date, amount: 100 }, # expense
+        { type: "transaction", date: 1.day.ago.to_date, amount: 50 }, # expense on the anchor day
+        { type: "opening_anchor", date: 1.day.ago.to_date, balance: 1000 },
+        { type: "transaction", date: Date.current, amount: 200 } # expense after the anchor
+      ]
+    )
+
+    calculated = Balance::ForwardCalculator.new(account).calculate
+
+    # 1000 = seed + 500 - 100 - 50  →  seed = 650
+    assert_calculated_ledger_balances(
+      calculated_data: calculated,
+      expected_data: [
+        {
+          date: 4.days.ago.to_date,
+          legacy_balances: { balance: 1150, cash_balance: 1150 },
+          balances: { start: 650, start_cash: 650, start_non_cash: 0, end_cash: 1150, end_non_cash: 0, end: 1150 },
+          flows: { cash_inflows: 500, cash_outflows: 0 },
+          adjustments: 0
+        },
+        {
+          date: 3.days.ago.to_date,
+          legacy_balances: { balance: 1150, cash_balance: 1150 },
+          balances: { start: 1150, start_cash: 1150, start_non_cash: 0, end_cash: 1150, end_non_cash: 0, end: 1150 },
+          flows: 0,
+          adjustments: 0
+        },
+        {
+          date: 2.days.ago.to_date,
+          legacy_balances: { balance: 1050, cash_balance: 1050 },
+          balances: { start: 1150, start_cash: 1150, start_non_cash: 0, end_cash: 1050, end_non_cash: 0, end: 1050 },
+          flows: { cash_inflows: 0, cash_outflows: 100 },
+          adjustments: 0
+        },
+        {
+          # The entered balance: reached by the movements, no jump.
+          date: 1.day.ago.to_date,
+          legacy_balances: { balance: 1000, cash_balance: 1000 },
+          balances: { start: 1050, start_cash: 1050, start_non_cash: 0, end_cash: 1000, end_non_cash: 0, end: 1000 },
+          flows: { cash_inflows: 0, cash_outflows: 50 },
+          adjustments: 0
+        },
+        {
+          date: Date.current,
+          legacy_balances: { balance: 800, cash_balance: 800 },
+          balances: { start: 1000, start_cash: 1000, start_non_cash: 0, end_cash: 800, end_non_cash: 0, end: 800 },
+          flows: { cash_inflows: 0, cash_outflows: 200 },
+          adjustments: 0
+        }
+      ]
+    )
+  end
+
+  test "credit card debt entered for a date is worked out backwards through earlier charges" do
+    account = create_account_with_ledger(
+      account: { type: CreditCard, currency: "EUR" },
+      entries: [
+        { type: "transaction", date: 3.days.ago.to_date, amount: 300 }, # purchase
+        { type: "transaction", date: 2.days.ago.to_date, amount: -100 }, # repayment
+        { type: "opening_anchor", date: 1.day.ago.to_date, balance: 900 }
+      ]
+    )
+
+    calculated = Balance::ForwardCalculator.new(account).calculate
+
+    # Debt 900 = seed + 300 - 100  →  seed = 700
+    assert_balances(
+      calculated_data: calculated,
+      expected_balances: [
+        [ 3.days.ago.to_date, { balance: 1000, cash_balance: 1000 } ],
+        [ 2.days.ago.to_date, { balance: 900, cash_balance: 900 } ],
+        [ 1.day.ago.to_date, { balance: 900, cash_balance: 900 } ]
+      ]
+    )
+  end
+
   private
     def assert_balances(calculated_data:, expected_balances:)
       # Sort calculated data by date to ensure consistent ordering
