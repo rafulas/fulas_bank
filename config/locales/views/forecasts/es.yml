@@ -1,0 +1,73 @@
+---
+es:
+  forecasts:
+    show:
+      title: Forecast
+      subtitle: Saldo previsto de tus cuentas a partir de hoy, con los movimientos recurrentes, los puntuales que esperas y el gasto variable habitual.
+      no_accounts_title: Sin cuentas para prever
+      no_accounts_description: El forecast usa tus cuentas corrientes y tarjetas de crédito. Añade alguna para ver su saldo previsto.
+      periods:
+        1m: 1 mes
+        3m: 3 meses
+        6m: 6 meses
+        1y: 1 año
+        2y: 2 años
+        5y: 5 años
+      until: Hasta el
+      account: Cuenta
+      all_accounts: Todas las cuentas
+      variable: Gasto variable
+      variable_on: Incluir la media
+      variable_off: Solo recurrentes y puntuales
+      today: Saldo hoy
+      on_date: Previsto el %{date}
+      difference: Diferencia
+      lowest: Punto más bajo
+      lowest_on: el %{date}
+      total_hint: El total suma lo que hay en las cuentas corrientes y resta lo que se debe en las tarjetas.
+      chart_total: Saldo previsto de todas las cuentas
+      chart_account: Saldo previsto de %{name}
+      accounts_title: Por cuenta
+      planned_title: Movimientos puntuales previstos
+      planned_hint: Gastos o ingresos que sabes que llegarán y no son recurrentes (una devolución de Hacienda, un viaje, una matrícula…).
+      planned_add: Añadir
+      edit: Editar
+    flows:
+      title: Movimientos previstos
+      empty: No hay movimientos recurrentes ni puntuales previstos en este periodo.
+      variable_spending: "Gasto variable de %{account}: unos %{amount} al mes (media de los últimos meses sin recurrentes), repartidos día a día."
+      variable_income: "Ingresos variables de %{account}: unos %{amount} al mes (media de los últimos meses sin recurrentes), repartidos día a día."
+      date: Fecha
+      name: Concepto
+      account: Cuenta
+      source: Origen
+      amount: Importe
+      no_account: Sin cuenta
+      sources:
+        recurring: Recurrente
+        planned: Puntual
+      truncated: Se muestran los primeros %{count} movimientos; el gráfico y los saldos los tienen todos en cuenta.
+  forecast_items:
+    form:
+      name: Concepto
+      name_placeholder: Devolución de la renta
+      nature: Tipo
+      outflow: Gasto
+      inflow: Ingreso
+      amount: Importe
+      date: Fecha prevista
+      account: Cuenta
+      notes: Notas
+      submit: Guardar
+      delete: Eliminar
+      resource: movimiento previsto
+    new:
+      title: Nuevo movimiento previsto
+    edit:
+      title: Editar movimiento previsto
+    create:
+      success: Movimiento previsto guardado
+    update:
+      success: Movimiento previsto actualizado
+    destroy:
+      success: Movimiento previsto eliminado

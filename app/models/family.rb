@@ -139,6 +139,7 @@ class Family < ApplicationRecord
 
   has_many :llm_usages, dependent: :destroy
   has_many :recurring_transactions, dependent: :destroy
+  has_many :forecast_items, dependent: :destroy
   has_many :recurring_occurrences, dependent: :destroy
   has_many :insights, dependent: :destroy
 

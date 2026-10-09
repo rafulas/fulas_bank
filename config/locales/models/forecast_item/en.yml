@@ -1,0 +1,9 @@
+---
+en:
+  activerecord:
+    attributes:
+      forecast_item:
+        name: Description
+        amount: Amount
+        date: Date
+        account: Account
