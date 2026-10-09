@@ -403,6 +403,12 @@ class Import < ApplicationRecord
       }
     end
 
+    # Bilance writes transfers once, with the origin's sign, and splits the
+    # category in two columns; its rows are adjusted before they are stored.
+    if is_a?(TransactionImport) && Import::BilanceExport.match?(csv_headers)
+      mapped_rows = Import::BilanceExport.new(self).adjust(mapped_rows, csv_rows)
+    end
+
     rows.insert_all!(mapped_rows)
     update_column(:rows_count, rows.count)
   end

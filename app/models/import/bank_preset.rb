@@ -3,6 +3,7 @@
 # description...), so a statement from a known bank can be imported without
 # mapping columns by hand.
 #
+# Exports from the Bilance app are recognised first (Import::BilanceExport).
 # Spanish banks export in a handful of similar layouts. BBVA is recognised
 # explicitly; other statements with Spanish headers (Fecha / Concepto /
 # Importe and their usual variants) get the same treatment as a generic
@@ -40,6 +41,15 @@ class Import::BankPreset
     return unless import.is_a?(TransactionImport)
 
     headers = Array(import.csv_headers).compact
+
+    # Exports from Bilance carry their own layout (and transfers that need
+    # their sign fixed), recognised before any bank statement guess.
+    if Import::BilanceExport.match?(headers)
+      Import::BilanceExport.new(import).configure
+      import.save!(validate: false)
+      return Result.new(key: "bilance", bank_name: "Bilance")
+    end
+
     columns = match_columns(headers)
     return unless columns.values_at(:date, :name, :amount).all?(&:present?)
 
@@ -79,7 +89,8 @@ class Import::BankPreset
     end
 
     def detect_number_format(amount_header)
-      samples = column_samples(amount_header)
+      # "-75.29€", "1.054,37 EUR": only the number decides the format.
+      samples = column_samples(amount_header).map { |value| value.gsub(/\A[^\d\-]+|[^\d]+\z/, "") }
 
       if samples.any? { |value| value.match?(/,\d{1,2}\z/) } || samples.any? { |value| value.match?(/\d\.\d{3},/) }
         "1.234,56"
