@@ -41,6 +41,7 @@ en:
         suggested: Suggested
         suggested_hint: "Matched by the app with \"%{name}\". Confirm it in the suggestions box on the Overview."
       edit:
+        linking: "You already had this record of %{date} without a bank charge. \"%{name}\" will be linked to it when you save, instead of creating another one."
         suggested: The app linked this record to a bank charge. Check the details and press Save to confirm it.
         suggested_fuel: The app created this refuel from a bank charge. Add the odometer and litres and press Save to confirm it. If you put in less fuel than you paid for (discounts, other purchases), correct the total; the bank charge does not change.
   transactions:

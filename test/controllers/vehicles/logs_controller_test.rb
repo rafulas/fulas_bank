@@ -15,6 +15,24 @@ class Vehicles::LogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "linking a movement to a refuel already typed opens that refuel instead of a new one" do
+    typed = @vehicle.logs.create!(kind: "fuel", date: 2.days.ago.to_date, odometer: 115_353, quantity: 35.44, amount: 70)
+    charge = create_transaction(name: "REPSOL", amount: 75.29, date: 2.days.ago.to_date)
+
+    get new_vehicle_log_url(@account, kind: "fuel", entry_id: charge.id)
+    assert_redirected_to edit_vehicle_log_url(@account, typed, entry_id: charge.id)
+
+    follow_redirect!
+    assert_response :success
+    assert_select "option[value='#{charge.id}'][selected]"
+
+    assert_no_difference -> { @vehicle.logs.count } do
+      patch vehicle_log_url(@account, typed), params: { vehicle_log: { entry_id: charge.id } }
+    end
+    assert_equal charge, typed.reload.entry
+    assert_equal BigDecimal("70"), typed.amount
+  end
+
   test "suggests bank charges for the date and amount being entered" do
     charge = create_transaction(name: "REPSOL CARD", amount: 61.2, date: 12.days.ago.to_date, account: accounts(:credit_card))
 

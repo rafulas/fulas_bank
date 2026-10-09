@@ -41,6 +41,7 @@ es:
         suggested: Sugerido
         suggested_hint: "Emparejado por la app con «%{name}». Confírmalo en la caja de sugerencias del Resumen."
       edit:
+        linking: "Ya tenías este apunte del %{date} sin cargo del banco. Se le vinculará «%{name}» al guardar, en vez de crear otro."
         suggested: La app ha vinculado este apunte con un cargo del banco. Revisa los datos y pulsa Guardar para confirmarlo.
         suggested_fuel: La app ha creado este repostaje a partir de un cargo del banco. Añade los km y los litros y pulsa Guardar para confirmarlo. Si echaste menos combustible del que pagaste (descuentos, otras compras), corrige el total; el cargo del banco no cambia.
   transactions:
