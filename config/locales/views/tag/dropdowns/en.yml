@@ -3,7 +3,11 @@ en:
   tag:
     dropdowns:
       show:
+        all: All tags
+        cancel: Cancel
         empty: No tags yet
         manage: Manage tags
         no_tags: No tags found
+        recent: Recent tags
+        save: Save
         search_placeholder: Search

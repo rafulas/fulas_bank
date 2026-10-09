@@ -187,6 +187,29 @@ class TransactionImportTest < ActiveSupport::TestCase
     assert_equal [ "Food|Dining", "essentials" ], Import::Row.new(tags: "Food\\|Dining|essentials").tags_list
   end
 
+  test "parses semicolon tags, trimming spaces and dropping blanks and repeats" do
+    assert_equal [ "Cupra", "Verano 2026", "Viaje La Manga" ],
+      Import::Row.new(tags: "Cupra;Verano 2026; Viaje La Manga").tags_list
+    assert_equal [ "Viaje Roma, Italia", "Verano" ], Import::Row.new(tags: "Viaje Roma, Italia;Verano").tags_list
+    assert_equal [ "A;B", "C" ], Import::Row.new(tags: "A\\;B,C").tags_list
+    assert_equal [ "Boda", "Viajes" ], Import::Row.new(tags: "Boda; ;Viajes;Boda;").tags_list
+    assert_equal [ "" ], Import::Row.new(tags: " ; ").tags_list
+  end
+
+  test "maps each semicolon-separated tag as its own tag" do
+    csv = <<~CSV
+      date,amount,name,tags
+      01/01/2024,-10,Gasolinera,Cupra;Verano 2026; Viaje La Manga
+      01/02/2024,-20,Hotel,"Verano 2026;Viaje La Manga"
+    CSV
+
+    @import.update!(raw_file_str: csv, date_col_label: "date", amount_col_label: "amount", date_format: "%m/%d/%Y")
+    @import.generate_rows_from_csv
+
+    assert_equal [ "Cupra", "Verano 2026", "Viaje La Manga" ],
+      Import::TagMapping.mappables_by_key(@import.reload).keys.sort
+  end
+
   test "does not create duplicate when matching transaction exists with same name" do
     account = accounts(:depository)
 

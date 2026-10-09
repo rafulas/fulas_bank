@@ -19,6 +19,35 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "show adds up the transactions with the tag" do
+    tag = @user.family.tags.create!(name: "Verano 2026")
+    entry = accounts(:depository).entries.create!(
+      name: "Hotel", date: Date.current, amount: 250, currency: accounts(:depository).currency,
+      entryable: Transaction.new(tags: [ tag ])
+    )
+
+    get tag_url(tag, period: "current_month")
+
+    assert_response :success
+    assert_select "[data-tag-total]", text: /250/
+    assert_select "[data-tag-months] > div", count: Tag::Report::MONTHS
+    assert_select "a[href=?]", transaction_path(entry)
+  end
+
+  test "show does not open another family's tag" do
+    other_tag = @other_family_user.family.tags.create!(name: "Ajena")
+
+    get tag_url(other_tag)
+
+    assert_response :not_found
+  end
+
+  test "index links each tag to its page" do
+    get tags_url
+
+    assert_select "a[href=?]", tag_path(tags(:one))
+  end
+
   test "should get new" do
     get new_tag_url
     assert_response :success

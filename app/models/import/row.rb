@@ -14,7 +14,8 @@ class Import::Row < ApplicationRecord
     if tags.blank?
       [ "" ]
     else
-      split_tags(tags).map(&:strip)
+      names = split_tags(tags).map(&:strip).reject(&:blank?)
+      names.any? ? names.uniq : [ "" ]
     end
   end
 
@@ -37,13 +38,19 @@ class Import::Row < ApplicationRecord
   end
 
   private
-    # Supports historical comma-delimited exports and pipe-delimited templates.
-    # Backslash escapes comma, pipe, and backslash so tag names can contain either delimiter.
+    # Supports semicolon-delimited exports (common in Spanish finance apps:
+    # "Cupra;Verano 2026; Viaje La Manga"), historical comma-delimited exports
+    # and pipe-delimited templates. The semicolon wins when present, so a tag
+    # name may contain commas ("Viaje Roma, Italia;Verano"). Backslash escapes
+    # any delimiter and the backslash itself.
+    TAG_ESCAPABLE = [ ";", ",", "|", "\\" ].freeze
+
     def split_tags(value)
       split_escaped_tags(value, tag_delimiter_for(value))
     end
 
     def tag_delimiter_for(value)
+      return ";" if unescaped_delimiter?(value, ";")
       return "," if unescaped_delimiter?(value, ",")
       return "|" if unescaped_delimiter?(value, "|")
 
@@ -73,7 +80,7 @@ class Import::Row < ApplicationRecord
 
       value.each_char do |char|
         if escaping
-          current << (char.in?([ delimiter, ",", "|", "\\" ]) ? char : "\\#{char}")
+          current << (char.in?(TAG_ESCAPABLE) ? char : "\\#{char}")
           escaping = false
         elsif char == "\\"
           escaping = true

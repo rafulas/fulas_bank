@@ -140,19 +140,24 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_text @transaction.name
   end
 
-  test "can toggle tags from the transaction row" do
+  test "can tick several tags from the transaction row and save them at once" do
     transaction = @transaction.entryable
     summary_id = dom_id(transaction, "tag_summary_desktop")
     option_id = "#{dom_id(@transaction, :tag_option)}_#{tags(:two).id}"
+    checkbox_id = "#{dom_id(@transaction, :tag_checkbox)}_#{tags(:two).id}"
 
     within "##{summary_id}" do
       assert_text tags(:one).name
     end
 
     find("##{summary_id}").click
-    find("##{option_id} button").click
+    find("##{checkbox_id}").click
 
-    assert_selector "##{option_id}[aria-selected='true']"
+    # Ticking only changes the form; nothing is saved until "Save".
+    assert_equal [ tags(:one).id ], transaction.reload.tag_ids
+
+    find("##{option_id}").ancestor("form").find("[data-tag-dropdown-save]").click
+
     assert_selector "##{summary_id} [data-tag-fit-target=compact] [data-tag-initial]", count: 2, visible: :all
     assert_equal [ tags(:one).id, tags(:two).id ].sort, transaction.reload.tag_ids.sort
   end
@@ -182,29 +187,18 @@ class TransactionsTest < ApplicationSystemTestCase
     transaction = @uncategorized_transaction.entryable
     assert_empty transaction.tags
     option_id = "#{dom_id(@uncategorized_transaction, :tag_option)}_#{tags(:one).id}"
+    checkbox_id = "#{dom_id(@uncategorized_transaction, :tag_checkbox)}_#{tags(:one).id}"
 
     find("##{dom_id(@uncategorized_transaction)}").hover
     find("##{dom_id(transaction, "tag_summary_desktop")}").click
-    find("##{option_id} button").click
-    assert_selector "##{option_id}[aria-selected='true']"
+    find("##{checkbox_id}").click
+    find("##{option_id}").ancestor("form").find("[data-tag-dropdown-save]").click
+    assert_selector "##{dom_id(transaction, "tag_summary_desktop")}", text: tags(:one).name
 
     page.current_window.resize_to(390, 900)
     assert_selector "##{dom_id(transaction, "tag_summary_mobile")}", text: tags(:one).name
   ensure
     page.current_window.resize_to(1400, 1400)
-  end
-
-  test "keyboard focus stays on a tag option after toggling it" do
-    summary_id = dom_id(@transaction.entryable, "tag_summary_desktop")
-    option_id = "#{dom_id(@transaction, :tag_option)}_#{tags(:two).id}"
-
-    find("##{summary_id}").click
-    button = find("##{option_id} button")
-    button.send_keys(:enter)
-
-    assert_selector "##{option_id}[aria-selected='true']"
-    assert page.evaluate_script("document.activeElement.closest('##{option_id}') !== null"),
-      "focus should remain on the toggled option"
   end
 
   test "can select and deselect entire page of transactions" do

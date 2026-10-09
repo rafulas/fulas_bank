@@ -20,11 +20,32 @@ class Tag < ApplicationRecord
   validates :name, exclusion: { in: [ UNTAGGED_FILTER_VALUE ] }
   validates :color, format: { with: /\A#[0-9A-Fa-f]{6}\z/ }, allow_nil: true
 
+  # How many "recently used" tags the pickers show first.
+  RECENT_LIMIT = 8
+
   scope :alphabetically, -> { order(:name, :id) }
+
+  # Tags ordered by the last time they were put on a transaction (newest first).
+  scope :recently_used, -> {
+    joins(:taggings)
+      .group("tags.id")
+      .reorder(Arel.sql("MAX(taggings.created_at) DESC"), "tags.name")
+  }
 
   class << self
     def untagged
       new(name: I18n.t(UNTAGGED_NAME_KEY), color: UNCATEGORIZED_COLOR)
+    end
+
+    # Splits the tags of the current scope for the pickers: the most recently
+    # used ones first (in that order) and the rest alphabetically, with no tag
+    # repeated in both lists.
+    def recent_and_rest(limit: RECENT_LIMIT)
+      tags = reorder(:name, :id).to_a
+      by_id = tags.index_by(&:id)
+      recent = recently_used.limit(limit).pluck("tags.id").filter_map { |id| by_id[id] }
+
+      [ recent, tags - recent ]
     end
 
     # Helper to get the localized name for "Untagged"

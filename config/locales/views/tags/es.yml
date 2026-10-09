@@ -22,10 +22,24 @@ es:
       loading: Cargando etiquetas...
     new:
       new: Nueva etiqueta
+    show:
+      average: 'Media (%{from} – %{to})'
+      back: Etiquetas
+      by_category: Por categoría
+      edit: Editar
+      empty_period: No hay movimientos con esta etiqueta en este periodo
+      last_months: Últimos %{count} meses
+      open_in_transactions: Abrir en Transacciones
+      see_all: Ver los %{count} movimientos
+      transactions_title: Transacciones
+      transactions:
+        one: 1 movimiento
+        other: "%{count} movimientos"
     summary:
       add: Añadir etiquetas
       title: 'Etiquetas: %{names}'
     tag:
+      show: Ver movimientos
       delete: Eliminar
       edit: Editar
     update:

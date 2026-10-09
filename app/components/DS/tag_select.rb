@@ -23,11 +23,33 @@ class DS::TagSelect < DesignSystemComponent
     "#{form.object_name}[#{attribute}][]"
   end
 
+  # Recently used tags first (when the caller passes a Tag relation), then the
+  # rest alphabetically. Each tag appears once.
+  def recent_tags
+    grouped_tags.first
+  end
+
+  def other_tags
+    grouped_tags.last
+  end
+
+  def show_group_headings?
+    recent_tags.any? && other_tags.any?
+  end
+
   def menu_id
     @menu_id ||= "tag_select_#{field_name.gsub(/\W+/, "_")}_#{object_id}"
   end
 
   private
+    def grouped_tags
+      @grouped_tags ||= if tags.respond_to?(:recent_and_rest)
+        tags.recent_and_rest
+      else
+        [ [], tags.to_a ]
+      end
+    end
+
 
     def normalize_menu_placement(value)
       normalized = value.to_s.downcase

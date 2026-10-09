@@ -1,5 +1,15 @@
 <%= turbo_frame_tag "tag_dropdown" do %>
-  <div class="flex flex-col relative" data-controller="list-filter">
+  <%= form_with url: tags_transaction_path(@entry),
+        method: :patch,
+        class: "flex flex-col relative",
+        data: {
+          controller: "list-filter",
+          action: "turbo:submit-end->DS--popover#close",
+          turbo_frame: "_top"
+        } do %>
+    <%# Empty value so unticking every tag still clears them all on save. %>
+    <%= hidden_field_tag "tag_ids[]", "", id: nil %>
+
     <div class="grow p-1.5">
       <div class="relative flex items-center bg-container border border-secondary rounded-lg">
         <input
@@ -17,13 +27,23 @@
       </div>
     </div>
 
-    <div data-list-filter-target="list" role="listbox" aria-multiselectable="true" class="flex flex-col gap-0.5 p-1.5 mt-0.5 mr-2 max-h-64 overflow-y-scroll scrollbar">
+    <div data-list-filter-target="list" class="flex flex-col gap-0.5 p-1.5 mt-0.5 mr-2 max-h-64 overflow-y-scroll scrollbar">
       <div class="pb-2 pl-4 mr-2 text-secondary hidden" data-list-filter-target="emptyMessage">
         <%= t(".no_tags") %>
       </div>
 
-      <% if @tags.any? %>
-        <% @tags.each do |tag| %>
+      <% if @recent_tags.any? || @other_tags.any? %>
+        <% if @recent_tags.any? && @other_tags.any? %>
+          <p class="pl-2 pb-1 text-xs font-medium text-secondary uppercase tracking-wide"><%= t(".recent") %></p>
+        <% end %>
+        <% @recent_tags.each do |tag| %>
+          <%= render "tag/dropdowns/row", tag: tag, entry: @entry, selected: @selected_tag_ids.include?(tag.id) %>
+        <% end %>
+
+        <% if @recent_tags.any? && @other_tags.any? %>
+          <p class="pl-2 pt-2 pb-1 text-xs font-medium text-secondary uppercase tracking-wide"><%= t(".all") %></p>
+        <% end %>
+        <% @other_tags.each do |tag| %>
           <%= render "tag/dropdowns/row", tag: tag, entry: @entry, selected: @selected_tag_ids.include?(tag.id) %>
         <% end %>
       <% else %>
@@ -33,13 +53,30 @@
 
     <%= render "shared/ruler", classes: "my-2" %>
 
-    <div class="relative p-1.5 w-full">
+    <div class="flex items-center justify-between gap-2 p-1.5 w-full">
       <%= link_to tags_path,
             data: { turbo_frame: "_top" },
-            class: "flex text-sm font-medium items-center gap-2 text-secondary w-full rounded-lg p-2 hover:bg-container-inset-hover" do %>
+            class: "flex text-sm font-medium items-center gap-2 text-secondary rounded-lg p-2 hover:bg-container-inset-hover" do %>
         <%= icon("settings-2") %>
         <p><%= t(".manage") %></p>
       <% end %>
+
+      <div class="flex items-center gap-2">
+        <%= render DS::Button.new(
+              text: t(".cancel"),
+              variant: :ghost,
+              size: :sm,
+              type: "reset",
+              data: { action: "DS--popover#close" }
+            ) %>
+        <%= render DS::Button.new(
+              text: t(".save"),
+              variant: :primary,
+              size: :sm,
+              type: "submit",
+              data: { tag_dropdown_save: true }
+            ) %>
+      </div>
     </div>
-  </div>
+  <% end %>
 <% end %>

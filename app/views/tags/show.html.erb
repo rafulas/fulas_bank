@@ -1,0 +1,119 @@
+<% currency = Current.family.currency %>
+<% months_max = @report.months.map { |month| month.total.abs }.max.to_d %>
+
+<% content_for :page_header do %>
+  <div class="mb-6 flex flex-col items-center gap-3 text-center">
+    <div class="flex w-full items-center justify-between">
+      <%= render DS::Link.new(
+        text: t(".back"),
+        icon: "arrow-left",
+        variant: "ghost",
+        href: tags_path
+      ) %>
+      <%= render DS::Link.new(
+        text: t(".edit"),
+        icon: "pencil",
+        variant: "ghost",
+        href: edit_tag_path(@tag),
+        frame: :modal
+      ) %>
+    </div>
+
+    <%= render DS::Pill.new(label: @tag.name, marker: false, size: :md, custom_color: @tag.color) %>
+    <p class="text-2xl lg:text-3xl font-semibold text-primary privacy-sensitive" data-tag-total>
+      <%= format_money(Money.new(@report.total, currency)) %>
+    </p>
+    <p class="text-sm text-secondary"><%= t(".transactions", count: @report.transactions_count) %></p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-sm text-secondary"><%= t(".by_category") %></p>
+    <%= render UI::PeriodPicker.new(selected: @period, url: tag_path(@tag)) %>
+  </div>
+
+  <% if @report.category_rows.any? %>
+    <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+      <% @report.category_rows.each_with_index do |row, index| %>
+        <%= render "shared/ruler" unless index.zero? %>
+        <%= render "category_summaries/row",
+                   row: row,
+                   href: transactions_path(q: @report.search_filters.merge(categories: [ row.category.filter_value ])) %>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="rounded-xl bg-container p-4 text-sm text-secondary shadow-border-xs"><%= t(".empty_period") %></p>
+  <% end %>
+
+  <section class="space-y-2">
+    <div class="flex items-center justify-between text-sm text-secondary">
+      <p><%= t(".last_months", count: Tag::Report::MONTHS) %></p>
+      <p class="privacy-sensitive"><%= format_money(Money.new(@report.months_total, currency)) %></p>
+    </div>
+
+    <div class="rounded-xl bg-container p-4 shadow-border-xs">
+      <div class="flex h-40 items-end gap-2" data-tag-months>
+        <% @report.months.each do |month| %>
+          <% height = months_max.zero? ? 0 : (month.total.abs / months_max * 100).round(1) %>
+          <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+               title="<%= l(month.date, format: "%B %Y") %>: <%= format_money(Money.new(month.total, currency)) %>">
+            <span class="truncate text-xs text-secondary privacy-sensitive">
+              <%= format_money(Money.new(month.total, currency), precision: 0) %>
+            </span>
+            <div class="w-full max-w-10 rounded-md" style="height: <%= [ height, month.total.zero? ? 0 : 2 ].max %>%; background-color: <%= @tag.color.presence || Tag::COLORS.first %>;"></div>
+          </div>
+        <% end %>
+      </div>
+      <div class="mt-2 flex gap-2 border-t border-divider pt-2">
+        <% @report.months.each do |month| %>
+          <p class="flex-1 text-center text-xs text-secondary"><%= l(month.date, format: "%b").delete(".").capitalize %></p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between rounded-xl bg-container px-4 py-3 shadow-border-xs">
+      <p class="text-sm font-medium text-primary">
+        <%= t(".average", from: l(@report.months.first.date, format: "%b").delete("."), to: l(@report.months.last.date, format: "%b").delete(".")) %>
+      </p>
+      <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@report.average, currency)) %></p>
+    </div>
+  </section>
+
+  <section class="space-y-2">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-medium text-primary">
+        <%= t(".transactions_title") %>
+        <span class="text-secondary">(<%= @report.transactions_count %>)</span>
+      </h2>
+      <%= render DS::Link.new(
+        text: t(".open_in_transactions"),
+        icon: "list",
+        variant: "ghost",
+        href: transactions_path(q: @report.search_filters)
+      ) %>
+    </div>
+
+    <% if @report.transactions.any? %>
+      <% @report.transactions.group_by { |transaction| transaction.entry.date.beginning_of_month }.each do |month, transactions| %>
+        <div class="space-y-1">
+          <p class="px-1 text-sm font-medium text-secondary"><%= l(month, format: "%B %Y").capitalize %></p>
+          <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+            <% transactions.each_with_index do |transaction, index| %>
+              <%= render "shared/ruler" unless index.zero? %>
+              <%= render "tags/transaction_row", transaction: transaction %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @report.transactions_count > @report.transactions.size %>
+        <p class="text-center text-sm text-secondary">
+          <%= link_to t(".see_all", count: @report.transactions_count), transactions_path(q: @report.search_filters), class: "underline" %>
+        </p>
+      <% end %>
+    <% else %>
+      <p class="rounded-xl bg-container p-4 text-sm text-secondary shadow-border-xs"><%= t(".empty_period") %></p>
+    <% end %>
+  </section>
+</div>
