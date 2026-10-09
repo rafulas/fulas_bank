@@ -31,6 +31,7 @@ class Vehicles::LogsController < Vehicles::BaseController
 
   def create
     @log = @vehicle.logs.new(log_params)
+    @log.attachments.attach(attachment_files) if attachment_files.any?
 
     if @log.save
       redirect_to_tab TABS.fetch(@log.kind), notice: t(".success")
@@ -43,9 +44,16 @@ class Vehicles::LogsController < Vehicles::BaseController
   end
 
   def update
-    if @log.update(log_params)
+    kept = @log.attachments.map(&:id)
+    @log.assign_attributes(log_params)
+    @log.attachments.attach(attachment_files) if attachment_files.any?
+
+    if @log.save
       redirect_to_tab TABS.fetch(@log.kind), notice: t(".success")
     else
+      # A file that was already stored before the record was rejected (an
+      # unchanged record saves its new attachments at once) goes again.
+      @log.attachments.select { |attachment| attachment.persisted? && kept.exclude?(attachment.id) }.each(&:purge)
       render :edit, formats: [ :html ], status: :unprocessable_entity
     end
   end
@@ -64,6 +72,11 @@ class Vehicles::LogsController < Vehicles::BaseController
 
     def set_log
       @log = @vehicle.logs.find(params[:id])
+    end
+
+    # Invoices and receipts chosen in the form, added to the ones the log has.
+    def attachment_files
+      @attachment_files ||= Array(params.dig(:vehicle_log, :attachments)).select { |file| file.respond_to?(:read) }
     end
 
     # The linked bank charge is looked up among the transactions this user can

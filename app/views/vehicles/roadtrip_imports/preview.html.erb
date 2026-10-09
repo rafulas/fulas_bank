@@ -18,6 +18,14 @@
           <% if @summary.license_plate %>
             <%= render DS::DetailRow.new(label: t(".license_plate"), value: @summary.license_plate, align: :center) %>
           <% end %>
+          <% if @summary.purchase %>
+            <%= render DS::DetailRow.new(
+              label: t(".purchase"),
+              value: [ format_money(Money.new(@summary.purchase.price, @account.currency)), (format_date(@summary.purchase.date) if @summary.purchase.date) ].compact.join(" · "),
+              align: :center,
+              value_class: "privacy-sensitive"
+            ) %>
+          <% end %>
         </dl>
       <% end %>
 
@@ -36,13 +44,13 @@
 
       <p class="text-xs text-secondary"><%= t(".not_imported") %></p>
 
-      <% if @summary.counts.values.sum.zero? %>
+      <% unless @import.anything_new? %>
         <%= render DS::Alert.new(message: t(".nothing_new"), variant: :info) %>
       <% else %>
         <%= styled_form_with url: vehicle_roadtrip_import_path(@account), method: :post, data: { turbo_frame: :_top } do |form| %>
           <%= hidden_field_tag :content, @content %>
           <%= hidden_field_tag :confirm, "1" %>
-          <%= form.submit t(".submit", count: @summary.counts.values.sum) %>
+          <%= form.submit @summary.counts.values.sum.positive? ? t(".submit", count: @summary.counts.values.sum) : t(".submit_details") %>
         <% end %>
       <% end %>
     </div>

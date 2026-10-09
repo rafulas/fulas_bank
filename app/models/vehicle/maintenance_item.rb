@@ -4,13 +4,13 @@
 class Vehicle::MaintenanceItem < ApplicationRecord
   # Common jobs offered when adding an item, with typical intervals.
   PRESETS = [
-    { key: "oil_change", interval_km: 15_000, interval_months: 12 },
-    { key: "air_filter", interval_km: 30_000, interval_months: 24 },
-    { key: "cabin_filter", interval_km: 15_000, interval_months: 12 },
-    { key: "tyres", interval_km: 40_000, interval_months: nil },
-    { key: "brake_pads", interval_km: 30_000, interval_months: nil },
-    { key: "timing_belt", interval_km: 120_000, interval_months: 60 },
-    { key: "inspection", interval_km: nil, interval_months: 24 }
+    { key: "oil_change", interval_km: 15_000, interval_months: 12, match: /aceite|\boil\b/i },
+    { key: "air_filter", interval_km: 30_000, interval_months: 24, match: /filtro\s+(de\s+)?aire|air filter/i },
+    { key: "cabin_filter", interval_km: 15_000, interval_months: 12, match: /polen|habit[aá]culo|cabin/i },
+    { key: "tyres", interval_km: 40_000, interval_months: nil, match: /neum[aá]tic|ruedas|tyre|tire/i },
+    { key: "brake_pads", interval_km: 30_000, interval_months: nil, match: /pastilla|brake pad/i },
+    { key: "timing_belt", interval_km: 120_000, interval_months: 60, match: /distribuci[oó]n|timing belt/i },
+    { key: "inspection", interval_km: nil, interval_months: 24, match: /\bitv\b/i, category: "inspection" }
   ].freeze
 
   # An item counts as "due soon" within this share of its distance interval

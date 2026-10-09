@@ -8,7 +8,8 @@ require "csv"
 # - Refuels become fuel logs (km, litres, price, total, full tank or not).
 # - Maintenance records become workshop services, or running costs when
 #   RoadTrip filed them as expenses (road tax, insurance...).
-# - The licence plate in the vehicle's notes fills in an empty plate.
+# - The licence plate in the vehicle's notes fills in an empty plate, and the
+#   purchase valuation an empty purchase price and date.
 #
 # Columns are read by position: RoadTrip keeps the same order whatever the
 # language of the export, while the titles are translated.
@@ -27,13 +28,15 @@ class Vehicle::RoadtripImport
   SECTIONS = {
     "COMBUSTIBLE" => :fuel, "FUEL" => :fuel,
     "MANTENIMIENTO" => :maintenance, "MAINTENANCE" => :maintenance,
-    "VEHÍCULO" => :vehicle, "VEHICULO" => :vehicle, "VEHICLE" => :vehicle
+    "VEHÍCULO" => :vehicle, "VEHICULO" => :vehicle, "VEHICLE" => :vehicle,
+    "VALUATIONS" => :valuations, "VALORACIONES" => :valuations
   }.freeze
 
   # Column positions in each section.
   FUEL = { odometer: 0, date: 2, quantity: 3, unit_price: 5, amount: 6, partial: 7, notes: 9, location: 11 }.freeze
   MAINTENANCE = { description: 0, date: 1, odometer: 2, amount: 3, notes: 4, location: 5, type: 6 }.freeze
   VEHICLE = { notes: 3 }.freeze
+  VALUATION = { type: 0, date: 1, price: 3 }.freeze
 
   # RoadTrip's own record types that are workshop jobs.
   SERVICE_TYPES = %w[servicio service].freeze
@@ -65,7 +68,8 @@ class Vehicle::RoadtripImport
 
   # A reading that was left out of its log. `reason` is :lower or :jump.
   Issue = Data.define(:date, :odometer, :reason)
-  Summary = Data.define(:counts, :duplicates, :first_date, :last_date, :issues, :license_plate)
+  Summary = Data.define(:counts, :duplicates, :first_date, :last_date, :issues, :license_plate, :purchase)
+  Purchase = Data.define(:date, :price)
 
   attr_reader :vehicle
 
@@ -89,6 +93,11 @@ class Vehicle::RoadtripImport
     @license_plate
   end
 
+  def purchase
+    parse
+    @purchase
+  end
+
   # Logs in the file that the vehicle does not have yet.
   def new_logs
     @new_logs ||= begin
@@ -97,25 +106,35 @@ class Vehicle::RoadtripImport
     end
   end
 
-  def summary
-    dates = logs.map { |attrs| attrs[:date] }
-
-    Summary.new(
-      counts: Vehicle::Log::KINDS.index_with { |kind| new_logs.count { |attrs| attrs[:kind] == kind } },
-      duplicates: logs.size - new_logs.size,
-      first_date: dates.min,
-      last_date: dates.max,
-      issues: issues,
-      license_plate: (license_plate if vehicle.license_plate.blank?)
-    )
+  # Whether importing would change anything: new logs, or details the vehicle
+  # is missing.
+  def anything_new?
+    summary.counts.values.sum.positive? || summary.license_plate.present? || summary.purchase.present?
   end
 
-  # Creates the new logs and fills in the plate, all or nothing. Returns how
-  # many logs were created.
+  def summary
+    @summary ||= begin
+      dates = logs.map { |attrs| attrs[:date] }
+
+      Summary.new(
+        counts: Vehicle::Log::KINDS.index_with { |kind| new_logs.count { |attrs| attrs[:kind] == kind } },
+        duplicates: logs.size - new_logs.size,
+        first_date: dates.min,
+        last_date: dates.max,
+        issues: issues,
+        license_plate: (license_plate if vehicle.license_plate.blank?),
+        purchase: (purchase unless vehicle.purchase_price_recorded?)
+      )
+    end
+  end
+
+  # Creates the new logs and fills in the plate and the purchase, all or
+  # nothing. Returns how many logs were created.
   def import!
     Vehicle::Log.transaction do
       new_logs.each { |attrs| vehicle.logs.create!(attrs) }
       vehicle.update!(license_plate: license_plate) if vehicle.license_plate.blank? && license_plate.present?
+      vehicle.update!(purchase_price: purchase.price, purchase_date: purchase.date) if purchase && !vehicle.purchase_price_recorded?
     end
 
     new_logs.size
@@ -128,6 +147,7 @@ class Vehicle::RoadtripImport
       @logs = []
       @issues = []
       @license_plate = nil
+      @purchase = nil
 
       sections = read_sections
       raise InvalidFile, "no refuels or maintenance found" if sections[:fuel].blank? && sections[:maintenance].blank?
@@ -138,6 +158,7 @@ class Vehicle::RoadtripImport
 
       @logs = (fuel + maintenance).sort_by { |attrs| [ attrs[:date], attrs[:odometer].to_i ] }
       @license_plate = plate_from(Array(sections[:vehicle]).first)
+      @purchase = purchase_from(Array(sections[:valuations]))
       @parsed = true
     end
 
@@ -250,6 +271,12 @@ class Vehicle::RoadtripImport
       end
 
       previous && previous + limit
+    end
+
+    def purchase_from(rows)
+      row = rows.find { |cells| cells[VALUATION[:type]].to_s.strip.casecmp?("purchase") }
+      price = decimal(row&.dig(VALUATION[:price]))
+      Purchase.new(date: date_from(row[VALUATION[:date]]), price: price) if price&.positive?
     end
 
     def category_for(description)

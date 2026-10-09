@@ -3,7 +3,7 @@
 <% vehicle = account.vehicle %>
 <% url = log.persisted? ? vehicle_log_path(account, log) : vehicle_logs_path(account) %>
 
-<%= styled_form_with model: log, scope: :vehicle_log, url: url, class: "space-y-4",
+<%= styled_form_with model: log, scope: :vehicle_log, url: url, class: "space-y-4", multipart: true,
       data: {
         turbo_frame: :_top,
         controller: "vehicle-log-bank-charges",
@@ -55,12 +55,22 @@
     <p class="text-xs text-secondary"><%= t(".bank_charge_hint") %></p>
 
     <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+
+    <%= form.file_field :attachments,
+                        label: t(".attachments"),
+                        multiple: true,
+                        accept: Vehicle::Log::ATTACHMENT_TYPES.join(",") %>
+    <p class="text-xs text-secondary">
+      <%= t(".attachments_hint", count: Vehicle::Log::MAX_ATTACHMENTS, size: Vehicle::Log::MAX_ATTACHMENT_SIZE / 1.megabyte) %>
+    </p>
   </div>
 
   <%= form.submit t(".submit") %>
 <% end %>
 
 <% if log.persisted? %>
+  <%= render "vehicles/logs/attachments", account: account, log: log %>
+
   <div class="pt-2">
     <%= render DS::Button.new(
       text: t(".delete"),

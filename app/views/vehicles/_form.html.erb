@@ -37,6 +37,17 @@
                                   label: t("vehicles.form.license_plate"),
                                   placeholder: t("vehicles.form.license_plate_placeholder") %>
       </div>
+
+      <div class="flex items-center gap-2">
+        <%= vehicle_form.number_field :purchase_price,
+                                    label: t("vehicles.form.purchase_price"),
+                                    min: 0,
+                                    step: 0.01 %>
+        <%= vehicle_form.date_field :purchase_date,
+                                  label: t("vehicles.form.purchase_date"),
+                                  max: Date.current %>
+      </div>
+      <p class="text-xs text-secondary"><%= t("vehicles.form.purchase_hint") %></p>
     <% end %>
   </div>
 <% end %>

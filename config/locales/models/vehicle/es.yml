@@ -2,6 +2,9 @@
 es:
   activerecord:
     attributes:
+      vehicle:
+        purchase_price: Precio de compra
+        purchase_date: Fecha de compra
       vehicle/log:
         date: Fecha
         amount: Importe
@@ -11,6 +14,7 @@ es:
         category: Categoría
         entry: Cargo del banco
         maintenance_item: Mantenimiento
+        attachments: Adjuntos
       vehicle/maintenance_item:
         name: Nombre
         interval_km: Intervalo de distancia
@@ -18,6 +22,12 @@ es:
         last_done_odometer: Kilómetros
     errors:
       models:
+        vehicle/log:
+          attributes:
+            attachments:
+              too_many: "no pueden ser más de %{max} archivos"
+              too_large: "«%{filename}» supera los %{max_mb} MB"
+              invalid_format: "«%{filename}» no es una imagen ni un PDF"
         vehicle/maintenance_item:
           attributes:
             base:

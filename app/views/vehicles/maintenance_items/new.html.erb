@@ -1,6 +1,14 @@
 <%= render DS::Dialog.new do |dialog| %>
   <% dialog.with_header(title: t(".title")) %>
   <% dialog.with_body do %>
+    <% if @prefilled_from %>
+      <div class="mb-4">
+        <%= render DS::Alert.new(
+          message: t(".prefilled", title: vehicle_log_title(@prefilled_from), date: format_date(@prefilled_from.date)),
+          variant: :info
+        ) %>
+      </div>
+    <% end %>
     <%= render "form", account: @account, item: @item %>
   <% end %>
 <% end %>

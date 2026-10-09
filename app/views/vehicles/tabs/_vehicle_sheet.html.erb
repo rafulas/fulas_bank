@@ -1,0 +1,49 @@
+<%# locals: (account:, logbook:) %>
+
+<% vehicle = account.vehicle %>
+
+<%= render DS::Card.new(class: "gap-3") do %>
+  <div class="flex items-center justify-between gap-2">
+    <h3 class="text-sm font-medium text-primary"><%= t(".title") %></h3>
+    <%= render DS::Link.new(text: t(".edit"), variant: :ghost, size: :sm, icon: "pencil", href: edit_vehicle_path(account), frame: :modal) %>
+  </div>
+
+  <dl class="space-y-2">
+    <%= render DS::DetailRow.new(label: t(".license_plate"), value: vehicle.license_plate.presence || "–", align: :center) %>
+    <%= render DS::DetailRow.new(label: t(".fuel_type"), value: vehicle.fuel_type.present? ? t("vehicles.fuel_types.#{vehicle.fuel_type}") : "–", align: :center) %>
+    <% if vehicle.purchase_date %>
+      <%= render DS::DetailRow.new(label: t(".purchase_date"), value: format_date(vehicle.purchase_date), align: :center) %>
+    <% end %>
+  </dl>
+
+  <% statuses = logbook.maintenance_statuses %>
+  <% if statuses.any? %>
+    <h4 class="text-sm font-medium text-primary pt-2"><%= t(".maintenance") %></h4>
+    <ul class="divide-y divide-subdued">
+      <% statuses.each do |item, status| %>
+        <% done_on, done_km = item.last_done %>
+        <li class="flex items-start justify-between gap-3 py-2 text-sm">
+          <div class="min-w-0">
+            <%= link_to item.name, edit_vehicle_maintenance_item_path(account, item), data: { turbo_frame: :modal }, class: "text-primary hover:underline" %>
+            <p class="text-secondary">
+              <% if done_on || done_km %>
+                <%= t(".last_done", when: [ (format_date(done_on) if done_on), vehicle_distance(done_km, vehicle) ].compact.join(" · ")) %>
+              <% else %>
+                <%= t(".never_recorded") %>
+              <% end %>
+            </p>
+            <% if item.notes.present? %>
+              <p class="text-secondary whitespace-pre-line"><%= item.notes %></p>
+            <% end %>
+          </div>
+          <%= maintenance_status_pill(status) %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-secondary">
+      <%= t(".no_maintenance") %>
+      <%= link_to t(".go_to_workshop"), account_path(account, tab: "workshop"), class: "text-primary underline", data: { turbo_frame: :_top } %>
+    </p>
+  <% end %>
+<% end %>

@@ -12,23 +12,27 @@
     </div>
   </div>
 
-  <% if logbook.maintenance_statuses.empty? %>
+  <% missing_presets = vehicle_missing_presets(vehicle) %>
+  <% if missing_presets.any? %>
     <%= render DS::Card.new(class: "gap-3") do %>
       <h3 class="text-sm font-medium text-primary"><%= t(".presets_title") %></h3>
       <p class="text-sm text-secondary"><%= t(".presets_description") %></p>
       <div class="flex flex-wrap gap-2">
-        <% Vehicle::MaintenanceItem::PRESETS.each do |preset| %>
+        <% missing_presets.each do |preset| %>
           <%= render DS::Link.new(
             text: t("vehicles.maintenance_items.presets.#{preset[:key]}"),
             variant: "outline",
             size: "sm",
+            icon: "plus",
             href: new_vehicle_maintenance_item_path(account, preset: preset[:key]),
             frame: :modal
           ) %>
         <% end %>
       </div>
     <% end %>
-  <% else %>
+  <% end %>
+
+  <% if logbook.maintenance_statuses.any? %>
     <%= render DS::Table.new(rows: logbook.maintenance_statuses, label: t(".items_title")) do |table| %>
       <% table.with_column(t(".item")) { |(item, _status)| link_to item.name, edit_vehicle_maintenance_item_path(account, item), data: { turbo_frame: :modal }, class: "text-primary hover:underline" } %>
       <% table.with_column(t(".status")) { |(_item, status)| maintenance_status_pill(status) } %>
@@ -47,6 +51,7 @@
       <% table.with_column(t(".odometer"), numeric: true) { |log| vehicle_distance(log.odometer, vehicle).to_s } %>
       <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |log| format_money(log.amount_money) } %>
       <% table.with_column(t(".bank")) { |log| render "vehicles/logs/bank_link", account: account, log: log } %>
+      <% table.with_column(t("vehicles.logs.detail_link.column"), align: :right) { |log| render "vehicles/logs/detail_link", account: account, log: log } %>
     <% end %>
   <% end %>
 </div>

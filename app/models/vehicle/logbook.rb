@@ -5,7 +5,7 @@
 # tank, up to and including the next one, is what was burnt over that
 # distance. Partial refuels in between are added to the next full tank.
 class Vehicle::Logbook
-  ConsumptionPoint = Data.define(:date, :odometer, :per_100)
+  ConsumptionPoint = Data.define(:date, :odometer, :per_100, :distance, :quantity)
 
   attr_reader :vehicle, :as_of
 
@@ -15,7 +15,7 @@ class Vehicle::Logbook
   end
 
   def logs
-    @logs ||= vehicle.logs.includes(:maintenance_item, entry: :account).chronological.to_a
+    @logs ||= vehicle.logs.includes(:maintenance_item, entry: :account).with_attached_attachments.chronological.to_a
   end
 
   def empty?
@@ -45,6 +45,26 @@ class Vehicle::Logbook
 
   def total_spent
     Money.new(logs.sum { |log| log.amount.to_d }, currency)
+  end
+
+  # What the car has really cost: the value it has lost since it was bought
+  # plus everything spent on it (fuel, workshop and other costs).
+  def total_cost
+    Money.new(vehicle.depreciation.amount + total_spent.amount, currency)
+  end
+
+  # The latest log that looks like the given workshop job (by its notes, or its
+  # category for running costs such as the ITV), so a new maintenance item can
+  # start from when it was last done.
+  def last_log_matching(preset)
+    pattern = preset[:match]
+    return if pattern.nil?
+
+    logs.reverse.find do |log|
+      next log.category == preset[:category] if preset[:category] && log.expense?
+
+      log.service? && log.notes.to_s.match?(pattern)
+    end
   end
 
   # Everything spent divided by the distance the logbook covers, from the
@@ -108,7 +128,10 @@ class Vehicle::Logbook
               segments << {
                 distance: distance,
                 quantity: pending,
-                point: ConsumptionPoint.new(date: refuel.date, odometer: refuel.odometer, per_100: (pending / distance * 100).round(2))
+                point: ConsumptionPoint.new(
+                  date: refuel.date, odometer: refuel.odometer, per_100: (pending / distance * 100).round(2),
+                  distance: distance, quantity: pending
+                )
               }
             end
           end

@@ -711,6 +711,7 @@ Rails.application.routes.draw do
     scope module: :vehicles do
       resources :logs, only: %i[new create edit update destroy] do
         get :bank_charges, on: :collection
+        resources :attachments, only: %i[show destroy], controller: "log_attachments"
       end
       resources :maintenance_items, only: %i[new create edit update destroy]
       resource :roadtrip_import, only: %i[new create]
