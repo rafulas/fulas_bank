@@ -86,6 +86,24 @@ en:
         year_built: Year Built
         edit_account_details: "Edit account details"
     subtypes:
+      single_family_home:
+        short: Single Family Home
+        long: Single Family Home
+      multi_family_home:
+        short: Multi-Family Home
+        long: Multi-Family Home
+      condominium:
+        short: Condo
+        long: Condominium
+      townhouse:
+        short: Townhouse
+        long: Townhouse
+      investment_property:
+        short: Investment Property
+        long: Investment Property
+      second_home:
+        short: Second Home
+        long: Second Home
       apartment:
         short: Apartment
         long: Apartment

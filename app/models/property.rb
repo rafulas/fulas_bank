@@ -18,7 +18,7 @@ class Property < ApplicationRecord
 
   accepts_nested_attributes_for :address
 
-  attribute :area_unit, :string, default: "sqft"
+  attribute :area_unit, :string, default: "sqm"
 
   class << self
     def icon

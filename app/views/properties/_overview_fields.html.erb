@@ -26,9 +26,8 @@
                       label: t(".area_label"),
                       placeholder: t(".area_placeholder"),
                       min: 0 %>
-      <%= property_form.select :area_unit,
-                      [[t(".square_feet"), "sqft"], [t(".square_meters"), "sqm"]],
-                      { label: t(".area_unit_label") } %>
+      <%# Fulas Bank: square metres only. %>
+      <%= property_form.hidden_field :area_unit, value: "sqm" %>
     </div>
   <% end %>
 

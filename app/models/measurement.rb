@@ -14,7 +14,10 @@ class Measurement
     validate!
   end
 
+  # How each unit is written next to a value.
+  SYMBOLS = { "sqft" => "ft²", "sqm" => "m²" }.freeze
+
   def to_s
-    "#{@value.to_i} #{@unit}"
+    "#{@value.to_i} #{SYMBOLS.fetch(@unit, @unit)}"
   end
 end

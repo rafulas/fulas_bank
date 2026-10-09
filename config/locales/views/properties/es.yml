@@ -7,8 +7,8 @@ es:
     form:
       address_line1: Dirección
       address_line1_placeholder: Calle Principal 123
-      area: Área habitable
-      area_placeholder: '2000'
+      area: Superficie (m²)
+      area_placeholder: '120'
       area_unit: Unidad de medida
       country: País
       country_placeholder: ES
@@ -64,7 +64,7 @@ es:
       property_type_label: Tipo de propiedad
       year_built_label: Año de construcción (opcional)
       year_built_placeholder: '1990'
-      area_label: Superficie (opcional)
+      area_label: Superficie en m² (opcional)
       area_placeholder: '120'
       square_feet: Pies cuadrados
       square_meters: Metros cuadrados
@@ -86,6 +86,24 @@ es:
         year_built: Año de construcción
         edit_account_details: Editar detalles de la cuenta
     subtypes:
+      single_family_home:
+        short: Casa
+        long: Casa unifamiliar
+      multi_family_home:
+        short: Edificio
+        long: Edificio de viviendas
+      condominium:
+        short: Apartamento
+        long: Apartamento
+      townhouse:
+        short: Adosado
+        long: Chalet adosado
+      investment_property:
+        short: Inversión
+        long: Inmueble de inversión
+      second_home:
+        short: Segunda residencia
+        long: Segunda residencia
       apartment:
         short: Piso
         long: Piso
