@@ -314,6 +314,7 @@ es:
         tag: Etiqueta
         merchant: Comercio
         ai: IA
+        attachment: Adjuntos
     convert_to_trade:
       title: Convertir en operación de valores
       description: Convierte esta transacción en una operación con detalles del valor
@@ -384,6 +385,11 @@ es:
           pending: Pendiente
           ai_current: IA
           ai_history: Historial de IA
+          attachment_with: Con adjunto
+          attachment_without: Sin adjunto
+        attachment_filter:
+          with: Con adjunto
+          without: Sin adjunto
         ai_filter:
           current: IA
           current_description: La categoría sigue siendo la asignada automáticamente (IA o Bayes).
