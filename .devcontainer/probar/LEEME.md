@@ -42,3 +42,7 @@ Los dos modos usan la misma base de datos, así que tus datos son los mismos.
 - GitHub da **60 horas gratis al mes**. Cuando no lo uses, puedes detenerlo en github.com/codespaces.
 - El enlace de la app es privado: solo funciona con tu sesión de GitHub.
 - Esto es para probar. Para usarlo a diario con tus datos reales, conviene instalarlo en un servidor propio.
+
+## En tu ordenador (VS Code + Docker)
+
+La misma configuración funciona en local: abre la carpeta del proyecto en VS Code, pulsa **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**, y luego `bin/probar`. Abre la app en **http://localhost:3000** (con `http`, sin la «s»): fuera de un Codespace la app no usa https.

@@ -81,8 +81,12 @@ if [[ "$mode" == "development" ]]; then
 fi
 
 export RAILS_ENV=production
-# The Codespace proxy terminates HTTPS in front of the app.
-export RAILS_FORCE_SSL=false RAILS_ASSUME_SSL=true
+# In a Codespace, GitHub's proxy terminates HTTPS in front of the app, so the
+# app must build https:// URLs. Run locally (e.g. a dev container on a Mac),
+# there is no proxy: the app is reached at http://localhost:3000 and https://
+# redirects would lead nowhere. RAILS_ASSUME_SSL can still be set by hand.
+if [[ -n "${CODESPACES:-}" ]]; then default_assume_ssl=true; else default_assume_ssl=false; fi
+export RAILS_FORCE_SSL=false RAILS_ASSUME_SSL="${RAILS_ASSUME_SSL:-$default_assume_ssl}"
 export RAILS_LOG_LEVEL="${RAILS_LOG_LEVEL:-warn}"
 
 secret_file=storage/.probar/secret-key-base
