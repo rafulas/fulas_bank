@@ -1,0 +1,35 @@
+<%# locals: (analysis:) %>
+<%# Fulas Bank: what was spent and earned in the period, each ring split by
+    main category; hovering a segment shows that category. %>
+
+<div class="grid grid-cols-2 gap-4">
+  <% [ [ :spent, analysis.spending_slices, analysis.spent ], [ :income, analysis.income_slices, analysis.income ] ].each do |side, slices, total| %>
+    <% segments = slices.map { |slice| { id: "#{side}_#{slice.id}", color: slice.color, amount: slice.amount.to_f } } %>
+    <% segments = [ { id: "unused", color: "var(--budget-unallocated-fill)", amount: 1 } ] if segments.empty? %>
+    <div class="relative h-40 md:h-44"
+         data-controller="donut-chart"
+         data-donut-chart-segments-value="<%= segments.to_json %>"
+         data-donut-chart-segment-height-value="8"
+         data-donut-chart-extended-hover-value="true">
+      <div data-donut-chart-target="chartContainer" class="absolute inset-0 pointer-events-none"></div>
+
+      <div data-donut-chart-target="contentContainer" class="flex justify-center items-center h-full">
+        <div data-donut-chart-target="defaultContent" class="flex flex-col items-center text-center">
+          <span class="text-secondary"><%= icon(side == :spent ? "minus" : "plus", size: "sm") %></span>
+          <p class="text-lg font-medium text-primary privacy-sensitive" data-donut-chart-target="amount"><%= format_money(total, precision: 0) %></p>
+          <p class="text-xs text-secondary"><%= t(".#{side}") %></p>
+        </div>
+
+        <% slices.each do |slice| %>
+          <div id="segment_<%= side %>_<%= slice.id %>" class="hidden flex flex-col items-center text-center px-4">
+            <p class="text-xs text-secondary truncate max-w-full"><%= slice.name %></p>
+            <p class="text-lg font-medium text-primary privacy-sensitive" data-donut-chart-target="amount"><%= format_money(Money.new(slice.amount, analysis.currency), precision: 0) %></p>
+            <% if total.amount.positive? %>
+              <p class="text-xs text-secondary"><%= number_to_percentage(slice.amount / total.amount * 100, precision: 0) %></p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

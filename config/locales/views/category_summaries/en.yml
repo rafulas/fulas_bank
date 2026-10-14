@@ -5,6 +5,9 @@ en:
       one: 1 transaction
       other: "%{count} transactions"
     index:
+      savings_rate: Savings rate
+      total_month: Total for %{month}
+      total_period: Total for the period
       category: Category
       edit_categories: Edit/add categories
       subtitle: What you spent and earned in each category
@@ -13,3 +16,30 @@ en:
       back: Back
       edit_categories: Edit/add categories
       own_transactions: Main category transactions
+    rings:
+      spent: Spent
+      income: Earned
+    analysis:
+      uncategorized: Uncategorized
+      tags: Tag
+      amount: Amount
+      all_tags: See all
+      add_tag: Add tag
+      analysis: Analysis
+      day_format: "%B %-d"
+      merchants: Merchants
+      merchants_count:
+        one: 1 merchant
+        other: "%{count} merchants"
+      last_months:
+        one: Last month
+        other: Last %{count} months
+      last_months_label: Income and spending of each month, by category
+      average: Average (%{from} – %{to})
+      daily_average: Average daily spending
+      daily_average_period:
+        one: This period (1 day)
+        other: This period (%{count} days)
+      others:
+        one: 1 other
+        other: "%{count} others"

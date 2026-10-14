@@ -5,6 +5,9 @@ es:
       one: 1 transacción
       other: "%{count} transacciones"
     index:
+      savings_rate: Tasa de ahorro
+      total_month: Total de %{month}
+      total_period: Total del periodo
       category: Categoría
       edit_categories: Editar/añadir categorías
       subtitle: Lo que has gastado e ingresado en cada categoría
@@ -13,3 +16,30 @@ es:
       back: Volver
       edit_categories: Editar/añadir categorías
       own_transactions: Categoría principal transacciones
+    rings:
+      spent: Gastado
+      income: Ingresado
+    analysis:
+      uncategorized: Sin categoría
+      tags: Etiqueta
+      amount: Importe
+      all_tags: Ver todas
+      add_tag: Añadir etiqueta
+      analysis: Análisis
+      day_format: "%-d de %B"
+      merchants: Comercios
+      merchants_count:
+        one: 1 comercio
+        other: "%{count} comercios"
+      last_months:
+        one: Último mes
+        other: Últimos %{count} meses
+      last_months_label: Ingresos y gastos de cada mes, por categoría
+      average: Media (%{from} – %{to})
+      daily_average: Gasto medio diario
+      daily_average_period:
+        one: Este periodo (1 día)
+        other: Este periodo (%{count} días)
+      others:
+        one: 1 otra
+        other: "%{count} otras"

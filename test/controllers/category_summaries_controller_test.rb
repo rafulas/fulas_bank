@@ -15,6 +15,15 @@ class CategorySummariesControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: "Excluido"
   end
 
+  test "index shows the rings, tags, calendar, merchants and last months" do
+    get category_summaries_url
+
+    assert_response :success
+    assert_select "[data-controller='donut-chart']", count: 2
+    assert_select "a[href=?]", new_tag_path
+    assert_select "h2", text: I18n.t("category_summaries.analysis.analysis")
+  end
+
   test "show breaks a category down by subcategory" do
     hogar = @family.categories.find_by!(name: "Hogar")
 

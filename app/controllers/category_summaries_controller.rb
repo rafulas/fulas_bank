@@ -1,10 +1,12 @@
 # Fulas Bank's "Resumen": what was spent and earned in each category for a
-# period, and, for one category, the breakdown by subcategory.
+# period, with the analysis around it (see Category::Analysis), and, for one
+# category, the breakdown by subcategory.
 class CategorySummariesController < ApplicationController
   include Periodable
 
   def index
     @summary = build_summary
+    @analysis = Category::Analysis.new(Current.family, period: @period, account_ids: report_account_ids)
   end
 
   def show
@@ -15,7 +17,10 @@ class CategorySummariesController < ApplicationController
 
   private
     def build_summary
-      account_ids = Current.family.accounts.accessible_by(Current.user).included_in_reports.pluck(:id)
-      Category::Summary.new(Current.family, period: @period, account_ids: account_ids)
+      Category::Summary.new(Current.family, period: @period, account_ids: report_account_ids)
+    end
+
+    def report_account_ids
+      @report_account_ids ||= Current.family.accounts.accessible_by(Current.user).included_in_reports.pluck(:id)
     end
 end
