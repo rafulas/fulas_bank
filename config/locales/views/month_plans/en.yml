@@ -13,8 +13,9 @@ en:
       spent: "%{amount} spent"
       left_to_spend: "%{amount} left to spend"
       over_budget: "%{amount} over budget"
-      no_budget: This month has no budget.
-      edit_budget: Add or change the budget
+      no_budget: "This month has no budget. Press Add budget and set how much you want to spend on each category."
+      edit_budget: Edit budget
+      add_budget: Add budget
       recurring: Recurring
       paid_so_far: paid so far
       to_pay: to pay
@@ -32,3 +33,12 @@ en:
       add_recurring: Add recurring
       all_recurring: See all recurring
       future: Later
+    budgets:
+      edit:
+        title: "Budget from %{month}"
+        hint: "How much you want to spend each month on each category. It repeats every month until you change it; earlier months stay as they were. Leave empty what you do not want to budget."
+        average: "You usually spend %{amount} a month"
+        amount_for: "%{category} budget"
+        submit: Save
+      update:
+        success: Budget saved.

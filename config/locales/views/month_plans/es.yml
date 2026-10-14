@@ -13,8 +13,9 @@ es:
       spent: "%{amount} gastado"
       left_to_spend: "%{amount} para gastar"
       over_budget: "%{amount} sobre presupuesto"
-      no_budget: Este mes no tiene presupuesto.
-      edit_budget: Añadir o cambiar presupuesto
+      no_budget: "Este mes no tiene presupuesto. Pulsa «Añadir presupuesto» y pon cuánto quieres gastar en cada categoría."
+      edit_budget: Editar presupuesto
+      add_budget: Añadir presupuesto
       recurring: Recurrentes
       paid_so_far: pagado hasta ahora
       to_pay: por pagar
@@ -32,3 +33,12 @@ es:
       add_recurring: Añadir recurrente
       all_recurring: Ver todos los recurrentes
       future: Futuro
+    budgets:
+      edit:
+        title: "Presupuesto desde %{month}"
+        hint: "Cuánto quieres gastar al mes en cada categoría. Se repite cada mes hasta que lo cambies; los meses anteriores no cambian. Deja vacío lo que no quieras presupuestar."
+        average: "Sueles gastar %{amount} al mes"
+        amount_for: "Presupuesto de %{category}"
+        submit: Guardar
+      update:
+        success: Presupuesto guardado.
