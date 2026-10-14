@@ -30,4 +30,15 @@ module CategorySummariesHelper
       format_money(Money.new(row.total, Current.family.currency))
     end
   end
+
+  # "Total de octubre" for a whole calendar month, "Total del periodo" otherwise.
+  def category_summary_total_label(period)
+    range = period.date_range
+    month = range.begin.beginning_of_month
+    if range.begin == month && range.end.to_date == month.end_of_month
+      t("category_summaries.index.total_month", month: l(month, format: "%B"))
+    else
+      t("category_summaries.index.total_period")
+    end
+  end
 end

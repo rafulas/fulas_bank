@@ -6,10 +6,25 @@
 <% end %>
 
 <div class="max-w-2xl space-y-4 pb-6">
-  <div class="flex items-center justify-between gap-2">
-    <p class="text-sm text-secondary"><%= t(".category") %></p>
+  <div class="flex items-center justify-end gap-2">
     <%= render UI::PeriodPicker.new(selected: @period, url: category_summaries_path) %>
   </div>
+
+  <%= render "category_summaries/rings", analysis: @analysis %>
+
+  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-primary">
+      <span class="first-letter:uppercase"><%= category_summary_total_label(@period) %></span>
+      <span class="privacy-sensitive"><%= format_money(@analysis.net, precision: 0) %></span>
+    </div>
+    <%= render "shared/ruler" %>
+    <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+      <span class="flex items-center gap-2 text-primary"><%= icon "piggy-bank", size: "sm" %><%= t(".savings_rate") %></span>
+      <span class="text-primary"><%= @analysis.savings_rate %>%</span>
+    </div>
+  </div>
+
+  <p class="px-1 text-xs text-secondary"><%= t(".category") %></p>
 
   <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
     <% @summary.rows.each_with_index do |row, index| %>
@@ -24,4 +39,6 @@
     variant: "ghost",
     href: categories_path
   ) %>
+
+  <%= render "category_summaries/analysis", analysis: @analysis, period: @period %>
 </div>

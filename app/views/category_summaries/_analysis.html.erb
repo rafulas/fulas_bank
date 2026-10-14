@@ -1,0 +1,184 @@
+<%# locals: (analysis:, period:) %>
+<%# Fulas Bank: below the categories, like Bilance's "Resumen": tags, the
+    month's calendar, merchants, the last six months and the average daily
+    spending. %>
+<% currency = analysis.currency %>
+
+<%# ---- Tags ---- %>
+<section class="space-y-2">
+  <div class="flex items-center justify-between px-1 text-xs text-secondary">
+    <span><%= t(".tags") %></span>
+    <span><%= t(".amount") %></span>
+  </div>
+  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <% analysis.top_tags.each_with_index do |(tag, amount), index| %>
+      <%= render "shared/ruler" unless index.zero? %>
+      <%= link_to transactions_path(q: { tags: [ tag.name ], start_date: period.start_date, end_date: period.end_date }), class: "flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-container-hover", data: { turbo_frame: "_top" } do %>
+        <%= render "tags/badge", tag: tag %>
+        <span class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(-amount, currency), precision: 0) %></span>
+      <% end %>
+    <% end %>
+    <% if analysis.top_tags.any? %>
+      <%= render "shared/ruler" %>
+    <% end %>
+    <%= link_to tags_path, class: "flex items-center gap-3 px-4 py-2.5 text-sm text-primary hover:bg-container-hover", data: { turbo_frame: "_top" } do %>
+      <%= icon "tags", size: "sm" %>
+      <span><%= t(".all_tags") %></span>
+    <% end %>
+    <%= render "shared/ruler" %>
+    <%= link_to new_tag_path, class: "flex items-center gap-3 px-4 py-2.5 text-sm text-primary hover:bg-container-hover", data: { turbo_frame: :modal } do %>
+      <%= icon "plus", size: "sm" %>
+      <span><%= t(".add_tag") %></span>
+    <% end %>
+  </div>
+</section>
+
+<%# ---- Calendar ---- %>
+<section class="space-y-2">
+  <h2 class="text-lg font-medium text-primary"><%= t(".analysis") %></h2>
+  <div class="rounded-xl bg-container shadow-border-xs p-2 space-y-1">
+    <p class="px-1 text-xs text-secondary first-letter:uppercase"><%= l(analysis.calendar_month, format: "%B %Y") %></p>
+    <div class="grid grid-cols-7 gap-1 text-center text-xs text-secondary">
+      <% I18n.t("date.abbr_day_names").rotate(1).each do |day_name| %>
+        <span><%= day_name %></span>
+      <% end %>
+    </div>
+    <div class="grid grid-cols-7 gap-1">
+      <% (analysis.calendar_month.cwday - 1).times do %>
+        <div></div>
+      <% end %>
+      <% analysis.calendar_days.each do |day| %>
+        <% active = day.slices.any? %>
+        <% cell_classes = class_names(
+             "flex flex-col justify-between h-14 rounded-md border px-1.5 py-1 text-left text-xs w-full",
+             active ? "border-secondary bg-container-inset" : "border-transparent text-subdued",
+             "ring-2 ring-primary" => day.date == Date.current
+           ) %>
+        <% if active %>
+          <%= render DS::Tooltip.new(variant: :surface, as: :span, html_class: "w-full") do |tooltip| %>
+            <% tooltip.with_trigger do %>
+              <div class="<%= cell_classes %>">
+                <span class="text-secondary"><%= day.date.day %></span>
+                <span class="font-medium text-primary privacy-sensitive truncate"><%= "+" if day.total.positive? %><%= format_money(Money.new(day.total, currency), precision: 0) %></span>
+                <span class="flex h-1 rounded-full overflow-hidden">
+                  <% day.slices.each do |slice| %>
+                    <span style="flex: <%= slice.amount.abs.to_f %>; background-color: <%= slice.color %>"></span>
+                  <% end %>
+                </span>
+              </div>
+            <% end %>
+            <div class="space-y-1 min-w-40">
+              <p class="flex justify-between gap-3 font-medium"><span><%= l(day.date, format: t(".day_format")) %></span><span class="privacy-sensitive"><%= format_money(Money.new(day.total, currency)) %></span></p>
+              <% day.slices.each do |slice| %>
+                <p class="flex justify-between gap-3 text-xs">
+                  <span class="flex items-center gap-1.5"><span class="size-2 rounded-full" style="background-color: <%= slice.color %>"></span><%= slice.name %></span>
+                  <span class="privacy-sensitive"><%= format_money(Money.new(slice.amount, currency)) %></span>
+                </p>
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="<%= cell_classes %>"><span><%= day.date.day %></span></div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ---- Merchants ---- %>
+<section class="space-y-2">
+  <p class="px-1 text-xs text-secondary"><%= t(".merchants") %></p>
+  <%= render DS::Disclosure.new(variant: :card, open: false) do |disclosure| %>
+    <% disclosure.with_summary_content do %>
+      <div class="flex items-center justify-between gap-2 px-4 py-3 text-sm text-primary">
+        <span><%= t(".merchants_count", count: analysis.merchant_totals.size) %></span>
+        <%= icon "chevron-down", size: "sm", class: "group-open:rotate-180 motion-safe:transition-transform" %>
+      </div>
+    <% end %>
+    <div class="pb-1">
+      <% analysis.top_merchants.each do |name, amount| %>
+        <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm border-t border-divider">
+          <span class="truncate text-primary"><%= name %></span>
+          <span class="shrink-0 text-primary privacy-sensitive"><%= format_money(Money.new(-amount, currency)) %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+
+<%# ---- Last six months ---- %>
+<% bars = analysis.month_bars %>
+<% scale = analysis.month_bars_max %>
+<section class="space-y-2">
+  <div class="flex items-center justify-between px-1 text-xs text-secondary">
+    <span><%= t(".last_months", count: bars.size) %></span>
+    <span class="privacy-sensitive"><%= format_money(Money.new(bars.sum { |bar| bar.income.sum(&:amount) - bar.spending.sum(&:amount) }, currency)) %></span>
+  </div>
+  <div class="rounded-xl bg-container shadow-border-xs p-3">
+    <div class="grid gap-2" style="grid-template-columns: repeat(<%= bars.size %>, minmax(0, 1fr))" role="img" aria-label="<%= t(".last_months_label") %>">
+      <% bars.each do |bar| %>
+        <% income_total = bar.income.sum(&:amount) %>
+        <% spending_total = bar.spending.sum(&:amount) %>
+        <div class="flex flex-col items-center text-xs">
+          <div class="flex flex-col justify-end items-center h-24 w-full gap-0.5">
+            <% if income_total.positive? %>
+              <span class="text-secondary privacy-sensitive whitespace-nowrap">+<%= transactions_panel_compact_amount(income_total, currency) %></span>
+              <div class="w-3 flex flex-col-reverse rounded-t-sm overflow-hidden" style="height: <%= transactions_panel_bar_height(income_total, scale) %>%">
+                <% bar.income.each do |slice| %>
+                  <div title="<%= slice.name %>" style="flex: <%= slice.amount.to_f %>; background-color: <%= slice.color %>"></div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+          <div class="w-full border-t border-dashed border-secondary"></div>
+          <div class="flex flex-col justify-start items-center h-24 w-full gap-0.5">
+            <% if spending_total.positive? %>
+              <div class="w-3 flex flex-col rounded-b-sm overflow-hidden" style="height: <%= transactions_panel_bar_height(spending_total, scale) %>%">
+                <% bar.spending.each do |slice| %>
+                  <div title="<%= slice.name %>" style="flex: <%= slice.amount.to_f %>; background-color: <%= slice.color %>"></div>
+                <% end %>
+              </div>
+              <span class="text-secondary privacy-sensitive whitespace-nowrap">−<%= transactions_panel_compact_amount(spending_total, currency) %></span>
+            <% end %>
+          </div>
+          <span class="mt-1 text-secondary first-letter:uppercase"><%= l(bar.month, format: "%b") %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <div class="flex items-center justify-between rounded-xl bg-container shadow-border-xs px-4 py-2.5 text-sm">
+    <span class="text-primary"><%= t(".average", from: l(bars.first.month, format: "%b"), to: l(bars.last.month, format: "%b")) %></span>
+    <span class="font-medium text-primary privacy-sensitive"><%= format_money(analysis.month_bars_average) %></span>
+  </div>
+</section>
+
+<%# ---- Average daily spending ---- %>
+<% top, rest_count, rest_amount = analysis.daily_average_slices %>
+<section class="space-y-2">
+  <p class="px-1 text-xs text-secondary"><%= t(".daily_average") %></p>
+  <div class="flex gap-3 rounded-xl bg-container shadow-border-xs p-3">
+    <div class="w-1.5 flex flex-col rounded-full overflow-hidden">
+      <% analysis.spending_slices.each do |slice| %>
+        <div style="flex: <%= slice.amount.to_f %>; background-color: <%= slice.color %>"></div>
+      <% end %>
+    </div>
+    <div class="flex-1 space-y-1">
+      <p class="flex justify-between text-sm font-medium text-primary">
+        <span><%= t(".daily_average_period", count: analysis.days_elapsed) %></span>
+        <span class="privacy-sensitive"><%= format_money(-analysis.daily_average) %></span>
+      </p>
+      <% top.each do |slice| %>
+        <p class="flex justify-between text-xs text-secondary">
+          <span class="flex items-center gap-1.5"><span class="size-2 rounded-full" style="background-color: <%= slice.color %>"></span><%= slice.name %></span>
+          <span class="privacy-sensitive"><%= format_money(Money.new(-slice.amount, currency)) %></span>
+        </p>
+      <% end %>
+      <% if rest_count.positive? %>
+        <p class="flex justify-between text-xs text-secondary">
+          <span><%= t(".others", count: rest_count) %></span>
+          <span class="privacy-sensitive"><%= format_money(-rest_amount) %></span>
+        </p>
+      <% end %>
+    </div>
+  </div>
+</section>
