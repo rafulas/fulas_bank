@@ -87,32 +87,6 @@
       <% end %>
     <% end %>
 
-    <%= render DS::Card.new(class: "gap-3") do %>
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <div class="space-y-1">
-          <h3 class="text-sm font-medium text-primary"><%= t(".planned_title") %></h3>
-          <p class="text-xs text-secondary"><%= t(".planned_hint") %></p>
-        </div>
-        <%= render DS::Link.new(text: t(".planned_add"), icon: "plus", size: :sm, href: new_forecast_item_path, frame: :modal) %>
-      </div>
-      <% if @forecast_items.any? %>
-        <ul class="divide-y divide-primary">
-          <% @forecast_items.each do |item| %>
-            <li class="flex items-center justify-between gap-3 py-2">
-              <div class="min-w-0">
-                <p class="text-sm text-primary truncate"><%= item.name %></p>
-                <p class="text-xs text-secondary"><%= format_date(item.date) %> · <%= item.account.name %></p>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="text-sm privacy-sensitive <%= item.outflow? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(-item.signed_amount, item.currency) %></span>
-                <%= render DS::Link.new(text: t(".edit"), variant: :ghost, size: :sm, href: edit_forecast_item_path(item), frame: :modal) %>
-              </div>
-            </li>
-          <% end %>
-        </ul>
-      <% end %>
-    <% end %>
-
-    <%= render "forecasts/flows", forecast: forecast, account: selected %>
+    <%= render "forecasts/table", forecast: forecast, account: selected %>
   <% end %>
 </div>

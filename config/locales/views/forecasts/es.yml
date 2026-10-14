@@ -1,9 +1,10 @@
 ---
 es:
   forecasts:
+    variable_line: Gastos varios %{month}
     show:
       title: Forecast
-      subtitle: Saldo previsto de tus cuentas a partir de hoy, con los movimientos recurrentes, los puntuales que esperas y el gasto variable habitual.
+      subtitle: Saldo previsto de tus cuentas a partir de hoy, con los movimientos recurrentes, los puntuales que esperas y los gastos varios de cada mes. Puedes cambiar cualquier línea de la tabla.
       no_accounts_title: Sin cuentas para prever
       no_accounts_description: El forecast usa tus cuentas corrientes y tarjetas de crédito. Añade alguna para ver su saldo previsto.
       periods:
@@ -17,7 +18,7 @@ es:
       account: Cuenta
       all_accounts: Todas las cuentas
       variable: Gasto variable
-      variable_on: Incluir la media
+      variable_on: Incluir los gastos varios
       variable_off: Solo recurrentes y puntuales
       today: Saldo hoy
       on_date: Previsto el %{date}
@@ -28,25 +29,30 @@ es:
       chart_total: Saldo previsto de todas las cuentas
       chart_account: Saldo previsto de %{name}
       accounts_title: Por cuenta
-      planned_title: Movimientos puntuales previstos
-      planned_hint: Gastos o ingresos que sabes que llegarán y no son recurrentes (una devolución de Hacienda, un viaje, una matrícula…).
-      planned_add: Añadir
-      edit: Editar
-    flows:
-      title: Movimientos previstos
-      empty: No hay movimientos recurrentes ni puntuales previstos en este periodo.
-      variable_spending: "Gasto variable de %{account}: unos %{amount} al mes (media de los últimos meses sin recurrentes), repartidos día a día."
-      variable_income: "Ingresos variables de %{account}: unos %{amount} al mes (media de los últimos meses sin recurrentes), repartidos día a día."
+    table:
+      title: Tabla de previsión
+      hint: "Cada línea con el saldo que quedará después. Recurrente: viene de tus recibos, nóminas y suscripciones (los fijos y recurrentes). Gastos varios: lo que sueles gastar en lo variable ese mes (media de los tres últimos meses iguales y los seis últimos meses, sin el mayor ni el menor). Con «Editar» cambias la fecha, el importe o el nombre de una línea, o la quitas."
+      add: Añadir línea
+      empty: No hay movimientos previstos en este periodo.
+      lines:
+        one: 1 línea
+        other: "%{count} líneas"
+      end_of_month: "Saldo al final: %{amount}"
+      month_label: Previsión de %{month}
       date: Fecha
       name: Concepto
       account: Cuenta
-      source: Origen
       amount: Importe
+      total: Saldo total
+      actions: ""
+      edit: Editar
       no_account: Sin cuenta
+      skipped: Quitada
+      adjusted: Cambiada
       sources:
         recurring: Recurrente
         planned: Puntual
-      truncated: Se muestran los primeros %{count} movimientos; el gráfico y los saldos los tienen todos en cuenta.
+        variable: Gastos varios
   forecast_items:
     form:
       name: Concepto
@@ -71,3 +77,19 @@ es:
       success: Movimiento previsto actualizado
     destroy:
       success: Movimiento previsto eliminado
+  forecast_adjustments:
+    edit:
+      title: Cambiar línea de la previsión
+      original: "Línea: %{name}, el %{date}"
+      name: Concepto
+      amount: Importe
+      amount_hint: Siempre en positivo; se mantiene si es gasto o ingreso.
+      date: Fecha
+      submit: Guardar
+      skip: Quitar de la previsión
+      restore: Volver a como la calcula la app
+    update:
+      success: Línea de la previsión cambiada
+      skipped: Línea quitada de la previsión. Puedes recuperarla desde la tabla.
+    destroy:
+      success: La línea vuelve a ser la que calcula la app

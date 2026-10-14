@@ -43,19 +43,68 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal %i[planned planned], forecast.flows.map(&:source)
   end
 
-  test "spreads the average variable spending, leaving out transfers and one-off purchases" do
-    last_month = (Date.current << 1).beginning_of_month + 5
-    create_transaction(account: @account, name: "Supermercado", amount: 300, date: last_month)
-    create_transaction(account: @account, name: "A ahorro", amount: 1_000, date: last_month, kind: "funds_movement")
-    create_transaction(account: @account, name: "Sofá", amount: 900, date: last_month, kind: "one_time")
+  test "adds a variable spending line at the end of each month, and this month only what is still to come" do
+    today = Date.new(2026, 10, 14)
+    create_transaction(account: @account, name: "Supermercado", amount: 300, date: Date.new(2026, 9, 10))
+    create_transaction(account: @account, name: "Cena", amount: 100, date: Date.new(2026, 10, 5))
 
-    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 60)
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 12, 31), today: today)
+    lines = forecast.flows.select { |flow| flow.source == :variable }
 
-    assert_equal BigDecimal("300"), forecast.variable_monthly[@account]
-    assert_in_delta 1_000 - 600, forecast.balances_on(Date.current + 60)[@account].amount, 30
+    assert_equal [ Date.new(2026, 10, 31), Date.new(2026, 11, 30), Date.new(2026, 12, 31) ], lines.map(&:date)
+    assert_equal [ BigDecimal("200"), BigDecimal("300"), BigDecimal("300") ], lines.map(&:amount)
+    assert_equal I18n.t("forecasts.variable_line", month: I18n.l(Date.new(2026, 11, 1), format: "%B %Y")), lines.second.name
+    assert_equal 1_000 - 800, forecast.balances_on(Date.new(2026, 12, 31))[@account].amount
 
-    without = Forecast.new(@family, accounts: [ @account ], through: Date.current + 60, include_variable: false)
-    assert_equal 1_000, without.balances_on(Date.current + 60)[@account].amount
+    without = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
+    assert_empty without.flows
+  end
+
+  test "a line the user changes, leaves out or brings back" do
+    create_series(@account, name: "Gimnasio", amount: 40)
+    through = Date.current + 60
+    first = Forecast.new(@family, accounts: [ @account ], through: through, include_variable: false).flows.first
+
+    adjustment = @family.forecast_adjustments.create!(key: first.key, amount: 55, name: "Gimnasio nuevo", date: first.date + 1)
+    changed = Forecast.new(@family, accounts: [ @account ], through: through, include_variable: false)
+    line = changed.flows.find { |flow| flow.key == first.key }
+
+    assert_equal [ BigDecimal("55"), "Gimnasio nuevo", first.date + 1, true ], [ line.amount, line.name, line.date, line.adjusted ]
+
+    adjustment.update!(skipped: true)
+    skipped = Forecast.new(@family, accounts: [ @account ], through: through, include_variable: false)
+
+    assert skipped.flows.find { |flow| flow.key == first.key }.skipped
+    assert_not_includes skipped.active_flows.map(&:key), first.key
+    assert_equal 1_000 - 40 * skipped.active_flows.size, skipped.balances_on(through)[@account].amount
+
+    adjustment.destroy!
+    restored = Forecast.new(@family, accounts: [ @account ], through: through, include_variable: false)
+    assert_equal first, restored.flows.first
+  end
+
+  test "the table carries the balance after each line" do
+    @family.forecast_items.create!(account: @account, name: "Viaje", amount: 300, nature: "outflow", date: Date.current + 5)
+    @family.forecast_items.create!(account: @account, name: "Devolución", amount: 100, nature: "inflow", date: Date.current + 9)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 30, include_variable: false)
+    rows = forecast.ledger
+
+    assert_equal [ 700, 800 ], rows.map { |row| row.balances[@account.id].to_i }
+    assert_equal [ 700, 800 ], rows.map { |row| row.total.amount.to_i }
+    assert_equal [ -300, 100 ], rows.map { |row| forecast.user_amount(row.flow).amount.to_i }
+    assert rows.all? { |row| row.flow.record.is_a?(ForecastItem) }
+  end
+
+  test "a series that ends is not projected beyond its end" do
+    series = create_series(@account, name: "Préstamo", amount: 100)
+    series.update!(end_mode: "on_date", end_on: Date.current + 70)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 400, include_variable: false)
+    dates = forecast.flows.select { |flow| flow.name == "Préstamo" }.map(&:date)
+
+    assert dates.any?
+    assert dates.all? { |date| date <= Date.current + 70 }
   end
 
   test "a card's debt grows with its charges, and the total subtracts it" do

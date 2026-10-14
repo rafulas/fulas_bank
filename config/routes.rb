@@ -558,6 +558,7 @@ Rails.application.routes.draw do
     resource :transfer_match, only: %i[new create]
     resource :pending_duplicate_merges, only: %i[new create]
     resource :category, only: :update, controller: :transaction_categories
+    resource :expense_type, only: :update, controller: "transactions/expense_types"
     resources :attachments, only: %i[show create destroy], controller: :transaction_attachments
 
     collection do
@@ -731,6 +732,7 @@ Rails.application.routes.draw do
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show
   resources :forecast_items, only: %i[new create edit update destroy]
+  resource :forecast_adjustment, only: %i[edit update destroy]
 
   resources :asset_links, only: [] do
     member do

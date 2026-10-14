@@ -1,0 +1,33 @@
+---
+en:
+  transactions:
+    show:
+      expense_type: Fixed, recurring or variable
+    expense_type:
+      current: "This movement is: %{type}."
+      automatic_series: The app decided it because it belongs to a recurring series.
+      automatic_default: The app decided it because it does not belong to any recurring series.
+      series: "Recurring: %{name}"
+      ends_on: "ends on %{date}"
+      type_label: Type
+      types:
+        variable: Variable
+        fixed: Fixed
+        recurring: Recurring
+      ends_by_label: Ends
+      ends_by_date: On a date
+      ends_by_periods: After a number of payments
+      end_on_label: Date of the last payment
+      periods_label: Payments left
+      hint: Fixed and recurring movements repeat and the Forecast projects them one by one (recurring is a fixed one that ends, like a loan). Variable ones go into each month's estimate of variable spending. If this movement has no recurring series, marking it fixed or recurring creates one.
+      submit: Save
+    expense_types:
+      update:
+        success: Movement type saved
+        errors:
+          invalid_type: Choose fixed, recurring or variable.
+          transfer: Transfers are neither fixed nor variable.
+          end_required: Say when the recurring movement ends, with a date or the payments left.
+          invalid_periods: The number of payments must be between 1 and 600.
+          series_failed: The recurring series for this movement could not be created.
+          invalid: The change could not be saved.
