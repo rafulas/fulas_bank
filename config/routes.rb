@@ -733,6 +733,7 @@ Rails.application.routes.draw do
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show
   resource :sidebar_summary, only: :show
+  resource :month_plan, only: :show, path: "planes"
   resources :forecast_items, only: %i[new create edit update destroy]
   resource :forecast_adjustment, only: %i[edit update destroy]
 

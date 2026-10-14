@@ -18,6 +18,7 @@ es:
         plan: Plan
         reports: Informes
         forecast: Forecast
+        month_plan: Planes
         summary: Resumen
         goals: Objetivos
         transactions: Transacciones

@@ -1,0 +1,34 @@
+---
+en:
+  month_plans:
+    show:
+      title: Plans
+      subtitle: The month's budgets and recurring movements, with what is paid and what is left.
+      previous: Previous month
+      next: Next month
+      this_month: This month
+      budgets: Budgets
+      spent_so_far: spent so far
+      total_budget: total budget
+      spent: "%{amount} spent"
+      left_to_spend: "%{amount} left to spend"
+      over_budget: "%{amount} over budget"
+      no_budget: This month has no budget.
+      edit_budget: Add or change the budget
+      recurring: Recurring
+      paid_so_far: paid so far
+      to_pay: to pay
+      balance_after: Balance after recurring
+      groups:
+        bills: Bills and services
+        loans: Loans and leases
+        subscriptions: Subscriptions
+        income: Income
+        other: Other
+      long_date: "%B %-d"
+      today: Today
+      overdue_on: "Overdue: %{date}"
+      expected_on: "Expected: %{date}"
+      add_recurring: Add recurring
+      all_recurring: See all recurring
+      future: Later

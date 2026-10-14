@@ -18,6 +18,7 @@ en:
         plan: Plan
         reports: Reports
         forecast: Forecast
+        month_plan: Plans
         summary: Summary
         goals: Goals
         transactions: Transactions
