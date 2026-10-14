@@ -160,9 +160,15 @@ class AccountsTest < ApplicationSystemTestCase
 
       click_button "Create Account"
 
+      # Wait for the new account's page before using the sidebar: that page
+      # opens the account's group by itself, so toggling it while the
+      # previous page is still showing races the navigation.
+      assert_selector "h2", text: account_name
+
       within_testid("account-sidebar-tabs") do
         click_on "All"
-        find("details", text: Accountable.from_type(accountable_type).display_name).click
+        group = find("details", text: Accountable.from_type(accountable_type).display_name)
+        group.find("summary").click unless group.matches_css?("[open]")
         assert_text account_name
       end
 
