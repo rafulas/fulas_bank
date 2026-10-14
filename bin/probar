@@ -60,9 +60,21 @@ export DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE:-Europe/Madrid}" DEFAULT_NUMBER_FORM
 # readable whichever mode runs, as it was before this mode existed. A real
 # server should set them (see .env.example).
 
+# Automatic backup (bin/copia, into copias/): once a week, and before a
+# git pull that changes the shape of the database, so a migration that goes
+# wrong can be undone with bin/restaurar.
+source bin/lib/copias.sh
+schema_marker=tmp/.probar-schema-version
+schema_version="$(grep -oE 'version: [0-9_]+' db/schema.rb | head -1 | tr -dc 0-9)"
+last_copy="$(copias_latest)"
+if [[ -z "$last_copy" || -n "$(find "$last_copy" -mtime +6 2> /dev/null)" || "$(cat "$schema_marker" 2> /dev/null)" != "$schema_version" ]]; then
+  bin/copia --auto || echo "(No se ha podido hacer la copia automática; sigo.)"
+fi
+
 # Schema changes and the demo family are handled in development mode, which
 # the database was created with.
 RAILS_ENV=development bin/rails db:prepare
+echo "$schema_version" > "$schema_marker"
 
 marker=tmp/.probar-demo-loaded
 if [[ ! -f "$marker" ]]; then

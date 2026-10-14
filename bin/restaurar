@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Loads a Fulas Bank backup into the Fulas Bank you run with bin/probar,
+# REPLACING the data it has now:
+#
+#   bin/restaurar copias/fulasbank-2026-10-14_1300.tar
+#
+# Works with the copies made here (bin/copia) and with the ones of the Mac
+# install (mac/copia.sh, in iCloud Drive → Fulas Bank → Copias): drag the
+# file into the project folder in VS Code and pass its name.
+#
+# Before replacing anything it makes a copy of what there is now. Stop the
+# app first (Control + C); afterwards start it with bin/probar, which brings
+# the database up to date if the copy is older than the code.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+source bin/lib/copias.sh
+
+ask=true
+if [[ "${1:-}" == "--sin-preguntar" ]]; then
+  ask=false
+  shift
+fi
+copy="${1:-}"
+[[ -n "$copy" && -f "$copy" ]] || { echo "Uso: bin/restaurar <copia.tar>" >&2; exit 1; }
+
+if pgrep -f "foreman start -f Procfile" > /dev/null; then
+  echo "Fulas Bank está en marcha: páralo con Control + C en su terminal y repite." >&2
+  exit 1
+fi
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+tar -C "$work" -xf "$copy"
+src="$(dirname "$(find "$work" -name db.dump | head -1)")"
+[[ -f "$src/db.dump" ]] || { echo "Esa copia no trae base de datos (db.dump)." >&2; exit 1; }
+
+copias_db_env
+copias_pg_client
+
+if $ask; then
+  echo "Se van a SUSTITUIR los datos de este Fulas Bank de pruebas por los de:"
+  echo "  $(basename "$copy") ($(cut -d' ' -f1 "$src/origen.txt" 2> /dev/null || echo "origen desconocido"))"
+  read -r -p "¿Seguimos? Escribe «si»: " answer < /dev/tty
+  [[ "$answer" == "si" || "$answer" == "sí" ]] || { echo "Cancelado, no se ha tocado nada."; exit 0; }
+  # Just in case: a copy of what there is now.
+  bin/copia || echo "(No se ha podido hacer copia previa; sigo.)"
+fi
+
+echo "▶ Cargando la base de datos"
+# Connected to template1, so the database can be dropped even when it is the
+# one called "postgres".
+psql -v ON_ERROR_STOP=1 -d template1 -q \
+  -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\" WITH (FORCE)" \
+  -c "CREATE DATABASE \"$POSTGRES_DB\""
+# --no-owner: the copy may come from another database user. A newer
+# pg_restore can report a harmless error about settings an older PostgreSQL
+# does not know, so errors do not stop it; the check below confirms the data
+# arrived.
+"$PG_BIN/pg_restore" -d "$POSTGRES_DB" --no-owner --no-privileges "$src/db.dump" 2> "$work/errores.txt" || true
+users="$(psql -d "$POSTGRES_DB" -tAc "SELECT count(*) FROM users" 2> /dev/null || echo 0)"
+if [[ "${users:-0}" -le 0 ]]; then
+  cat "$work/errores.txt" >&2
+  echo "La base de datos no se ha cargado bien (no hay usuarios)." >&2
+  exit 1
+fi
+echo "  $users usuario(s) cargados."
+
+if [[ -f "$src/storage.tar.gz" ]]; then
+  echo "▶ Cargando los archivos subidos"
+  mkdir -p storage
+  find storage -mindepth 1 -maxdepth 1 ! -name .probar ! -name .keep -exec rm -rf {} +
+  tar -xzf "$src/storage.tar.gz" -C storage --no-same-owner
+fi
+
+# The demo family must not be loaded on top of the restored data.
+mkdir -p tmp && touch tmp/.probar-demo-loaded
+
+echo "Datos cargados. Arranca la app con bin/probar y entra con el usuario de la copia."

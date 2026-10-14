@@ -139,3 +139,6 @@ playwright-report/
 !app/views/vehicles/logs/
 # The Mac install (mac/) needs its compose file in the repository.
 !/mac/compose.yml
+
+# Backups made by bin/copia
+/copias/

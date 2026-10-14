@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Makes a backup of the Fulas Bank you run with bin/probar (the "Probar Fulas
+# Bank" container in VS Code, or the Codespace): the database and the
+# uploaded files, in one file
+#   copias/fulasbank-AAAA-MM-DD_HHMMSS.tar
+# inside the project folder (FULAS_COPIAS_DIR changes the folder). It keeps
+# the newest 10 (FULAS_COPIAS changes how many).
+#
+# In VS Code on a Mac the project folder is a folder of the Mac, so the copy
+# is already on the Mac. In a Codespace, right-click the file in the
+# Explorer → Download.
+#
+# bin/probar calls it on its own once a week and before the database
+# changes shape after a git pull. bin/restaurar loads a copy back.
+#
+# The file has the same layout as the copies of the Mac install (mac/copia.sh),
+# so a copy made here loads there with mac/restaurar.sh, and the other way
+# round with bin/restaurar.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+source bin/lib/copias.sh
+
+quiet=false
+[[ "${1:-}" == "--auto" ]] && quiet=true
+
+copias_db_env
+
+if ! psql -d "$POSTGRES_DB" -tAc "SELECT 1 FROM users LIMIT 1" > /dev/null 2>&1; then
+  $quiet || echo "Todavía no hay datos que copiar (la base de datos está vacía o no existe)."
+  exit 0
+fi
+
+copias_pg_client
+dest="$(copias_dir)"
+keep="${FULAS_COPIAS:-10}"
+name="fulasbank-$(date '+%Y-%m-%d_%H%M%S')"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+mkdir "$work/$name"
+
+echo "Haciendo copia de seguridad…"
+"$PG_BIN/pg_dump" -Fc -d "$POSTGRES_DB" > "$work/$name/db.dump"
+[[ -s "$work/$name/db.dump" ]] || { echo "La copia de la base de datos ha salido vacía." >&2; exit 1; }
+
+mkdir -p storage
+tar -C storage --exclude=./.probar -czf "$work/$name/storage.tar.gz" .
+echo "probar $(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$work/$name/origen.txt"
+
+# Built in a temporary folder and moved in at the end, so a folder synced to
+# iCloud or Google Drive never uploads a half-written copy.
+tar -C "$work" -cf "$work/$name.tar" "$name"
+mkdir -p "$dest"
+mv "$work/$name.tar" "$dest/$name.tar"
+echo "Copia guardada: $dest/$name.tar ($(du -h "$dest/$name.tar" | cut -f1))"
+
+# Keep the newest $keep copies.
+ls -1t "$dest"/fulasbank-*.tar 2> /dev/null | tail -n +"$((keep + 1))" | while read -r old; do
+  rm -f "$old"
+done

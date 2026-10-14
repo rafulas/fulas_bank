@@ -76,6 +76,7 @@ Con el Mac encendido y Fulas Bank en marcha:
 
 - Cada copia es un único archivo, `fulasbank-AAAA-MM-DD_HHMM.tar`, con la base de datos, los archivos subidos (extractos, facturas) y la clave para leer los campos cifrados.
 - **Por qué no la base de datos directamente en iCloud:** PostgreSQL escribe en sus archivos todo el rato, e iCloud los subiría a medio escribir, lo que puede estropearla. Una copia terminada es un archivo cerrado que iCloud sube sin problema.
+- **Otra carpeta (por ejemplo Google Drive):** añade al final de `~/FulasBank/.env` una línea como `FULAS_COPIAS_DIR=/Users/tu-usuario/Library/CloudStorage/GoogleDrive-tu@gmail.com/Mi unidad/Fulas Bank` (la ruta exacta la ves en Finder, en la barra lateral, con Google Drive para Mac instalado).
 - La copia incluye la clave de cifrado: trata esos archivos como privados (tu iCloud ya lo es).
 - **Recuperar una copia** (sustituye los datos actuales; antes hace otra copia por si acaso):
 
