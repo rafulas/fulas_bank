@@ -37,3 +37,12 @@ en:
       account: Account
       holdings: "Main positions of %{account}"
       add: Add investment
+      funds_title: Funds by units
+      funds_hint: "Each fund is worth its units times its latest price. Changing one updates its account's balance."
+      update_prices: Update prices
+      add_fund: Add fund
+      fund: Fund
+      units: Units
+      price: Price
+      edit_fund: "Edit %{fund}"
+      stale_prices: Some prices are more than a week old.

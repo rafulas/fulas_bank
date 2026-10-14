@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1549,6 +1549,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_100000) do
     t.index ["family_id", "status"], name: "index_insights_on_family_id_and_status"
     t.check_constraint "priority::text = ANY (ARRAY['high'::character varying::text, 'medium'::character varying::text, 'low'::character varying::text])", name: "chk_insights_priority"
     t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'read'::character varying::text, 'dismissed'::character varying::text, 'expired'::character varying::text])", name: "chk_insights_status"
+  end
+
+  create_table "investment_fund_prices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.uuid "investment_fund_id", null: false
+    t.decimal "price", precision: 19, scale: 6, null: false
+    t.datetime "updated_at", null: false
+    t.index ["investment_fund_id", "date"], name: "index_investment_fund_prices_on_investment_fund_id_and_date", unique: true
+    t.check_constraint "price > 0::numeric", name: "chk_investment_fund_prices_price_positive"
+  end
+
+  create_table "investment_funds", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id", null: false
+    t.decimal "cost", precision: 19, scale: 4
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "isin"
+    t.string "name", null: false
+    t.decimal "price", precision: 19, scale: 6
+    t.date "price_date"
+    t.decimal "units", precision: 19, scale: 6, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_investment_funds_on_account_id"
+    t.index ["family_id"], name: "index_investment_funds_on_family_id"
+    t.check_constraint "units >= 0::numeric", name: "chk_investment_funds_units_not_negative"
   end
 
   create_table "investments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3179,6 +3205,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_100000) do
   add_foreign_key "indexa_capital_accounts", "indexa_capital_items"
   add_foreign_key "indexa_capital_items", "families"
   add_foreign_key "insights", "families"
+  add_foreign_key "investment_fund_prices", "investment_funds", on_delete: :cascade
+  add_foreign_key "investment_funds", "accounts", on_delete: :cascade
+  add_foreign_key "investment_funds", "families", on_delete: :cascade
   add_foreign_key "invitations", "families"
   add_foreign_key "invitations", "users", column: "inviter_id"
   add_foreign_key "kraken_accounts", "kraken_items"

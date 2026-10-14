@@ -70,6 +70,16 @@ class InvestmentsOverview
     (total_gain.amount / total_contributed.amount).to_f
   end
 
+  # The funds held by participaciones in these accounts (InvestmentFund).
+  def funds
+    @funds ||= family.investment_funds.where(account_id: accounts.select { |account| account.accountable_type == "Investment" }.map(&:id))
+                     .includes(:account).alphabetically.to_a
+  end
+
+  def any_stale_fund?
+    funds.any?(&:stale?)
+  end
+
   # [ [label, value], ... ] by kind of account (fund, pension plan...), biggest first.
   def by_kind
     rows.group_by { |row| row.account.short_subtype_label.presence || row.account.accountable_type }
