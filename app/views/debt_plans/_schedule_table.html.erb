@@ -1,0 +1,26 @@
+<%# locals: (schedule:, view:, expanded: false) %>
+<%# The plan month by month: "payments" is the spreadsheet's PaymentSchedule
+    and "pending" its Plan Reducc Deuda. The totals come right after the
+    month so they are seen without scrolling sideways. %>
+<% currency = Current.family.currency %>
+<% loan_keys = schedule.ordered_loans.map(&:key) %>
+<% names = schedule.loans.to_h { |loan| [ loan.key, loan.name ] } %>
+
+<%= render DS::Table.new(rows: schedule.months, dense: true, sticky_header: true, max_height: expanded ? "max-h-[80vh]" : "max-h-[70vh]",
+      label: t("debt_plans.show.schedule_title"),
+      row_class: ->(month) { "bg-warning/10" if month.additional_total.positive? }) do |table| %>
+  <% table.with_column(t("debt_plans.show.month"), class: "whitespace-nowrap") { |month| l(month.date, format: "%b %Y") } %>
+  <% if view == "payments" %>
+    <% table.with_column(t("debt_plans.show.snowball"), numeric: true, class: "privacy-sensitive text-secondary") { |month| debt_plan_money(month.snowball, currency) } %>
+    <% table.with_column(t("debt_plans.show.additional"), numeric: true, class: "privacy-sensitive text-secondary") { |month| month.additional_total.positive? ? debt_plan_money(month.additional_total, currency) : "" } %>
+    <% table.with_column(t("debt_plans.show.total_payment"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") { |month| debt_plan_money(month.total_payment, currency) } %>
+  <% end %>
+  <% table.with_column(t("debt_plans.show.total_balance"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") { |month| debt_plan_money(month.total_balance, currency) } %>
+  <% loan_keys.each do |key| %>
+    <% if view == "payments" %>
+      <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| month.payments[key].to_d.positive? ? debt_plan_money(month.payments[key], currency) : "" } %>
+    <% else %>
+      <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| debt_plan_money(month.balances[key], currency) } %>
+    <% end %>
+  <% end %>
+<% end %>

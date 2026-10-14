@@ -51,7 +51,8 @@ es:
       payment: Cuota
       order: Orden
       recurring: Movimiento recurrente
-      excluded: Fuera
+      excluded: Dejar fuera del plan
+      expand: Ampliar
       payment_for: "Cuota de %{loan}"
       order_for: "Orden de %{loan}"
       recurring_for: "Movimiento recurrente de %{loan}"
