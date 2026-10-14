@@ -156,11 +156,11 @@ fn reads_what_the_toast_script_reports() {
     );
     assert_eq!(
         DownloadToast::from_script_result(
-            r#"{"shown":false,"message":"Download failed. Please try again.","description":null}"#
+            r#"{"shown":false,"message":"No se ha podido descargar. Inténtalo de nuevo.","description":null}"#
         ),
         DownloadToast {
             shown: false,
-            message: Some("Download failed. Please try again.".to_string()),
+            message: Some("No se ha podido descargar. Inténtalo de nuevo.".to_string()),
             description: None,
         }
     );
@@ -197,7 +197,7 @@ fn notifies_in_the_page_language_when_the_page_provides_the_text() {
     assert_eq!(
         download_notification(false, &failed),
         (
-            "Sure".to_string(),
+            "Fulas Bank".to_string(),
             "Le téléchargement a échoué. Veuillez réessayer.".to_string()
         )
     );
@@ -209,15 +209,15 @@ fn notifies_in_english_when_the_page_has_no_toast_text() {
     assert_eq!(
         download_notification(true, &none),
         (
-            "Sure".to_string(),
-            "Download complete. The file is in your Downloads folder.".to_string()
+            "Fulas Bank".to_string(),
+            "Descarga completa. El archivo está en tu carpeta Descargas.".to_string()
         )
     );
     assert_eq!(
         download_notification(false, &none),
         (
-            "Sure".to_string(),
-            "Download failed. Please try again.".to_string()
+            "Fulas Bank".to_string(),
+            "No se ha podido descargar. Inténtalo de nuevo.".to_string()
         )
     );
     let empty = DownloadToast {

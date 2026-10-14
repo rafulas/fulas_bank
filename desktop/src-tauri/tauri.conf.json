@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Sure",
+  "productName": "Fulas Bank",
   "version": "0.1.0",
   "identifier": "app.sure.desktop",
   "build": {
@@ -16,7 +16,7 @@
       {
         "label": "main",
         "create": false,
-        "title": "Sure",
+        "title": "Fulas Bank",
         "width": 1200,
         "height": 800,
         "minWidth": 900,
@@ -27,7 +27,7 @@
       },
       {
         "label": "prefs",
-        "title": "Preferences",
+        "title": "Preferencias",
         "width": 420,
         "height": 520,
         "visible": false,
@@ -43,13 +43,22 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
-    "icon": ["icons/icon.icns"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
+    "icon": [
+      "icons/icon.icns"
+    ],
     "category": "public.app-category.finance"
   },
   "plugins": {
     "deep-link": {
-      "desktop": { "schemes": ["sure"] }
+      "desktop": {
+        "schemes": [
+          "sure"
+        ]
+      }
     }
   }
 }

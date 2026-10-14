@@ -1,0 +1,119 @@
+# Builds the Fulas Bank Docker image that the Mac install (mac/) runs, for
+# Apple Silicon (arm64) and Intel (amd64), and publishes it as
+# ghcr.io/rafulas/fulas_bank:latest. It runs after every merge to main, so
+# "Actualizar Fulas Bank" on the Mac always gets the latest version.
+#
+# Sure's own "Publish Docker image" workflow is disabled in forks; this one is
+# a smaller version of it without releases, nightlies or the Render demo.
+# Changes are already tested by the pull request workflow before merging.
+name: Imagen Fulas Bank
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'charts/**'
+      - 'mobile/**'
+      - 'desktop/**'
+      - 'docs/**'
+      - 'mac/**'
+      - '**/*.md'
+
+concurrency:
+  group: fulas-imagen
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Construir (${{ matrix.platform }})
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: amd64
+            runs-on: ubuntu-24.04
+          - platform: arm64
+            runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y subir la imagen
+        id: build
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          build-args: BUILD_COMMIT_SHA=${{ github.sha }}
+          platforms: linux/${{ matrix.platform }}
+          cache-from: type=registry,ref=${{ env.IMAGE }}:cache-${{ matrix.platform }}
+          cache-to: type=registry,ref=${{ env.IMAGE }}:cache-${{ matrix.platform }},mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.title=Fulas Bank
+            org.opencontainers.image.licenses=AGPL-3.0
+          provenance: false
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true
+
+      - name: Guardar el identificador de la imagen
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          echo "${DIGEST#sha256:}" > "$RUNNER_TEMP/digests/${{ matrix.platform }}"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: digest-${{ matrix.platform }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publicar latest
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # One tag that works on both kinds of Mac: Docker picks the right one.
+      - name: Unir arm64 y amd64 en «latest»
+        run: |
+          docker buildx imagetools create \
+            --annotation "index:org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --tag "$IMAGE:latest" \
+            --tag "$IMAGE:sha-$GITHUB_SHA" \
+            "$IMAGE@sha256:$(cat "$RUNNER_TEMP/digests/amd64")" \
+            "$IMAGE@sha256:$(cat "$RUNNER_TEMP/digests/arm64")"
