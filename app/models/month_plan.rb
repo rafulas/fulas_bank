@@ -1,0 +1,260 @@
+# Fulas Bank: the "Planes" screen, like Bilance's: for one month,
+#   - the budget: spent so far against the total, day by day, and each
+#     budgeted category with what is left (or how far over);
+#   - the recurring movements: what has been paid and what is still to pay,
+#     the balance left after them, a calendar with each day's payments, and
+#     the list by kind with a tick on the ones already paid;
+#   - and the recurring movements that come later than this month (yearly
+#     taxes, insurance renewals...).
+#
+# It reads the budget and the recurring payments the app already keeps; it
+# creates neither.
+class MonthPlan
+  FUTURE_LIMIT = 12
+
+  # Kinds of recurring movement, in the order the screen lists them.
+  GROUPS = {
+    "bill" => "bills",
+    "installment" => "loans",
+    "subscription" => "subscriptions",
+    "income" => "income",
+    "transfer" => "other",
+    "other" => "other"
+  }.freeze
+
+  BudgetRow = Data.define(:category, :budgeted, :spent) do
+    def available
+      budgeted - spent
+    end
+
+    def over?
+      available.negative?
+    end
+
+    def share
+      budgeted.positive? ? spent.to_d / budgeted.to_d : 0
+    end
+  end
+
+  # One payment of a recurring series this month.
+  Payment = Data.define(:occurrence, :series, :date, :amount, :paid, :state) do
+    def income?
+      series.typed_income? || series.amount.to_d.negative?
+    end
+
+    def name
+      series.display_name
+    end
+  end
+
+  Group = Data.define(:key, :payments) do
+    def total
+      payments.sum(&:amount)
+    end
+
+    def paid_total
+      payments.select(&:paid).sum(&:amount)
+    end
+  end
+
+  Upcoming = Data.define(:series, :date, :amount)
+
+  attr_reader :family, :user, :month, :today
+
+  def initialize(family, user:, month: Date.current, today: Date.current)
+    @family = family
+    @user = user
+    @month = month.beginning_of_month
+    @today = today
+  end
+
+  def currency
+    family.currency
+  end
+
+  def end_of_month
+    month.end_of_month
+  end
+
+  def current_month?
+    month == today.beginning_of_month
+  end
+
+  # ---- Budget ----
+
+  # The household budget of the month, or the user's own when budgets are
+  # personal; nil until one has been set up.
+  def budget
+    return @budget if defined?(@budget)
+
+    start_date, = Budget.period_for(month, family: family)
+    candidates = family.budgets.where(start_date: start_date).to_a
+    @budget = candidates.find { |candidate| candidate.user_id.nil? } || candidates.find { |candidate| candidate.user_id == user&.id }
+    @budget&.current_user = user
+    @budget = nil if @budget && !@budget.initialized?
+    @budget
+  end
+
+  def budget_rows
+    return [] unless budget
+
+    @budget_rows ||= budget.budget_categories.filter_map do |budget_category|
+      budgeted = (budget_category[:budgeted_spending] || 0).to_d
+      next unless budgeted.positive?
+
+      BudgetRow.new(category: budget_category.category, budgeted: budgeted, spent: budget_category.actual_spending.to_d)
+    end.sort_by { |row| -row.budgeted }
+  end
+
+  def budget_total
+    money(budget_rows.sum(&:budgeted))
+  end
+
+  def budget_spent
+    money(budget_rows.sum(&:spent))
+  end
+
+  def budget_share
+    budget_total.amount.positive? ? (budget_spent.amount / budget_total.amount * 100).round : 0
+  end
+
+  # Share of the month gone by (all of it for a past month).
+  def elapsed_share
+    return 1 if end_of_month < today
+    return 0 if month > today
+
+    (today - month + 1).to_d / month.end_of_month.day
+  end
+
+  # Spending ahead of the month's pace (or over the budget): shown in red.
+  def ahead_of_pace?(row)
+    row.over? || row.share > elapsed_share
+  end
+
+  # Cumulative spending in the budgeted categories, day by day up to today,
+  # for the chart.
+  def budget_series
+    return nil if budget_rows.empty?
+
+    category_ids = budget_rows.map { |row| row.category.id }
+    category_ids += family.categories.where(parent_id: category_ids).pluck(:id)
+    last_day = [ end_of_month, today ].min
+    return nil if last_day < month
+
+    daily = family.entries
+                  .excluding_split_parents
+                  .where(account_id: report_account_ids, entryable_type: "Transaction", excluded: false, date: month..last_day)
+                  .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+                  .where("t.kind NOT IN (?)", Transaction::TRANSFER_KINDS)
+                  .where("t.category_id IN (?)", category_ids)
+                  .group(Arel.sql("entries.date"))
+                  .sum(:amount)
+                  .transform_keys(&:to_date)
+
+    running = 0
+    values = (month..last_day).map do |date|
+      running += daily.fetch(date, 0).to_d
+      { date: date, value: money(running) }
+    end
+
+    Series.from_raw_values(values, interval: "1 day")
+  end
+
+  # ---- Recurring movements ----
+
+  def payments
+    @payments ||= occurrences.map do |occurrence|
+      series = occurrence.recurring_transaction
+      paid = occurrence.paid?
+      amount = paid && occurrence.confirmed_allocated.to_d.positive? ? occurrence.confirmed_allocated.to_d : occurrence.resolved_expected_amount.to_d
+      Payment.new(occurrence: occurrence, series: series, date: occurrence.effective_due_on, amount: amount, paid: paid, state: payment_state(occurrence))
+    end.sort_by { |payment| [ payment.date, payment.name.to_s ] }
+  end
+
+  def groups
+    @groups ||= payments.group_by { |payment| GROUPS.fetch(payment.series.bill_type.to_s, "other") }
+                        .map { |key, list| Group.new(key: key, payments: list) }
+                        .sort_by { |group| GROUPS.values.uniq.index(group.key) }
+  end
+
+  def outgoing
+    payments.reject(&:income?)
+  end
+
+  def paid_total
+    money(outgoing.select(&:paid).sum(&:amount))
+  end
+
+  def pending_total
+    money(outgoing.reject(&:paid).sum(&:amount))
+  end
+
+  def paid_share
+    total = paid_total.amount + pending_total.amount
+    total.positive? ? (paid_total.amount / total * 100).round : 0
+  end
+
+  # The balance of the movements panel's accounts once this month's pending
+  # payments and income have gone through.
+  def balance_after_recurring
+    pending_income = payments.select(&:income?).reject(&:paid).sum(&:amount)
+    Transaction::Panel.new(family, user: user, today: today).accounts_total + money(pending_income) - pending_total
+  end
+
+  # { date => [Payment] } for the calendar.
+  def payments_by_day
+    @payments_by_day ||= payments.group_by(&:date)
+  end
+
+  # Recurring movements whose next payment comes after this month, soonest
+  # first: what is coming that this month does not show.
+  def upcoming
+    @upcoming ||= begin
+      in_month = payments.map { |payment| payment.series.id }.to_set
+      series_list.reject { |series| in_month.include?(series.id) }.filter_map do |series|
+        date = series.schedule.first_occurrence_after(end_of_month)
+        Upcoming.new(series: series, date: date, amount: series.amount.to_d.abs) if date
+      end.sort_by(&:date).first(FUTURE_LIMIT)
+    end
+  end
+
+  private
+    def money(amount)
+      Money.new(amount, currency)
+    end
+
+    def report_account_ids
+      @report_account_ids ||= family.accounts.accessible_by(user).included_in_reports.pluck(:id)
+    end
+
+    def series_list
+      @series_list ||= family.recurring_transactions
+                             .accessible_by(user)
+                             .where(status: "active")
+                             .includes(:merchant, :category, :recurrence_rules)
+                             .to_a
+    end
+
+    def occurrences
+      family.recurring_occurrences
+            .where(recurring_transaction_id: series_list.map(&:id))
+            .where(due_on: month..end_of_month)
+            .where.not(status: "skipped")
+            .includes(recurring_transaction: [ :merchant, :category ])
+            .to_a
+    end
+
+    # :paid, :today, :overdue (its date passed without payment) or :expected.
+    def payment_state(occurrence)
+      return :paid if occurrence.paid?
+
+      date = occurrence.effective_due_on
+      if date == today
+        :today
+      elsif date < today
+        :overdue
+      else
+        :expected
+      end
+    end
+end

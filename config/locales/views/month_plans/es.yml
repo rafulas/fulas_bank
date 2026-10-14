@@ -1,0 +1,34 @@
+---
+es:
+  month_plans:
+    show:
+      title: Planes
+      subtitle: Presupuestos y recurrentes del mes, con lo pagado y lo que queda.
+      previous: Mes anterior
+      next: Mes siguiente
+      this_month: Este mes
+      budgets: Presupuestos
+      spent_so_far: gastado hasta ahora
+      total_budget: presupuesto total
+      spent: "%{amount} gastado"
+      left_to_spend: "%{amount} para gastar"
+      over_budget: "%{amount} sobre presupuesto"
+      no_budget: Este mes no tiene presupuesto.
+      edit_budget: Añadir o cambiar presupuesto
+      recurring: Recurrentes
+      paid_so_far: pagado hasta ahora
+      to_pay: por pagar
+      balance_after: Saldo tras recurrentes
+      groups:
+        bills: Facturas y servicios
+        loans: Préstamos y arrendamientos
+        subscriptions: Suscripciones
+        income: Ingresos
+        other: Otros
+      long_date: "%-d de %B"
+      today: Hoy
+      overdue_on: "Vencido: %{date}"
+      expected_on: "Previsto: %{date}"
+      add_recurring: Añadir recurrente
+      all_recurring: Ver todos los recurrentes
+      future: Futuro

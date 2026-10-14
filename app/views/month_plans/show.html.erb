@@ -1,0 +1,176 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% plan = @plan %>
+<% currency = plan.currency %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <div class="flex items-center gap-2">
+    <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_plan_path(month: (plan.month << 1).strftime("%Y-%m")), aria: { label: t(".previous") }) %>
+    <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_plan_path(month: (plan.month >> 1).strftime("%Y-%m")), aria: { label: t(".next") }) %>
+    <span class="text-sm font-medium text-primary first-letter:uppercase"><%= plan.current_month? ? t(".this_month") : l(plan.month, format: "%B %Y") %></span>
+  </div>
+
+  <%# ---- Budgets ---- %>
+  <section class="space-y-2">
+    <h2 class="text-lg font-medium text-primary"><%= t(".budgets") %></h2>
+    <div class="rounded-xl bg-container shadow-border-xs">
+      <% if plan.budget_rows.any? %>
+        <div class="p-4 space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.budget_spent) %></p>
+              <p class="text-xs text-secondary"><%= t(".spent_so_far") %></p>
+            </div>
+            <%= render DS::ProgressRing.new(percent: plan.budget_share, size: 40, stroke_width: 4, tone: plan.budget_share > (plan.elapsed_share * 100) ? :destructive : :success) %>
+            <div class="text-right">
+              <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.budget_total, precision: 0) %></p>
+              <p class="text-xs text-secondary"><%= t(".total_budget") %></p>
+            </div>
+          </div>
+          <% if (series = plan.budget_series) %>
+            <div class="h-28 w-full" data-controller="time-series-chart" data-time-series-chart-data-value="<%= series.to_json %>"></div>
+          <% end %>
+        </div>
+
+        <% plan.budget_rows.each do |row| %>
+          <% red = plan.ahead_of_pace?(row) %>
+          <div class="px-4 py-3 border-t border-divider space-y-1.5">
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 min-w-0 text-sm font-medium text-primary">
+                <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
+                <span class="truncate"><%= row.category.name %></span>
+              </span>
+              <span class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
+            </div>
+            <div class="flex items-center justify-between gap-3 text-xs">
+              <span class="text-secondary privacy-sensitive"><%= t(".spent", amount: format_money(Money.new(row.spent, currency))) %></span>
+              <span class="privacy-sensitive <%= red ? "text-destructive" : "text-success" %>">
+                <%= t(row.over? ? ".over_budget" : ".left_to_spend", amount: format_money(Money.new(row.available.abs, currency))) %>
+              </span>
+            </div>
+            <div class="h-2 rounded-full overflow-hidden <%= red ? "bg-destructive/10" : "bg-success/10" %>">
+              <div class="h-full rounded-full <%= red ? "bg-destructive" : "bg-success" %>" style="width: <%= [ row.share * 100, 100 ].min.round(1) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="p-4 text-sm text-secondary"><%= t(".no_budget") %></p>
+      <% end %>
+      <%= link_to budgets_path, class: "flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover" do %>
+        <%= icon "plus", size: "sm" %>
+        <span><%= t(".edit_budget") %></span>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ---- Recurring ---- %>
+  <section class="space-y-2">
+    <h2 class="text-lg font-medium text-primary"><%= t(".recurring") %></h2>
+    <div class="rounded-xl bg-container shadow-border-xs">
+      <div class="flex items-center justify-between gap-3 p-4">
+        <div>
+          <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.paid_total) %></p>
+          <p class="text-xs text-secondary"><%= t(".paid_so_far") %></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <%= render DS::ProgressRing.new(percent: plan.paid_share, size: 40, stroke_width: 4, tone: :success) %>
+          <%= render DS::ProgressRing.new(percent: 100 - plan.paid_share, size: 40, stroke_width: 4, tone: :warning) %>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.pending_total) %></p>
+          <p class="text-xs text-secondary"><%= t(".to_pay") %></p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 px-4 py-3 border-t border-divider text-sm">
+        <span class="flex items-center gap-2 text-primary"><%= icon "layers", size: "sm" %><%= t(".balance_after") %></span>
+        <span class="font-medium text-primary privacy-sensitive"><%= format_money(plan.balance_after_recurring) %></span>
+      </div>
+    </div>
+
+    <%# Calendar %>
+    <div class="rounded-xl bg-container shadow-border-xs p-2 space-y-1">
+      <div class="grid grid-cols-7 gap-1 text-center text-xs text-secondary">
+        <% I18n.t("date.abbr_day_names").rotate(1).each do |day_name| %>
+          <span><%= day_name %></span>
+        <% end %>
+      </div>
+      <div class="grid grid-cols-7 gap-1">
+        <% (plan.month.cwday - 1).times do %>
+          <div></div>
+        <% end %>
+        <% (plan.month..plan.end_of_month).each do |date| %>
+          <% day_payments = plan.payments_by_day.fetch(date, []) %>
+          <% all_paid = day_payments.any? && day_payments.all?(&:paid) %>
+          <div class="<%= class_names(
+                "flex flex-col items-center justify-between h-16 rounded-md border px-1 py-1 text-xs",
+                all_paid ? "bg-success/10 border-success/20" : "border-transparent",
+                "ring-2 ring-primary" => date == Date.current
+              ) %>">
+            <span class="text-secondary"><%= date.day %></span>
+            <% if day_payments.any? %>
+              <% first = day_payments.first.series %>
+              <%= render DS::FilledIcon.new(variant: :solid, icon: first.category&.lucide_icon || "repeat", hex_color: first.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
+              <% net = day_payments.sum { |payment| payment.income? ? payment.amount : -payment.amount } %>
+              <span class="font-medium text-primary privacy-sensitive truncate max-w-full" title="<%= day_payments.map(&:name).join(", ") %>">
+                <%= "+" if net.positive? %><%= transactions_panel_compact_amount(net, currency) %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Lists by kind %>
+    <% plan.groups.each do |group| %>
+      <div class="space-y-1">
+        <div class="flex items-center justify-between px-1 text-xs text-secondary">
+          <span><%= t(".groups.#{group.key}") %></span>
+          <span class="privacy-sensitive"><%= number_with_delimiter(group.paid_total.round) %>/<%= format_money(Money.new(group.total, currency), precision: 0) %></span>
+        </div>
+        <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">
+          <% group.payments.each_with_index do |payment, index| %>
+            <div class="<%= class_names("flex items-center gap-3 px-4 py-2", "border-t border-divider" => index.positive?) %>">
+              <%= render DS::FilledIcon.new(variant: :solid, icon: payment.series.category&.lucide_icon || "repeat", hex_color: payment.series.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-primary"><%= payment.name %></p>
+                <p class="text-xs <%= payment.state == :overdue ? "text-destructive" : "text-secondary" %>"><%= month_plan_payment_date(payment) %></p>
+              </div>
+              <span class="text-sm privacy-sensitive <%= payment.income? ? "text-success" : "text-primary" %>"><%= payment.income? ? "+" : "−" %><%= format_money(Money.new(payment.amount, currency)) %></span>
+              <span class="w-4 shrink-0 text-success"><%= icon("check", size: "sm", color: "current") if payment.paid %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">
+      <%= link_to new_recurring_transaction_path, class: "flex items-center gap-3 px-4 py-3 text-sm text-primary hover:bg-container-hover", data: { turbo_frame: :modal } do %>
+        <%= icon "plus", size: "sm" %><span><%= t(".add_recurring") %></span>
+      <% end %>
+      <%= link_to recurring_transactions_path, class: "flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover" do %>
+        <%= icon "archive", size: "sm" %><span><%= t(".all_recurring") %></span>
+      <% end %>
+    </div>
+
+    <% if plan.upcoming.any? %>
+      <p class="px-1 pt-2 text-xs text-secondary"><%= t(".future") %></p>
+      <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">
+        <% plan.upcoming.each_with_index do |upcoming, index| %>
+          <div class="<%= class_names("flex items-center gap-3 px-4 py-2", "border-t border-divider" => index.positive?) %>">
+            <%= render DS::FilledIcon.new(variant: :solid, icon: upcoming.series.category&.lucide_icon || "repeat", hex_color: upcoming.series.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm text-primary"><%= upcoming.series.display_name %></p>
+              <p class="text-xs text-secondary"><%= t(".expected_on", date: l(upcoming.date, format: t(".long_date"))) %></p>
+            </div>
+            <span class="text-sm text-primary privacy-sensitive"><%= upcoming.series.amount.negative? ? "+" : "−" %><%= format_money(Money.new(upcoming.amount, currency)) %></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+</div>
