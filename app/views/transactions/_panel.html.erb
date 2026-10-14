@@ -1,0 +1,57 @@
+<%# locals: (panel:) %>
+<%# Fulas Bank: chosen accounts' balances, the spending of the last three
+    weeks day by day, and the balance of those accounts over 90 days. %>
+
+<section id="transactions-panel" class="space-y-3">
+  <div class="flex items-center justify-between gap-2">
+    <h2 class="text-sm font-medium text-secondary"><%= t(".accounts_title") %></h2>
+    <%= render DS::Link.new(text: t(".choose_accounts"), icon: "settings-2", variant: :ghost, size: :sm, href: edit_transactions_panel_accounts_path, frame: :modal) %>
+  </div>
+
+  <% if panel.accounts.any? %>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <% panel.accounts.each do |account| %>
+        <%= link_to account_path(account), class: "flex items-center gap-3 bg-container rounded-xl shadow-border-xs px-3 py-2 min-w-0 hover:bg-container-hover" do %>
+          <%= render DS::FilledIcon.new(icon: "wallet", size: "md", rounded: true) %>
+          <div class="min-w-0">
+            <p class="text-xs text-secondary truncate"><%= account.name %></p>
+            <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(account.balance_money) %></p>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+    <% panel.weeks.each_with_index do |week, index| %>
+      <div class="bg-container rounded-xl shadow-border-xs p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <span class="text-secondary"><%= transactions_panel_week_label(week, index, panel.weeks.size) %></span>
+          <span class="text-primary font-medium privacy-sensitive"><%= forecast_signed_amount(-week.total, panel.currency) %></span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 items-end h-28" role="img" aria-label="<%= t(".week_chart_label", week: transactions_panel_week_label(week, index, panel.weeks.size)) %>">
+          <% week.days.each do |day| %>
+            <div class="flex flex-col items-center justify-end h-full gap-1 min-w-0">
+              <% if day.total.positive? %>
+                <span class="text-xs text-secondary privacy-sensitive whitespace-nowrap"><%= transactions_panel_compact_amount(day.total, panel.currency) %></span>
+                <div class="w-3 flex flex-col-reverse rounded-sm overflow-hidden" style="height: <%= transactions_panel_bar_height(day.total, panel.max_day_total) %>%" title="<%= transactions_panel_day_title(day, panel.currency) %>">
+                  <% day.segments.each do |segment| %>
+                    <div style="height: <%= (segment.amount / day.total * 100).round(2) %>%; background-color: <%= segment.color %>"></div>
+                  <% end %>
+                </div>
+              <% end %>
+              <span class="text-xs <%= day.date == Date.current ? "text-primary font-medium" : "text-secondary" %>"><%= l(day.date, format: "%a") %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if (series = panel.balance_series) %>
+    <div class="bg-container rounded-xl shadow-border-xs p-3 space-y-2">
+      <p class="text-xs text-secondary"><%= t(".balance_title", days: Transaction::Panel::BALANCE_DAYS) %></p>
+      <div class="h-32 w-full" data-controller="time-series-chart" data-time-series-chart-data-value="<%= series.to_json %>"></div>
+    </div>
+  <% end %>
+</section>

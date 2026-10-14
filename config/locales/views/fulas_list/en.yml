@@ -1,0 +1,43 @@
+---
+en:
+  transactions:
+    list:
+      today: Today
+      yesterday: Yesterday
+      day_format: "%A, %B %-d"
+      load_more: Show more transactions
+      per_page: Transactions per block
+    panel:
+      accounts_title: Balances
+      choose_accounts: Choose accounts
+      week_range: "Spending: %{from} – %{to}"
+      last_week: "Spending: last week"
+      this_week: "Spending: this week"
+      week_chart_label: "Spending of each day, %{week}"
+      balance_title: Total balance over the last %{days} days
+      uncategorized: Uncategorized
+    month_summary:
+      title: Summary of %{month}
+      spent: spent
+      income: earned
+      over_budget: over budget
+      under_budget: under budget
+      no_budget: no budget
+      savings_rate: savings rate
+    panel_accounts:
+      edit:
+        title: Panel accounts
+        hint: Choose the accounts whose balance you want to see above your transactions. Their sum is the "Total balance" in the left panel and the 90-day chart.
+        submit: Save
+      update:
+        success: Panel accounts saved
+  accounts:
+    sidebar_summary:
+      net_worth: Net worth
+      split_label: Net worth by asset type
+      asset_kind: Asset type
+      value: Value
+      debts: Debts and loans
+      total_balance: Total balance
+      choose: Choose accounts
+      total_balance_chart: Total balance over the last weeks

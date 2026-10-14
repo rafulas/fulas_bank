@@ -122,6 +122,7 @@ end %>
           <%= yield :sidebar %>
         <% else %>
           <div class="grow">
+            <%= render "accounts/sidebar_summary", family: Current.family, user: Current.user %>
             <%= render "accounts/account_sidebar_tabs", family: Current.family, active_tab: @account_group_tab %>
           </div>
 

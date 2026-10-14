@@ -1,0 +1,43 @@
+---
+es:
+  transactions:
+    list:
+      today: Hoy
+      yesterday: Ayer
+      day_format: "%A, %-d de %B"
+      load_more: Ver más movimientos
+      per_page: Movimientos por bloque
+    panel:
+      accounts_title: Saldos
+      choose_accounts: Elegir cuentas
+      week_range: "Gastos: %{from} – %{to}"
+      last_week: "Gastos: semana pasada"
+      this_week: "Gastos: esta semana"
+      week_chart_label: "Gasto de cada día, %{week}"
+      balance_title: Saldo total de los últimos %{days} días
+      uncategorized: Sin categoría
+    month_summary:
+      title: Resumen de %{month}
+      spent: gastado
+      income: ingresado
+      over_budget: sobre presupuesto
+      under_budget: por debajo del presupuesto
+      no_budget: sin presupuesto
+      savings_rate: tasa de ahorro
+    panel_accounts:
+      edit:
+        title: Cuentas del panel
+        hint: Elige las cuentas cuyo saldo quieres ver arriba de los movimientos. Su suma es el «Saldo total» del panel izquierdo y del gráfico de 90 días.
+        submit: Guardar
+      update:
+        success: Cuentas del panel guardadas
+  accounts:
+    sidebar_summary:
+      net_worth: Patrimonio neto
+      split_label: Reparto del patrimonio por tipo de activo
+      asset_kind: Categoría de activo
+      value: Valor
+      debts: Deudas y préstamos
+      total_balance: Saldo total
+      choose: Elegir cuentas
+      total_balance_chart: Saldo total de las últimas semanas

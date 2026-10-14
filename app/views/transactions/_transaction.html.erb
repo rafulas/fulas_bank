@@ -10,7 +10,7 @@
 
 <%= turbo_frame_tag dom_id(entry) do %>
   <%= turbo_frame_tag dom_id(transaction) do %>
-    <div class="group flex lg:grid lg:grid-cols-12 items-center text-primary text-sm font-medium p-3 lg:p-4 <%= "pl-8 lg:pl-12" if in_split_group %>"
+    <div class="group flex lg:grid lg:grid-cols-12 items-center text-primary text-sm font-medium px-3 py-2 lg:px-4 <%= "pl-8 lg:pl-12" if in_split_group %>"
          data-controller="clickable-row"
          data-action="click->clickable-row#open">
 
@@ -46,23 +46,23 @@
                 <%= render DS::FilledIcon.new(
                   icon: "arrow-right-left",
                   hex_color: Category::TRANSFER_COLOR,
-                  size: "lg",
+                  size: "md",
                   rounded: true
                 ) %>
               <% elsif transaction_security_logo_url.present? %>
                 <%= image_tag Setting.transform_brand_fetch_url(transaction_security_logo_url),
-                    class: "w-9 h-9 rounded-full border border-secondary",
+                    class: "w-8 h-8 rounded-full border border-secondary",
                     loading: "lazy" %>
               <% elsif transaction.merchant&.logo_url.present? %>
                 <%= image_tag Setting.transform_brand_fetch_url(transaction.merchant.logo_url),
-                    class: "w-9 h-9 rounded-full border border-secondary",
+                    class: "w-8 h-8 rounded-full border border-secondary",
                     loading: "lazy" %>
               <% else %>
                 <div class="hidden lg:flex">
                   <%= render DS::FilledIcon.new(
                     variant: :text,
                     text: entry.name,
-                    size: "lg",
+                    size: "md",
                     rounded: true
                   ) %>
                 </div>
@@ -70,7 +70,7 @@
             </div>
 
             <div class="truncate flex-1 min-w-0">
-              <div class="space-y-0.5">
+              <div>
                 <div class="flex items-center gap-1 min-w-0" data-tag-fit-bounds="0.5">
                   <div class="truncate flex-shrink">
                     <%= link_to(
