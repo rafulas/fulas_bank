@@ -125,7 +125,8 @@ class BudgetsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", plan_path, count: 0
-    assert_select "a[href=?]", budgets_path, minimum: 1
+    # Fulas Bank: without a Budgets entry in the sidebar, the way back is Planes.
+    assert_select "a[href=?]", month_plan_path, minimum: 1
   end
   # --- Lot A3: cash on hand ---
 
