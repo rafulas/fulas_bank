@@ -23,10 +23,11 @@ echo "▶ Copia de seguridad antes de actualizar"
 "$DIR/copia.sh" || { echo "No se ha podido hacer la copia; no actualizo." >&2; exit 1; }
 
 echo "▶ Descargando la versión nueva"
-for f in compose.yml actualizar.sh copia.sh restaurar.sh; do
+for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh
+chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh
+"$DIR/aviso.sh" --instalar || true
 docker compose pull
 
 echo "▶ Reiniciando"
@@ -53,4 +54,5 @@ fi
 rm -rf "$tmp"
 
 docker image prune -f > /dev/null 2>&1 || true
+rm -f "$DIR/registros/aviso-pospuesto"
 echo "Fulas Bank actualizado."

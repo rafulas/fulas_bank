@@ -14,7 +14,8 @@
 #   3. downloads Fulas Bank and starts it at http://localhost:3000;
 #   4. restores the backup given as argument, if any;
 #   5. installs the «Fulas Bank» app in Applications;
-#   6. opens Docker when you log in and makes a backup every day.
+#   6. opens Docker when you log in, makes a backup every day and warns
+#      you when there is a new version.
 set -euo pipefail
 
 # Everything runs inside main(), which bash reads in full before running it:
@@ -60,11 +61,11 @@ echo "Docker Desktop en marcha."
 paso "Preparando la carpeta $DIR"
 mkdir -p "$DIR"
 cd "$DIR"
-for f in compose.yml actualizar.sh copia.sh restaurar.sh; do
+for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" || fallo "No se ha podido descargar $f."
   mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh
+chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh
 
 # Passwords are created once. Later runs keep them: the database was
 # created with them, and backups need the same SECRET_KEY_BASE.
@@ -189,7 +190,10 @@ for agent in docker copia; do
   launchctl bootout "gui/$(id -u)/es.fulasbank.$agent" 2> /dev/null || true
   launchctl bootstrap "gui/$(id -u)" "$agents/es.fulasbank.$agent.plist"
 done
-echo "Docker se abrirá al iniciar sesión, y habrá una copia cada día a las 13:00."
+# Every hour, a window if there is a new version (you choose when to update).
+"$DIR/aviso.sh" --instalar
+echo "Docker se abrirá al iniciar sesión, habrá una copia cada día a las 13:00"
+echo "y te avisaré cuando haya una versión nueva."
 
 paso "¡Listo!"
 cat <<EOF

@@ -7,6 +7,7 @@ Instalación de una sola vez. Después, Fulas Bank arranca solo al encender el M
 - **El motor**, en Docker: la app, la base de datos, Redis y el ayudante en segundo plano. Se encienden solos al abrir Docker, y Docker se abre solo al iniciar sesión.
 - **La app «Fulas Bank»** en Aplicaciones: una ventana de Mac con el logo FB que se conecta al motor (`http://localhost:3000`).
 - **Una copia diaria** a las 13:00 en **iCloud Drive → Fulas Bank → Copias**. Se guardan las 30 últimas.
+- **Un aviso** cuando haya una versión nueva. Tú decides cuándo actualizar.
 - La carpeta **`~/FulasBank`** (en tu carpeta de usuario), con las contraseñas (`.env`) y dos accesos directos: **Actualizar Fulas Bank** y **Hacer copia ahora**.
 
 ## Instalar
@@ -27,7 +28,11 @@ Si en el paso 3 sale un error que dice **«denied»**: en GitHub, tu perfil → 
 ## Día a día
 
 - **Abrir:** «Fulas Bank» en Aplicaciones. Puedes arrastrarla al Dock.
-- **Actualizar** cuando unas una solicitud de cambios nueva en GitHub. Espera a que termine el robot «Imagen Fulas Bank» (pestaña **Actions** del repositorio, unos 15 minutos) y haz doble clic en **`~/FulasBank/Actualizar Fulas Bank`**. Antes de actualizar hace una copia.
+- **Actualizar:** nunca se actualiza solo. Cuando unes una solicitud de cambios y GitHub termina de preparar la versión nueva (unos 15 minutos), sale una **ventana de aviso** con la lista de cambios y dos botones:
+  - **Actualizar ahora:** abre Terminal y actualiza. Antes hace una copia.
+  - **Más tarde:** vuelve a avisar al día siguiente.
+
+  El Mac lo comprueba cada hora. También puedes actualizar cuando quieras con doble clic en **`~/FulasBank/Actualizar Fulas Bank`**.
 - **Copia a mano:** doble clic en **`~/FulasBank/Hacer copia ahora`**.
 
 ## Probar un cambio antes de unirlo
@@ -99,6 +104,7 @@ Con el Mac encendido y Fulas Bank en marcha:
 | `instalar.sh` | Lo deja todo listo; se puede repetir sin peligro |
 | `actualizar.sh` | Copia, descarga la versión nueva y reinicia |
 | `copia.sh` | Hace la copia diaria |
+| `aviso.sh` | Cada hora mira si hay versión nueva y, si la hay, te pregunta |
 | `restaurar.sh` | Carga una copia |
 
 La «imagen» de Fulas Bank (la app ya preparada, lista para Docker) la fabrica GitHub después de cada merge a `main`: `.github/workflows/fulas-imagen.yml`, para Mac con chip Apple y con Intel. La app de Aplicaciones (carpeta `desktop/`) la fabrica `.github/workflows/fulas-app-mac.yml` y queda en la release «app-mac» del repositorio.
