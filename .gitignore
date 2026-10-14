@@ -137,3 +137,5 @@ playwright-report/
 
 # Vehicle logbook views live in a folder called "logs"
 !app/views/vehicles/logs/
+# The Mac install (mac/) needs its compose file in the repository.
+!/mac/compose.yml

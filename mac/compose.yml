@@ -1,0 +1,100 @@
+# Fulas Bank on a Mac, with Docker Desktop.
+#
+# Four pieces run together: the web app, the background worker (Sidekiq),
+# the database (PostgreSQL) and Redis, the worker's task queue. All of them
+# restart on their own whenever Docker Desktop opens, so after installing
+# there is nothing to start by hand.
+#
+# mac/instalar.sh puts this file in ~/FulasBank, next to the .env file it
+# creates with the passwords. Data lives in Docker volumes (postgres-data,
+# app-storage), not in that folder: copia.sh saves them every day.
+#
+# The image is built by .github/workflows/fulas-imagen.yml after every merge
+# to main; actualizar.sh downloads the newest one.
+name: fulasbank
+
+x-db-env: &db_env
+  POSTGRES_USER: ${POSTGRES_USER:-fulas}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+  POSTGRES_DB: ${POSTGRES_DB:-fulas_bank}
+
+x-rails-env: &rails_env
+  <<: *db_env
+  # Also seeds the keys that encrypt some fields (e.g. emails): a backup is
+  # only fully readable with the same value, so copia.sh saves it too.
+  SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Falta SECRET_KEY_BASE en .env}
+  SELF_HOSTED: "true"
+  # Reached over plain http (localhost, the home wifi or Tailscale).
+  RAILS_FORCE_SSL: "false"
+  RAILS_ASSUME_SSL: "false"
+  RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-warn}
+  DB_HOST: db
+  DB_PORT: 5432
+  REDIS_URL: redis://redis:6379/1
+  DEFAULT_LOCALE: es
+  DEFAULT_CURRENCY: EUR
+  DEFAULT_COUNTRY: ES
+  DEFAULT_DATE_FORMAT: "%d/%m/%Y"
+  DEFAULT_TIMEZONE: Europe/Madrid
+  DEFAULT_NUMBER_FORMAT: "1.234,56"
+
+services:
+  web:
+    image: ${FULAS_IMAGE:-ghcr.io/rafulas/fulas_bank:latest}
+    volumes:
+      - app-storage:/rails/storage
+    ports:
+      # Every network interface: http://localhost:3000 on the Mac, and the
+      # Mac's address from a phone or iPad on the same wifi or Tailscale.
+      - ${PORT:-3000}:3000
+    restart: unless-stopped
+    environment:
+      <<: *rails_env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ${FULAS_IMAGE:-ghcr.io/rafulas/fulas_bank:latest}
+    command: bundle exec sidekiq
+    volumes:
+      - app-storage:/rails/storage
+    restart: unless-stopped
+    environment:
+      <<: *rails_env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      <<: *db_env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  app-storage:
+  postgres-data:
+  redis-data:
