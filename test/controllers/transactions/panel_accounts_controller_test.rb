@@ -18,6 +18,8 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
   end
 
   test "the next block of movements comes in its own frame" do
+    12.times { |index| create_transaction(account: accounts(:depository), name: "Bloque #{index}", amount: 5, date: Date.current - index) }
+
     get transactions_url(page: 2, per_page: 10, after_month: Date.current.beginning_of_month.iso8601),
         headers: { "Turbo-Frame" => "transactions_page_2" }
 
