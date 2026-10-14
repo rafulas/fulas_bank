@@ -20,7 +20,7 @@ class MonthPlans::BudgetsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_response :success
-    assert_match @food.name, response.body
+    assert_match ERB::Util.html_escape(@food.name), response.body
   end
 
   test "ignores categories of another family" do
