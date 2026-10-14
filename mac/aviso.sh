@@ -11,6 +11,10 @@
 #
 # «aviso.sh --instalar» sets up the hourly check (instalar.sh and
 # actualizar.sh call it; doing it again does no harm).
+#
+# «aviso.sh --ahora» is «Buscar actualizaciones…» in the app's menu: it
+# ignores «Más tarde» and, when there is nothing new or it cannot check,
+# says so in a window instead of staying quiet.
 set -uo pipefail
 export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
 
@@ -42,22 +46,42 @@ PLIST
   exit 0
 fi
 
+ahora=false
+[[ "${1:-}" == "--ahora" ]] && ahora=true
+
+# A window with one button, only when asked from the menu.
+tell() {
+  $ahora || return 0
+  osascript -e "display dialog \"$1\" with title \"Fulas Bank\" buttons {\"Aceptar\"} default button \"Aceptar\" with icon note" > /dev/null 2>&1
+}
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 # The version this Mac runs: the commit the running image was built from.
 local_sha="$(docker compose exec -T web printenv BUILD_COMMIT_SHA 2> /dev/null | tr -d '[:space:]')"
-[[ -n "$local_sha" ]] || exit 0   # Fulas Bank or Docker not running: try later
+if [[ -z "$local_sha" ]]; then   # Fulas Bank or Docker not running: try later
+  tell "No puedo comprobarlo ahora: Fulas Bank no está en marcha. Abre Docker Desktop y vuelve a probar."
+  exit 0
+fi
 
 # The newest version GitHub has finished building.
-curl -fsS "$API/actions/workflows/fulas-imagen.yml/runs?branch=main&status=success&per_page=1" \
-  -o "$work/runs.json" 2> /dev/null || exit 0
+if ! curl -fsS "$API/actions/workflows/fulas-imagen.yml/runs?branch=main&status=success&per_page=1" \
+    -o "$work/runs.json" 2> /dev/null; then
+  tell "No puedo comprobarlo ahora: no hay conexión con GitHub. Prueba más tarde."
+  exit 0
+fi
 remote_sha="$(plutil -extract workflow_runs.0.head_sha raw -o - "$work/runs.json" 2> /dev/null)"
-[[ -n "$remote_sha" && "$remote_sha" != "$local_sha" ]] || exit 0
+if [[ -z "$remote_sha" || "$remote_sha" == "$local_sha" ]]; then
+  tell "Fulas Bank está al día: tienes la última versión."
+  exit 0
+fi
 
 # «Más tarde» on this same version today: do not ask again until tomorrow.
 today="$(date '+%Y-%m-%d')"
-[[ "$(cat "$STATE" 2> /dev/null)" == "$remote_sha $today" ]] && exit 0
+if ! $ahora && [[ "$(cat "$STATE" 2> /dev/null)" == "$remote_sha $today" ]]; then
+  exit 0
+fi
 
 # What changed: the titles of the pull requests merged in between. A merge
 # commit's message is «Merge pull request #N from …», a blank line and the
@@ -65,7 +89,10 @@ today="$(date '+%Y-%m-%d')"
 changes=""
 if curl -fsS "$API/compare/$local_sha...$remote_sha" -o "$work/compare.json" 2> /dev/null; then
   status="$(plutil -extract status raw -o - "$work/compare.json" 2> /dev/null)"
-  [[ "$status" == "behind" || "$status" == "identical" ]] && exit 0   # this Mac is not older
+  if [[ "$status" == "behind" || "$status" == "identical" ]]; then   # this Mac is not older
+    tell "Fulas Bank está al día: tienes la última versión."
+    exit 0
+  fi
   count="$(plutil -extract commits raw -o - "$work/compare.json" 2> /dev/null || echo 0)"
   for ((i = 0; i < count; i++)); do
     msg="$(plutil -extract "commits.$i.commit.message" raw -o - "$work/compare.json" 2> /dev/null)"
