@@ -1,0 +1,23 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= form_with url: transactions_panel_accounts_path, method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+      <p class="text-sm text-secondary"><%= t(".hint") %></p>
+      <%= hidden_field_tag "account_ids[]", "" %>
+      <ul class="space-y-2">
+        <% @panel.selectable_accounts.each do |account| %>
+          <li>
+            <label class="flex items-center justify-between gap-3 text-sm text-primary">
+              <span class="flex items-center gap-2">
+                <%= check_box_tag "account_ids[]", account.id, @panel.accounts.include?(account), id: dom_id(account, :panel), class: "checkbox checkbox--light" %>
+                <%= account.name %>
+              </span>
+              <span class="text-secondary privacy-sensitive"><%= format_money(account.balance_money) %></span>
+            </label>
+          </li>
+        <% end %>
+      </ul>
+      <%= render DS::Button.new(text: t(".submit"), full_width: true, type: "submit") %>
+    <% end %>
+  <% end %>
+<% end %>

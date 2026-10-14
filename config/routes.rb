@@ -547,6 +547,7 @@ Rails.application.routes.draw do
   namespace :transactions do
     resource :bulk_deletion, only: :create
     resource :bulk_update, only: %i[new create]
+    resource :panel_accounts, only: %i[edit update]
     resource :categorize, only: %i[show create] do
       patch :assign_entry, on: :collection
       get :preview_rule, on: :collection
@@ -731,6 +732,7 @@ Rails.application.routes.draw do
   # Links between bank charges and vehicle logs or property expenses that the
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show
+  resource :sidebar_summary, only: :show
   resources :forecast_items, only: %i[new create edit update destroy]
   resource :forecast_adjustment, only: %i[edit update destroy]
 

@@ -3,7 +3,7 @@ class TransactionsController < ApplicationController
 
   before_action :set_entry_for_unlock, only: :unlock
   before_action :set_entry_for_tags, only: :update_tags
-  before_action :store_params!, only: :index
+  before_action :store_params!, only: :index, unless: :next_page_request?
 
   helper_method :new_transaction_idempotency_key
 
@@ -92,6 +92,15 @@ class TransactionsController < ApplicationController
     end
 
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.transactions"), nil ] ]
+
+    # Fulas Bank: the next block of the list, asked for by its frame as the
+    # list is scrolled (see transactions/_list_page).
+    if next_page_request?
+      @after_month = parse_month(params[:after_month])
+      render :next_page
+    elsif @q.blank?
+      @panel = Transaction::Panel.new(Current.family, user: Current.user)
+    end
   end
 
   def clear_filter
@@ -721,6 +730,16 @@ class TransactionsController < ApplicationController
       end
 
       cleaned_params
+    end
+
+    def next_page_request?
+      request.headers["Turbo-Frame"].to_s.start_with?("transactions_page_")
+    end
+
+    def parse_month(value)
+      Date.iso8601(value.to_s).beginning_of_month
+    rescue Date::Error
+      nil
     end
 
     def store_params!

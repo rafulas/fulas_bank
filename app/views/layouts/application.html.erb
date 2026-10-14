@@ -122,6 +122,7 @@ end %>
           <%= yield :sidebar %>
         <% else %>
           <div class="grow">
+            <%= turbo_frame_tag "sidebar-summary", src: sidebar_summary_path, loading: :lazy, refresh: :morph %>
             <%= render "accounts/account_sidebar_tabs", family: Current.family, active_tab: @account_group_tab %>
           </div>
 

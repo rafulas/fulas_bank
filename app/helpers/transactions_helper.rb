@@ -247,4 +247,49 @@ module TransactionsHelper
   rescue StandardError
     value.to_s
   end
+
+  # ---- Fulas Bank: movements panel and month summaries ----
+
+  # Two weeks ago shows its dates; the other two are "last week" and "this week".
+  def transactions_panel_week_label(week, index, count)
+    case count - 1 - index
+    when 0 then t("transactions.panel.this_week")
+    when 1 then t("transactions.panel.last_week")
+    else
+      t("transactions.panel.week_range", from: l(week.start_date, format: "%-d %b"), to: l(week.end_date, format: "%-d %b"))
+    end
+  end
+
+  # "1,8K €" above a bar: whole units under a thousand, thousands with one decimal.
+  def transactions_panel_compact_amount(amount, currency)
+    symbol = Money::Currency.new(currency).symbol
+    if amount.abs >= 1000
+      "#{number_with_precision(amount / 1000, precision: 1, strip_insignificant_zeros: true)}K #{symbol}"
+    else
+      "#{amount.round} #{symbol}"
+    end
+  end
+
+  # A day's bar height as a share of the highest day, never so thin it vanishes.
+  def transactions_panel_bar_height(total, max_total)
+    return 0 unless max_total.positive?
+
+    [ (total / max_total * 80).round(2), 4 ].max
+  end
+
+  def transactions_panel_day_title(day, currency)
+    lines = day.segments.map { |segment| "#{segment.name}: #{format_money(Money.new(segment.amount, currency))}" }
+    ([ l(day.date, format: :long) ] + lines).join("\n")
+  end
+
+  # The day headers of the list: "Hoy", "Ayer" or "lunes, 12 de octubre".
+  def entry_group_date_label(date)
+    if date == Date.current
+      t("transactions.list.today")
+    elsif date == Date.yesterday
+      t("transactions.list.yesterday")
+    else
+      l(date, format: t("transactions.list.day_format"))
+    end
+  end
 end

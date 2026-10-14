@@ -693,6 +693,16 @@ class User < ApplicationRecord
     preferences&.dig("show_split_grouped") != false
   end
 
+  # Fulas Bank: the accounts whose balance the movements panel shows, or nil
+  # while the user has not chosen (see Transaction::Panel).
+  def transactions_panel_account_ids
+    preferences&.dig(Transaction::Panel::PREFERENCE_KEY)
+  end
+
+  def update_transactions_panel_account_ids!(ids)
+    update_dashboard_preferences(Transaction::Panel::PREFERENCE_KEY => Array(ids).map(&:to_s).uniq)
+  end
+
   # Returns whether the user has enabled the two-column dashboard layout.
   def dashboard_two_column?
     preferences&.dig("dashboard_two_column") == true

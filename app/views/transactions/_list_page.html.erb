@@ -1,0 +1,45 @@
+<%# locals: (transactions:, pagy:, after_month:) %>
+<%# Fulas Bank: a block of movements, grouped by month (each month starts with
+    its summary) and day. At the end, the frame that brings the next block
+    when the list is scrolled down to it or its button is pressed.
+    `after_month` is the month the previous block ended in, so a month split
+    between two blocks does not get its summary twice. %>
+
+<% entries = transactions.map(&:entry) %>
+<% entries.group_by { |entry| entry.date.beginning_of_month }.each do |month, month_entries| %>
+  <% unless month == after_month %>
+    <%= render "transactions/month_summary",
+          summary: Transaction::MonthSummary.new(Current.family, month: month, scope: @search.transactions_scope, user: Current.user) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= entries_by_date(month_entries, totals: true) do |day_entries| %>
+      <% if Current.user.show_split_grouped? %>
+        <% group_split_entries(day_entries, @split_parents).each do |item| %>
+          <% if item.is_a?(EntriesHelper::SplitGroup) %>
+            <%= render "entries/split_group", split_group: item %>
+          <% else %>
+            <%= render item %>
+          <% end %>
+        <% end %>
+      <% else %>
+        <% day_entries.each do |entry| %>
+          <%= render entry %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if pagy.next && entries.any? %>
+  <%= turbo_frame_tag "transactions_page_#{pagy.next}",
+        class: "block",
+        data: {
+          controller: "infinite-scroll",
+          infinite_scroll_url_value: transactions_path(q: @q, per_page: pagy.limit, page: pagy.next, after_month: entries.last.date.beginning_of_month.iso8601)
+        } do %>
+    <div class="flex justify-center py-2">
+      <%= render DS::Button.new(text: t("transactions.list.load_more"), variant: :outline, size: :sm, icon: "chevrons-down", data: { action: "infinite-scroll#load" }) %>
+    </div>
+  <% end %>
+<% end %>
