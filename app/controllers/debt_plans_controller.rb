@@ -31,12 +31,14 @@ class DebtPlansController < ApplicationController
       @plan = Current.family.debt_plan || Current.family.build_debt_plan
     end
 
+    # The payment account is not mass-assigned: it must be one the user can
+    # see, and anything else leaves the main account.
     def plan_params
-      permitted = params.require(:debt_plan).permit(:strategy, :monthly_extra, :account_id, :feeds_forecast)
-      if permitted[:account_id].present?
-        permitted[:account_id] = nil unless Current.family.accounts.accessible_by(Current.user).exists?(id: permitted[:account_id])
-      end
-      permitted
+      permitted = params.require(:debt_plan).permit(:strategy, :monthly_extra, :feeds_forecast)
+      account_id = params.dig(:debt_plan, :account_id)
+      return permitted if account_id.nil?
+
+      permitted.merge(account: Current.family.accounts.accessible_by(Current.user).find_by(id: account_id.presence))
     end
 
     def loan_settings_params
