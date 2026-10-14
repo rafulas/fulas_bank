@@ -4,6 +4,7 @@
     of the accounts chosen for the movements panel with its last weeks. The
     panel scrolls on its own, apart from the page. %>
 
+<%= turbo_frame_tag "sidebar-summary" do %>
 <% cache [ family.build_cache_key("sidebar_summary_v1", invalidate_on_data_updates: true), user.id, user.transactions_panel_account_ids, I18n.locale ], expires_in: 12.hours, skip_digest: true do %>
   <% balance_sheet = family.balance_sheet(user: user) %>
   <% asset_groups = balance_sheet.assets.account_groups.select { |group| group.total.positive? } %>
@@ -64,4 +65,5 @@
       </div>
     <% end %>
   </div>
+<% end %>
 <% end %>
