@@ -1,0 +1,36 @@
+---
+es:
+  rules:
+    index:
+      suggestions: Reglas sugeridas
+    suggestions:
+      show:
+        title: Reglas sugeridas
+        description: "Sacadas de tus movimientos de los dos últimos años: cuando casi todos los de un mismo comercio o concepto tienen la misma categoría, una regla puede ponérsela sola a los siguientes. Las reglas creadas aquí solo tocan movimientos sin categoría, así que nunca cambian una categoría que ya hayas puesto."
+        back: Volver a las reglas
+        create_all:
+          one: Crear la regla
+          other: "Crear las %{count}"
+        create_all_confirm:
+          title: "¿Crear todas las reglas sugeridas?"
+          body: "Se crearán %{count} reglas y se aplicarán a los movimientos sin categoría que coincidan."
+        empty_title: No hay sugerencias
+        empty_description: "Cuando tengas más movimientos con categoría (al menos tres del mismo comercio con la misma categoría), aparecerán aquí."
+        name_contains: El nombre contiene
+        category: Categoría
+        types:
+          expense: Gasto
+          income: Ingreso
+        history: Historial
+        history_count:
+          one: "%{count} movimiento (%{share})"
+          other: "%{count} movimientos (%{share})"
+        uncategorized: Sin categoría
+        create: Crear regla
+        dismiss: "Descartar %{name}"
+      create:
+        created:
+          one: Regla creada. Se está aplicando a los movimientos sin categoría.
+          other: "%{count} reglas creadas. Se están aplicando a los movimientos sin categoría."
+      dismiss:
+        dismissed: Sugerencia descartada.

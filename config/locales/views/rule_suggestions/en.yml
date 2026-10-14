@@ -1,0 +1,36 @@
+---
+en:
+  rules:
+    index:
+      suggestions: Suggested rules
+    suggestions:
+      show:
+        title: Suggested rules
+        description: "Learnt from your movements of the last two years: when nearly all those of the same shop or concept share a category, a rule can set it on the next ones. Rules created here only touch movements without a category, so they never change a category you already chose."
+        back: Back to rules
+        create_all:
+          one: Create the rule
+          other: "Create all %{count}"
+        create_all_confirm:
+          title: Create every suggested rule?
+          body: "%{count} rules will be created and applied to the matching movements without a category."
+        empty_title: No suggestions
+        empty_description: "Once more movements have a category (at least three of the same shop with the same category), they will show up here."
+        name_contains: Name contains
+        category: Category
+        types:
+          expense: Expense
+          income: Income
+        history: History
+        history_count:
+          one: "%{count} movement (%{share})"
+          other: "%{count} movements (%{share})"
+        uncategorized: Uncategorized
+        create: Create rule
+        dismiss: "Dismiss %{name}"
+      create:
+        created:
+          one: Rule created. It is being applied to the movements without a category.
+          other: "%{count} rules created. They are being applied to the movements without a category."
+      dismiss:
+        dismissed: Suggestion dismissed.

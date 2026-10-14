@@ -650,6 +650,10 @@ Rails.application.routes.draw do
     end
   end
 
+  resource :rule_suggestions, only: %i[show create], path: "rules/suggestions", controller: "rules/suggestions" do
+    post :dismiss
+  end
+
   resources :rules, except: :show do
     member do
       get :confirm
