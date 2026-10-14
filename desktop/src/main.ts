@@ -27,6 +27,8 @@ function fill() {
   $("title").textContent = S.title;
   $("url-label").textContent = S.serverLabel;
   ($("server-url") as HTMLInputElement).placeholder = S.urlPlaceholder;
+  // Fulas Bank runs on this Mac (Docker) at this address, so it comes filled in.
+  ($("server-url") as HTMLInputElement).value = S.defaultUrl;
   $("connect").textContent = S.connect;
   $("remembered-title").textContent = S.remembered;
 }
@@ -107,6 +109,9 @@ async function boot() {
   }
   fill();
   renderRemembered();
+  // First launch: try the local Fulas Bank straight away. If it is not
+  // running yet, the form stays on screen with the reason.
+  connect(S.defaultUrl);
 }
 boot();
 

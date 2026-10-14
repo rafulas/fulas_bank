@@ -45,4 +45,6 @@ Los dos modos usan la misma base de datos, así que tus datos son los mismos.
 
 ## En tu ordenador (VS Code + Docker)
 
-La misma configuración funciona en local: abre la carpeta del proyecto en VS Code, pulsa **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**, y luego `bin/probar`. Abre la app en **http://localhost:3000** (con `http`, sin la «s»): fuera de un Codespace la app no usa https.
+La misma configuración funciona en local: abre la carpeta del proyecto en VS Code, pulsa **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**, y luego `bin/probar`. Abre la app en **http://127.0.0.1:3001** (con `http`, sin la «s»): fuera de un Codespace la app no usa https.
+
+En el Mac usa el puerto **3001** porque el 3000 es del Fulas Bank de verdad (instalado con `mac/instalar.sh`), y así pueden estar los dos en marcha a la vez. Usa `127.0.0.1` y no `localhost`: el navegador guarda la sesión por nombre y no por puerto, así que con `localhost` en los dos, entrar en uno te sacaría del otro.

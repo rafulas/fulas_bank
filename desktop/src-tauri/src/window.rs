@@ -154,7 +154,7 @@ fn open_server_window(handle: &AppHandle, url: Url) {
     let showed_page = Arc::new(AtomicBool::new(false));
     let popup_handle = handle.clone();
     let result = WebviewWindowBuilder::new(handle, label, WebviewUrl::External(url))
-        .title("Sure")
+        .title("Fulas Bank")
         .inner_size(1000.0, 800.0)
         .on_page_load({
             let page = page.clone();
@@ -309,16 +309,16 @@ pub fn download_notification(success: bool, toast: &DownloadToast) -> (String, S
     let description = toast.description.clone().filter(|text| !text.is_empty());
     match (message, description) {
         (Some(message), Some(description)) => (message, description),
-        (Some(message), None) => ("Sure".to_string(), message),
+        (Some(message), None) => ("Fulas Bank".to_string(), message),
         // macOS does not return a path in Finished. Wry saves downloads to the
         // Downloads directory and adds a suffix when a filename already exists.
         (None, _) if success => (
-            "Sure".to_string(),
-            "Download complete. The file is in your Downloads folder.".to_string(),
+            "Fulas Bank".to_string(),
+            "Descarga completa. El archivo está en tu carpeta Descargas.".to_string(),
         ),
         (None, _) => (
-            "Sure".to_string(),
-            "Download failed. Please try again.".to_string(),
+            "Fulas Bank".to_string(),
+            "No se ha podido descargar. Inténtalo de nuevo.".to_string(),
         ),
     }
 }

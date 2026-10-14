@@ -1,0 +1,107 @@
+# Builds the Fulas Bank Mac app (desktop/, a Tauri window around the web app)
+# as one .dmg that works on Apple Silicon and Intel Macs, and publishes it in
+# the GitHub release «app-mac». mac/instalar.sh downloads it from there.
+#
+# On a pull request that touches desktop/ it only builds and tests, so a
+# broken app never reaches the release.
+#
+# The .dmg is not signed with an Apple Developer certificate (99 $/year).
+# Installing it with mac/instalar.sh avoids the macOS warning, because files
+# downloaded from the Terminal are not marked as "downloaded from the internet".
+name: App de Mac
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/fulas-app-mac.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/fulas-app-mac.yml'
+
+concurrency:
+  group: fulas-app-mac-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Construir el .dmg
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Instalar dependencias
+        working-directory: desktop
+        run: npm ci
+
+      - name: Preparar la ventana de inicio
+        working-directory: desktop
+        run: npm run build
+
+      - name: Pruebas
+        working-directory: desktop/src-tauri
+        run: cargo test --locked
+
+      - name: Construir el .dmg (Apple Silicon e Intel)
+        working-directory: desktop
+        run: npm run tauri build -- --target universal-apple-darwin
+
+      - name: Darle un nombre fijo
+        run: |
+          set -euo pipefail
+          dmg="$(ls desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -1)"
+          cp "$dmg" "$RUNNER_TEMP/FulasBank.dmg"
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: FulasBank-dmg
+          path: ${{ runner.temp }}/FulasBank.dmg
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publicar en la release «app-mac»
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: FulasBank-dmg
+          path: dmg
+
+      # The release always has one FulasBank.dmg, replaced by each build, so
+      # its download address never changes.
+      - name: Subir el .dmg
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! gh release view app-mac > /dev/null 2>&1; then
+            gh release create app-mac --target "$GITHUB_SHA" --latest=false \
+              --title "Fulas Bank para Mac" \
+              --notes "App de Mac de Fulas Bank. Se instala con mac/instalar.sh (ver mac/LEEME.md)."
+          fi
+          gh release upload app-mac dmg/FulasBank.dmg --clobber
