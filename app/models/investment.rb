@@ -86,8 +86,8 @@ class Investment < ApplicationRecord
     "sgb" => { short: "SGB", long: "Sovereign Gold Bond", region: "in", tax_treatment: :tax_advantaged },
 
     # === Spain (Fulas Bank) ===
-    "stocks" => { short: "Stocks", long: "Stocks and ETFs", region: "es", tax_treatment: :taxable },
-    "fixed_income" => { short: "Fixed income", long: "Deposits and fixed income", region: "es", tax_treatment: :taxable },
+    "stocks" => { short: "Stocks", long: "Stocks and ETFs", region: "eu", tax_treatment: :taxable },
+    "fixed_income" => { short: "Fixed income", long: "Deposits and fixed income", region: "eu", tax_treatment: :taxable },
 
     # === Generic (available everywhere) ===
     "pension" => { short: "Pension", long: "Pension", region: nil, tax_treatment: :tax_deferred },
