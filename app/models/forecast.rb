@@ -315,7 +315,7 @@ class Forecast
     # ---- The user's changes to the lines above ----
 
     def adjustments
-      @adjustments ||= family.forecast_adjustments.index_by(&:key)
+      @adjustments ||= ForecastAdjustment.where(family_id: family.id).index_by(&:key)
     end
 
     # Another date (still inside the window, or the line goes), amount (in
