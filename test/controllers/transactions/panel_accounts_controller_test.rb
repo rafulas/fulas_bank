@@ -49,4 +49,3 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
     assert_select "#transactions-panel"
   end
 end
-

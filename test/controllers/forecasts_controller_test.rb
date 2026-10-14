@@ -108,4 +108,3 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='main_account_id'] option[selected][value='#{other.id}']"
   end
 end
-

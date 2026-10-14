@@ -26,7 +26,7 @@ es:
       difference: Diferencia
       lowest: Punto más bajo
       lowest_on: el %{date}
-      total_hint: El total suma tus cuentas corrientes, de ahorro y de inversión. Las tarjetas no aparecen: sus cargos recurrentes y su gasto variable se prevén en la cuenta principal, que es la que acaba pagándolas.
+      total_hint: "El total suma tus cuentas corrientes, de ahorro y de inversión. Las tarjetas no aparecen: sus cargos recurrentes y su gasto variable se prevén en la cuenta principal, que es la que acaba pagándolas."
       chart_total: Saldo previsto de todas las cuentas
       chart_account: Saldo previsto de %{name}
       accounts_title: Por cuenta
