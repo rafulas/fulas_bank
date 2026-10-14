@@ -34,8 +34,14 @@ if ! bundle check > /dev/null 2>&1; then
   bundle install
 fi
 
+# In a Codespace the app uses port 3000, the one its Ports tab opens. On a
+# Mac, 3000 belongs to the real Fulas Bank (mac/, in Docker), so this test
+# copy uses 3001 and both can run at the same time. PROBAR_PORT overrides it.
+if [[ -n "${CODESPACES:-}" ]]; then default_port=3000; else default_port=3001; fi
+export PORT="${PROBAR_PORT:-$default_port}"
+
 if pgrep -f "foreman start -f Procfile" > /dev/null; then
-  echo "Fulas Bank ya está en marcha. Ábrelo desde la pestaña Puertos (3000)."
+  echo "Fulas Bank ya está en marcha. Ábrelo desde la pestaña Puertos ($PORT)."
   exit 0
 fi
 
@@ -69,21 +75,20 @@ fi
 # Rails refuses to start while it exists.
 rm -f tmp/pids/server.pid
 
-# Same port as bin/dev; without it foreman hands the web process port 5000.
-export PORT=3000
+# PORT (set above) also stops foreman from handing the web process port 5000.
 
 if [[ "$mode" == "development" ]]; then
   # Precompiled assets from production mode would shadow live changes.
   rm -rf public/assets
   bin/rails tailwindcss:build
-  echo "Fulas Bank listo en el puerto 3000 (modo desarrollo)."
+  echo "Fulas Bank listo en el puerto $PORT (modo desarrollo)."
   exec foreman start -f Procfile.dev
 fi
 
 export RAILS_ENV=production
 # In a Codespace, GitHub's proxy terminates HTTPS in front of the app, so the
 # app must build https:// URLs. Run locally (e.g. a dev container on a Mac),
-# there is no proxy: the app is reached at http://localhost:3000 and https://
+# there is no proxy: the app is reached at http://127.0.0.1:3001 and https://
 # redirects would lead nowhere. RAILS_ASSUME_SSL can still be set by hand.
 if [[ -n "${CODESPACES:-}" ]]; then default_assume_ssl=true; else default_assume_ssl=false; fi
 export RAILS_FORCE_SSL=false RAILS_ASSUME_SSL="${RAILS_ASSUME_SSL:-$default_assume_ssl}"
@@ -103,5 +108,5 @@ if [[ ! -d public/assets || "$(cat "$assets_marker" 2>/dev/null)" != "$current" 
   echo "$current" > "$assets_marker"
 fi
 
-echo "Fulas Bank listo en el puerto 3000."
+echo "Fulas Bank listo en el puerto $PORT."
 exec foreman start -f Procfile.probar

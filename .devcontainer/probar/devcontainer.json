@@ -21,12 +21,17 @@
     "memory": "8gb"
   },
   "forwardPorts": [
-    3000
+    3000,
+    3001
   ],
   "portsAttributes": {
     "3000": {
       "label": "Fulas Bank",
       "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "Fulas Bank (pruebas en el Mac)",
+      "onAutoForward": "notify"
     }
   },
   "postCreateCommand": "bundle install && npm install && mkdir -p tmp && touch tmp/.probar-setup-done",

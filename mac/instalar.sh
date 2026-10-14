@@ -102,7 +102,10 @@ chmod +x ./*.command
 paso "Descargando Fulas Bank (la primera vez tarda unos minutos)"
 if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN > /dev/null 2>&1 \
     && ! docker compose ps --status running --services 2>/dev/null | grep -qx web; then
-  fallo "El puerto 3000 ya lo usa otro programa. ¿Tienes abierto el contenedor «Probar Fulas Bank» de VS Code? Ciérralo y vuelve a lanzar el instalador."
+  # The test container («Probar Fulas Bank» in VS Code) uses 3001 since
+  # bin/probar learnt to leave 3000 to this install; an older copy of it
+  # still takes 3000.
+  fallo "El puerto $PORT ya lo usa otro programa. Si es «Probar Fulas Bank» de VS Code, en su terminal para la app (Control + C) y escribe: git pull && bin/probar. Desde esa versión usa el puerto 3001 y puede seguir abierto. Luego vuelve a lanzar el instalador."
 fi
 if ! docker compose pull 2>&1 | tail -n 3; then
   fallo "No se ha podido descargar la imagen. Si dice «denied», en GitHub ve a tu perfil → Packages → fulas_bank → Package settings → Change visibility → Public, y vuelve a lanzar el instalador."

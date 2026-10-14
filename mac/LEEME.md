@@ -12,7 +12,7 @@ Instalación de una sola vez. Después, Fulas Bank arranca solo al encender el M
 ## Instalar
 
 1. **Docker Desktop.** Si no lo tienes, descárgalo de [docker.com](https://www.docker.com/products/docker-desktop/) (gratis para uso personal), ábrelo una vez y acepta lo que pida.
-2. **Cierra el contenedor «Probar Fulas Bank»** de VS Code si lo tienes abierto, porque usa el mismo puerto (3000). En VS Code: abajo a la izquierda, el recuadro verde → **Cerrar conexión remota**.
+2. Si tienes abierto el contenedor **«Probar Fulas Bank»** de VS Code, ponlo al día para que deje libre el puerto 3000: en su terminal, para la app con **Control + C** y escribe `git pull && bin/probar`. Desde esa versión usa el **3001** y puede seguir abierto a la vez que el de verdad.
 3. Abre **Terminal** (Aplicaciones → Utilidades), pega esto y pulsa Intro:
 
    ```
@@ -29,6 +29,34 @@ Si en el paso 3 sale un error que dice **«denied»**: en GitHub, tu perfil → 
 - **Abrir:** «Fulas Bank» en Aplicaciones. Puedes arrastrarla al Dock.
 - **Actualizar** cuando unas una solicitud de cambios nueva en GitHub. Espera a que termine el robot «Imagen Fulas Bank» (pestaña **Actions** del repositorio, unos 15 minutos) y haz doble clic en **`~/FulasBank/Actualizar Fulas Bank`**. Antes de actualizar hace una copia.
 - **Copia a mano:** doble clic en **`~/FulasBank/Hacer copia ahora`**.
+
+## Probar un cambio antes de unirlo
+
+Tienes dos Fulas Bank en el Mac, cada uno con **su propia base de datos**:
+
+| | Para qué | Dónde se abre | Versión |
+|---|---|---|---|
+| **El de verdad** (Docker, `~/FulasBank`) | Usarlo a diario | App «Fulas Bank» (`localhost:3000`) | `main`, cuando pulsas «Actualizar» |
+| **El de pruebas** (VS Code, «Probar Fulas Bank») | Probar cambios | Navegador, `http://127.0.0.1:3001` | La rama que elijas |
+
+Para probar una solicitud de cambios **antes de unirla**:
+
+1. Abre el proyecto en VS Code. Si no está dentro del contenedor: **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**.
+2. En el terminal (si la app está en marcha, párala con **Control + C**):
+
+   ```
+   git fetch && git checkout NOMBRE-DE-LA-RAMA && bin/probar
+   ```
+
+   El nombre de la rama sale en la solicitud, debajo del título (por ejemplo `app-mac`).
+3. Abre `http://127.0.0.1:3001` y prueba. Lo que hagas aquí no toca tus datos reales.
+4. Si te convence, une la solicitud en GitHub. Después, en VS Code:
+
+   ```
+   git checkout main && git pull
+   ```
+
+   y en el de verdad, doble clic en **Actualizar Fulas Bank** cuando termine el robot «Imagen Fulas Bank».
 
 ## Desde el móvil o el iPad
 
