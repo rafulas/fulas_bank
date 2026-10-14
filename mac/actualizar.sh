@@ -56,3 +56,7 @@ rm -rf "$tmp"
 docker image prune -f > /dev/null 2>&1 || true
 rm -f "$DIR/registros/aviso-pospuesto"
 echo "Fulas Bank actualizado."
+# Back to the app, which the update closed to replace it.
+if [[ -d "/Applications/Fulas Bank.app" ]]; then
+  open "/Applications/Fulas Bank.app"
+fi

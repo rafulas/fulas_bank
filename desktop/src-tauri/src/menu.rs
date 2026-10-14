@@ -6,12 +6,14 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
 
     let prefs = MenuItem::with_id(app, "preferences", "Preferencias…", true, Some("Cmd+,"))?;
     let switch = MenuItem::with_id(app, "switch_server", "Cambiar dirección…", true, Some("Cmd+Shift+O"))?;
+    let updates = MenuItem::with_id(app, "check_updates", "Buscar actualizaciones…", true, None::<&str>)?;
     let app_menu = Submenu::with_items(
         app,
         &pkg.name,
         true,
         &[
             &PredefinedMenuItem::about(app, Some(&pkg.name), Some(AboutMetadata::default()))?,
+            &updates,
             &PredefinedMenuItem::separator(app)?,
             &prefs,
             &switch,
@@ -80,11 +82,40 @@ pub fn on_event(app: &tauri::AppHandle, id: &str) {
                 let _ = w.unminimize();
             }
         }
+        // Fulas Bank: the Mac install (mac/ in the repository) keeps its
+        // scripts in ~/FulasBank. aviso.sh --ahora checks GitHub for a newer
+        // version and answers in a native window, with «Actualizar ahora»
+        // when there is one.
+        "check_updates" => check_updates(app),
         "reload" => {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.eval("window.location.reload()");
             }
         }
         _ => {}
+    }
+}
+
+fn check_updates(app: &tauri::AppHandle) {
+    let script = std::env::var("HOME")
+        .map(|home| std::path::Path::new(&home).join("FulasBank").join("aviso.sh"))
+        .ok()
+        .filter(|path| path.exists());
+    let started = match script.map(|path| std::process::Command::new("/bin/bash").arg(path).arg("--ahora").spawn()) {
+        Some(Ok(mut child)) => {
+            // Collect its exit in the background so no finished process lingers.
+            std::thread::spawn(move || {
+                let _ = child.wait();
+            });
+            true
+        }
+        _ => false,
+    };
+    if !started {
+        if let Some(w) = app.get_webview_window("main") {
+            let _ = w.eval(
+                "alert('No encuentro la instalación de Fulas Bank en la carpeta FulasBank de tu usuario. Vuelve a lanzar el instalador (mac/LEEME.md).')",
+            );
+        }
     }
 }

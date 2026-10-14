@@ -32,7 +32,9 @@ Si en el paso 3 sale un error que dice **«denied»**: en GitHub, tu perfil → 
   - **Actualizar ahora:** abre Terminal y actualiza. Antes hace una copia.
   - **Más tarde:** vuelve a avisar al día siguiente.
 
-  El Mac lo comprueba cada hora. También puedes actualizar cuando quieras con doble clic en **`~/FulasBank/Actualizar Fulas Bank`**.
+  El Mac lo comprueba cada hora. Para mirarlo en el momento (también después de un «Más tarde»), en la app: menú **Fulas Bank → Buscar actualizaciones…**. Te enseña los cambios con **Actualizar ahora**, o te dice que ya estás al día. Al terminar de actualizar, la app se vuelve a abrir sola.
+
+  Sin la app, también vale el doble clic en **`~/FulasBank/Actualizar Fulas Bank`**.
 - **Copia a mano:** doble clic en **`~/FulasBank/Hacer copia ahora`**.
 
 ## Probar un cambio antes de unirlo
