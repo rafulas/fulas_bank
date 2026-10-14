@@ -49,6 +49,26 @@ class Forecast::VariableEstimate
     (monthly_totals.dig(account.id, month.beginning_of_month) || 0).to_d
   end
 
+  # The same estimate for all the accounts together, as one figure: what is
+  # spent across them each month, averaged the same way. A month counts once
+  # any of them has history.
+  def combined_monthly(month)
+    start = history_starts.values.compact.min
+    return BigDecimal("0") unless start
+
+    values = sample_months(month.beginning_of_month).filter_map do |sample|
+      combined_total(sample) if sample >= start.beginning_of_month
+    end
+    return BigDecimal("0") if values.empty?
+
+    values = trimmed(values)
+    (values.sum.to_d / values.size).round(2)
+  end
+
+  def combined_spent(month)
+    combined_total(month.beginning_of_month)
+  end
+
   # The months averaged for `month`, newest first.
   def sample_months(month)
     same = []
@@ -65,6 +85,10 @@ class Forecast::VariableEstimate
   end
 
   private
+    def combined_total(month)
+      monthly_totals.values.sum { |months| months[month] || 0 }.to_d
+    end
+
     def current_month
       today.beginning_of_month
     end

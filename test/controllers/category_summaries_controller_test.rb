@@ -15,6 +15,14 @@ class CategorySummariesControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: "Excluido"
   end
 
+  test "opens on the current month" do
+    @user.update!(default_period: "last_30_days")
+
+    get category_summaries_url
+
+    assert_equal "current_month", @controller.instance_variable_get(:@period).key
+  end
+
   test "index shows the rings, tags, calendar, merchants and last months" do
     get category_summaries_url
 

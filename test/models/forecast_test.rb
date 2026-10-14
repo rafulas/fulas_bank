@@ -107,15 +107,43 @@ class ForecastTest < ActiveSupport::TestCase
     assert dates.all? { |date| date <= Date.current + 70 }
   end
 
-  test "a card's debt grows with its charges, and the total subtracts it" do
+  test "cards are not shown: their charges are expected in the main account, and paying them off is left out" do
+    savings = create_account("Forecast savings", Depository.new, balance: 500)
     card = create_account("Forecast card", CreditCard.new, balance: 200)
     create_series(card, name: "Streaming", amount: 10)
+    create_series(@account, name: "Pago tarjeta", amount: 300, destination_account: card)
 
-    forecast = Forecast.new(@family, accounts: [ @account, card ], through: Date.current + 31, include_variable: false)
-    charges = forecast.flows.count { |flow| flow.account == card }
+    forecast = Forecast.new(@family, accounts: [ savings, @account, card ], card_accounts: [ card ], main_account: @account,
+                            through: Date.current + 31, include_variable: false)
+    charges = forecast.flows.select { |flow| flow.name == "Streaming" }
 
-    assert_equal 200 + 10 * charges, forecast.balances_on(Date.current + 31)[card].amount
-    assert_equal 1_000 - (200 + 10 * charges), forecast.total_on(Date.current + 31).amount
+    assert_equal [ savings, @account ], forecast.accounts
+    assert charges.any?
+    assert charges.all? { |flow| flow.account == @account }
+    assert_empty forecast.flows.select { |flow| flow.name == "Pago tarjeta" }
+    assert_equal 1_000 - 10 * charges.size, forecast.balances_on(Date.current + 31)[@account].amount
+  end
+
+  test "the variable spending of every account and card is one line in the main account" do
+    today = Date.new(2026, 10, 14)
+    savings = create_account("Forecast savings", Depository.new, balance: 500)
+    card = create_account("Forecast card", CreditCard.new, balance: 0)
+    create_transaction(account: @account, name: "Súper", amount: 300, date: Date.new(2026, 9, 10))
+    create_transaction(account: card, name: "Cena", amount: 100, date: Date.new(2026, 9, 12))
+
+    forecast = Forecast.new(@family, accounts: [ savings, @account ], card_accounts: [ card ], main_account: savings,
+                            through: Date.new(2026, 11, 30), today: today)
+    lines = forecast.flows.select { |flow| flow.source == :variable }
+
+    assert_equal [ savings, savings ], lines.map(&:account)
+    assert_equal [ BigDecimal("400"), BigDecimal("400") ], lines.map(&:amount)
+  end
+
+  test "the main account defaults to the first current account" do
+    savings = create_account("Forecast savings", Depository.new, balance: 500)
+    forecast = Forecast.new(@family, accounts: [ @account, savings ], through: Date.current + 31)
+
+    assert_equal @account, forecast.main_account
   end
 
   test "a recurring transfer leaves one account and reaches the other" do

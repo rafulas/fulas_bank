@@ -15,10 +15,12 @@ class DS::Table::Column < DesignSystemComponent
   #   column that names each row
   # @param class [String, nil] extra classes for the body cells, e.g. "text-secondary"
   #   or "privacy-sensitive"
-  def initialize(header, cell:, sticky: false, align: :left, numeric: false, row_header: false, class: nil)
+  # @param dense [Boolean] set by the table: tighter padding and smaller text
+  def initialize(header, cell:, sticky: false, dense: false, align: :left, numeric: false, row_header: false, class: nil)
     @header = header
     @cell = cell
     @sticky = sticky
+    @dense = dense
     @numeric = numeric
     # to_s first so a nil or unrecognized value falls back instead of raising.
     candidate = align.to_s.to_sym
@@ -32,7 +34,7 @@ class DS::Table::Column < DesignSystemComponent
   # rows use the subdued rule between them.
   def call
     tag.th header, scope: "col", class: class_names(
-      "px-4 py-3 border-b border-divider text-xs uppercase font-medium text-secondary",
+      padding_classes, "border-b border-divider text-xs uppercase font-medium text-secondary",
       alignment_classes,
       # z-10 so a privacy-blurred amount, which paints in a layer of its own,
       # doesn't show through the header as it scrolls under it.
@@ -47,7 +49,8 @@ class DS::Table::Column < DesignSystemComponent
       @cell&.call(row, index),
       scope: ("row" if @row_header),
       class: class_names(
-        "px-4 py-3",
+        padding_classes,
+        ("text-xs" if @dense),
         ("border-t border-subdued" if index.positive?),
         ("font-medium" if @row_header),
         alignment_classes,
@@ -57,6 +60,10 @@ class DS::Table::Column < DesignSystemComponent
   end
 
   private
+    def padding_classes
+      @dense ? "px-3 py-1.5" : "px-4 py-3"
+    end
+
     def alignment_classes
       class_names(
         @align == :right ? "text-right" : "text-left",

@@ -19,13 +19,14 @@ en:
       all_accounts: All accounts
       variable: Variable spending
       variable_on: Include variable spending
+      main_account: Main account
       variable_off: Recurring and one-off only
       today: Balance today
       on_date: Expected on %{date}
       difference: Difference
       lowest: Lowest point
       lowest_on: on %{date}
-      total_hint: The total adds what is in current accounts and subtracts what is owed on cards.
+      total_hint: "The total adds your current, savings and investment accounts. Cards are not shown: their recurring charges and variable spending are expected in the main account, which pays them in the end."
       chart_total: Expected balance of all accounts
       chart_account: Expected balance of %{name}
       accounts_title: By account

@@ -48,6 +48,13 @@
               {},
               { class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" } %>
       </label>
+      <label class="text-sm text-secondary flex flex-col gap-1">
+        <%= t(".main_account") %>
+        <%= form.select :main_account_id,
+              options_for_select(@accounts.map { |account| [ account.name, account.id ] }, @main_account&.id),
+              {},
+              { class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" } %>
+      </label>
     <% end %>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">

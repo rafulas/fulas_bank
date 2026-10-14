@@ -14,13 +14,32 @@ class ForecastsController < ApplicationController
     @through = custom_date || (Date.current >> PERIODS.fetch(@period || DEFAULT_PERIOD))
     @include_variable = params[:variable] != "0"
     @account = @accounts.find { |account| account.id == params[:account_id] }
+    @main_account = main_account
 
-    @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable)
+    @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
+                             main_account: @main_account, card_accounts: card_accounts)
   end
 
   private
     def forecast_accounts
       accessible_accounts.visible.where(accountable_type: Forecast::ACCOUNT_TYPES).alphabetically.to_a
+    end
+
+    def card_accounts
+      accessible_accounts.visible.where(accountable_type: Forecast::CARD_TYPES).to_a
+    end
+
+    # The account where the monthly variable spending and the card charges
+    # are expected. Choosing one in the form keeps it for next time.
+    def main_account
+      chosen = @accounts.find { |account| account.id == params[:main_account_id].to_s } if params[:main_account_id].present?
+      if chosen
+        Current.user.update_dashboard_preferences(Forecast::MAIN_ACCOUNT_PREFERENCE => chosen.id)
+        return chosen
+      end
+
+      saved = Current.user.preferences&.dig(Forecast::MAIN_ACCOUNT_PREFERENCE)
+      @accounts.find { |account| account.id == saved } || Forecast.default_main_account(@accounts)
     end
 
     # A date typed in the form, never before tomorrow.

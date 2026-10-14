@@ -8,6 +8,10 @@ module ForecastsHelper
     amount.to_d.negative? ? "−#{format_money(money)}" : "+#{format_money(money)}"
   end
 
+  def forecast_table_rows(forecast, ledger_rows)
+    forecast.table_rows(ledger_rows)
+  end
+
   def forecast_source_tone(source)
     SOURCE_TONES.fetch(source.to_sym, :neutral)
   end

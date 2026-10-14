@@ -38,4 +38,14 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
     assert_redirected_to transactions_url
     assert_equal [ accounts(:depository).id ], @user.reload.transactions_panel_account_ids
   end
+
+  test "opening the list from the menu starts without the filters used before" do
+    get transactions_url(q: { types: [ "income" ], start_date: (Date.current - 30).iso8601 })
+    assert_response :success
+
+    get transactions_url
+
+    assert_response :success
+    assert_select "#transactions-panel"
+  end
 end
