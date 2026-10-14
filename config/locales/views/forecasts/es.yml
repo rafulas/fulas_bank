@@ -2,6 +2,8 @@
 es:
   forecasts:
     variable_line: Gastos varios %{month}
+    debt_plan_line: "Cuota %{loan} (plan de deuda)"
+    debt_plan_extra_line: "Amortización extra: %{name}"
     show:
       title: Forecast
       subtitle: Saldo previsto de tus cuentas a partir de hoy, con los movimientos recurrentes, los puntuales que esperas y los gastos varios de cada mes. Puedes cambiar cualquier línea de la tabla.
@@ -55,6 +57,7 @@ es:
         recurring: Recurrente
         planned: Puntual
         variable: Gastos varios
+        debt_plan: Plan de deuda
   forecast_items:
     form:
       name: Concepto

@@ -1,0 +1,177 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% currency = Current.family.currency %>
+<% schedule = @schedule %>
+<% loan_keys = schedule.ordered_loans.map(&:key) %>
+<% names = schedule.loans.to_h { |loan| [ loan.key, loan.name ] } %>
+<% input_class = "w-full rounded-md border border-primary bg-container px-2 py-1 text-sm text-primary" %>
+
+<div class="max-w-5xl space-y-4 pb-6">
+  <% if @loans.empty? %>
+    <%= render DS::EmptyState.new(icon: "landmark", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <%# What the plan achieves %>
+    <div class="@container">
+      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+        <%= summary_card title: t(".debt_today") do %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_balance, currency, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".debt_free") do %>
+          <span class="first-letter:uppercase"><%= schedule.payoff_date ? l(schedule.payoff_date, format: "%B %Y") : "—" %></span>
+        <% end %>
+        <%= summary_card title: t(".interest") do %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_interest, currency, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".savings") do %>
+          <% saved = @baseline.total_interest - schedule.total_interest %>
+          <% months_saved = @baseline.months.size - schedule.months.size %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money([ saved, 0 ].max, currency, precision: 0) %></span>
+          <span class="block text-xs text-secondary font-normal"><%= t(".months_saved", count: [ months_saved, 0 ].max) %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <% if schedule.months.any? %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <h3 class="text-sm font-medium text-primary"><%= t(".chart_title") %></h3>
+        <div id="debt-plan-chart" class="h-56 w-full"
+             data-controller="time-series-chart"
+             data-time-series-chart-data-value="<%= debt_plan_series(schedule, currency).to_json %>"></div>
+      <% end %>
+    <% end %>
+
+    <%# Calculator: the strategy and each loan's settings %>
+    <%= render DS::Card.new(class: "gap-4") do %>
+      <div class="space-y-1">
+        <h3 class="text-sm font-medium text-primary"><%= t(".calculator_title") %></h3>
+        <p class="text-xs text-secondary"><%= t("debt_plans.strategies.#{@plan.strategy}.description") %></p>
+      </div>
+
+      <%= styled_form_with model: @plan, url: debt_plan_path, method: :patch, class: "space-y-4" do |form| %>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <%= form.select :strategy, debt_plan_strategy_options, { label: t(".strategy") } %>
+          <%= form.number_field :monthly_extra, label: t(".monthly_extra"), step: "0.01", min: 0 %>
+          <%= form.select :account_id, @payment_accounts.map { |account| [ account.name, account.id ] }, { label: t(".payment_account"), include_blank: t(".main_account") } %>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <%= form.toggle :feeds_forecast %>
+          <div class="space-y-0.5">
+            <p class="text-sm text-primary"><%= t(".feeds_forecast") %></p>
+            <p class="text-xs text-secondary"><%= t(".feeds_forecast_hint") %></p>
+          </div>
+        </div>
+
+        <%= render DS::Table.new(rows: @loans, label: t(".calculator_title")) do |table| %>
+          <% table.with_column(t(".loan")) { |account| link_to account.name, account_path(account), class: "text-primary hover:underline" } %>
+          <% table.with_column(t(".balance"), numeric: true, class: "privacy-sensitive whitespace-nowrap") { |account| format_money(Money.new(account.balance.to_d.abs, account.currency)) } %>
+          <% table.with_column(t(".rate"), numeric: true, class: "whitespace-nowrap") { |account| account.accountable.interest_rate ? number_to_percentage(account.accountable.interest_rate, precision: 2) : "—" } %>
+          <% table.with_column(t(".payment"), class: "min-w-28") do |account| %>
+            <% loan_payment = @plan.payment_for(account) %>
+            <%= number_field_tag "debt_plan[loans][#{account.id}][payment]", @plan.setting(account, :payment), step: "0.01", min: 0, class: input_class,
+                  placeholder: (loan_payment && number_with_precision(loan_payment, precision: 2)), aria: { label: t(".payment_for", loan: account.name) } %>
+          <% end %>
+          <% table.with_column(t(".order"), class: "min-w-16") do |account| %>
+            <%= number_field_tag "debt_plan[loans][#{account.id}][order]", @plan.setting(account, :order), step: 1, class: input_class, aria: { label: t(".order_for", loan: account.name) } %>
+          <% end %>
+          <% table.with_column(t(".recurring"), class: "min-w-40") do |account| %>
+            <%= select_tag "debt_plan[loans][#{account.id}][recurring_transaction_id]",
+                  options_for_select(@recurring_transactions.map { |series| [ series.display_name, series.id ] }, debt_plan_selected_series(@plan, account, @recurring_transactions)),
+                  include_blank: t(".no_recurring"), class: input_class, aria: { label: t(".recurring_for", loan: account.name) } %>
+          <% end %>
+          <% table.with_column(t(".excluded")) do |account| %>
+            <%= hidden_field_tag "debt_plan[loans][#{account.id}][excluded]", "0", id: nil %>
+            <%= check_box_tag "debt_plan[loans][#{account.id}][excluded]", "1", @plan.excluded?(account), aria: { label: t(".excluded_for", loan: account.name) } %>
+          <% end %>
+        <% end %>
+        <p class="text-xs text-secondary"><%= t(".loans_hint") %></p>
+
+        <div class="flex justify-end">
+          <%= render DS::Button.new(text: t(".save"), type: "submit") %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%# When each loan ends %>
+    <% if schedule.loans.any? %>
+      <%= render DS::Table.new(rows: schedule.ordered_loans.map { |loan| schedule.results.find { |result| result.loan == loan } }, label: t(".results_title")) do |table| %>
+        <% table.with_column(t(".loan")) { |result| result.loan.name } %>
+        <% table.with_column(t(".months"), numeric: true) { |result| result.months_to_pay_off || "—" } %>
+        <% table.with_column(t(".paid_off_on"), class: "whitespace-nowrap") { |result| result.paid_off_on ? l(result.paid_off_on, format: "%b %Y") : t(".never") } %>
+        <% table.with_column(t(".interest"), numeric: true, class: "privacy-sensitive") { |result| debt_plan_money(result.total_interest, currency) } %>
+      <% end %>
+    <% end %>
+
+    <%# One-off contributions %>
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <div class="space-y-1">
+        <h3 class="text-sm font-medium text-primary"><%= t(".extras_title") %></h3>
+        <p class="text-xs text-secondary"><%= t(".extras_hint") %></p>
+      </div>
+
+      <% if @plan.persisted? && @plan.extra_payments.any? %>
+        <ul class="divide-y divide-secondary">
+          <% @plan.extra_payments.each do |payment| %>
+            <li class="flex items-center justify-between gap-3 py-2 text-sm">
+              <div class="min-w-0">
+                <p class="text-primary truncate"><%= payment.display_name %></p>
+                <p class="text-xs text-secondary">
+                  <%= payment.repeats_until ? t(".repeats", date: l(payment.date, format: "%B %Y"), until: payment.repeats_until.year) : l(payment.date, format: "%d/%m/%Y") %>
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="font-medium text-primary whitespace-nowrap privacy-sensitive"><%= debt_plan_money(payment.amount, currency) %></span>
+                <%= render DS::Button.new(icon: "trash-2", variant: :icon, size: :sm, href: debt_plan_extra_payment_path(payment), method: :delete,
+                      aria: { label: t(".delete_extra") }, confirm: CustomConfirm.new(title: t(".delete_extra"), body: t(".delete_extra_body"), btn_text: t(".delete_extra"), destructive: true)) %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <%= styled_form_with model: DebtPlan::ExtraPayment.new(date: (Date.current >> 1).beginning_of_month), url: debt_plan_extra_payments_path, scope: :debt_plan_extra_payment, class: "grid grid-cols-2 md:grid-cols-5 gap-3 items-end" do |form| %>
+        <%= form.text_field :name, label: t(".extra_name"), placeholder: t(".extra_name_placeholder"), container_class: "col-span-2 md:col-span-1" %>
+        <%= form.date_field :date, label: t(".extra_date"), required: true %>
+        <%= form.number_field :amount, label: t(".extra_amount"), step: "0.01", min: 0, required: true %>
+        <%= form.date_field :repeats_until, label: t(".extra_repeats_until") %>
+        <%= render DS::Button.new(text: t(".add_extra"), icon: "plus", type: "submit", variant: :secondary) %>
+      <% end %>
+    <% end %>
+
+    <%# PaymentSchedule and Plan Reducc Deuda: month by month %>
+    <% if schedule.months.any? %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-medium text-primary"><%= t(".schedule_title") %></h3>
+          <div class="flex gap-1">
+            <%= render DS::Link.new(text: t(".view_payments"), size: :sm, variant: (@view == "payments" ? :secondary : :ghost), href: debt_plan_path(view: "payments")) %>
+            <%= render DS::Link.new(text: t(".view_pending"), size: :sm, variant: (@view == "pending" ? :secondary : :ghost), href: debt_plan_path(view: "pending")) %>
+          </div>
+        </div>
+
+        <%= render DS::Table.new(rows: schedule.months, dense: true, sticky_header: true, max_height: "max-h-[70vh]", label: t(".schedule_title"),
+              row_class: ->(month) { "bg-warning/10" if month.additional_total.positive? }) do |table| %>
+          <% table.with_column(t(".month"), class: "whitespace-nowrap") { |month| l(month.date, format: "%b %Y") } %>
+          <% if @view == "payments" %>
+            <% table.with_column(t(".snowball"), numeric: true, class: "privacy-sensitive text-secondary") { |month| debt_plan_money(month.snowball, currency) } %>
+            <% table.with_column(t(".additional"), numeric: true, class: "privacy-sensitive text-secondary") { |month| month.additional_total.positive? ? debt_plan_money(month.additional_total, currency) : "" } %>
+            <% loan_keys.each do |key| %>
+              <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| month.payments[key].to_d.positive? ? debt_plan_money(month.payments[key], currency) : "" } %>
+            <% end %>
+            <% table.with_column(t(".total_payment"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") { |month| debt_plan_money(month.total_payment, currency) } %>
+          <% else %>
+            <% loan_keys.each do |key| %>
+              <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| debt_plan_money(month.balances[key], currency) } %>
+            <% end %>
+          <% end %>
+          <% table.with_column(t(".total_balance"), numeric: true, class: "privacy-sensitive font-medium text-primary") { |month| debt_plan_money(month.total_balance, currency) } %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

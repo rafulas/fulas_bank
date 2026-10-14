@@ -11,6 +11,9 @@
 #   3. Optionally, one "Gastos varios" line a month per account with the
 #      expected variable spending (see Forecast::VariableEstimate), on the last
 #      day of the month. In the current month, only what is still to come.
+#   4. When the debt plan feeds the forecast (DebtPlan::ForecastFeed), its
+#      loan payments and one-off contributions, which replace the recurring
+#      movements linked to the loans from next month on.
 #
 # The user can change the date, amount or name of a line of 1 and 3, or leave
 # it out, from the table; those changes are ForecastAdjustments, applied here
@@ -63,12 +66,12 @@ class Forecast
     end
   end
 
-  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today
+  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan
 
   # `main_account` is where the monthly variable spending and the card
   # charges are expected (by default the first current account);
   # `card_accounts` are the cards whose spending ends up there.
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [])
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil)
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
     @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
@@ -76,6 +79,7 @@ class Forecast
     @through = [ through, today + 1 ].max
     @include_variable = include_variable
     @today = today
+    @debt_plan = debt_plan
   end
 
   def self.default_main_account(accounts)
@@ -90,7 +94,7 @@ class Forecast
   # (with `skipped`), which do not count in any balance. On the same day, the
   # month's variable spending goes last.
   def flows
-    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows)
+    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows + debt_plan_flows)
                  .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
   end
 
@@ -259,7 +263,11 @@ class Forecast
           card_ids.include?(series.account_id) || account_ids.include?(series.destination_account_id)
       end
 
-      series_list.flat_map { |series| flows_for_series(series) }
+      series_list.flat_map do |series|
+        list = flows_for_series(series)
+        # The debt plan pays this loan from the month it starts.
+        debt_plan&.replaces?(series) ? list.select { |flow| flow.date < debt_plan.starts_on } : list
+      end
     end
 
     # Pending payments already scheduled (with any amount or date the user
@@ -359,6 +367,28 @@ class Forecast
 
     def variable_name(month)
       I18n.t("forecasts.variable_line", month: I18n.l(month, format: "%B %Y"))
+    end
+
+    # ---- 4. The debt plan ----
+
+    def debt_plan_flows
+      return [] unless debt_plan
+
+      account = accounts_by_id[debt_plan.account_id] || main_account
+      return [] unless account
+
+      payments = debt_plan.payments.map do |date, loan, amount|
+        [ date, I18n.t("forecasts.debt_plan_line", loan: loan), amount ]
+      end
+      contributions = debt_plan.contributions.map do |date, names, amount|
+        [ date, I18n.t("forecasts.debt_plan_extra_line", name: names), amount ]
+      end
+
+      (payments + contributions).filter_map do |date, name, amount|
+        next unless window.cover?(date)
+
+        Flow.new(date: date, account: account, amount: amount, name: name, source: :debt_plan)
+      end
     end
 
     # ---- The user's changes to the lines above ----

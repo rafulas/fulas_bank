@@ -1,0 +1,91 @@
+---
+es:
+  debt_plans:
+    strategies:
+      avalanche:
+        name: Avalancha (el de más interés primero)
+        description: "El dinero extra va primero al préstamo con el tipo de interés más alto. Es la que menos intereses paga en total."
+      snowball:
+        name: Bola de nieve (el más pequeño primero)
+        description: "El dinero extra va primero al préstamo con menos pendiente. Se terminan préstamos antes, y cada cuota que queda libre se suma a la del siguiente."
+      stair_stepper:
+        name: Escalera (el que antes se acaba primero)
+        description: "El dinero extra va primero al préstamo al que le quedan menos meses con su cuota (pendiente entre cuota)."
+      table_order:
+        name: En el orden de la tabla
+        description: "El dinero extra va a los préstamos en el orden en que aparecen en la tabla."
+      no_snowball:
+        name: Sin bola de nieve
+        description: "Cada préstamo paga su cuota y, cuando uno termina, su cuota vuelve a tu cuenta en vez de ir al siguiente. Las aportaciones extra sí se usan, en el orden de la tabla."
+      custom_highest:
+        name: Personalizado, número más alto primero
+        description: "El dinero extra va primero al préstamo con el número más alto en la columna «Orden»."
+      custom_lowest:
+        name: Personalizado, número más bajo primero
+        description: "El dinero extra va primero al préstamo con el número más bajo en la columna «Orden»."
+    extra_payment:
+      default_name: Aportación extra
+    show:
+      title: Plan de deuda
+      subtitle: "Cómo y cuándo terminas de pagar tus préstamos según la estrategia que elijas, con aportaciones extra como el bonus."
+      empty_title: No hay préstamos
+      empty_description: "Añade tus préstamos en Préstamos (con su pendiente, su tipo de interés y su cuota) y aquí verás el plan para terminarlos antes."
+      debt_today: Deuda hoy
+      debt_free: Sin deudas en
+      interest: Intereses
+      savings: Ahorro frente a solo cuotas
+      months_saved:
+        one: "%{count} mes antes"
+        other: "%{count} meses antes"
+      chart_title: Deuda total prevista
+      calculator_title: Préstamos y estrategia
+      strategy: Estrategia
+      monthly_extra: Extra cada mes
+      payment_account: Cuenta desde la que pagas
+      main_account: La cuenta principal del Forecast
+      feeds_forecast: Usar este plan en el Forecast
+      feeds_forecast_hint: "Desde el mes que viene, el Forecast pone las cuotas y aportaciones de este plan en lugar de los movimientos recurrentes que elijas en la tabla, para no contarlos dos veces."
+      loan: Préstamo
+      balance: Pendiente
+      rate: Interés
+      payment: Cuota
+      order: Orden
+      recurring: Movimiento recurrente
+      excluded: Fuera
+      payment_for: "Cuota de %{loan}"
+      order_for: "Orden de %{loan}"
+      recurring_for: "Movimiento recurrente de %{loan}"
+      excluded_for: "Dejar %{loan} fuera del plan"
+      no_recurring: Ninguno
+      loans_hint: "Cuota: déjala vacía para usar la del préstamo. Orden: solo para las estrategias personalizadas. Movimiento recurrente: el que paga hoy ese préstamo, que el plan sustituye en el Forecast."
+      save: Guardar
+      results_title: Cuándo termina cada préstamo
+      months: Meses
+      paid_off_on: Termina
+      never: "No termina"
+      extras_title: Aportaciones extra
+      extras_hint: "Dinero puntual para amortizar, como 15.000 € del bonus en marzo. Si pones «Cada año hasta», se repite ese mes cada año hasta esa fecha."
+      repeats: "%{date}, cada año hasta %{until}"
+      delete_extra: Borrar la aportación
+      delete_extra_body: "La aportación se quita del plan."
+      extra_name: Nombre
+      extra_name_placeholder: Bonus
+      extra_date: Fecha
+      extra_amount: Importe
+      extra_repeats_until: Cada año hasta
+      add_extra: Añadir
+      schedule_title: Mes a mes
+      view_payments: Pagos
+      view_pending: Pendiente
+      month: Mes
+      snowball: Bola de nieve
+      additional: Extra
+      total_payment: Pago total
+      total_balance: Deuda total
+    update:
+      saved: Plan guardado.
+    extra_payments:
+      create:
+        created: Aportación añadida.
+      destroy:
+        destroyed: Aportación borrada.

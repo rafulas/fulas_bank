@@ -740,6 +740,9 @@ Rails.application.routes.draw do
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes"
   resource :loans_overview, only: :show, path: "prestamos"
+  resource :debt_plan, only: %i[show update], path: "prestamos/plan" do
+    resources :extra_payments, only: %i[create destroy], module: :debt_plans
+  end
   resource :investments_overview, only: :show, path: "inversiones"
   resources :forecast_items, only: %i[new create edit update destroy]
   resource :forecast_adjustment, only: %i[edit update destroy]

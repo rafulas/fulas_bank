@@ -73,5 +73,8 @@
     </div>
   <% end %>
 
-  <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_loan_path, frame: :modal) %>
+  <div class="flex flex-wrap gap-2">
+    <%= render DS::Link.new(text: t(".debt_plan"), icon: "trending-down", href: debt_plan_path) unless overview.rows.empty? %>
+    <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_loan_path, frame: :modal) %>
+  </div>
 </div>
