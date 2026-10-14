@@ -42,10 +42,17 @@ module AccountableResource
     rescue Date::Error
       nil
     end || (Time.zone.today - 2.years)
+    attributes = account_params.except(:return_to, :opening_balance_date).merge(owner: Current.user)
+    # Fulas Bank: an investment can be opened empty; its value then comes
+    # from the purchases recorded in it, however old.
+    without_opening_balance = optional_balance? && attributes[:balance].blank?
+    attributes[:balance] = 0 if without_opening_balance
+
     Account.transaction do
       @account = Current.family.accounts.create_and_sync(
-        account_params.except(:return_to, :opening_balance_date).merge(owner: Current.user),
-        opening_balance_date: opening_balance_date
+        attributes,
+        opening_balance_date: opening_balance_date,
+        without_opening_balance: without_opening_balance
       )
       @account.lock_saved_attributes!
     end
@@ -163,6 +170,11 @@ module AccountableResource
     def set_manageable_account
       @account = Current.user.accessible_accounts.find(params[:id])
       require_account_permission!(@account)
+    end
+
+    # Account types that can be created without a balance.
+    def optional_balance?
+      accountable_type == Investment
     end
 
     def account_params

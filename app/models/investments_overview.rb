@@ -5,8 +5,9 @@
 #
 # "Put into it" is the net of the money movements of the account (transfers
 # in minus transfers out). Buying and selling inside the account does not
-# count. An account with no money movements has no contribution to compare
-# against, so its gain is not shown.
+# count. An account with no money movements but with positions (shares
+# recorded purchase by purchase) uses what those positions cost instead;
+# with neither, there is nothing to compare against and no gain is shown.
 class InvestmentsOverview
   ACCOUNT_TYPES = %w[Investment Crypto].freeze
   TOP_HOLDINGS = 5
@@ -40,7 +41,7 @@ class InvestmentsOverview
 
   def rows
     @rows ||= accounts.map do |account|
-      net_in = contributions[account.id]
+      net_in = contributions[account.id] || holdings_cost(account)
       Row.new(
         account: account,
         value: Money.new(account.balance.to_d, account.currency),
@@ -101,6 +102,16 @@ class InvestmentsOverview
                                .group(:account_id)
                                .sum(:amount)
                                .transform_values { |amount| -amount.to_d }
+    end
+
+    # What the current positions cost, for an account recorded only with
+    # purchases (no money moved in): nil unless every position's cost is known.
+    def holdings_cost(account)
+      holdings = account.current_holdings.to_a
+      return if holdings.empty?
+
+      costs = holdings.map { |holding| (cost = holding.avg_cost) && holding.qty.to_d * cost.amount }
+      costs.sum if costs.none?(&:nil?)
     end
 
     def sum(amounts)

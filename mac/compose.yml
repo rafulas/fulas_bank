@@ -37,6 +37,9 @@ x-rails-env: &rails_env
   DEFAULT_DATE_FORMAT: "%d/%m/%Y"
   DEFAULT_TIMEZONE: Europe/Madrid
   DEFAULT_NUMBER_FORMAT: "1.234,56"
+  # Share and fund prices from Yahoo Finance: free, no key, covers the
+  # Madrid stock exchange. Another can still be chosen in Ajustes.
+  SECURITIES_PROVIDER: ${SECURITIES_PROVIDER:-yahoo_finance}
 
 services:
   web:

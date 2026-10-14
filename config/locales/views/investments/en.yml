@@ -4,6 +4,8 @@ en:
     edit:
       edit: Edit %{account}
     form:
+      subtype: "Investment type"
+      balance_hint: "Optional. Leave it empty to record purchases one by one (for example, 100 BBVA shares on 01/03/2019 at 3.40): the value will come from them."
       none: None
       subtype_prompt: Select investment type
     new:
@@ -11,6 +13,12 @@ en:
     show:
       chart_title: Total value
     subtypes:
+      stocks:
+        short: Stocks
+        long: Stocks and ETFs
+      fixed_income:
+        short: Fixed income
+        long: Deposits and fixed income
       # United States
       brokerage:
         short: Brokerage

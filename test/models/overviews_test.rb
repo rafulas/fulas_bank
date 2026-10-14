@@ -38,4 +38,19 @@ class OverviewsTest < ActiveSupport::TestCase
     assert_equal Money.new(7_445, "USD"), overview.total_value
     assert_equal Money.new(645, "USD"), overview.total_gain
   end
+
+  test "investments recorded purchase by purchase compare their value with what the shares cost" do
+    account = @family.accounts.create!(name: "Acciones BBVA", balance: 1_000, currency: "USD", accountable: Investment.new(subtype: "stocks"))
+    account.holdings.create!(security: securities(:aapl), date: Date.current, qty: 100, price: 10, amount: 1_000, currency: "USD", cost_basis: 3.4)
+
+    row = InvestmentsOverview.new(@family, user: @user).rows.sole
+
+    assert_equal Money.new(340, "USD"), row.contributed
+    assert_equal Money.new(660, "USD"), row.gain
+  end
+
+  test "the investment types offered are the Spanish ones, keeping an account's own" do
+    assert_equal %w[stocks mutual_fund pension fixed_income other], Investment.subtypes_for_select.map(&:last)
+    assert_includes Investment.subtypes_for_select(current: "401k").map(&:last), "401k"
+  end
 end
