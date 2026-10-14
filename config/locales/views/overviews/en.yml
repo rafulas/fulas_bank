@@ -22,6 +22,7 @@ en:
         one: 1 payment left
         other: "%{count} payments left"
       add: Add loan
+      debt_plan: Debt plan
   investments_overviews:
     show:
       title: Investments

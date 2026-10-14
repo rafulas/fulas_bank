@@ -1,0 +1,91 @@
+---
+en:
+  debt_plans:
+    strategies:
+      avalanche:
+        name: Avalanche (highest interest first)
+        description: "Extra money goes first to the loan with the highest interest rate. It pays the least interest overall."
+      snowball:
+        name: Snowball (lowest balance first)
+        description: "Extra money goes first to the loan with the lowest balance. Loans end sooner, and each payment freed joins the next one."
+      stair_stepper:
+        name: Stair-stepper (soonest to finish first)
+        description: "Extra money goes first to the loan with the fewest months left at its payment (balance divided by payment)."
+      table_order:
+        name: Order entered in the table
+        description: "Extra money goes to the loans in the order they appear in the table."
+      no_snowball:
+        name: No snowball
+        description: "Each loan gets its payment and, when one ends, its payment goes back to your account instead of to the next one. Extra contributions are still used, in table order."
+      custom_highest:
+        name: Custom, highest number first
+        description: "Extra money goes first to the loan with the highest number in the Order column."
+      custom_lowest:
+        name: Custom, lowest number first
+        description: "Extra money goes first to the loan with the lowest number in the Order column."
+    extra_payment:
+      default_name: Extra contribution
+    show:
+      title: Debt plan
+      subtitle: "How and when your loans are paid off with the strategy you choose, with extra contributions such as the bonus."
+      empty_title: No loans
+      empty_description: "Add your loans in Borrowing (with balance, interest rate and payment) to see the plan to pay them off sooner."
+      debt_today: Debt today
+      debt_free: Debt-free by
+      interest: Interest
+      savings: Saved versus payments only
+      months_saved:
+        one: "%{count} month sooner"
+        other: "%{count} months sooner"
+      chart_title: Expected total debt
+      calculator_title: Loans and strategy
+      strategy: Strategy
+      monthly_extra: Extra every month
+      payment_account: Account you pay from
+      main_account: The forecast's main account
+      feeds_forecast: Use this plan in the forecast
+      feeds_forecast_hint: "From next month, the forecast shows this plan's payments and contributions instead of the recurring movements chosen in the table, so they are not counted twice."
+      loan: Loan
+      balance: Balance
+      rate: Rate
+      payment: Payment
+      order: Order
+      recurring: Recurring movement
+      excluded: Out
+      payment_for: "%{loan} payment"
+      order_for: "%{loan} order"
+      recurring_for: "%{loan} recurring movement"
+      excluded_for: "Leave %{loan} out of the plan"
+      no_recurring: None
+      loans_hint: "Payment: leave it empty to use the loan's. Order: only for the custom strategies. Recurring movement: the one paying that loan today, which the plan replaces in the forecast."
+      save: Save
+      results_title: When each loan ends
+      months: Months
+      paid_off_on: Ends
+      never: Never
+      extras_title: Extra contributions
+      extras_hint: "One-off money to repay, such as 15,000 of the bonus in March. With Every year until, it repeats that month every year up to that date."
+      repeats: "%{date}, every year until %{until}"
+      delete_extra: Delete the contribution
+      delete_extra_body: The contribution is removed from the plan.
+      extra_name: Name
+      extra_name_placeholder: Bonus
+      extra_date: Date
+      extra_amount: Amount
+      extra_repeats_until: Every year until
+      add_extra: Add
+      schedule_title: Month by month
+      view_payments: Payments
+      view_pending: Balance
+      month: Month
+      snowball: Snowball
+      additional: Extra
+      total_payment: Total payment
+      total_balance: Total debt
+    update:
+      saved: Plan saved.
+    extra_payments:
+      create:
+        created: Contribution added.
+      destroy:
+        destroyed: Contribution deleted.

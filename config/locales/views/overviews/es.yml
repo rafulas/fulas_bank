@@ -22,6 +22,7 @@ es:
         one: Queda 1 cuota
         other: "Quedan %{count} cuotas"
       add: Añadir préstamo
+      debt_plan: Plan de deuda
   investments_overviews:
     show:
       title: Inversiones

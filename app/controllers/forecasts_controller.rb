@@ -27,7 +27,8 @@ class ForecastsController < ApplicationController
       @main_account = main_account
 
       @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
-                               main_account: @main_account, card_accounts: card_accounts)
+                               main_account: @main_account, card_accounts: card_accounts,
+                               debt_plan: Current.family.debt_plan&.forecast_feed(Current.user))
     end
 
     def forecast_accounts

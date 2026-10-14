@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -612,6 +612,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090100) do
     t.jsonb "value"
     t.index ["enrichable_id", "enrichable_type", "source", "attribute_name"], name: "idx_on_enrichable_id_enrichable_type_source_attribu_5be5f63e08", unique: true
     t.index ["enrichable_type", "enrichable_id"], name: "index_data_enrichments_on_enrichable"
+  end
+
+  create_table "debt_plan_extra_payments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "amount", precision: 19, scale: 4, null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.uuid "debt_plan_id", null: false
+    t.string "name"
+    t.date "repeats_until"
+    t.datetime "updated_at", null: false
+    t.index ["debt_plan_id"], name: "index_debt_plan_extra_payments_on_debt_plan_id"
+    t.check_constraint "amount > 0::numeric", name: "chk_debt_plan_extra_payments_amount_positive"
+  end
+
+  create_table "debt_plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id"
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.boolean "feeds_forecast", default: false, null: false
+    t.jsonb "loan_settings", default: {}, null: false
+    t.decimal "monthly_extra", precision: 19, scale: 4, default: "0.0", null: false
+    t.string "strategy", default: "avalanche", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_debt_plans_on_account_id"
+    t.index ["family_id"], name: "index_debt_plans_on_family_id", unique: true
   end
 
   create_table "debug_log_entries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3084,6 +3109,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090100) do
   add_foreign_key "coinspot_items", "families"
   add_foreign_key "coinstats_accounts", "coinstats_items"
   add_foreign_key "coinstats_items", "families"
+  add_foreign_key "debt_plan_extra_payments", "debt_plans", on_delete: :cascade
+  add_foreign_key "debt_plans", "accounts", on_delete: :nullify
+  add_foreign_key "debt_plans", "families", on_delete: :cascade
   add_foreign_key "debug_log_entries", "account_providers", on_delete: :nullify
   add_foreign_key "debug_log_entries", "accounts", on_delete: :nullify
   add_foreign_key "debug_log_entries", "families", on_delete: :nullify

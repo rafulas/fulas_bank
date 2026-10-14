@@ -166,6 +166,23 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal Date.current + 5.years, series.values.last.date
   end
 
+  test "the debt plan's payments replace the loan's recurring payment from next month" do
+    loan = create_account("Préstamo coche", Loan.new(interest_rate: 0, payment_amount: 100, payment_day: 5), balance: 1_000)
+    series = create_series(@account, name: "Cuota coche", amount: 100)
+    plan = @family.create_debt_plan!(feeds_forecast: true, loan_settings: { loan.id => { "recurring_transaction_id" => series.id } })
+    plan.extra_payments.create!(date: (Date.current >> 2).beginning_of_month + 19, amount: 300, name: "Bonus")
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current >> 12, include_variable: false,
+                            debt_plan: plan.forecast_feed(users(:family_admin)))
+    next_month = Date.current.next_month.beginning_of_month
+
+    assert forecast.flows.none? { |flow| flow.name == "Cuota coche" && flow.date >= next_month }
+    plan_lines = forecast.flows.select { |flow| flow.source == :debt_plan }
+    assert_equal next_month + 4, plan_lines.first.date
+    assert plan_lines.any? { |flow| flow.amount == 300 && flow.name.include?("Bonus") }
+    assert_equal BigDecimal("1000"), plan_lines.sum(&:amount)
+  end
+
   private
     def create_account(name, accountable, balance:)
       Account.create!(family: @family, owner: users(:family_admin), name: name, balance: balance, currency: "USD",

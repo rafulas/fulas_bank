@@ -76,7 +76,7 @@
       <% end %>
       <% table.with_column("", align: :right) do |row| %>
         <% unless row.month? %>
-          <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: forecast_line_edit_path(row.flow), frame: :modal, aria: { label: t(".edit") }) %>
+          <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: forecast_line_edit_path(row.flow), frame: (row.flow.source == :debt_plan ? :_top : :modal), aria: { label: t(".edit") }) %>
         <% end %>
       <% end %>
     <% end %>

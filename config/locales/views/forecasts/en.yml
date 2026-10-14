@@ -2,6 +2,8 @@
 en:
   forecasts:
     variable_line: Variable spending %{month}
+    debt_plan_line: "%{loan} payment (debt plan)"
+    debt_plan_extra_line: "Extra repayment: %{name}"
     show:
       title: Forecast
       subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and each month's variable spending. Any line of the table can be changed.
@@ -55,6 +57,7 @@ en:
         recurring: Recurring
         planned: One-off
         variable: Variable spending
+        debt_plan: Debt plan
   forecast_items:
     form:
       name: Description
