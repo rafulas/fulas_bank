@@ -4,7 +4,7 @@
     <%# Current Net Worth %>
     <div class="p-4 bg-surface-inset rounded-lg">
       <p class="text-sm text-secondary mb-2"><%= t("reports.net_worth.current_net_worth") %></p>
-      <p class="text-2xl font-semibold privacy-sensitive <%= net_worth_metrics[:current_net_worth] >= 0 ? "text-success" : "text-destructive" %>">
+      <p class="text-xl font-semibold whitespace-nowrap privacy-sensitive <%= net_worth_metrics[:current_net_worth] >= 0 ? "text-success" : "text-destructive" %>">
         <%= net_worth_metrics[:current_net_worth].format %>
       </p>
     </div>
@@ -14,7 +14,7 @@
       <p class="text-sm text-secondary mb-2"><%= t("reports.net_worth.period_change") %></p>
       <% if net_worth_metrics[:trend] %>
         <% trend = net_worth_metrics[:trend] %>
-        <p class="text-2xl font-semibold mb-1 privacy-sensitive" style="color: <%= trend.color %>">
+        <p class="text-xl font-semibold whitespace-nowrap mb-1 privacy-sensitive" style="color: <%= trend.color %>">
           <%= trend.value.format(signify_positive: true) %>
         </p>
         <% if trend.percent.finite? %>
@@ -23,7 +23,7 @@
           </p>
         <% end %>
       <% else %>
-        <p class="text-2xl font-semibold mb-1 text-subdued">--</p>
+        <p class="text-xl font-semibold whitespace-nowrap mb-1 text-subdued">--</p>
       <% end %>
     </div>
 

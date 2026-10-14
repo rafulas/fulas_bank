@@ -31,6 +31,7 @@ es:
       chart_account: Saldo previsto de %{name}
       accounts_title: Por cuenta
     table:
+      expand: Ampliar
       title: Tabla de previsión
       hint: "Cada línea con el saldo que quedará después. Recurrente: viene de tus recibos, nóminas y suscripciones (los fijos y recurrentes). Gastos varios: lo que sueles gastar en lo variable ese mes (media de los tres últimos meses iguales y los seis últimos meses, sin el mayor ni el menor). Con «Editar» cambias la fecha, el importe o el nombre de una línea, o la quitas."
       add: Añadir línea

@@ -1,4 +1,4 @@
-<%# locals: (forecast:, account:) %>
+<%# locals: (forecast:, account:, expanded: false) %>
 <%# The forecast table: one dense table whose header stays in view while it
     scrolls, with a row opening each month (its result and the balance it
     ends on) followed by that month's lines. %>
@@ -7,14 +7,20 @@
 <% balance_accounts = account ? [] : (forecast.accounts.size > 1 ? forecast.accounts : []) %>
 <% table_rows = forecast_table_rows(forecast, rows) %>
 
-<%= render DS::Card.new(class: "gap-3") do %>
-  <div class="flex flex-wrap items-start justify-between gap-2">
-    <div class="space-y-1">
-      <h3 class="text-sm font-medium text-primary"><%= t(".title") %></h3>
-      <p class="text-xs text-secondary"><%= t(".hint") %></p>
+<%= render DS::Card.new(class: class_names("gap-3", "shadow-none p-0" => expanded)) do %>
+  <% unless expanded %>
+    <div class="flex flex-wrap items-start justify-between gap-2">
+      <div class="space-y-1">
+        <h3 class="text-sm font-medium text-primary"><%= t(".title") %></h3>
+        <p class="text-xs text-secondary"><%= t(".hint") %></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= render DS::Link.new(text: t(".expand"), icon: "maximize-2", variant: :outline, size: :sm,
+              href: table_forecast_path(request.query_parameters.slice("period", "until", "account_id", "variable")), frame: :modal) %>
+        <%= render DS::Link.new(text: t(".add"), icon: "plus", size: :sm, href: new_forecast_item_path, frame: :modal) %>
+      </div>
     </div>
-    <%= render DS::Link.new(text: t(".add"), icon: "plus", size: :sm, href: new_forecast_item_path, frame: :modal) %>
-  </div>
+  <% end %>
 
   <% if rows.empty? %>
     <p class="text-sm text-secondary"><%= t(".empty") %></p>
@@ -23,7 +29,7 @@
       rows: table_rows,
       dense: true,
       sticky_header: true,
-      max_height: "max-h-[70vh]",
+      max_height: expanded ? "max-h-[80vh]" : "max-h-[70vh]",
       label: t(".title"),
       row_class: ->(row) {
         if row.month?
@@ -60,7 +66,7 @@
         <% amount = row.month? ? row.net : forecast.user_amount(row.flow) %>
         <span class="<%= amount.negative? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(amount.amount, forecast.currency) %></span>
       <% end %>
-      <% table.with_column(account ? account.name : t(".total"), numeric: true, class: "privacy-sensitive font-medium") do |row| %>
+      <% table.with_column(account ? account.name : t(".total"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") do |row| %>
         <%= account ? format_money(Money.new(row.balances[account.id], account.currency)) : format_money(row.total) %>
       <% end %>
       <% balance_accounts.each do |balance_account| %>

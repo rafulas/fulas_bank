@@ -18,6 +18,8 @@ es:
         plan: Plan
         reports: Informes
         forecast: Forecast
+        loans_overview: Préstamos
+        investments_overview: Inversiones
         month_plan: Planes
         summary: Resumen
         goals: Objetivos

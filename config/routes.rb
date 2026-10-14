@@ -731,9 +731,13 @@ Rails.application.routes.draw do
   resources :loan_payment_links, only: %i[create destroy]
   # Links between bank charges and vehicle logs or property expenses that the
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
-  resource :forecast, only: :show
+  resource :forecast, only: :show do
+    get :table
+  end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes"
+  resource :loans_overview, only: :show, path: "prestamos"
+  resource :investments_overview, only: :show, path: "inversiones"
   resources :forecast_items, only: %i[new create edit update destroy]
   resource :forecast_adjustment, only: %i[edit update destroy]
 

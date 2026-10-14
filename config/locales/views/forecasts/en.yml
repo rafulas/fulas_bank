@@ -31,6 +31,7 @@ en:
       chart_account: Expected balance of %{name}
       accounts_title: By account
     table:
+      expand: Expand
       title: Forecast table
       hint: "Each line with the balance left after it. Recurring: from your bills, salaries and subscriptions (the fixed and recurring ones). Variable spending: what you usually spend on variable things that month (average of the last three same months and the last six months, without the highest and lowest). Use Edit to change a line's date, amount or name, or to leave it out."
       add: Add line

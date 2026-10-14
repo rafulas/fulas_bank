@@ -8,19 +8,28 @@ class ForecastsController < ApplicationController
   PERIODS = { "1m" => 1, "3m" => 3, "6m" => 6, "1y" => 12, "2y" => 24, "5y" => 60 }.freeze
   DEFAULT_PERIOD = "5y"
 
-  def show
-    @accounts = forecast_accounts
-    @period = params[:until].present? ? nil : (PERIODS.key?(params[:period]) ? params[:period] : DEFAULT_PERIOD)
-    @through = custom_date || (Date.current >> PERIODS.fetch(@period || DEFAULT_PERIOD))
-    @include_variable = params[:variable] != "0"
-    @account = @accounts.find { |account| account.id == params[:account_id] }
-    @main_account = main_account
+  before_action :build_forecast
 
-    @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
-                             main_account: @main_account, card_accounts: card_accounts)
+  def show
+  end
+
+  # The table on its own, in a wide dialog, to see every column at once.
+  def table
   end
 
   private
+    def build_forecast
+      @accounts = forecast_accounts
+      @period = params[:until].present? ? nil : (PERIODS.key?(params[:period]) ? params[:period] : DEFAULT_PERIOD)
+      @through = custom_date || (Date.current >> PERIODS.fetch(@period || DEFAULT_PERIOD))
+      @include_variable = params[:variable] != "0"
+      @account = @accounts.find { |account| account.id == params[:account_id] }
+      @main_account = main_account
+
+      @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
+                               main_account: @main_account, card_accounts: card_accounts)
+    end
+
     def forecast_accounts
       accessible_accounts.visible.where(accountable_type: Forecast::ACCOUNT_TYPES).alphabetically.to_a
     end
