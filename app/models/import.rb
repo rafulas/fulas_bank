@@ -351,6 +351,13 @@ class Import < ApplicationRecord
     @csv_sample ||= parsed_csv.first(2)
   end
 
+  # A number from any column of the file, read with the import's number
+  # format (nil when it is not a number). Used for columns the rows do not
+  # keep, such as a bank's running balance (Import::BankBalance).
+  def csv_number(value)
+    sanitize_number(value).presence&.to_d
+  end
+
   def dry_run
     mappings = {
       transactions: rows_count,

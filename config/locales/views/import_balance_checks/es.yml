@@ -1,0 +1,28 @@
+---
+es:
+  import:
+    balance_checks:
+      balance_check:
+        title: "¿Cuadran los saldos?"
+        hint: "Compara lo que tiene cada cuenta en Fulas Bank con lo que dice el banco. Si no cuadra, falta un movimiento, sobra uno o alguno tiene otro importe."
+        status:
+          pending: Calculando
+          matched: Cuadra
+          mismatched: Descuadre
+        sources:
+          statement: "Banco, %{date} (del extracto)"
+          typed: "Banco, %{date}"
+        app: Fulas Bank
+        calculating: Calculando…
+        difference: "Diferencia de %{amount}"
+        adjust: Ajustar el saldo
+        adjust_confirm:
+          title: "¿Ajustar el saldo?"
+          body: "%{account} pasará a tener %{amount}, como dice el banco. Antes de hacerlo, revisa si falta o sobra algún movimiento: el ajuste no lo arregla, solo iguala la cifra."
+        typed_label: Saldo en el banco o en Bilance hoy
+        check: Comprobar
+      update:
+        invalid_amount: Escribe el saldo como un número, por ejemplo 1234.56
+      adjust:
+        adjusted: "Saldo de %{account} ajustado."
+        not_adjusted: No se ha podido ajustar el saldo.

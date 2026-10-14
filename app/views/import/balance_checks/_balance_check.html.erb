@@ -1,0 +1,65 @@
+<%# locals: (balance_check:) %>
+<%# Does each account hold what the bank says, now that the movements are in?
+    Reloads itself while the app recalculates the balances. %>
+<% import = balance_check.import %>
+<% polling = balance_check.any_pending? ? { controller: "polling", polling_url_value: import_balance_check_path(import), polling_interval_value: 3000 } : {} %>
+
+<%= turbo_frame_tag "import_balance_check", data: polling do %>
+  <div class="bg-container border border-primary rounded-lg p-4 space-y-3 text-left">
+    <div class="space-y-1">
+      <h2 class="text-sm font-medium text-primary"><%= t(".title") %></h2>
+      <p class="text-xs text-secondary"><%= t(".hint") %></p>
+    </div>
+
+    <% balance_check.checks.each do |check| %>
+      <div id="<%= dom_id(check.account, :balance_check) %>" class="border-t border-secondary pt-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-sm font-medium text-primary truncate" title="<%= check.account.name %>"><%= check.account.name %></span>
+          <% if check.pending? %>
+            <%= render DS::Pill.new(label: t(".status.pending"), tone: :gray, marker: false, size: :sm) %>
+          <% elsif check.matched? %>
+            <%= render DS::Pill.new(label: t(".status.matched"), tone: :success, icon: "check", marker: false, size: :sm) %>
+          <% elsif check.mismatched? %>
+            <%= render DS::Pill.new(label: t(".status.mismatched"), tone: :warning, icon: "triangle-alert", marker: false, size: :sm) %>
+          <% end %>
+        </div>
+
+        <% if check.checked? %>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <p class="text-secondary"><%= t(".sources.#{check.source}", date: l(check.date, format: :short)) %></p>
+              <p class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format_money(check.money(check.bank_amount)) %></p>
+            </div>
+            <div>
+              <p class="text-secondary"><%= t(".app") %></p>
+              <p class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap">
+                <%= check.pending? ? t(".calculating") : format_money(check.money(check.app_amount)) %>
+              </p>
+            </div>
+          </div>
+
+          <% if check.mismatched? %>
+            <p class="text-xs text-warning"><%= t(".difference", amount: format_money(check.money(check.difference.abs))) %></p>
+            <% if check.adjustable? %>
+              <%= render DS::Button.new(
+                text: t(".adjust"),
+                variant: :outline,
+                size: :sm,
+                icon: "scale",
+                href: adjust_import_balance_check_path(import, account_id: check.account.id),
+                confirm: CustomConfirm.new(title: t(".adjust_confirm.title"), body: t(".adjust_confirm.body", account: check.account.name, amount: format_money(check.money(check.bank_amount))), btn_text: t(".adjust"))
+              ) %>
+            <% end %>
+          <% end %>
+        <% end %>
+
+        <%= styled_form_with scope: :balance_check, url: import_balance_check_path(import, account_id: check.account.id), method: :patch, class: "flex items-end gap-2" do |form| %>
+          <div class="grow">
+            <%= form.number_field :amount, label: t(".typed_label"), step: "0.01", value: (check.bank_amount&.to_s("F") if check.source == "typed"), required: true %>
+          </div>
+          <%= render DS::Button.new(text: t(".check"), type: "submit", variant: :secondary) %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

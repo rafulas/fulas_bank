@@ -1,0 +1,28 @@
+---
+en:
+  import:
+    balance_checks:
+      balance_check:
+        title: Do the balances match?
+        hint: "Compares what each account holds in the app with what the bank says. If they differ, a movement is missing, repeated or has another amount."
+        status:
+          pending: Calculating
+          matched: Matches
+          mismatched: Mismatch
+        sources:
+          statement: "Bank, %{date} (from the statement)"
+          typed: "Bank, %{date}"
+        app: App
+        calculating: Calculating…
+        difference: "Difference of %{amount}"
+        adjust: Adjust the balance
+        adjust_confirm:
+          title: Adjust the balance?
+          body: "%{account} will hold %{amount}, as the bank says. Before doing it, check whether a movement is missing or repeated: the adjustment does not fix that, it only matches the figure."
+        typed_label: Balance at the bank today
+        check: Check
+      update:
+        invalid_amount: Type the balance as a number, for example 1234.56
+      adjust:
+        adjusted: "%{account} balance adjusted."
+        not_adjusted: The balance could not be adjusted.
