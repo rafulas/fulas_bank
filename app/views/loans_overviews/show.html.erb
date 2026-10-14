@@ -1,0 +1,77 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% overview = @overview %>
+
+<div class="max-w-3xl space-y-4 pb-6">
+  <% if overview.rows.empty? %>
+    <%= render DS::EmptyState.new(icon: "landmark", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="@container">
+      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+        <%= summary_card title: t(".pending") do %>
+          <span class="whitespace-nowrap"><%= format_money(overview.total_pending, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".borrowed") do %>
+          <span class="whitespace-nowrap"><%= format_money(overview.total_borrowed, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".paid") do %>
+          <%= overview.total_paid_ratio ? number_to_percentage(overview.total_paid_ratio * 100, precision: 0) : "—" %>
+        <% end %>
+        <%= summary_card title: t(".monthly_payment") do %>
+          <span class="whitespace-nowrap"><%= format_money(overview.total_monthly_payment) %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <% overview.rows.each do |row| %>
+        <%= link_to account_path(row.account), class: "block rounded-xl bg-container shadow-border-xs p-4 space-y-2 hover:bg-container-hover" do %>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-primary"><%= row.account.name %></p>
+              <p class="text-xs text-secondary">
+                <%= [ row.account.short_subtype_label.presence,
+                      (t(".rate", rate: number_to_percentage(row.rate, precision: 2)) if row.rate),
+                      (t(".property", name: row.property.name) if row.property) ].compact.join(" · ") %>
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format_money(row.pending) %></p>
+              <p class="text-xs text-secondary"><%= t(".pending_short") %></p>
+            </div>
+          </div>
+
+          <% if row.paid_ratio %>
+            <div class="h-2 rounded-full overflow-hidden bg-surface-inset" role="img" aria-label="<%= t(".paid_label", percent: number_to_percentage(row.paid_ratio * 100, precision: 0)) %>">
+              <div class="h-full rounded-full bg-success" style="width: <%= (row.paid_ratio * 100).round(1) %>%"></div>
+            </div>
+          <% end %>
+
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+            <% if row.borrowed %>
+              <span class="privacy-sensitive"><%= t(".borrowed_on", amount: format_money(row.borrowed, precision: 0)) %></span>
+            <% end %>
+            <% if row.paid_ratio %>
+              <span><%= t(".paid_percent", percent: number_to_percentage(row.paid_ratio * 100, precision: 0)) %></span>
+            <% end %>
+            <% if row.monthly_payment %>
+              <span class="privacy-sensitive"><%= t(".instalment", amount: format_money(row.monthly_payment)) %></span>
+            <% end %>
+            <% if row.payoff_date %>
+              <span><%= t(".ends_on", date: l(row.payoff_date, format: "%B %Y")) %></span>
+            <% elsif row.remaining_months %>
+              <span><%= t(".remaining_months", count: row.remaining_months) %></span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_loan_path, frame: :modal) %>
+</div>

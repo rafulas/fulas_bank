@@ -1,0 +1,38 @@
+---
+es:
+  loans_overviews:
+    show:
+      title: Préstamos
+      subtitle: Lo que debes, lo que has devuelto y cuándo acaba cada préstamo.
+      empty_title: Sin préstamos
+      empty_description: Añade tu hipoteca o tus préstamos como cuentas de tipo Préstamo para verlos aquí.
+      pending: Pendiente
+      borrowed: Prestado
+      paid: Amortizado
+      monthly_payment: Cuotas al mes
+      rate: "%{rate} de interés"
+      property: "vivienda: %{name}"
+      pending_short: pendiente
+      paid_label: "%{percent} amortizado"
+      borrowed_on: "Prestado: %{amount}"
+      paid_percent: "%{percent} amortizado"
+      instalment: "Cuota: %{amount}"
+      ends_on: "Termina en %{date}"
+      remaining_months:
+        one: Queda 1 cuota
+        other: "Quedan %{count} cuotas"
+      add: Añadir préstamo
+  investments_overviews:
+    show:
+      title: Inversiones
+      subtitle: Lo que valen tus inversiones, lo que has aportado y lo que has ganado.
+      empty_title: Sin inversiones
+      empty_description: Añade tus fondos, planes de pensiones o acciones como cuentas de tipo Inversión para verlos aquí.
+      value: Valor
+      contributed: Aportado
+      gain: Ganancia
+      return: Rentabilidad
+      by_kind: Por tipo
+      account: Cuenta
+      holdings: "Posiciones principales de %{account}"
+      add: Añadir inversión

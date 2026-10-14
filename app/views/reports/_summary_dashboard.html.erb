@@ -1,22 +1,26 @@
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<%# Fulas Bank: the columns follow the width the page actually has (with
+    the side panels open or closed), not the window's, and figures never
+    break across lines. %>
+<div class="@container">
+<div class="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-4 gap-3">
   <%# Total Income Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-6">
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("trending-up", size: "sm") %>
-        <h3 class="text-sm font-medium text-secondary">
+        <h3 class="text-sm font-medium text-secondary truncate">
           <%= t("reports.summary.total_income") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-2xl font-semibold text-primary privacy-sensitive">
+      <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_income].format %>
       </p>
 
       <% if metrics[:income_change] %>
-        <div class="flex items-center gap-1.5 privacy-sensitive">
+        <div class="flex flex-wrap items-center gap-x-1.5 privacy-sensitive">
           <% if metrics[:income_change] >= 0 %>
             <%= icon("arrow-up", size: "sm") %>
             <span class="text-sm font-medium text-success">
@@ -28,7 +32,7 @@
               <%= metrics[:income_change] %>%
             </span>
           <% end %>
-          <span class="text-sm text-subdued">
+          <span class="text-sm text-subdued whitespace-nowrap">
             <%= t("reports.summary.vs_previous") %>
           </span>
         </div>
@@ -37,23 +41,23 @@
   </div>
 
   <%# Total Expenses Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-6">
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("trending-down", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary">
+        <h3 class="text-sm font-medium text-secondary truncate">
           <%= t("reports.summary.total_expenses") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-2xl font-semibold text-primary privacy-sensitive">
+      <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_expenses].format %>
       </p>
 
       <% if metrics[:expense_change] %>
-        <div class="flex items-center gap-1.5 privacy-sensitive">
+        <div class="flex flex-wrap items-center gap-x-1.5 privacy-sensitive">
           <% if metrics[:expense_change] >= 0 %>
             <%= icon("arrow-up", class: "w-4 h-4 text-destructive") %>
             <span class="text-sm font-medium text-destructive">
@@ -65,7 +69,7 @@
               <%= metrics[:expense_change] %>%
             </span>
           <% end %>
-          <span class="text-sm text-subdued">
+          <span class="text-sm text-subdued whitespace-nowrap">
             <%= t("reports.summary.vs_previous") %>
           </span>
         </div>
@@ -74,18 +78,18 @@
   </div>
 
   <%# Net Savings Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-6">
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("piggy-bank", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary">
+        <h3 class="text-sm font-medium text-secondary truncate">
           <%= t("reports.summary.net_savings") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-2xl font-semibold privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
+      <p class="text-xl font-semibold whitespace-nowrap privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
         <%= metrics[:net_savings].format %>
       </p>
 
@@ -96,11 +100,11 @@
   </div>
 
   <%# Budget Performance Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-6">
+  <div class="bg-container rounded-xl shadow-border-xs p-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("gauge", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary">
+        <h3 class="text-sm font-medium text-secondary truncate">
           <%= t("reports.summary.budget_performance") %>
         </h3>
       </div>
@@ -108,7 +112,7 @@
 
     <div class="space-y-2">
       <% if metrics[:budget_percent] %>
-        <p class="text-2xl font-semibold text-primary privacy-sensitive">
+        <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
           <%= metrics[:budget_percent] %>%
         </p>
 
@@ -129,4 +133,5 @@
       <% end %>
     </div>
   </div>
+</div>
 </div>

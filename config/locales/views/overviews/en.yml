@@ -1,0 +1,38 @@
+---
+en:
+  loans_overviews:
+    show:
+      title: Loans
+      subtitle: What you owe, what you have repaid and when each loan ends.
+      empty_title: No loans
+      empty_description: Add your mortgage or loans as Loan accounts to see them here.
+      pending: Outstanding
+      borrowed: Borrowed
+      paid: Repaid
+      monthly_payment: Monthly payments
+      rate: "%{rate} interest"
+      property: "property: %{name}"
+      pending_short: outstanding
+      paid_label: "%{percent} repaid"
+      borrowed_on: "Borrowed: %{amount}"
+      paid_percent: "%{percent} repaid"
+      instalment: "Payment: %{amount}"
+      ends_on: "Ends in %{date}"
+      remaining_months:
+        one: 1 payment left
+        other: "%{count} payments left"
+      add: Add loan
+  investments_overviews:
+    show:
+      title: Investments
+      subtitle: What your investments are worth, what you put in and what you gained.
+      empty_title: No investments
+      empty_description: Add your funds, pension plans or shares as Investment accounts to see them here.
+      value: Value
+      contributed: Contributed
+      gain: Gain
+      return: Return
+      by_kind: By kind
+      account: Account
+      holdings: "Main positions of %{account}"
+      add: Add investment

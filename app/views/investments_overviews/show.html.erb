@@ -1,0 +1,90 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% overview = @overview %>
+
+<div class="max-w-3xl space-y-4 pb-6">
+  <% if overview.rows.empty? %>
+    <%= render DS::EmptyState.new(icon: "line-chart", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="@container">
+      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+        <%= summary_card title: t(".value") do %>
+          <span class="whitespace-nowrap"><%= format_money(overview.total_value, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".contributed") do %>
+          <span class="whitespace-nowrap"><%= format_money(overview.total_contributed, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".gain") do %>
+          <span class="whitespace-nowrap <%= overview.total_gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(overview.total_gain, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".return") do %>
+          <%= overview.total_return_ratio ? number_to_percentage(overview.total_return_ratio * 100, precision: 2) : "—" %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if overview.by_kind.size > 1 %>
+      <% total = overview.total_value.amount %>
+      <div class="rounded-xl bg-container shadow-border-xs p-4 space-y-2">
+        <p class="text-xs text-secondary"><%= t(".by_kind") %></p>
+        <% overview.by_kind.each do |label, money| %>
+          <div class="space-y-1">
+            <div class="flex justify-between gap-3 text-sm">
+              <span class="truncate text-primary"><%= label %></span>
+              <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap"><%= format_money(money, precision: 0) %></span>
+            </div>
+            <% if total.positive? %>
+              <div class="h-1.5 rounded-full overflow-hidden bg-surface-inset">
+                <div class="h-full rounded-full bg-info" style="width: <%= (money.amount / total * 100).round(1) %>%"></div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= render DS::Table.new(rows: overview.rows, dense: true, label: t(".title")) do |table| %>
+      <% table.with_column(t(".account")) do |row| %>
+        <%= link_to row.account.name, account_path(row.account), class: "text-primary hover:underline" %>
+        <span class="block text-secondary"><%= row.account.short_subtype_label %></span>
+      <% end %>
+      <% table.with_column(t(".contributed"), numeric: true, class: "privacy-sensitive") { |row| row.contributed ? format_money(row.contributed) : "—" } %>
+      <% table.with_column(t(".value"), numeric: true, class: "privacy-sensitive font-medium bg-info/10") { |row| format_money(row.value) } %>
+      <% table.with_column(t(".gain"), numeric: true, class: "privacy-sensitive") do |row| %>
+        <% if row.gain %>
+          <span class="<%= row.gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(row.gain) %></span>
+        <% else %>
+          —
+        <% end %>
+      <% end %>
+      <% table.with_column(t(".return"), numeric: true) do |row| %>
+        <% if row.return_ratio %>
+          <span class="<%= row.return_ratio.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(row.return_ratio * 100, precision: 2) %></span>
+        <% else %>
+          —
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% overview.rows.each do |row| %>
+      <% holdings = row.holdings %>
+      <% next if holdings.empty? %>
+      <div class="rounded-xl bg-container shadow-border-xs p-4 space-y-2">
+        <p class="text-xs text-secondary"><%= t(".holdings", account: row.account.name) %></p>
+        <% holdings.each do |holding| %>
+          <div class="flex justify-between gap-3 text-sm">
+            <span class="truncate text-primary"><%= holding.name %></span>
+            <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap"><%= format_money(holding.amount_money) %></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_investment_path, frame: :modal) %>
+</div>

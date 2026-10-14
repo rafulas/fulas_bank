@@ -18,6 +18,8 @@ en:
         plan: Plan
         reports: Reports
         forecast: Forecast
+        loans_overview: Loans
+        investments_overview: Investments
         month_plan: Plans
         summary: Summary
         goals: Goals
