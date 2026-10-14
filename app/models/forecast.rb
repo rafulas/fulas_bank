@@ -17,10 +17,19 @@
 # by the line's key. A line left out is still listed (so it can be brought
 # back) but does not count.
 #
+# Credit cards are not shown: what is spent on them is paid from the main
+# account in the end. So a recurring charge on a card is expected in the
+# main account, a recurring payment of the card itself is left out (it would
+# count that spending twice), and the variable spending on cards goes into
+# the main account's "Gastos varios" line.
+#
 # Amounts use the bank's convention, like entries: positive when money goes
-# out of the account. An asset account loses it; a credit card owes it.
+# out of the account. An asset account loses it.
 class Forecast
-  ACCOUNT_TYPES = %w[Depository CreditCard].freeze
+  # Current and savings accounts and investments: the ones the forecast shows.
+  ACCOUNT_TYPES = %w[Depository Investment Crypto].freeze
+  CARD_TYPES = %w[CreditCard].freeze
+  MAIN_ACCOUNT_PREFERENCE = "forecast_main_account_id".freeze
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
@@ -40,16 +49,37 @@ class Forecast
 
   # A line of the table with the balances right after it: each account's (in
   # its own currency and sign) and the total (in the family's currency).
-  LedgerRow = Data.define(:flow, :balances, :total)
+  LedgerRow = Data.define(:flow, :balances, :total) do
+    def month?
+      false
+    end
+  end
 
-  attr_reader :family, :accounts, :through, :include_variable, :today
+  # The row opening a month in the table: the month's result (from the
+  # user's side) and the balances it ends on.
+  MonthRow = Data.define(:month, :net, :balances, :total) do
+    def month?
+      true
+    end
+  end
 
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current)
+  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today
+
+  # `main_account` is where the monthly variable spending and the card
+  # charges are expected (by default the first current account);
+  # `card_accounts` are the cards whose spending ends up there.
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [])
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
+    @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
+    @main_account = @accounts.find { |account| account == main_account } || self.class.default_main_account(@accounts)
     @through = [ through, today + 1 ].max
     @include_variable = include_variable
     @today = today
+  end
+
+  def self.default_main_account(accounts)
+    accounts.find { |account| account.accountable_type == "Depository" } || accounts.first
   end
 
   def currency
@@ -88,6 +118,15 @@ class Forecast
     end
 
     account ? rows.select { |row| row.flow.account == account } : rows
+  end
+
+  # The table's rows: each month's opening row, then its lines.
+  def table_rows(ledger_rows)
+    ledger_rows.group_by { |row| row.flow.date.beginning_of_month }.flat_map do |month, month_rows|
+      net = month_rows.reject { |row| row.flow.skipped }.sum(money(0)) { |row| user_amount(row.flow) }
+      last = month_rows.last
+      [ MonthRow.new(month: month, net: net, balances: last.balances, total: last.total) ] + month_rows
+    end
   end
 
   # A line's amount from the user's side, in the family's currency: income
@@ -214,7 +253,10 @@ class Forecast
 
     def recurring_flows
       series_list = family.recurring_transactions.active.includes(:recurrence_rules).select do |series|
-        series.account_id.nil? || account_ids.include?(series.account_id) || account_ids.include?(series.destination_account_id)
+        next false if card_ids.include?(series.destination_account_id) # paying a card off
+
+        series.account_id.nil? || account_ids.include?(series.account_id) ||
+          card_ids.include?(series.account_id) || account_ids.include?(series.destination_account_id)
       end
 
       series_list.flat_map { |series| flows_for_series(series) }
@@ -250,7 +292,8 @@ class Forecast
     def series_flows(series, date, amount, key)
       outflow = series.amount.to_d.positive? || series.destination_account_id.present?
       name = series.display_name
-      source_account = accounts_by_id[series.account_id]
+      # A charge on a card is paid from the main account in the end.
+      source_account = card_ids.include?(series.account_id) ? main_account : accounts_by_id[series.account_id]
       list = []
 
       if series.account_id.nil? || source_account
@@ -278,22 +321,28 @@ class Forecast
     # One line a month per account, on the month's last day, for the months
     # whose last day is in the window. This month's line is what is left of
     # the estimate after what has already been spent.
+    # One line a month, in the main account, with the variable spending of
+    # all the accounts and cards together.
     def variable_flows
-      return [] unless include_variable
+      return [] unless include_variable && main_account
 
-      estimate = Forecast::VariableEstimate.new(family, accounts: accounts, today: today)
+      estimate = Forecast::VariableEstimate.new(family, accounts: accounts + card_accounts, today: today)
 
-      months.product(accounts).filter_map do |month, account|
+      months.filter_map do |month|
         date = month.end_of_month
         next unless window.cover?(date)
 
-        amount = estimate.monthly(account, month)
-        amount -= estimate.spent(account, month) if month == today.beginning_of_month
+        amount = estimate.combined_monthly(month)
+        amount -= estimate.combined_spent(month) if month == today.beginning_of_month
         next unless amount.positive?
 
-        Flow.new(date: date, account: account, amount: amount.round(2), name: variable_name(month),
-                 source: :variable, key: ForecastAdjustment.variable_key(account, month))
+        Flow.new(date: date, account: main_account, amount: amount.round(2), name: variable_name(month),
+                 source: :variable, key: ForecastAdjustment.variable_key(main_account, month))
       end
+    end
+
+    def card_ids
+      @card_ids ||= card_accounts.map(&:id)
     end
 
     def months

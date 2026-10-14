@@ -743,14 +743,10 @@ class TransactionsController < ApplicationController
     end
 
     def store_params!
+      # Fulas Bank: opening the list (from the menu, with no filters in the
+      # address) starts without filters; only the block size is remembered.
       if should_restore_params?
-        params_to_restore = {}
-
-        params_to_restore[:q] = stored_params["q"].presence || {}
-        params_to_restore[:page] = stored_params["page"].presence || 1
-        params_to_restore[:per_page] = stored_params["per_page"].presence || 50
-
-        redirect_to transactions_path(params_to_restore)
+        redirect_to transactions_path(per_page: stored_params["per_page"])
       else
         Current.session.update!(
           prev_transaction_page_params: {
@@ -763,7 +759,7 @@ class TransactionsController < ApplicationController
     end
 
     def should_restore_params?
-      request.query_parameters.blank? && (stored_params["q"].present? || stored_params["page"].present? || stored_params["per_page"].present?)
+      request.query_parameters.blank? && stored_params["per_page"].present?
     end
 
     def stored_params

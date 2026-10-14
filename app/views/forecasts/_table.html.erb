@@ -1,7 +1,11 @@
 <%# locals: (forecast:, account:) %>
+<%# The forecast table: one dense table whose header stays in view while it
+    scrolls, with a row opening each month (its result and the balance it
+    ends on) followed by that month's lines. %>
 
 <% rows = forecast.ledger(account: account) %>
-<% balance_accounts = account ? [ account ] : (forecast.accounts.size > 1 ? forecast.accounts : []) %>
+<% balance_accounts = account ? [] : (forecast.accounts.size > 1 ? forecast.accounts : []) %>
+<% table_rows = forecast_table_rows(forecast, rows) %>
 
 <%= render DS::Card.new(class: "gap-3") do %>
   <div class="flex flex-wrap items-start justify-between gap-2">
@@ -15,66 +19,60 @@
   <% if rows.empty? %>
     <p class="text-sm text-secondary"><%= t(".empty") %></p>
   <% else %>
-    <div class="space-y-2">
-      <% rows.group_by { |row| row.flow.date.beginning_of_month }.each_with_index do |(month, month_rows), index| %>
-        <% counted = month_rows.reject { |row| row.flow.skipped } %>
-        <% net = counted.sum(Money.new(0, forecast.currency)) { |row| forecast.user_amount(row.flow) } %>
-        <%= render DS::Disclosure.new(variant: :card, open: index < 3) do |disclosure| %>
-          <% disclosure.with_summary_content do %>
-            <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <%= icon "chevron-right", class: "group-open:rotate-90 motion-safe:transition-transform motion-safe:duration-150" %>
-                <span class="text-sm font-medium text-primary capitalize"><%= l(month, format: "%B %Y") %></span>
-                <span class="text-xs text-secondary"><%= t(".lines", count: month_rows.size) %></span>
-              </div>
-              <div class="flex items-center gap-4 text-sm privacy-sensitive">
-                <span class="<%= net.negative? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(net.amount, forecast.currency) %></span>
-                <span class="text-secondary"><%= t(".end_of_month", amount: format_money(month_rows.last.total)) %></span>
-              </div>
-            </div>
-          <% end %>
-
-          <div class="px-2 pb-2">
-            <%= render DS::Table.new(
-              rows: month_rows,
-              inset: true,
-              label: t(".month_label", month: l(month, format: "%B %Y")),
-              row_class: ->(row) { "text-secondary line-through" if row.flow.skipped }
-            ) do |table| %>
-              <% table.with_column(t(".date")) { |row| format_date(row.flow.date) } %>
-              <% table.with_column(t(".name")) do |row| %>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span><%= row.flow.name %></span>
-                  <%= render DS::Pill.new(label: t(".sources.#{row.flow.source}"), tone: forecast_source_tone(row.flow.source), marker: false) %>
-                  <% if row.flow.skipped %>
-                    <%= render DS::Pill.new(label: t(".skipped"), tone: :neutral, marker: false) %>
-                  <% elsif row.flow.adjusted %>
-                    <%= render DS::Pill.new(label: t(".adjusted"), tone: :warning, marker: false) %>
-                  <% end %>
-                </div>
-              <% end %>
-              <% unless account %>
-                <% table.with_column(t(".account"), class: "text-secondary") { |row| row.flow.account&.name || t(".no_account") } %>
-              <% end %>
-              <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") do |row| %>
-                <% amount = forecast.user_amount(row.flow) %>
-                <span class="<%= amount.negative? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(amount.amount, forecast.currency) %></span>
-              <% end %>
-              <% unless account %>
-                <% table.with_column(t(".total"), numeric: true, class: "privacy-sensitive font-medium") { |row| format_money(row.total) } %>
-              <% end %>
-              <% balance_accounts.each do |balance_account| %>
-                <% table.with_column(balance_account.name, numeric: true, class: "privacy-sensitive") do |row| %>
-                  <%= format_money(Money.new(row.balances[balance_account.id], balance_account.currency)) %>
-                <% end %>
-              <% end %>
-              <% table.with_column(t(".actions"), align: :right) do |row| %>
-                <%= render DS::Link.new(text: t(".edit"), variant: :ghost, size: :sm, href: forecast_line_edit_path(row.flow), frame: :modal) %>
-              <% end %>
+    <%= render DS::Table.new(
+      rows: table_rows,
+      dense: true,
+      sticky_header: true,
+      max_height: "max-h-[70vh]",
+      label: t(".title"),
+      row_class: ->(row) {
+        if row.month?
+          "bg-container-inset font-medium"
+        elsif row.flow.skipped
+          "text-secondary line-through"
+        end
+      }
+    ) do |table| %>
+      <% table.with_column(t(".date"), class: "whitespace-nowrap") do |row| %>
+        <% if row.month? %>
+          <span class="text-primary first-letter:uppercase"><%= l(row.month, format: "%B %Y") %></span>
+        <% else %>
+          <%= l(row.flow.date, format: "%d/%m/%y") %>
+        <% end %>
+      <% end %>
+      <% table.with_column(t(".name")) do |row| %>
+        <% unless row.month? %>
+          <div class="flex items-center gap-1.5 min-w-0 max-w-64">
+            <span class="truncate" title="<%= row.flow.name %>"><%= row.flow.name %></span>
+            <%= render DS::Pill.new(label: t(".sources.#{row.flow.source}"), tone: forecast_source_tone(row.flow.source), marker: false, size: :sm) %>
+            <% if row.flow.skipped %>
+              <%= render DS::Pill.new(label: t(".skipped"), tone: :neutral, marker: false, size: :sm) %>
+            <% elsif row.flow.adjusted %>
+              <%= render DS::Pill.new(label: t(".adjusted"), tone: :warning, marker: false, size: :sm) %>
             <% end %>
           </div>
         <% end %>
       <% end %>
-    </div>
+      <% unless account %>
+        <% table.with_column(t(".account"), class: "text-secondary whitespace-nowrap") { |row| row.month? ? "" : (row.flow.account&.name || t(".no_account")) } %>
+      <% end %>
+      <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") do |row| %>
+        <% amount = row.month? ? row.net : forecast.user_amount(row.flow) %>
+        <span class="<%= amount.negative? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(amount.amount, forecast.currency) %></span>
+      <% end %>
+      <% table.with_column(account ? account.name : t(".total"), numeric: true, class: "privacy-sensitive font-medium") do |row| %>
+        <%= account ? format_money(Money.new(row.balances[account.id], account.currency)) : format_money(row.total) %>
+      <% end %>
+      <% balance_accounts.each do |balance_account| %>
+        <% table.with_column(balance_account.name, numeric: true, class: "privacy-sensitive text-secondary") do |row| %>
+          <%= format_money(Money.new(row.balances[balance_account.id], balance_account.currency)) %>
+        <% end %>
+      <% end %>
+      <% table.with_column("", align: :right) do |row| %>
+        <% unless row.month? %>
+          <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: forecast_line_edit_path(row.flow), frame: :modal, aria: { label: t(".edit") }) %>
+        <% end %>
+      <% end %>
+    <% end %>
   <% end %>
 <% end %>

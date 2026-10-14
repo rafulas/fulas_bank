@@ -57,7 +57,7 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     get forecast_url(account_id: accounts(:depository).id, period: "6m")
 
     assert_response :success
-    assert_select "details", minimum: 1
+    assert_select "table thead th", minimum: 4
     assert_match "Seguro vida", response.body
     assert_select "a[href*='#{edit_forecast_adjustment_path}'][href*='#{CGI.escape("recurring:#{series.id}")}']", minimum: 1
   end
@@ -96,4 +96,16 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     get edit_forecast_adjustment_url(key: "recurring:../../etc")
     assert_response :not_found
   end
+
+  test "remembers the main account chosen" do
+    other = @user.family.accounts.create!(name: "Ahorro", balance: 100, currency: "USD", accountable: Depository.new, owner: @user)
+
+    get forecast_url(main_account_id: other.id)
+    assert_response :success
+    assert_equal other.id, @user.reload.preferences[Forecast::MAIN_ACCOUNT_PREFERENCE]
+
+    get forecast_url
+    assert_select "select[name='main_account_id'] option[selected][value='#{other.id}']"
+  end
 end
+

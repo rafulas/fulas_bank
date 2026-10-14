@@ -15,10 +15,10 @@ class DS::Table < DesignSystemComponent
   # markup or return a String: Rails' `capture` drops any other return value,
   # so a bare Integer renders as an empty cell (call `to_s` on it).
   renders_many :columns, ->(header, **options, &cell) do
-    DS::Table::Column.new(header, cell: cell, sticky: sticky_header, **options)
+    DS::Table::Column.new(header, cell: cell, sticky: sticky_header, dense: dense, **options)
   end
 
-  attr_reader :rows, :inset, :sticky_header, :label, :row_class, :opts
+  attr_reader :rows, :inset, :sticky_header, :label, :row_class, :dense, :max_height, :opts
 
   # @param rows [Enumerable] the records, one table row each
   # @param inset [Boolean] frame the table in container-inset, for a table that
@@ -32,13 +32,19 @@ class DS::Table < DesignSystemComponent
   #   screen.
   # @param row_class [Proc, nil] called with each row, returns extra classes for
   #   its <tr>, e.g. the tint on a loan's past payments
+  # @param dense [Boolean] tighter cells and smaller text, for long tables
+  #   read line by line such as a forecast
+  # @param max_height [String, nil] the scroll area's height cap with a
+  #   sticky header, instead of the default max-h-128
   # @param opts [Hash] forwarded to the outer element; :class merges with the base classes
-  def initialize(rows:, inset: false, sticky_header: false, label: nil, row_class: nil, **opts)
+  def initialize(rows:, inset: false, sticky_header: false, label: nil, row_class: nil, dense: false, max_height: nil, **opts)
     @rows = rows
     @inset = inset
     @sticky_header = sticky_header
     @label = label
     @row_class = row_class
+    @dense = dense
+    @max_height = max_height
     @opts = opts
   end
 
@@ -60,7 +66,7 @@ class DS::Table < DesignSystemComponent
     class_names(
       "table-scroll shadow-border-xs",
       inset ? "rounded-lg" : "rounded-xl",
-      ("max-h-128 overflow-y-auto" if sticky_header),
+      ("#{max_height || 'max-h-128'} overflow-y-auto" if sticky_header),
       ("focus-ring" if label)
     )
   end

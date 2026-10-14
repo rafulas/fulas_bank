@@ -19,13 +19,14 @@ es:
       all_accounts: Todas las cuentas
       variable: Gasto variable
       variable_on: Incluir los gastos varios
+      main_account: Cuenta principal
       variable_off: Solo recurrentes y puntuales
       today: Saldo hoy
       on_date: Previsto el %{date}
       difference: Diferencia
       lowest: Punto más bajo
       lowest_on: el %{date}
-      total_hint: El total suma lo que hay en las cuentas corrientes y resta lo que se debe en las tarjetas.
+      total_hint: El total suma tus cuentas corrientes, de ahorro y de inversión. Las tarjetas no aparecen: sus cargos recurrentes y su gasto variable se prevén en la cuenta principal, que es la que acaba pagándolas.
       chart_total: Saldo previsto de todas las cuentas
       chart_account: Saldo previsto de %{name}
       accounts_title: Por cuenta
