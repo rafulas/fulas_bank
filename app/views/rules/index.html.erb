@@ -30,6 +30,12 @@
     ) %>
   <% end %>
   <%= render DS::Link.new(
+    text: t(".suggestions"),
+    variant: "secondary",
+    href: rule_suggestions_path,
+    icon: "wand-sparkles"
+  ) %>
+  <%= render DS::Link.new(
     text: t(".new_rule"),
     variant: "primary",
     href: new_rule_path(resource_type: "transaction"),
