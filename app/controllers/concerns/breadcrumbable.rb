@@ -25,7 +25,8 @@ module Breadcrumbable
     # Home > Plan; without the flag it's the plain Home prefix.
     def plan_breadcrumb_prefix
       prefix = [ [ I18n.t("breadcrumbs.home"), root_path ] ]
-      prefix << [ I18n.t("breadcrumbs.plan"), plan_path ] if preview_features_enabled?
+      # Fulas Bank: budgets are reached from Planes, so their way back leads there.
+      prefix << (preview_features_enabled? ? [ I18n.t("breadcrumbs.plan"), plan_path ] : [ I18n.t("month_plans.show.title"), month_plan_path ])
       prefix
     end
 end
