@@ -169,7 +169,10 @@ class ForecastTest < ActiveSupport::TestCase
   test "the debt plan's payments replace the loan's recurring payment from next month" do
     loan = create_account("Préstamo coche", Loan.new(interest_rate: 0, payment_amount: 100, payment_day: 5), balance: 1_000)
     series = create_series(@account, name: "Cuota coche", amount: 100)
-    plan = @family.create_debt_plan!(feeds_forecast: true, loan_settings: { loan.id => { "recurring_transaction_id" => series.id } })
+    # The family's mortgage (a fixture) is left out, so only this loan counts.
+    plan = @family.create_debt_plan!(feeds_forecast: true, loan_settings: {
+      loan.id => { "recurring_transaction_id" => series.id }, accounts(:loan).id => { "excluded" => "1" }
+    })
     plan.extra_payments.create!(date: (Date.current >> 2).beginning_of_month + 19, amount: 300, name: "Bonus")
 
     forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current >> 12, include_variable: false,
