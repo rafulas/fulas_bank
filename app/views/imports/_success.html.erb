@@ -44,6 +44,11 @@
       </div>
     <% end %>
 
+    <% if import.is_a?(TransactionImport) %>
+      <% balance_check = Import::BalanceCheck.new(import, user: Current.user) %>
+      <%= render "import/balance_checks/balance_check", balance_check: balance_check if balance_check.available? %>
+    <% end %>
+
     <%= render DS::Link.new(
       text: t(".back_to_dashboard"),
       variant: "primary",
