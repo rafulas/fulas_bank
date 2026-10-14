@@ -1,9 +1,10 @@
 ---
 en:
   forecasts:
+    variable_line: Variable spending %{month}
     show:
       title: Forecast
-      subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and your usual variable spending.
+      subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and each month's variable spending. Any line of the table can be changed.
       no_accounts_title: No accounts to forecast
       no_accounts_description: The forecast uses your current accounts and credit cards. Add one to see its expected balance.
       periods:
@@ -17,7 +18,7 @@ en:
       account: Account
       all_accounts: All accounts
       variable: Variable spending
-      variable_on: Include the average
+      variable_on: Include variable spending
       variable_off: Recurring and one-off only
       today: Balance today
       on_date: Expected on %{date}
@@ -28,25 +29,30 @@ en:
       chart_total: Expected balance of all accounts
       chart_account: Expected balance of %{name}
       accounts_title: By account
-      planned_title: Expected one-off movements
-      planned_hint: Expenses or income you know are coming and are not recurring (a tax refund, a trip, a tuition fee…).
-      planned_add: Add
-      edit: Edit
-    flows:
-      title: Expected movements
-      empty: No recurring or one-off movements expected in this period.
-      variable_spending: "Variable spending of %{account}: about %{amount} a month (average of recent months without recurring movements), spread day by day."
-      variable_income: "Variable income of %{account}: about %{amount} a month (average of recent months without recurring movements), spread day by day."
+    table:
+      title: Forecast table
+      hint: "Each line with the balance left after it. Recurring: from your bills, salaries and subscriptions (the fixed and recurring ones). Variable spending: what you usually spend on variable things that month (average of the last three same months and the last six months, without the highest and lowest). Use Edit to change a line's date, amount or name, or to leave it out."
+      add: Add line
+      empty: No movements expected in this period.
+      lines:
+        one: 1 line
+        other: "%{count} lines"
+      end_of_month: "Balance at the end: %{amount}"
+      month_label: Forecast for %{month}
       date: Date
       name: Description
       account: Account
-      source: Source
       amount: Amount
+      total: Total balance
+      actions: ""
+      edit: Edit
       no_account: No account
+      skipped: Left out
+      adjusted: Changed
       sources:
         recurring: Recurring
         planned: One-off
-      truncated: Showing the first %{count} movements; the chart and balances take all of them into account.
+        variable: Variable spending
   forecast_items:
     form:
       name: Description
@@ -71,3 +77,19 @@ en:
       success: Expected movement updated
     destroy:
       success: Expected movement deleted
+  forecast_adjustments:
+    edit:
+      title: Change forecast line
+      original: "Line: %{name}, on %{date}"
+      name: Description
+      amount: Amount
+      amount_hint: Always positive; it stays an expense or an income.
+      date: Date
+      submit: Save
+      skip: Leave out of the forecast
+      restore: Back to what the app works out
+    update:
+      success: Forecast line changed
+      skipped: Line left out of the forecast. You can bring it back from the table.
+    destroy:
+      success: The line is back to what the app works out

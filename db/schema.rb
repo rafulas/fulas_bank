@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1121,6 +1121,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.datetime "updated_at", null: false
     t.index ["family_id"], name: "index_fio_items_on_family_id"
     t.index ["status"], name: "index_fio_items_on_status"
+  end
+
+  create_table "forecast_adjustments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "amount", precision: 19, scale: 4
+    t.datetime "created_at", null: false
+    t.date "date"
+    t.uuid "family_id", null: false
+    t.string "key", null: false
+    t.string "name"
+    t.boolean "skipped", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_id", "key"], name: "index_forecast_adjustments_on_family_id_and_key", unique: true
+    t.index ["family_id"], name: "index_forecast_adjustments_on_family_id"
+    t.check_constraint "amount IS NULL OR amount > 0::numeric", name: "chk_forecast_adjustments_amount_positive"
   end
 
   create_table "forecast_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -2796,6 +2810,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   create_table "transactions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "category_id"
     t.datetime "created_at", null: false
+    t.string "expense_type"
     t.string "external_id"
     t.jsonb "extra", default: {}, null: false
     t.string "investment_activity_label"
@@ -2812,6 +2827,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.index ["kind"], name: "index_transactions_on_kind"
     t.index ["merchant_id"], name: "index_transactions_on_merchant_id"
     t.index ["transfer_id"], name: "index_transactions_on_transfer_id"
+    t.check_constraint "expense_type IS NULL OR (expense_type::text = ANY (ARRAY['variable'::character varying::text, 'fixed'::character varying::text, 'recurring'::character varying::text]))", name: "chk_transactions_expense_type"
   end
 
   create_table "transfers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3107,6 +3123,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   add_foreign_key "financekit_transactions", "financekit_accounts", on_delete: :nullify
   add_foreign_key "fio_accounts", "fio_items"
   add_foreign_key "fio_items", "families"
+  add_foreign_key "forecast_adjustments", "families", on_delete: :cascade
   add_foreign_key "forecast_items", "accounts", on_delete: :cascade
   add_foreign_key "forecast_items", "families", on_delete: :cascade
   add_foreign_key "goal_accounts", "accounts", on_delete: :restrict

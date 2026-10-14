@@ -1,32 +1,46 @@
 # The expected balance of each everyday account (current accounts and credit
 # cards) on every day from tomorrow up to a chosen date, and of all of them
-# together.
+# together, and the table of every expected movement behind it.
 #
-# It starts from today's balances and adds, day by day:
+# It starts from today's balances and adds, line by line:
 #   1. The recurring movements (salary, bills, mortgage, subscriptions...):
 #      their pending payments already scheduled, and beyond those, as many as
-#      their schedule produces up to the date, however far it is.
+#      their schedule produces up to the date, however far it is. A series
+#      that ends (a loan, a plan with an end date) stops there.
 #   2. The one-off movements the user typed in (ForecastItem).
-#   3. Optionally, the everyday variable spending (supermarket, fuel...): the
-#      monthly average of the last three full months (or of the months with
-#      movements, for a younger history) of movements that are not recurring,
-#      not transfers and not one-off, spread evenly over the days, so the
-#      forecast is not too optimistic.
+#   3. Optionally, one "Gastos varios" line a month per account with the
+#      expected variable spending (see Forecast::VariableEstimate), on the last
+#      day of the month. In the current month, only what is still to come.
+#
+# The user can change the date, amount or name of a line of 1 and 3, or leave
+# it out, from the table; those changes are ForecastAdjustments, applied here
+# by the line's key. A line left out is still listed (so it can be brought
+# back) but does not count.
 #
 # Amounts use the bank's convention, like entries: positive when money goes
 # out of the account. An asset account loses it; a credit card owes it.
 class Forecast
   ACCOUNT_TYPES = %w[Depository CreditCard].freeze
-  VARIABLE_MONTHS = 3
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
 
-  Flow = Data.define(:date, :account, :amount, :name, :source) do
+  # One expected movement. `key` identifies a line the app works out by itself
+  # (recurring or variable) so the user's changes to it can be found again;
+  # `record` is the ForecastItem behind a one-off line.
+  Flow = Data.define(:date, :account, :amount, :name, :source, :key, :skipped, :adjusted, :record) do
+    def initialize(date:, account:, amount:, name:, source:, key: nil, skipped: false, adjusted: false, record: nil)
+      super
+    end
+
     def inflow?
       amount.negative?
     end
   end
+
+  # A line of the table with the balances right after it: each account's (in
+  # its own currency and sign) and the total (in the family's currency).
+  LedgerRow = Data.define(:flow, :balances, :total)
 
   attr_reader :family, :accounts, :through, :include_variable, :today
 
@@ -42,21 +56,45 @@ class Forecast
     family.currency
   end
 
-  # The recurring and one-off movements expected, by date. The variable
-  # spending is not listed here, as it is spread over every day; see
-  # #variable_monthly.
+  # Every expected movement by date, including the lines the user left out
+  # (with `skipped`), which do not count in any balance. On the same day, the
+  # month's variable spending goes last.
   def flows
-    @flows ||= (recurring_flows + planned_flows).sort_by { |flow| [ flow.date, flow.name.to_s ] }
+    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows)
+                 .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
   end
 
-  # What each account is expected to spend (positive) or receive (negative) in
-  # a month outside its recurring movements.
-  def variable_monthly
-    @variable_monthly ||= include_variable ? compute_variable_monthly : {}
+  def active_flows
+    @active_flows ||= flows.reject(&:skipped)
   end
 
-  def variable_monthly_total
-    money(variable_monthly.sum { |account, amount| to_family_currency(amount, account) })
+  # The table: every line with the balances right after it. With an account,
+  # only that account's lines (the balances still cover every account).
+  def ledger(account: nil)
+    balances = accounts.to_h { |each_account| [ each_account.id, each_account.balance.to_d ] }
+    unassigned = 0
+
+    rows = flows.map do |flow|
+      unless flow.skipped
+        if flow.account
+          balances[flow.account.id] += sign_for(flow.account) * flow.amount
+        else
+          unassigned -= flow.amount
+        end
+      end
+
+      total = accounts.sum { |each_account| net_worth_amount(each_account, balances[each_account.id]) } + unassigned
+      LedgerRow.new(flow: flow, balances: balances.dup, total: money(total))
+    end
+
+    account ? rows.select { |row| row.flow.account == account } : rows
+  end
+
+  # A line's amount from the user's side, in the family's currency: income
+  # positive, spending negative.
+  def user_amount(flow)
+    amount = flow.account ? to_family_currency(flow.amount, flow.account) : flow.amount
+    money(-amount)
   end
 
   # { account => balance } on `date` (a Money in the account's currency).
@@ -72,9 +110,10 @@ class Forecast
     money(accounts.sum { |account| net_worth_amount(account, balance_of(account, date)) } + unassigned_until(date))
   end
 
-  # The lowest expected total and when, to warn before money runs short.
+  # The lowest expected total and when, to warn before money runs short. It
+  # looks at every day with a line too, which the weekly chart may skip.
   def lowest_total
-    dates.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount }
+    (dates | active_flows.map(&:date)).sort.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount }
   end
 
   # A Series for the chart: the total, or one account's balance.
@@ -96,6 +135,7 @@ class Forecast
       (through - today).to_i > DAILY_POINTS_LIMIT
     end
 
+    # The chart's days: every day, or one a week for long horizons.
     def dates
       @dates ||= begin
         step = weekly? ? 7 : 1
@@ -113,7 +153,7 @@ class Forecast
       index.zero? ? running[:start] : running[:balances][index - 1]
     end
 
-    # For each account, its balance after each day that has a flow, so any
+    # For each account, its balance after each day that has a line, so any
     # date can be answered with a binary search.
     def running_balances
       @running_balances ||= accounts.to_h do |account|
@@ -135,19 +175,11 @@ class Forecast
       account.liability? ? -amount : amount
     end
 
-    # { account_id => { date => amount out } } for flows and variable spending.
+    # { account_id => { date => amount out } } for the lines that count.
     def daily_deltas
       @daily_deltas ||= begin
         deltas = Hash.new { |hash, key| hash[key] = Hash.new(0) }
-
-        flows.each { |flow| deltas[flow.account.id][flow.date] += flow.amount if flow.account }
-
-        variable_monthly.each do |account, monthly|
-          ((today + 1)..through).each do |day|
-            deltas[account.id][day] += monthly / Time.days_in_month(day.month, day.year)
-          end
-        end
-
+        active_flows.each { |flow| deltas[flow.account.id][flow.date] += flow.amount if flow.account }
         deltas
       end
     end
@@ -155,7 +187,7 @@ class Forecast
     # Recurring movements with no account (a series detected across several
     # accounts) still count in the total, as money going out of "somewhere".
     def unassigned_until(date)
-      -flows.select { |flow| flow.account.nil? && flow.date <= date }.sum { |flow| flow.amount }
+      -active_flows.select { |flow| flow.account.nil? && flow.date <= date }.sum { |flow| flow.amount }
     end
 
     def to_family_currency(amount, account)
@@ -189,20 +221,22 @@ class Forecast
     end
 
     # Pending payments already scheduled (with any amount or date the user
-    # changed), then whatever the schedule produces beyond them.
+    # changed in Bills), then whatever the schedule produces beyond them.
     def flows_for_series(series)
       stored = series.recurring_occurrences.to_a
       covered_until = stored.map(&:original_due_on).max || today
 
       scheduled = stored.select { |occurrence| occurrence.status == "scheduled" && window.cover?(occurrence.effective_due_on) }
-                        .map { |occurrence| [ occurrence.effective_due_on, occurrence.remaining_amount ] }
-                        .reject { |_, amount| amount.to_d.zero? }
+                        .map { |occurrence| [ occurrence.effective_due_on, occurrence.remaining_amount, occurrence.original_due_on ] }
+                        .reject { |_, amount, _| amount.to_d.zero? }
 
       projected = series.schedule.occurrence_pairs_between(covered_until + 1, through)
                         .select { |pair| pair.original_due_on > covered_until && window.cover?(pair.due_on) }
-                        .map { |pair| [ pair.due_on, projected_amount(series) ] }
+                        .map { |pair| [ pair.due_on, projected_amount(series), pair.original_due_on ] }
 
-      (scheduled + projected).flat_map { |date, amount| series_flows(series, date, amount.to_d.abs) }
+      (scheduled + projected).flat_map do |date, amount, original_date|
+        series_flows(series, date, amount.to_d.abs, ForecastAdjustment.recurring_key(series, original_date))
+      end
     end
 
     def projected_amount(series)
@@ -212,18 +246,19 @@ class Forecast
 
     # A bill takes money out of its account and a salary brings it in; a
     # recurring transfer does both, out of one account and into the other.
-    def series_flows(series, date, amount)
+    # Both sides share the key, so a change applies to the whole transfer.
+    def series_flows(series, date, amount, key)
       outflow = series.amount.to_d.positive? || series.destination_account_id.present?
       name = series.display_name
       source_account = accounts_by_id[series.account_id]
       list = []
 
       if series.account_id.nil? || source_account
-        list << Flow.new(date: date, account: source_account, amount: outflow ? amount : -amount, name: name, source: :recurring)
+        list << Flow.new(date: date, account: source_account, amount: outflow ? amount : -amount, name: name, source: :recurring, key: key)
       end
 
       if (destination = accounts_by_id[series.destination_account_id])
-        list << Flow.new(date: date, account: destination, amount: -amount, name: name, source: :recurring)
+        list << Flow.new(date: date, account: destination, amount: -amount, name: name, source: :recurring, key: key)
       end
 
       list
@@ -233,33 +268,73 @@ class Forecast
 
     def planned_flows
       family.forecast_items.where(account_id: account_ids, date: window).map do |item|
-        Flow.new(date: item.date, account: accounts_by_id[item.account_id], amount: item.signed_amount, name: item.name, source: :planned)
+        Flow.new(date: item.date, account: accounts_by_id[item.account_id], amount: item.signed_amount, name: item.name,
+                 source: :planned, record: item)
       end
     end
 
     # ---- 3. Everyday variable spending ----
 
-    def compute_variable_monthly
-      from = (today << VARIABLE_MONTHS).beginning_of_month
-      to = (today << 1).end_of_month
+    # One line a month per account, on the month's last day, for the months
+    # whose last day is in the window. This month's line is what is left of
+    # the estimate after what has already been spent.
+    def variable_flows
+      return [] unless include_variable
 
-      totals = family.entries
-                     .where(account_id: account_ids, entryable_type: "Transaction", excluded: false, date: from..to)
-                     .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
-                     .where.not(transactions: { kind: Transaction::TRANSFER_KINDS + [ "one_time" ] })
-                     .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
-                     .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
-                     .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
-                     .where.not(id: RecurringAllocation.where.not(entry_id: nil).select(:entry_id))
-                     .group(:account_id, Arel.sql("date_trunc('month', entries.date)"))
-                     .sum(:amount)
+      estimate = Forecast::VariableEstimate.new(family, accounts: accounts, today: today)
 
-      # Averaged over the months that have movements, so an account (or a
-      # history) younger than three months is not diluted by empty months.
-      totals.group_by { |(account_id, _month), _| account_id }.filter_map do |account_id, months|
-        account = accounts_by_id[account_id]
-        total = months.sum { |_, amount| amount.to_d }
-        [ account, (total / months.size).round(2) ] if account && !total.zero?
-      end.to_h
+      months.product(accounts).filter_map do |month, account|
+        date = month.end_of_month
+        next unless window.cover?(date)
+
+        amount = estimate.monthly(account, month)
+        amount -= estimate.spent(account, month) if month == today.beginning_of_month
+        next unless amount.positive?
+
+        Flow.new(date: date, account: account, amount: amount.round(2), name: variable_name(month),
+                 source: :variable, key: ForecastAdjustment.variable_key(account, month))
+      end
+    end
+
+    def months
+      list = []
+      month = today.beginning_of_month
+
+      while month <= through
+        list << month
+        month = month.next_month
+      end
+
+      list
+    end
+
+    def variable_name(month)
+      I18n.t("forecasts.variable_line", month: I18n.l(month, format: "%B %Y"))
+    end
+
+    # ---- The user's changes to the lines above ----
+
+    def adjustments
+      @adjustments ||= family.forecast_adjustments.index_by(&:key)
+    end
+
+    # Another date (still inside the window, or the line goes), amount (in
+    # the same direction) or name, or left out.
+    def adjusted(list)
+      return list if adjustments.empty?
+
+      list.filter_map do |flow|
+        adjustment = adjustments[flow.key]
+        next flow unless adjustment
+
+        date = adjustment.date || flow.date
+        next unless window.cover?(date)
+
+        amount = flow.amount
+        amount = flow.inflow? ? -adjustment.amount.to_d : adjustment.amount.to_d if adjustment.amount
+
+        flow.with(date: date, amount: amount, name: adjustment.name.presence || flow.name,
+                  skipped: adjustment.skipped, adjusted: true)
+      end
     end
 end

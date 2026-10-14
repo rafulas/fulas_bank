@@ -1,0 +1,50 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <div class="space-y-4">
+      <% if @original[:name].present? %>
+        <p class="text-sm text-secondary">
+          <%= t(".original", name: @original[:name], date: (@original[:date] ? format_date(@original[:date]) : "—")) %>
+          <% if @original[:amount] %>
+            · <span class="privacy-sensitive"><%= format_money(Money.new(@original[:amount], Current.family.currency)) %></span>
+          <% end %>
+        </p>
+      <% end %>
+
+      <%= styled_form_with model: @adjustment, url: forecast_adjustment_path, method: :patch,
+            class: "space-y-3", data: { turbo_frame: :_top } do |form| %>
+        <%= form.hidden_field :key %>
+        <%= form.hidden_field :skipped, value: "0" %>
+        <%= form.text_field :name, label: t(".name") %>
+        <%= form.number_field :amount, label: t(".amount"), min: 0.01, step: 0.01, help_text: t(".amount_hint") %>
+        <%= form.date_field :date, label: t(".date"), min: Date.current + 1 %>
+        <%= form.submit t(".submit") %>
+      <% end %>
+
+      <div class="flex flex-col gap-2">
+        <% unless @adjustment.skipped? %>
+          <%= render DS::Button.new(
+            text: t(".skip"),
+            icon: "eye-off",
+            variant: :outline,
+            full_width: true,
+            href: forecast_adjustment_path(forecast_adjustment: { key: @adjustment.key, skipped: "1" }),
+            method: :patch,
+            frame: :_top
+          ) %>
+        <% end %>
+        <% if @adjustment.persisted? %>
+          <%= render DS::Button.new(
+            text: t(".restore"),
+            icon: "rotate-ccw",
+            variant: :outline,
+            full_width: true,
+            href: forecast_adjustment_path(key: @adjustment.key),
+            method: :delete,
+            frame: :_top
+          ) %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

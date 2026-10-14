@@ -47,4 +47,54 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  test "lists every expected line by month, with a way to edit it" do
+    series = @user.family.recurring_transactions.create!(
+      account: accounts(:depository), name: "Seguro vida", amount: 47, currency: "USD", expected_day_of_month: 24,
+      status: "active", manual: true, bill_type: "bill", last_occurrence_date: Date.current, next_expected_date: Date.current
+    )
+
+    get forecast_url(account_id: accounts(:depository).id, period: "6m")
+
+    assert_response :success
+    assert_select "details", minimum: 1
+    assert_match "Seguro vida", response.body
+    assert_select "a[href*='#{edit_forecast_adjustment_path}'][href*='#{CGI.escape("recurring:#{series.id}")}']", minimum: 1
+  end
+
+  test "changes, leaves out and brings back a line the app works out" do
+    series = @user.family.recurring_transactions.create!(
+      account: accounts(:depository), name: "Seguro vida", amount: 47, currency: "USD", expected_day_of_month: 24,
+      status: "active", manual: true, bill_type: "bill", last_occurrence_date: Date.current, next_expected_date: Date.current
+    )
+    key = ForecastAdjustment.recurring_key(series, Date.current + 40)
+
+    get edit_forecast_adjustment_url(key: key, date: (Date.current + 40).iso8601, amount: "47", name: "Seguro vida")
+    assert_response :success
+    assert_select "input[name='forecast_adjustment[name]'][value='Seguro vida']"
+
+    patch forecast_adjustment_url, params: { forecast_adjustment: { key: key, amount: "52", name: "Seguro vida 2027", skipped: "0" } }
+    assert_redirected_to forecast_url
+    adjustment = @user.family.forecast_adjustments.find_by!(key: key)
+    assert_equal [ BigDecimal("52"), "Seguro vida 2027", false ], [ adjustment.amount, adjustment.name, adjustment.skipped ]
+
+    patch forecast_adjustment_url, params: { forecast_adjustment: { key: key, skipped: "1" } }
+    assert adjustment.reload.skipped
+
+    assert_difference -> { @user.family.forecast_adjustments.count } => -1 do
+      delete forecast_adjustment_url(key: key)
+    end
+  end
+
+  test "rejects a line of someone else's series or a malformed key" do
+    other_key = "recurring:#{SecureRandom.uuid}:2026-12-01"
+
+    assert_no_difference -> { ForecastAdjustment.count } do
+      patch forecast_adjustment_url, params: { forecast_adjustment: { key: other_key, amount: "10" } }
+    end
+
+    get edit_forecast_adjustment_url(key: "recurring:../../etc")
+    assert_response :not_found
+  end
 end
+

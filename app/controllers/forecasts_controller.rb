@@ -1,11 +1,12 @@
 # The Forecast page: the expected balance of the everyday accounts up to any
-# date, from today's balances, the recurring movements, the one-off movements
-# the user expects and, optionally, the usual variable spending.
+# date (five years by default), from today's balances, the recurring
+# movements, the one-off movements the user expects and, optionally, the
+# usual variable spending; with the table of every expected line, which the
+# user can edit.
 class ForecastsController < ApplicationController
   # Shortcuts for the end date; any other date can be typed in.
   PERIODS = { "1m" => 1, "3m" => 3, "6m" => 6, "1y" => 12, "2y" => 24, "5y" => 60 }.freeze
-  DEFAULT_PERIOD = "3m"
-  MAX_LISTED_FLOWS = 300
+  DEFAULT_PERIOD = "5y"
 
   def show
     @accounts = forecast_accounts
@@ -15,7 +16,6 @@ class ForecastsController < ApplicationController
     @account = @accounts.find { |account| account.id == params[:account_id] }
 
     @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable)
-    @forecast_items = Current.family.forecast_items.upcoming.where(account_id: @accounts.map(&:id)).includes(:account).chronological
   end
 
   private
