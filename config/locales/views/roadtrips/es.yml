@@ -1,0 +1,16 @@
+---
+es:
+  roadtrips:
+    show:
+      title: RoadTrip
+      subtitle: Tus coches y motos, con sus kilómetros, consumo y gastos.
+      empty_title: Sin vehículos
+      empty_description: "Añade tus coches y motos como cuentas de tipo Vehículo y, en cada uno, importa sus datos de RoadTrip."
+      alerts:
+        one: "%{count} aviso"
+        other: "%{count} avisos"
+      mileage: Kilómetros
+      consumption: Consumo medio
+      spent_this_year: "Gastado en %{year}"
+      last_refuel: Último repostaje
+      add: Añadir vehículo
