@@ -18,6 +18,11 @@ export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Con
 DIR="${FULAS_DIR:-$HOME/FulasBank}"
 KEEP="${FULAS_COPIAS:-30}"
 ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+# Another folder (e.g. Google Drive) can be set in ~/FulasBank/.env:
+#   FULAS_COPIAS_DIR=/Users/yo/Library/CloudStorage/GoogleDrive-…/Mi unidad/Fulas Bank
+if [[ -z "${FULAS_COPIAS_DIR:-}" && -f "$DIR/.env" ]]; then
+  FULAS_COPIAS_DIR="$(grep '^FULAS_COPIAS_DIR=' "$DIR/.env" | tail -1 | cut -d= -f2- || true)"
+fi
 if [[ -n "${FULAS_COPIAS_DIR:-}" ]]; then
   DEST="$FULAS_COPIAS_DIR"
 elif [[ -d "$ICLOUD" ]]; then

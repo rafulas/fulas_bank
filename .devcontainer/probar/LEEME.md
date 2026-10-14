@@ -43,6 +43,22 @@ Los dos modos usan la misma base de datos, así que tus datos son los mismos.
 - El enlace de la app es privado: solo funciona con tu sesión de GitHub.
 - Esto es para probar. Para usarlo a diario con tus datos reales, conviene instalarlo en un servidor propio.
 
+## Copias de seguridad
+
+`bin/probar` hace solo una copia de los datos **una vez por semana** y **antes de que un `git pull` cambie la base de datos**. Las copias van a la carpeta **`copias/`** del proyecto y se guardan las 10 últimas.
+
+- **Copia a mano:** `bin/copia`
+- **Recuperar una copia** (sustituye los datos de este Fulas Bank; antes hace otra copia por si acaso). Para la app con **Control + C** y escribe:
+
+  ```bash
+  bin/restaurar copias/fulasbank-2026-10-14_130000.tar
+  ```
+
+  Después, arranca otra vez con `bin/probar`.
+- En VS Code en el Mac, `copias/` es una carpeta de tu Mac (dentro de la carpeta del proyecto). En un Codespace, para bajarte una copia: clic derecho sobre el archivo → **Download**.
+- Las copias tienen el mismo formato que las del Fulas Bank de verdad (`mac/`). Puedes pasar datos de uno a otro: una copia hecha aquí se carga allí con `~/FulasBank/restaurar.sh`, y una de iCloud se carga aquí con `bin/restaurar` (arrastra el archivo a la carpeta del proyecto en VS Code).
+- La primera copia instala las herramientas de PostgreSQL 17 (unos segundos, solo una vez por contenedor).
+
 ## En tu ordenador (VS Code + Docker)
 
 La misma configuración funciona en local: abre la carpeta del proyecto en VS Code, pulsa **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**, y luego `bin/probar`. Abre la app en **http://127.0.0.1:3001** (con `http`, sin la «s»): fuera de un Codespace la app no usa https.
