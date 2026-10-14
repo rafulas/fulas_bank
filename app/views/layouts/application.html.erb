@@ -8,15 +8,16 @@
 else
   [
     { name: t(".nav.home"), path: root_path, icon: "pie-chart", icon_custom: false, active: page_active?(root_path) },
+    # Fulas Bank: what happened, what is coming, what I have, comparing. The
+    # budgets live in Planes (its "Añadir o cambiar presupuesto" link).
     { name: t(".nav.transactions"), path: transactions_path, icon: "credit-card", icon_custom: false, active: page_active?(transactions_path) },
     { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) },
-    bills_nav_item,
-    { name: t(".nav.reports"), path: reports_path, icon: "chart-bar", icon_custom: false, active: page_active?(reports_path) },
-    { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) },
+    { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) || page_active?(budgets_path) },
+    { name: t(".nav.forecast"), path: forecast_path, icon: "trending-up", icon_custom: false, active: page_active?(forecast_path) },
     { name: t(".nav.loans_overview"), path: loans_overview_path, icon: "landmark", icon_custom: false, active: page_active?(loans_overview_path) },
     { name: t(".nav.investments_overview"), path: investments_overview_path, icon: "line-chart", icon_custom: false, active: page_active?(investments_overview_path) },
-    { name: t(".nav.forecast"), path: forecast_path, icon: "trending-up", icon_custom: false, active: page_active?(forecast_path) },
-    plan_nav_item,
+    { name: t(".nav.reports"), path: reports_path, icon: "chart-bar", icon_custom: false, active: page_active?(reports_path) },
+    bills_nav_item,
     { name: t(".nav.assistant"), path: chats_path, icon: "icon-assistant", icon_custom: true, active: page_active?(chats_path), mobile_only: true }
   ].compact
 end %>
