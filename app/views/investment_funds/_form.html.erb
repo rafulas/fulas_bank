@@ -1,0 +1,51 @@
+<%# locals: (fund:) %>
+
+<%= styled_form_with model: fund, url: (fund.persisted? ? investment_fund_path(fund) : investment_funds_path), class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if fund.errors.any? %>
+    <%= render DS::Alert.new(message: fund.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.select :account_id, investment_accounts.map { |account| [ account.name, account.id ] }, { label: t(".account") }, required: true %>
+    <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
+    <%= form.text_field :isin, label: t(".isin"), placeholder: "ES0000000000" %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :units, label: t(".units"), step: "0.000001", min: 0, required: true %>
+      <%= form.number_field :cost, label: t(".cost"), step: "0.01", min: 0 %>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :price, label: t(".price"), step: "0.000001", min: 0 %>
+      <%= form.date_field :price_date, label: t(".price_date"), max: Date.current %>
+    </div>
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if fund.persisted? %>
+  <% if fund.prices.any? %>
+    <div class="pt-4 space-y-2">
+      <p class="text-xs text-secondary"><%= t(".history") %></p>
+      <ul class="divide-y divide-secondary text-sm">
+        <% fund.prices.first(6).each do |price| %>
+          <li class="flex justify-between py-1.5">
+            <span class="text-secondary"><%= l(price.date, format: "%d/%m/%Y") %></span>
+            <span class="text-primary privacy-sensitive"><%= number_with_precision(price.price, precision: 4) %></span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: investment_fund_path(fund),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

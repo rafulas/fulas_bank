@@ -1,0 +1,41 @@
+---
+en:
+  investment_funds:
+    form:
+      account: Investment account
+      name: Fund name
+      name_placeholder: Global index fund
+      isin: ISIN
+      units: Units
+      cost: Total contributed
+      price: Price
+      price_date: Price date
+      hint: "The fund's value is units × price. Total contributed is optional: with it the gain is worked out."
+      submit: Save
+      history: Latest prices
+      delete: Delete fund
+      resource: fund
+    new:
+      title: Add fund
+    edit:
+      title: Edit fund
+    create:
+      success: Fund added.
+    update:
+      success: Fund saved.
+    destroy:
+      success: Fund deleted.
+    prices:
+      edit:
+        title: Update prices
+        hint: "Type today's price (or the chosen date's) for the funds you want. Those left empty do not change."
+        date: Date
+        last: "Latest: %{price} (%{date})"
+        no_price: No price yet
+        price_for: "%{fund} price"
+        submit: Save
+      update:
+        success:
+          zero: No price was changed.
+          one: Price saved.
+          other: "%{count} prices saved."

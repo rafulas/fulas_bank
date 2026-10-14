@@ -71,6 +71,60 @@
       <% end %>
     <% end %>
 
+    <%# Funds held by participaciones: units × valor liquidativo %>
+    <% if overview.rows.any? { |row| row.account.accountable_type == "Investment" } %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium text-primary"><%= t(".funds_title") %></h3>
+            <p class="text-xs text-secondary"><%= t(".funds_hint") %></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <% if overview.funds.any? %>
+              <%= render DS::Link.new(text: t(".update_prices"), icon: "refresh-cw", variant: (overview.any_stale_fund? ? :primary : :outline), size: :sm,
+                    href: edit_investment_fund_prices_path, frame: :modal) %>
+            <% end %>
+            <%= render DS::Link.new(text: t(".add_fund"), icon: "plus", variant: :outline, size: :sm, href: new_investment_fund_path, frame: :modal) %>
+          </div>
+        </div>
+
+        <% if overview.funds.any? %>
+          <%= render DS::Table.new(rows: overview.funds, dense: true, label: t(".funds_title")) do |table| %>
+            <% table.with_column(t(".fund")) do |fund| %>
+              <span class="text-primary"><%= fund.name %></span>
+              <span class="block text-secondary"><%= [ fund.isin, fund.account.name ].compact.join(" · ") %></span>
+            <% end %>
+            <% table.with_column(t(".units"), numeric: true, class: "privacy-sensitive") { |fund| number_with_precision(fund.units, precision: 4, strip_insignificant_zeros: true) } %>
+            <% table.with_column(t(".price"), numeric: true) do |fund| %>
+              <% if fund.price %>
+                <span class="privacy-sensitive"><%= number_with_precision(fund.price, precision: 4) %></span>
+                <span class="block <%= fund.stale? ? "text-warning" : "text-secondary" %>"><%= l(fund.price_date, format: "%d/%m/%y") %></span>
+              <% else %>
+                —
+              <% end %>
+            <% end %>
+            <% table.with_column(t(".value"), numeric: true, class: "privacy-sensitive font-medium bg-info/10") { |fund| format_money(fund.value) } %>
+            <% table.with_column(t(".gain"), numeric: true, class: "privacy-sensitive") do |fund| %>
+              <% if fund.gain %>
+                <span class="<%= fund.gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(fund.gain) %></span>
+                <% if fund.return_ratio %>
+                  <span class="block text-secondary"><%= number_to_percentage(fund.return_ratio * 100, precision: 2) %></span>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            <% end %>
+            <% table.with_column("", align: :right) do |fund| %>
+              <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: edit_investment_fund_path(fund), frame: :modal, aria: { label: t(".edit_fund", fund: fund.name) }) %>
+            <% end %>
+          <% end %>
+          <% if overview.any_stale_fund? %>
+            <p class="text-xs text-warning"><%= t(".stale_prices") %></p>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+
     <% overview.rows.each do |row| %>
       <% holdings = row.holdings %>
       <% next if holdings.empty? %>

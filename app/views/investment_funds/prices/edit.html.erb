@@ -1,0 +1,28 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= styled_form_with url: investment_fund_prices_path, method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+      <p class="text-sm text-secondary"><%= t(".hint") %></p>
+      <%= form.date_field :date, label: t(".date"), value: @date, max: Date.current, required: true %>
+
+      <div class="space-y-3">
+        <% @funds.each do |fund| %>
+          <div class="flex items-end gap-3">
+            <div class="min-w-0 grow">
+              <p class="text-sm text-primary truncate"><%= fund.name %></p>
+              <p class="text-xs text-secondary">
+                <%= fund.price ? t(".last", price: number_with_precision(fund.price, precision: 4), date: l(fund.price_date, format: "%d/%m/%Y")) : t(".no_price") %>
+              </p>
+            </div>
+            <div class="w-36 shrink-0">
+              <%= number_field_tag "prices[#{fund.id}]", nil, step: "0.000001", min: 0, placeholder: fund.price&.to_s("F"),
+                    class: "w-full rounded-md border border-primary bg-container px-2 py-1.5 text-sm text-primary", aria: { label: t(".price_for", fund: fund.name) } %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%= form.submit t(".submit") %>
+    <% end %>
+  <% end %>
+<% end %>

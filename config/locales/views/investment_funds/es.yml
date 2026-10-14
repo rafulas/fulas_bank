@@ -1,0 +1,41 @@
+---
+es:
+  investment_funds:
+    form:
+      account: Cuenta de inversión
+      name: Nombre del fondo
+      name_placeholder: Fondo indexado mundial
+      isin: ISIN
+      units: Participaciones
+      cost: Total aportado
+      price: Valor liquidativo
+      price_date: Fecha del valor
+      hint: "El valor del fondo es participaciones × valor liquidativo. «Total aportado» es opcional: con él se calcula la ganancia."
+      submit: Guardar
+      history: Últimos valores liquidativos
+      delete: Borrar fondo
+      resource: fondo
+    new:
+      title: Añadir fondo
+    edit:
+      title: Editar fondo
+    create:
+      success: Fondo añadido.
+    update:
+      success: Fondo guardado.
+    destroy:
+      success: Fondo borrado.
+    prices:
+      edit:
+        title: Actualizar valores liquidativos
+        hint: "Escribe el valor liquidativo de hoy (o de la fecha que elijas) de los fondos que quieras. Los que dejes vacíos no cambian."
+        date: Fecha
+        last: "Último: %{price} (%{date})"
+        no_price: Sin valor todavía
+        price_for: "Valor liquidativo de %{fund}"
+        submit: Guardar
+      update:
+        success:
+          zero: No se ha cambiado ningún valor.
+          one: Valor liquidativo guardado.
+          other: "%{count} valores liquidativos guardados."

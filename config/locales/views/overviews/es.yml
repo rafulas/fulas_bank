@@ -37,3 +37,12 @@ es:
       account: Cuenta
       holdings: "Posiciones principales de %{account}"
       add: Añadir inversión
+      funds_title: Fondos por participaciones
+      funds_hint: "Cada fondo vale sus participaciones por el último valor liquidativo. Al cambiar uno, el saldo de su cuenta se actualiza solo."
+      update_prices: Actualizar valores liquidativos
+      add_fund: Añadir fondo
+      fund: Fondo
+      units: Participaciones
+      price: Valor liquidativo
+      edit_fund: "Editar %{fund}"
+      stale_prices: Hay valores liquidativos de hace más de una semana.
