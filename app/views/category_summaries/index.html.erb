@@ -24,6 +24,8 @@
     </div>
   </div>
 
+  <%= render "category_summaries/spending_split", split: @spending_split %>
+
   <p class="px-1 text-xs text-secondary"><%= t(".category") %></p>
 
   <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
@@ -41,4 +43,8 @@
   ) %>
 
   <%= render "category_summaries/analysis", analysis: @analysis, period: @period %>
+
+  <% if @fixed_variable.any? %>
+    <%= render "category_summaries/fixed_variable", fixed_variable: @fixed_variable %>
+  <% end %>
 </div>

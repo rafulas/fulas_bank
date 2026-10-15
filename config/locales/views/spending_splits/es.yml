@@ -1,0 +1,38 @@
+---
+es:
+  category_summaries:
+    spending_split:
+      title: Necesario, prescindible y ahorro
+      settings: Configurar
+      essential: Necesario
+      discretionary: Prescindible
+      savings: Ahorro
+      share: "%{share} % · obj. %{target} %"
+      bars_hint: "Arriba, tu reparto real de lo ingresado; debajo, tu objetivo (%{target})."
+      hint: "Sobre %{income} ingresados. El ahorro es lo que queda tras lo necesario y lo prescindible."
+      unclassified: "%{amount} en categorías sin clasificar cuentan como prescindible. Clasifícalas en «Configurar»."
+      no_income: Este periodo no tiene ingresos, así que no hay reparto que calcular.
+    fixed_variable:
+      title:
+        one: Fijos y variables, último mes
+        other: "Fijos y variables, últimos %{count} meses"
+      committed: "%{share} % comprometido"
+      label: Gasto de cada mes, fijo y variable
+      tooltip: "%{month}: %{fixed} fijo, %{variable} variable"
+      fixed: Fijo
+      recurring: Recurrente (con fin)
+      variable: Variable
+      hint: "Encima de cada barra, la parte fija del mes: lo que gastas pase lo que pase. El tipo de cada movimiento se cambia en su detalle."
+  spending_splits:
+    edit:
+      title: Necesario, prescindible y ahorro
+      target: Tu objetivo (%)
+      target_hint: "Lo clásico es 50/30/20. Con un alquiler alto, 60/25/15; para ahorrar más, 40/30/30. Tiene que sumar 100."
+      classes: Qué es cada categoría
+      classes_hint: Una subcategoría sin tipo propio va como su categoría principal.
+      none: Sin clasificar
+      inherit: Como su categoría
+      submit: Guardar
+    update:
+      success: Reparto guardado.
+      invalid_target: El objetivo tiene que sumar 100.

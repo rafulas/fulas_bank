@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -444,11 +444,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_100000) do
     t.uuid "parent_id"
     t.integer "position"
     t.string "special"
+    t.string "spending_class"
     t.datetime "updated_at", null: false
     t.index ["family_id", "last_used_at"], name: "index_categories_on_family_id_and_last_used_at"
     t.index ["family_id", "name"], name: "index_categories_on_family_id_and_name", unique: true
     t.index ["family_id", "special"], name: "index_categories_on_family_id_and_special", unique: true, where: "(special IS NOT NULL)"
     t.index ["family_id"], name: "index_categories_on_family_id"
+    t.check_constraint "spending_class IS NULL OR (spending_class::text = ANY (ARRAY['essential'::character varying::text, 'discretionary'::character varying::text, 'savings'::character varying::text]))", name: "chk_categories_spending_class"
   end
 
   create_table "categorization_comparisons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

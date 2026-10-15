@@ -1,0 +1,38 @@
+---
+en:
+  category_summaries:
+    spending_split:
+      title: Necessary, discretionary and savings
+      settings: Settings
+      essential: Necessary
+      discretionary: Discretionary
+      savings: Savings
+      share: "%{share} % · target %{target} %"
+      bars_hint: "Top, your real split of what came in; below, your target (%{target})."
+      hint: "Out of %{income} income. Savings is what is left after necessary and discretionary spending."
+      unclassified: "%{amount} in unclassified categories count as discretionary. Classify them under \"Settings\"."
+      no_income: This period has no income, so there is no split to work out.
+    fixed_variable:
+      title:
+        one: Fixed and variable, last month
+        other: "Fixed and variable, last %{count} months"
+      committed: "%{share} % committed"
+      label: Each month's spending, fixed and variable
+      tooltip: "%{month}: %{fixed} fixed, %{variable} variable"
+      fixed: Fixed
+      recurring: Recurring (ends)
+      variable: Variable
+      hint: "Above each bar, the month's fixed share: what you spend whatever happens. A movement's type is changed in its detail."
+  spending_splits:
+    edit:
+      title: Necessary, discretionary and savings
+      target: Your target (%)
+      target_hint: "The classic is 50/30/20. With high rent, 60/25/15; to save more, 40/30/30. It must add up to 100."
+      classes: What each category is
+      classes_hint: A subcategory without its own goes as its main category.
+      none: Unclassified
+      inherit: As its category
+      submit: Save
+    update:
+      success: Split saved.
+      invalid_target: The target must add up to 100.

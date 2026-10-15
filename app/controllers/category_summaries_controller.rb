@@ -8,6 +8,10 @@ class CategorySummariesController < ApplicationController
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("category_summaries.index.title"), nil ] ]
     @summary = build_summary
     @analysis = Category::Analysis.new(Current.family, period: @period, account_ids: report_account_ids)
+    @spending_split = Category::SpendingSplit.new(Current.family, range: @analysis.start_date..@analysis.end_date,
+                                                 account_ids: report_account_ids,
+                                                 target: Category::SpendingSplit.target_for(Current.user))
+    @fixed_variable = Category::FixedVariable.new(Current.family, account_ids: report_account_ids)
   end
 
   def show

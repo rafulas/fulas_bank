@@ -36,6 +36,7 @@ class Category < ApplicationRecord
   #   transfers - money moved between own accounts; neither income nor expense
   enum :special, { other: "other", excluded: "excluded", transfers: "transfers" }, prefix: true, validate: { allow_nil: true }
   validates :special, uniqueness: { scope: :family_id }, allow_nil: true
+  validates :spending_class, inclusion: { in: Category::SpendingClass::CLASSES }, allow_nil: true
 
   # Specials whose transactions are left out of income/expense figures.
   ANALYTICS_NEUTRAL_SPECIALS = %w[excluded transfers].freeze
@@ -364,6 +365,12 @@ class Category < ApplicationRecord
 
   def special?
     special.present?
+  end
+
+  # Fulas Bank: necessary, discretionary or saving (Category::SpendingClass),
+  # the subcategory's own or else its main category's.
+  def effective_spending_class
+    spending_class.presence || parent&.spending_class.presence
   end
 
   def analytics_neutral?

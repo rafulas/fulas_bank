@@ -174,6 +174,7 @@ class Category::FulasTree
     Category.transaction do
       fold_legacy_categories! if first_rollout
       build_tree!
+      Category::SpendingClass.apply_proposal!(family)
     end
   end
 
