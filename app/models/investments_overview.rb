@@ -71,6 +71,12 @@ class InvestmentsOverview
     (total_gain.amount / total_contributed.amount).to_f
   end
 
+  # Fulas Bank: the yearly return taking into account when each euro went in
+  # (see InvestmentsOverview::AnnualReturn), for every account and in total.
+  def annual_return
+    @annual_return ||= InvestmentsOverview::AnnualReturn.new(accounts, currency: currency)
+  end
+
   # The funds held by participaciones in these accounts (InvestmentFund).
   def funds
     @funds ||= family.investment_funds.where(account_id: accounts.select { |account| account.accountable_type == "Investment" }.map(&:id))
