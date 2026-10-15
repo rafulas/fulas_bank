@@ -417,8 +417,15 @@ class Import < ApplicationRecord
       mapped_rows = Import::BilanceExport.new(self).adjust(mapped_rows, csv_rows)
     end
 
-    rows.insert_all!(mapped_rows)
-    update_column(:rows_count, rows.count)
+    # Fulas Bank: a movement dated after today has not happened yet (a
+    # payday already noted in Bilance, say). The row would not pass the date
+    # check and would hold the whole import back, so it is left out and
+    # counted, for the import to say so.
+    future_rows = is_a?(TransactionImport) ? mapped_rows.select { |row| future_date?(row[:date]) } : []
+    mapped_rows -= future_rows
+
+    rows.insert_all!(mapped_rows) if mapped_rows.any?
+    update_columns(rows_count: rows.count, skipped_future_rows_count: future_rows.size)
   end
 
   def sync_mappings
@@ -597,6 +604,16 @@ class Import < ApplicationRecord
 
     def default_currency
       account&.currency || family.currency
+    end
+
+    # Whether a row's date, read with the import's date format, is after
+    # today. A date that does not parse is not "future": the row stays, and
+    # its date check says what is wrong.
+    def future_date?(value)
+      return false if value.blank? || date_format.blank?
+
+      date = Date.strptime(value.to_s, date_format) rescue nil
+      date.present? && date > Date.current
     end
 
     def csv_value(row, label, *aliases)

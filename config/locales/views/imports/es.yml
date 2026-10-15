@@ -34,6 +34,9 @@ es:
         errors_notice: Tienes errores en tus datos. Pasa el ratón sobre el error para ver los detalles.
         errors_notice_mobile: Tienes errores en tus datos. Toca el tooltip del error para ver los detalles.
         title: Limpia tus datos
+        skipped_future_rows:
+          one: "Se ha dejado fuera 1 movimiento con fecha posterior a hoy. Impórtalo cuando llegue su fecha."
+          other: "Se han dejado fuera %{count} movimientos con fecha posterior a hoy. Impórtalos cuando llegue su fecha."
         data_cleaned: Tus datos se han limpiado
         next_step: Siguiente paso
         all_rows: Todas las filas

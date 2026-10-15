@@ -103,6 +103,28 @@ class TransactionImportTest < ActiveSupport::TestCase
     assert_equal lidl, @import.entries.find_by(name: "Compra 1").transaction.merchant
   end
 
+  test "leaves out rows dated after today and counts them" do
+    travel_to Date.new(2026, 10, 16) do
+      csv = <<~CSV
+        date,name,amount
+        10/15/2026,Ayer,10
+        10/16/2026,Hoy,20
+        10/19/2026,Nómina,-1500
+        10/20/2026,Hipoteca,1200
+      CSV
+
+      @import.update!(raw_file_str: csv, date_col_label: "date", amount_col_label: "amount",
+                      name_col_label: "name", date_format: "%m/%d/%Y", account: accounts(:depository))
+      @import.generate_rows_from_csv
+      @import.reload
+
+      assert_equal [ "Ayer", "Hoy" ], @import.rows.ordered.map(&:name)
+      assert_equal 2, @import.rows_count
+      assert_equal 2, @import.skipped_future_rows_count
+      assert @import.rows.all?(&:valid?)
+    end
+  end
+
   test "imports transactions with separate type column for signage convention" do
     import = <<~CSV
       date,amount,amount_type
