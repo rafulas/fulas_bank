@@ -34,7 +34,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     Rails.cache.clear
 
     get transactions_url(tab: "upcoming")
-    assert_select "form[action=?]", identify_recurring_transactions_path
+    assert_select "a[href=?]", identify_recurring_transactions_path
     assert_select "a[href=?]", recurring_transactions_path
   end
 
