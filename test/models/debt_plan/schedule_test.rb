@@ -76,4 +76,22 @@ class DebtPlan::ScheduleTest < ActiveSupport::TestCase
     assert_nil schedule.payoff_date
     assert_nil schedule.results.first.months_to_pay_off
   end
+
+  test "tells which loan is cleared first, and when" do
+    schedule = DebtPlan::Schedule.new(loans: @loans, strategy: "snowball", start: @start)
+
+    first = schedule.first_paid_off
+
+    assert_equal "free", first.loan.key
+    assert_equal schedule.results.find { |result| result.loan.key == "free" }.paid_off_on, first.paid_off_on
+  end
+
+  test "warns of a loan whose interest is at least its payment" do
+    loans = @loans + [ Loan.new(key: "card", name: "Tarjeta revolving", balance: 6_000.to_d, rate: 24.to_d, payment: 100.to_d, order: nil) ]
+
+    growing = DebtPlan::Schedule.new(loans: loans, strategy: "avalanche", start: @start).growing_loans
+
+    # 6.000 € at 24 % is 120 € of interest a month, more than its 100 €.
+    assert_equal [ "card" ], growing.map(&:key)
+  end
 end

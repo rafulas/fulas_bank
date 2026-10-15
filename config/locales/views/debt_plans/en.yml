@@ -31,6 +31,8 @@ en:
       empty_title: No loans
       empty_description: "Add your loans in Borrowing (with balance, interest rate and payment) to see the plan to pay them off sooner."
       debt_today: Debt today
+      first_paid_off: First debt cleared
+      growing: "%{name}: each month's interest is at least its payment, so on the payment alone the debt does not go down. Raise the payment or put it first in the plan."
       debt_free: Debt-free by
       interest: Interest
       savings: Saved versus payments only

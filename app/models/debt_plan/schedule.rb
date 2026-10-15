@@ -87,6 +87,21 @@ class DebtPlan::Schedule
     months.any? && months.last.total_balance.zero?
   end
 
+  # Fulas Bank: the first loan the plan clears, and when (a Result), so the
+  # first win is visible, not only the last one.
+  def first_paid_off
+    results.select(&:paid_off_on).min_by { |result| [ result.months_to_pay_off, result.loan.balance.to_d ] }
+  end
+
+  # Fulas Bank: loans whose month of interest is at least their payment, so
+  # on their payment alone what is owed never goes down.
+  def growing_loans
+    loans.select do |loan|
+      monthly_interest = (loan.balance.to_d * loan.rate.to_d / 1200).round(2)
+      monthly_interest.positive? && loan.payment.to_d <= monthly_interest
+    end
+  end
+
   def payoff_date
     months.last.date if paid_off?
   end
