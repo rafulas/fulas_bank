@@ -130,7 +130,10 @@ class Transaction < ApplicationRecord
     "(#{table}.kind NOT IN (#{kinds}) OR #{table}.id IN (#{INVESTMENT_WITHDRAWAL_IDS_SQL}))"
   end
 
-  scope :counted_by_kind, -> { where(counts_by_kind_sql) }
+  # The same condition for ActiveRecord queries on the transactions table.
+  scope :counted_by_kind, ->(excluded_kinds = ANALYTICS_EXCLUDED_KINDS) {
+    where("transactions.kind NOT IN (?) OR transactions.id IN (#{INVESTMENT_WITHDRAWAL_IDS_SQL})", excluded_kinds)
+  }
 
   # Fulas Bank: whether this transaction counts as income or expense by its
   # kind (see ANALYTICS_EXCLUDED_KINDS). A transfer leg that does is shown

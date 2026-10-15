@@ -125,7 +125,7 @@ class Transaction::Panel
                    .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
                    .joins("LEFT JOIN categories panel_categories ON panel_categories.id = transactions.category_id")
                    .joins("LEFT JOIN categories panel_parents ON panel_parents.id = panel_categories.parent_id")
-                   .where(Transaction.counts_by_kind_sql)
+                   .merge(Transaction.counted_by_kind)
                    .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
                    .group(:date, Arel.sql("COALESCE(panel_parents.name, panel_categories.name)"), Arel.sql("COALESCE(panel_parents.color, panel_categories.color)"))
                    .sum(:amount)

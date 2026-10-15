@@ -184,7 +184,8 @@ class Category::Summary
           -- Matched transfer legs between own accounts. Loan instalments,
           -- contributions to investments and the cash from selling one
           -- count under their category instead.
-          (NOT #{Transaction.counts_by_kind_sql("t")}) AS transfer_kind,
+          (t.kind IN (#{Transaction::ANALYTICS_EXCLUDED_KINDS.map { |kind| "'#{kind}'" }.join(", ")})
+            AND t.id NOT IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})) AS transfer_kind,
           SUM(#{converted_amount_sql("t")}) AS total,
           COUNT(ae.id) AS count
         FROM transactions t
