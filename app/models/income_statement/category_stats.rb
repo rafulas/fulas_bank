@@ -48,7 +48,7 @@ class IncomeStatement::CategoryStats
           LEFT JOIN categories c ON c.id = t.category_id
           #{exchange_rates_join_sql}
           WHERE a.family_id = :family_id
-            AND t.kind NOT IN (#{budget_excluded_kinds_sql})
+            AND #{counted_kinds_sql("t")}
             #{analytics_neutral_categories_sql("t")}
             AND ae.excluded = false
             AND a.exclude_from_reports = false

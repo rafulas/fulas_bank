@@ -71,7 +71,7 @@ class IncomeStatement::Totals
         #{accounts_join_sql}
         LEFT JOIN categories c ON c.id = at.category_id
         #{exchange_rates_join_sql}
-        WHERE at.kind NOT IN (#{budget_excluded_kinds_sql})
+        WHERE #{counted_kinds_sql("at")}
           #{analytics_neutral_categories_sql("at")}
           AND ae.excluded = false
           AND a.family_id = :family_id
@@ -97,7 +97,7 @@ class IncomeStatement::Totals
         #{accounts_join_sql}
         LEFT JOIN categories c ON c.id = at.category_id
         #{exchange_rates_join_sql}
-        WHERE at.kind NOT IN (#{budget_excluded_kinds_sql})
+        WHERE #{counted_kinds_sql("at")}
           #{analytics_neutral_categories_sql("at")}
           #{investment_activity_label_sql("at")}
           AND ae.excluded = false

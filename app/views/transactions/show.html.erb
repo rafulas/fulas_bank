@@ -68,7 +68,7 @@
                 max: Date.current,
                 disabled: @entry.linked? || split_locked || edit_locked,
                 "data-auto-submit-form-target": "auto" %>
-          <% unless @entry.transaction.transfer? %>
+          <% if !@entry.transaction.transfer? %>
             <div class="flex items-center gap-2">
               <%= f.select :nature,
                     [[t("shared.transaction_tabs.expense"), "outflow"], [t("shared.transaction_tabs.income"), "inflow"]],
@@ -88,6 +88,20 @@
                     categories: Current.family.categories.alphabetically_by_hierarchy,
                     selected_id: ef.object.category_id,
                     disabled: @entry.split_child? || annotate_locked,
+                    auto_submit: true,
+                    blank_label: t(".uncategorized")
+                  ) %>
+            <% end %>
+          <% elsif @entry.transaction.counts_by_kind? %>
+            <%# A loan instalment, a contribution to an investment or the cash
+                from selling one: a transfer that still counts as income or
+                expense, so its category can be chosen. %>
+            <%= f.fields_for :entryable do |ef| %>
+              <%= render DS::CategorySelect.new(
+                    form: ef,
+                    categories: Current.family.categories.alphabetically_by_hierarchy,
+                    selected_id: ef.object.category_id,
+                    disabled: annotate_locked,
                     auto_submit: true,
                     blank_label: t(".uncategorized")
                   ) %>

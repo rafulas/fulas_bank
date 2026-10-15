@@ -162,7 +162,7 @@ class MonthPlan
                   .excluding_split_parents
                   .where(account_id: report_account_ids, entryable_type: "Transaction", excluded: false, date: month..last_day)
                   .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
-                  .where("t.kind NOT IN (?)", Transaction::TRANSFER_KINDS)
+                  .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
                   .where("t.category_id IN (?)", category_ids)
                   .group(Arel.sql("entries.date"))
                   .sum(:amount)

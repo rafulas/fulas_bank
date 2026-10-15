@@ -16,6 +16,12 @@ class Transfer < ApplicationRecord
   validate :transfer_within_date_range
   validate :transfer_has_same_family
 
+  # Accounts whose money is invested: selling from one of them into any other
+  # account is income (see Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL).
+  INVESTMENT_ACCOUNT_TYPES = %w[Investment Crypto].freeze
+
+  after_create :categorize_investment_withdrawal
+
   class << self
     def kind_for_account(account)
       if account.loan?
@@ -180,5 +186,29 @@ class Transfer < ApplicationRecord
       date_diff = (inflow_transaction.entry.date - outflow_transaction.entry.date).abs
       max_days = status == "confirmed" ? 30 : 4
       errors.add(:base, :within_days, count: max_days) if date_diff > max_days
+    end
+
+    # Fulas Bank: the cash from selling an investment counts as income (see
+    # Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL), so, mirror of a
+    # contribution, it goes to "Inversiones financieras" when it has no
+    # category and the family has the default categories.
+    #
+    # The accounts are read with a query rather than through each leg's
+    # entry: a transfer can be created before its entries (they are added
+    # right after), and reading the association here would cache it empty.
+    def categorize_investment_withdrawal
+      return if inflow_transaction.nil? || inflow_transaction.category_id.present?
+
+      legs = Entry.where(entryable_type: "Transaction", entryable_id: [ outflow_transaction_id, inflow_transaction_id ])
+                  .joins(:account)
+                  .pluck(:entryable_id, "accounts.accountable_type", "accounts.family_id")
+                  .index_by(&:first)
+      from = legs[outflow_transaction_id]
+      to = legs[inflow_transaction_id]
+      return if from.nil? || to.nil?
+      return unless INVESTMENT_ACCOUNT_TYPES.include?(from[1]) && INVESTMENT_ACCOUNT_TYPES.exclude?(to[1])
+
+      category = Category.find_by(family_id: to[2], name: Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME)
+      inflow_transaction.update!(category: category) if category
     end
 end

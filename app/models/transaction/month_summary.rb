@@ -54,7 +54,7 @@ class Transaction::MonthSummary
     def totals
       @totals ||= begin
         row = scope.where(entries: { date: month..month.end_of_month, excluded: false })
-                   .where.not(transactions: { kind: Transaction::TRANSFER_KINDS })
+                   .merge(Transaction.counted_by_kind)
                    .joins(ActiveRecord::Base.sanitize_sql_array([
                      "LEFT JOIN exchange_rates month_rates ON (month_rates.date = entries.date AND month_rates.from_currency = entries.currency AND month_rates.to_currency = ?)",
                      family.currency

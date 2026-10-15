@@ -519,6 +519,12 @@ class Family < ApplicationRecord
   # This is used for auto-categorizing transfers to investment accounts.
   # Always uses the family's locale to ensure consistent category naming across all users.
   def investment_contributions_category
+    # Fulas Bank: with the default categories, money put into (or taken out
+    # of) an investment goes to "Inversiones financieras", under
+    # "Inversiones", rather than to a root category of its own.
+    fulas = categories.find_by(name: Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME)
+    return fulas if fulas
+
     # Find ALL legacy categories (created under old request-locale behavior)
     legacy = categories.where(name: Category.all_investment_contributions_names).order(:created_at).to_a
 

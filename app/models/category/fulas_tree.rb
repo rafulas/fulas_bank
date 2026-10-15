@@ -154,6 +154,10 @@ class Category::FulasTree
     "savings_and_investments" => "Inversiones"
   }.freeze
 
+  # Where contributions to investments, and the cash from selling them, are
+  # categorized (see Family#investment_contributions_category).
+  INVESTMENT_CONTRIBUTIONS_NAME = "Inversiones financieras".freeze
+
   class << self
     def names
       TREE.flat_map { |name, _color, _icon, _special, children| [ name ] + children.map(&:first) }

@@ -79,7 +79,7 @@ class MonthBudget::Estimate
               "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
               family.currency
             ]))
-            .where("t.kind NOT IN (?)", Transaction::TRANSFER_KINDS + [ "one_time" ])
+            .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS + [ "one_time" ])
             .where("c.id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
     end
 end

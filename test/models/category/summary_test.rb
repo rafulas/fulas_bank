@@ -79,7 +79,27 @@ class Category::SummaryTest < ActiveSupport::TestCase
     assert_equal 0, summary.total_for(category("Comida y bebida"))
   end
 
+  test "contributions and the cash from selling an investment count in Inversiones, not in Traspasos" do
+    fund = @family.accounts.create!(name: "Fondo", currency: "USD", balance: 5000, accountable: Investment.new)
+    transfer(from: @checking, to: fund, amount: 200)
+    transfer(from: fund, to: @checking, amount: 150)
+    transfer(from: @checking, to: @savings, amount: 100)
+
+    summary = summary_for
+
+    assert_equal(-50, summary.total_for(category("Inversiones")))
+    own, subs = summary.breakdown(category("Inversiones"))
+    assert_equal 0, own.total
+    assert_equal(-50, subs.find { |row| row.category.name == "Inversiones financieras" }.total)
+    # The move to savings (both legs) and the two legs inside the fund.
+    assert_equal 4, summary.rows.find(&:transfers?).count
+  end
+
   private
+    def transfer(from:, to:, amount:)
+      Transfer::Creator.new(family: @family, source_account_id: from.id, destination_account_id: to.id, date: 2.days.ago.to_date, amount: amount).create
+    end
+
     def category(name)
       @family.categories.find_by!(name: name)
     end
