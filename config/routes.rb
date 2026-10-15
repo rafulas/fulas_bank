@@ -446,13 +446,6 @@ Rails.application.routes.draw do
 
   # Fulas Bank: spending by category and subcategory ("Resumen").
   resources :category_summaries, only: %i[index show], path: "resumen"
-  # Fulas Bank: what the subscriptions cost (see SubscriptionsOverview).
-  resources :subscription_costs, only: :index, path: "suscripciones" do
-    member do
-      patch :could_drop
-      patch :mark
-    end
-  end
 
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection
@@ -741,6 +734,13 @@ Rails.application.routes.draw do
       end
       resources :maintenance_items, only: %i[new create edit update destroy]
       resource :roadtrip_import, only: %i[new create]
+    end
+  end
+  # Fulas Bank: what the subscriptions cost (see SubscriptionsOverview).
+  resources :subscription_costs, only: :index, path: "suscripciones" do
+    member do
+      patch :could_drop
+      patch :mark
     end
   end
   resources :credit_cards, only: %i[new create edit update] do
