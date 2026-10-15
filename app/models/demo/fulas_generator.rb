@@ -405,7 +405,7 @@ class Demo::FulasGenerator
     # --------------------------------------------------- car and flat records
 
     def car_logbook!
-      vehicle = @car.vehicle
+      vehicle = @car.reload.vehicle
       odometer = 61_400
       charges = @fuel_charges.sort_by(&:date)
       # The two latest refuels are left for the app to propose.
@@ -416,7 +416,7 @@ class Demo::FulasGenerator
         next if pending.include?(entry)
 
         price = (1.56 + rand * 0.14).round(3)
-        vehicle.logs.create!(kind: "fuel", date: entry.date, entry: entry, odometer: odometer,
+        vehicle.logs.create!(currency: "EUR", kind: "fuel", date: entry.date, entry: entry, odometer: odometer,
                              quantity: (entry.amount / price).round(2), unit_price: price, full_tank: true)
       end
 
@@ -431,16 +431,16 @@ class Demo::FulasGenerator
         entry = @service_charges.find { |_e, l| l == label }&.first
         next unless entry
 
-        vehicle.logs.create!(kind: "service", date: entry.date, entry: entry, maintenance_item: item,
+        vehicle.logs.create!(currency: "EUR", kind: "service", date: entry.date, entry: entry, maintenance_item: item,
                              odometer: odometer_on(entry.date), notes: entry.name.split(" - ").last.capitalize)
       end
-      vehicle.logs.create!(kind: "expense", category: "inspection", date: @inspection.date, entry: @inspection,
+      vehicle.logs.create!(currency: "EUR", kind: "expense", category: "inspection", date: @inspection.date, entry: @inspection,
                            maintenance_item: itv, odometer: odometer_on(@inspection.date), notes: "ITV favorable")
-      vehicle.logs.create!(kind: "expense", category: "insurance", date: @car_insurance.date, entry: @car_insurance,
+      vehicle.logs.create!(currency: "EUR", kind: "expense", category: "insurance", date: @car_insurance.date, entry: @car_insurance,
                            notes: "Todo riesgo con franquicia")
-      vehicle.logs.create!(kind: "expense", category: "road_tax", date: @road_tax.date, entry: @road_tax)
+      vehicle.logs.create!(currency: "EUR", kind: "expense", category: "road_tax", date: @road_tax.date, entry: @road_tax)
       Array(@car_expenses).each do |category, entry|
-        vehicle.logs.create!(kind: "expense", category: category, date: entry.date, entry: entry)
+        vehicle.logs.create!(currency: "EUR", kind: "expense", category: category, date: entry.date, entry: entry)
       end
     end
 
@@ -455,11 +455,11 @@ class Demo::FulasGenerator
     end
 
     def flat_records!
-      property = @flat.property
+      property = @flat.reload.property
       # The latest community fee is left for the app to propose.
       latest_community = @flat_expenses.select { |kind, _e, _n| kind == "community" }.max_by { |_k, e, _n| e.date }
       (@flat_expenses - [ latest_community ]).each do |kind, entry, notes|
-        property.expenses.create!(kind: kind, date: entry.date, entry: entry, notes: notes)
+        property.expenses.create!(currency: "EUR", kind: kind, date: entry.date, entry: entry, notes: notes)
       end
     end
 
