@@ -132,6 +132,9 @@ class Demo::FulasGenerator
       # amortisation schedule starts from). The years before the example data are
       # summed up in one reconciliation at what the schedule says is left.
       valuation!(@mortgage, "opening_anchor", 180_000, mortgage_start)
+      # Reloaded: the Loan built with the account does not know its account
+      # yet, and the schedule needs it.
+      @mortgage.reload
       left = @mortgage.loan.amortization_schedule.payments.select { |p| p.date < start }.last
       valuation!(@mortgage, "reconciliation", left.ending_balance.amount.round(2), day_before) if left
     end
