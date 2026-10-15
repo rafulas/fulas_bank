@@ -7,8 +7,6 @@
 
 <% currency = Current.family.currency %>
 <% schedule = @schedule %>
-<% loan_keys = schedule.ordered_loans.map(&:key) %>
-<% names = schedule.loans.to_h { |loan| [ loan.key, loan.name ] } %>
 <% input_class = "w-full rounded-md border border-primary bg-container px-2 py-1 text-sm text-primary" %>
 
 <div class="max-w-5xl space-y-4 pb-6">
@@ -148,29 +146,14 @@
       <%= render DS::Card.new(class: "gap-3") do %>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h3 class="text-sm font-medium text-primary"><%= t(".schedule_title") %></h3>
-          <div class="flex gap-1">
+          <div class="flex items-center gap-1">
             <%= render DS::Link.new(text: t(".view_payments"), size: :sm, variant: (@view == "payments" ? :secondary : :ghost), href: debt_plan_path(view: "payments")) %>
             <%= render DS::Link.new(text: t(".view_pending"), size: :sm, variant: (@view == "pending" ? :secondary : :ghost), href: debt_plan_path(view: "pending")) %>
+            <%= render DS::Link.new(text: t(".expand"), icon: "maximize-2", variant: :outline, size: :sm, href: schedule_debt_plan_path(view: @view), frame: :modal) %>
           </div>
         </div>
 
-        <%= render DS::Table.new(rows: schedule.months, dense: true, sticky_header: true, max_height: "max-h-[70vh]", label: t(".schedule_title"),
-              row_class: ->(month) { "bg-warning/10" if month.additional_total.positive? }) do |table| %>
-          <% table.with_column(t(".month"), class: "whitespace-nowrap") { |month| l(month.date, format: "%b %Y") } %>
-          <% if @view == "payments" %>
-            <% table.with_column(t(".snowball"), numeric: true, class: "privacy-sensitive text-secondary") { |month| debt_plan_money(month.snowball, currency) } %>
-            <% table.with_column(t(".additional"), numeric: true, class: "privacy-sensitive text-secondary") { |month| month.additional_total.positive? ? debt_plan_money(month.additional_total, currency) : "" } %>
-            <% loan_keys.each do |key| %>
-              <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| month.payments[key].to_d.positive? ? debt_plan_money(month.payments[key], currency) : "" } %>
-            <% end %>
-            <% table.with_column(t(".total_payment"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") { |month| debt_plan_money(month.total_payment, currency) } %>
-          <% else %>
-            <% loan_keys.each do |key| %>
-              <% table.with_column(names[key], numeric: true, class: "privacy-sensitive") { |month| debt_plan_money(month.balances[key], currency) } %>
-            <% end %>
-          <% end %>
-          <% table.with_column(t(".total_balance"), numeric: true, class: "privacy-sensitive font-medium text-primary") { |month| debt_plan_money(month.total_balance, currency) } %>
-        <% end %>
+        <%= render "debt_plans/schedule_table", schedule: schedule, view: @view %>
       <% end %>
     <% end %>
   <% end %>

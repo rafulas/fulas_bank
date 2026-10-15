@@ -745,6 +745,7 @@ Rails.application.routes.draw do
   resource :month_plan, only: :show, path: "planes"
   resource :loans_overview, only: :show, path: "prestamos"
   resource :debt_plan, only: %i[show update], path: "prestamos/plan" do
+    get :schedule
     resources :extra_payments, only: %i[create destroy], module: :debt_plans
   end
   resource :investments_overview, only: :show, path: "inversiones"

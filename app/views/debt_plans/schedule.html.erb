@@ -1,0 +1,10 @@
+<%= render DS::Dialog.new(width: "expanded") do |dialog| %>
+  <% dialog.with_header(title: t("debt_plans.show.schedule_title")) %>
+  <% dialog.with_body do %>
+    <% if @schedule.months.any? %>
+      <%= render "debt_plans/schedule_table", schedule: @schedule, view: @view, expanded: true %>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t("debt_plans.show.empty_title") %></p>
+    <% end %>
+  <% end %>
+<% end %>

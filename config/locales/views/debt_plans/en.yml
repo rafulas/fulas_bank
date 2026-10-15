@@ -51,7 +51,8 @@ en:
       payment: Payment
       order: Order
       recurring: Recurring movement
-      excluded: Out
+      excluded: Leave out of the plan
+      expand: Expand
       payment_for: "%{loan} payment"
       order_for: "%{loan} order"
       recurring_for: "%{loan} recurring movement"

@@ -65,4 +65,17 @@ class DebtPlansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match @loan.name, response.body
   end
+
+  test "puts the totals right after the month and opens the table in a wide dialog" do
+    get debt_plan_url
+
+    headers = css_select("table").last.css("thead th").map { |th| th.text.strip }
+    assert_operator headers.index(I18n.t("debt_plans.show.total_payment")), :<, headers.index(@loan.name)
+    assert_operator headers.index(I18n.t("debt_plans.show.total_balance")), :<, headers.index(@loan.name)
+    assert_select "a[href='#{schedule_debt_plan_path(view: "payments")}']"
+
+    get schedule_debt_plan_url(view: "pending")
+    assert_response :success
+    assert_select "dialog table"
+  end
 end

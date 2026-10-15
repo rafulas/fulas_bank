@@ -15,6 +15,12 @@ class DebtPlansController < ApplicationController
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("loans_overviews.show.title"), loans_overview_path ], [ t(".title"), nil ] ]
   end
 
+  # The month-by-month table on its own, in a wide dialog.
+  def schedule
+    @schedule = @plan.schedule(Current.user)
+    @view = params[:view] == "pending" ? "pending" : "payments"
+  end
+
   def update
     @plan.assign_attributes(plan_params)
     @plan.assign_loan_settings(@plan.loan_accounts(Current.user), loan_settings_params)
