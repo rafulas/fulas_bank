@@ -25,6 +25,11 @@ es:
       variable: Gasto variable
       variable_on: Incluir los gastos varios
       main_account: Cuenta principal
+      cushion: Colchón mínimo
+      cushion_placeholder: "Ej. 1000"
+      cushion_breached_title: "El %{date} bajarías de tu colchón de %{cushion}"
+      cushion_breached: "Ese día %{account} se quedaría en %{balance}. Lo más bajo: %{lowest} el %{lowest_on}. Mira la tabla para ver qué lo provoca y si puedes mover algún pago."
+      cushion_ok: "%{account} no baja de %{cushion} hasta el %{date}."
       variable_off: Solo recurrentes y puntuales
       today: Saldo hoy
       on_date: Previsto el %{date}

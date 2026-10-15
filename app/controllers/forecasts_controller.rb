@@ -25,6 +25,7 @@ class ForecastsController < ApplicationController
       @include_variable = params[:variable] != "0"
       @account = @accounts.find { |account| account.id == params[:account_id] }
       @main_account = main_account
+      @cushion = cushion
 
       @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
                                main_account: @main_account, card_accounts: card_accounts,
@@ -50,6 +51,19 @@ class ForecastsController < ApplicationController
 
       saved = Current.user.preferences&.dig(Forecast::MAIN_ACCOUNT_PREFERENCE)
       @accounts.find { |account| account.id == saved } || Forecast.default_main_account(@accounts)
+    end
+
+    # The least the main account should have. Typing it in the form keeps it
+    # for next time; leaving it empty removes it.
+    def cushion
+      if params.key?(:cushion)
+        value = params[:cushion].to_s.tr(",", ".").presence&.to_d
+        value = nil unless value&.positive?
+        Current.user.update_dashboard_preferences(Forecast::CUSHION_PREFERENCE => value&.to_s("F"))
+        return value
+      end
+
+      Current.user.preferences&.dig(Forecast::CUSHION_PREFERENCE).presence&.to_d
     end
 
     # A date typed in the form, never before tomorrow.
