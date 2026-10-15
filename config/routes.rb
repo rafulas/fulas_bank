@@ -735,7 +735,10 @@ Rails.application.routes.draw do
       resource :roadtrip_import, only: %i[new create]
     end
   end
-  resources :credit_cards, only: %i[new create edit update]
+  resources :credit_cards, only: %i[new create edit update] do
+    # Fulas Bank: file the card's charges in its payment account now.
+    resource :reconciliation, only: :create, controller: "credit_cards/reconciliations"
+  end
   resources :loans, only: %i[new create edit update]
   resources :loan_payment_links, only: %i[create destroy]
   # Links between bank charges and vehicle logs or property expenses that the

@@ -6,6 +6,7 @@
 <% current = cycle.current %>
 <% last_closed = cycle.last_closed %>
 <% financings = account.card_financings.includes(entry: :entryable).order(purchase_date: :desc).to_a %>
+<% reconciler = CreditCard::Reconciler.new(account, today: today) %>
 
 <div class="space-y-4">
   <div class="@container">
@@ -26,7 +27,13 @@
   </div>
 
   <%= render DS::Card.new(class: "gap-2") do %>
-    <h3 class="text-sm font-medium text-primary uppercase"><%= t(".statements") %></h3>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-sm font-medium text-primary uppercase"><%= t(".statements") %></h3>
+      <% if reconciler.active? %>
+        <%= render DS::Button.new(text: t(".reconcile"), icon: "check-check", variant: :outline, size: :sm,
+              href: credit_card_reconciliation_path(account), method: :post) %>
+      <% end %>
+    </div>
     <%= render DS::Table.new(rows: cycle.recent, dense: true, label: t(".statements")) do |table| %>
       <% table.with_column(t(".period")) do |statement| %>
         <span class="text-primary"><%= l(statement.opens_on, format: "%-d/%m") %> – <%= l(statement.closes_on, format: "%-d/%m/%y") %></span>
@@ -38,8 +45,26 @@
       <% table.with_column(t(".financed_column"), numeric: true, class: "privacy-sensitive") { |statement| statement.financed.positive? ? format_money(-statement.financed_money) : "—" } %>
       <% table.with_column(t(".charge"), numeric: true, class: "privacy-sensitive font-medium bg-info/10") { |statement| format_money(statement.amount_money) } %>
       <% table.with_column(t(".charge_date"), numeric: true) { |statement| l(statement.charged_on, format: "%d/%m/%y") } %>
+      <% if reconciler.active? %>
+        <% table.with_column(t(".bank")) do |statement| %>
+          <% status = reconciler.status_for(statement) %>
+          <% case status.state %>
+          <% when :matched %>
+            <span class="inline-flex items-center gap-1 text-success"><%= icon "check", size: "sm", color: "current" %><%= t(".matched") %></span>
+          <% when :different %>
+            <span class="text-warning privacy-sensitive" title="<%= status.entry.name %>">
+              <%= t(".different", amount: format_money(Money.new(status.charged, account.currency)), difference: format_money(Money.new(status.difference, account.currency))) %>
+            </span>
+          <% else %>
+            <span class="text-secondary"><%= statement.charged?(today) ? t(".not_found") : t(".upcoming") %></span>
+          <% end %>
+        <% end %>
+      <% end %>
     <% end %>
     <p class="text-xs text-secondary"><%= t(".hint") %></p>
+    <% if reconciler.active? %>
+      <p class="text-xs text-secondary"><%= t(".reconcile_hint", account: account.credit_card.payment_account.name) %></p>
+    <% end %>
   <% end %>
 
   <%= render DS::Card.new(class: "gap-2") do %>

@@ -21,6 +21,7 @@ class Family::Syncer
 
   def perform_post_sync
     family.auto_match_transfers!
+    CreditCard::Reconciler.run_quietly(family)
     AssetLinker.run_quietly(family)
 
     Rails.logger.info("Applying rules for family #{family.id}")
