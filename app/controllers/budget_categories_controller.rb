@@ -18,7 +18,7 @@ class BudgetCategoriesController < ApplicationController
     # account) shows under the Uncategorized card -- or any retained
     # category -- even though the aggregate ignores it. See issue #1059.
     @recent_transactions = @budget.transactions
-                                  .where.not(transactions: { kind: Transaction::BUDGET_EXCLUDED_KINDS })
+                                  .where(Transaction.counts_by_kind_sql(excluded_kinds: Transaction::BUDGET_EXCLUDED_KINDS))
                                   .merge(Transaction.counted_in_analytics)
 
     if params[:id] == BudgetCategory.uncategorized.id

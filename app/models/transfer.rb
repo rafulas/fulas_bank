@@ -16,6 +16,12 @@ class Transfer < ApplicationRecord
   validate :transfer_within_date_range
   validate :transfer_has_same_family
 
+  # Accounts whose money is invested: selling from one of them into any other
+  # account is income (see Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL).
+  INVESTMENT_ACCOUNT_TYPES = %w[Investment Crypto].freeze
+
+  after_create :categorize_investment_withdrawal
+
   class << self
     def kind_for_account(account)
       if account.loan?
@@ -180,5 +186,21 @@ class Transfer < ApplicationRecord
       date_diff = (inflow_transaction.entry.date - outflow_transaction.entry.date).abs
       max_days = status == "confirmed" ? 30 : 4
       errors.add(:base, :within_days, count: max_days) if date_diff > max_days
+    end
+
+    # Fulas Bank: the cash from selling an investment counts as income (see
+    # Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL), so, mirror of a
+    # contribution, it goes to the investments category when it has none.
+    def categorize_investment_withdrawal
+      inflow = inflow_transaction
+      return if inflow.nil? || inflow.category_id.present?
+
+      from = from_account
+      to = to_account
+      return if from.nil? || to.nil?
+      return unless INVESTMENT_ACCOUNT_TYPES.include?(from.accountable_type) && INVESTMENT_ACCOUNT_TYPES.exclude?(to.accountable_type)
+
+      category = to.family.investment_contributions_category
+      inflow.update!(category: category) if category.present?
     end
 end

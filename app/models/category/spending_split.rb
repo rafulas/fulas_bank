@@ -111,7 +111,7 @@ class Category::SpendingSplit
                      "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
                      currency
                    ]))
-                   .where("t.kind NOT IN (?)", Transaction::TRANSFER_KINDS)
+                   .where(Transaction.counts_by_kind_sql("t"))
                    .where("t.category_id IS NULL OR t.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
                    .group(Arel.sql("COALESCE(parent_c.id, c.id)"), Arel.sql("COALESCE(c.spending_class, parent_c.spending_class)"))
                    .sum(Arel.sql("entries.amount * COALESCE(rates.rate, 1)"))

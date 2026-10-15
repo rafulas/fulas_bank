@@ -72,7 +72,39 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     assert_equal Money.new(10, "USD"), analysis.daily_average
   end
 
+  test "loan instalments and contributions count as spending, and selling an investment as income" do
+    loan = @family.accounts.create!(name: "Hipoteca", balance: 100_000, currency: "USD", accountable: Loan.new)
+    fund = @family.accounts.create!(name: "Fondo", balance: 5_000, currency: "USD", accountable: Investment.new)
+    card = @family.accounts.create!(name: "Tarjeta", balance: 0, currency: "USD", accountable: CreditCard.new)
+    savings = @family.accounts.create!(name: "Ahorro", balance: 0, currency: "USD", accountable: Depository.new)
+    investing = @family.categories.create!(name: "Inversiones", color: "#a448d8")
+
+    instalment = transfer(from: @account, to: loan, amount: 500, date: Date.new(2026, 10, 4))
+    instalment.outflow_transaction.update!(category: @home)
+    contribution = transfer(from: @account, to: fund, amount: 200, date: Date.new(2026, 10, 5))
+    contribution.outflow_transaction.update!(category: investing)
+    sale = transfer(from: fund, to: @account, amount: 150, date: Date.new(2026, 10, 6))
+    transfer(from: @account, to: card, amount: 80, date: Date.new(2026, 10, 7))
+    transfer(from: @account, to: savings, amount: 300, date: Date.new(2026, 10, 8))
+
+    sale_category = sale.inflow_transaction.reload.category
+    assert_equal @family.investment_contributions_category, sale_category, "the cash from selling is categorized as an investment"
+
+    assert_equal [ [ "Hogar", 500 ], [ "Inversiones", 200 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+    assert_equal [ [ sale_category.name, 150 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+
+    assert instalment.outflow_transaction.counts_by_kind?
+    assert contribution.outflow_transaction.counts_by_kind?
+    assert sale.inflow_transaction.counts_by_kind?
+    assert_not contribution.inflow_transaction.counts_by_kind?, "the leg inside the investment account counts as nothing"
+    assert_not sale.outflow_transaction.counts_by_kind?
+  end
+
   private
+    def transfer(from:, to:, amount:, date:)
+      Transfer::Creator.new(family: @family, source_account_id: from.id, destination_account_id: to.id, date: date, amount: amount).create
+    end
+
     def analysis
       Category::Analysis.new(@family, period: @period, account_ids: [ @account.id ], today: @today)
     end

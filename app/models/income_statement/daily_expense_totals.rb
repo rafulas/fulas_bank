@@ -48,7 +48,7 @@ class IncomeStatement::DailyExpenseTotals
           #{entries_join_sql("at")}
           #{accounts_join_sql}
           #{exchange_rates_join_sql}
-          WHERE at.kind NOT IN (#{budget_excluded_kinds_sql})
+          WHERE #{counted_kinds_sql("at")}
             #{analytics_neutral_categories_sql("at")}
             #{investment_activity_label_sql("at")}
             AND ae.excluded = false

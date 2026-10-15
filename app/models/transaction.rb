@@ -97,6 +97,63 @@ class Transaction < ApplicationRecord
     where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
   }
 
+  # Fulas Bank: transfer kinds that are neither income nor expense. Moving
+  # money between the user's own current accounts and paying a card off are
+  # not (the card's spending already counts, purchase by purchase). A loan
+  # instalment and a contribution to an investment are money spent, so
+  # loan_payment and investment_contribution are not here and count as
+  # expenses, as Sure's own budgets already counted them.
+  ANALYTICS_EXCLUDED_KINDS = %w[funds_movement cc_payment].freeze
+
+  # Fulas Bank: the cash side of selling an investment, mirror of a
+  # contribution. It is the inflow leg of a transfer from an investment or
+  # crypto account into any other kind of account; its kind is
+  # funds_movement, but it counts as income. The leg that leaves the
+  # investment account, and transfers between two investment accounts, still
+  # count as nothing.
+  INVESTMENT_WITHDRAWAL_IDS_SQL = <<~SQL.squish.freeze
+    SELECT withdrawals.inflow_transaction_id
+    FROM transfers withdrawals
+    INNER JOIN entries withdrawal_out ON withdrawal_out.entryable_type = 'Transaction' AND withdrawal_out.entryable_id = withdrawals.outflow_transaction_id
+    INNER JOIN accounts withdrawal_from ON withdrawal_from.id = withdrawal_out.account_id
+    INNER JOIN entries withdrawal_in ON withdrawal_in.entryable_type = 'Transaction' AND withdrawal_in.entryable_id = withdrawals.inflow_transaction_id
+    INNER JOIN accounts withdrawal_to ON withdrawal_to.id = withdrawal_in.account_id
+    WHERE withdrawal_from.accountable_type IN ('Investment', 'Crypto')
+      AND withdrawal_to.accountable_type NOT IN ('Investment', 'Crypto')
+  SQL
+
+  # Fulas Bank: SQL condition for "this transaction's kind counts as income
+  # or expense", for the transactions table aliased `table`. `excluded_kinds`
+  # lets the income statement also leave out one_time, as it always has.
+  def self.counts_by_kind_sql(table = "transactions", excluded_kinds: ANALYTICS_EXCLUDED_KINDS)
+    kinds = excluded_kinds.map { |kind| "'#{kind}'" }.join(", ")
+    "(#{table}.kind NOT IN (#{kinds}) OR #{table}.id IN (#{INVESTMENT_WITHDRAWAL_IDS_SQL}))"
+  end
+
+  scope :counted_by_kind, -> { where(counts_by_kind_sql) }
+
+  # Fulas Bank: whether this transaction counts as income or expense by its
+  # kind (see ANALYTICS_EXCLUDED_KINDS). A transfer leg that does is shown
+  # with its category, which can be changed.
+  def counts_by_kind?
+    ANALYTICS_EXCLUDED_KINDS.exclude?(kind) || investment_withdrawal?
+  end
+
+  # Fulas Bank: the inflow leg of selling an investment (see
+  # INVESTMENT_WITHDRAWAL_IDS_SQL).
+  def investment_withdrawal?
+    return false unless funds_movement?
+
+    transfer = transfer_as_inflow
+    return false if transfer.nil?
+
+    from = transfer.outflow_transaction&.entry&.account
+    to = entry&.account
+    from.present? && to.present? &&
+      Transfer::INVESTMENT_ACCOUNT_TYPES.include?(from.accountable_type) &&
+      Transfer::INVESTMENT_ACCOUNT_TYPES.exclude?(to.accountable_type)
+  end
+
   # Kinds excluded from budget/income-statement analytics.
   # loan_payment and investment_contribution are intentionally NOT here —
   # they represent real cash outflow from a budgeting perspective.

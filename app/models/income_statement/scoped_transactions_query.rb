@@ -59,8 +59,11 @@ module IncomeStatement::ScopedTransactionsQuery
       "AND (#{t}.category_id IS NULL OR #{t}.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL}))"
     end
 
-    def budget_excluded_kinds_sql
-      @budget_excluded_kinds_sql ||= Transaction::BUDGET_EXCLUDED_KINDS.map { |k| "'#{k}'" }.join(", ")
+    # Kinds that count as income or expense: all but BUDGET_EXCLUDED_KINDS,
+    # plus the cash side of selling an investment, which is a funds_movement
+    # that counts as income (Fulas Bank, see Transaction.counts_by_kind_sql).
+    def counted_kinds_sql(t)
+      Transaction.counts_by_kind_sql(t, excluded_kinds: Transaction::BUDGET_EXCLUDED_KINDS)
     end
 
     def pending_providers_sql(t = "t")

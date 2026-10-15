@@ -13,9 +13,6 @@
 class Category::Summary
   include IncomeStatement::ScopedTransactionsQuery
 
-  # Matched transfer legs between own accounts (see Transaction#kind).
-  TRANSFER_KINDS = %w[funds_movement cc_payment].freeze
-
   # `kind` is :regular, :transfers, :excluded or :uncategorized.
   Row = Data.define(:category, :total, :count, :kind) do
     def uncategorized?
@@ -184,7 +181,10 @@ class Category::Summary
         SELECT
           t.category_id,
           ae.excluded,
-          (t.kind IN (#{TRANSFER_KINDS.map { |kind| "'#{kind}'" }.join(", ")})) AS transfer_kind,
+          -- Matched transfer legs between own accounts. Loan instalments,
+          -- contributions to investments and the cash from selling one
+          -- count under their category instead.
+          (NOT #{Transaction.counts_by_kind_sql("t")}) AS transfer_kind,
           SUM(#{converted_amount_sql("t")}) AS total,
           COUNT(ae.id) AS count
         FROM transactions t
