@@ -2,25 +2,67 @@
 <%= render DS::Dialog.new do |dialog| %>
   <% dialog.with_header(title: t(".title", month: l(month_budget.month, format: "%B %Y"))) %>
   <% dialog.with_body do %>
-    <%= styled_form_with url: month_plan_budget_path(month: month_budget.month.strftime("%Y-%m")), method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+    <%= styled_form_with url: month_plan_budget_path(month: month_budget.month.strftime("%Y-%m")), method: :patch, class: "space-y-4",
+          data: { turbo_frame: :_top, controller: "month-budget" } do |form| %>
       <p class="text-sm text-secondary"><%= t(".hint") %></p>
 
-      <div class="space-y-2">
+      <% if @prefilled %>
+        <%= render DS::Alert.new(message: t(".prefilled"), variant: :info) %>
+      <% end %>
+
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-sm text-primary">
+          <%= t(".total") %>
+          <span class="font-medium privacy-sensitive" data-month-budget-target="total"></span>
+        </p>
+        <% if @estimate.any? %>
+          <%= render DS::Button.new(text: t(".suggest"), icon: "sparkles", variant: :outline, size: :sm,
+                data: { action: "month-budget#suggest" }) %>
+        <% end %>
+      </div>
+
+      <div class="space-y-3">
         <% month_budget.categories.each do |category| %>
-          <div class="flex items-center gap-3">
-            <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
-            <div class="min-w-0 grow">
-              <p class="text-sm text-primary truncate"><%= category.name %></p>
-              <% if (average = @averages[category.id]) && average.amount.positive? %>
-                <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(average, precision: 0)) %></p>
+          <% subcategories = month_budget.subcategories_of(category) %>
+          <div class="space-y-1" data-month-budget-target="group">
+            <div class="flex items-center gap-3">
+              <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+              <div class="min-w-0 grow">
+                <p class="text-sm text-primary truncate"><%= category.name %></p>
+                <% if (average = @estimate[category.id]) %>
+                  <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, Current.family.currency), precision: 0)) %></p>
+                <% end %>
+              </div>
+              <div class="w-32 shrink-0">
+                <%= render "month_plans/budgets/amount_field", category: category, amount: @amounts[category.id], suggested: @estimate[category.id], target: "main" %>
+              </div>
+            </div>
+
+            <% if subcategories.any? %>
+              <% broken_down = subcategories.any? { |sub| @amounts[sub.id]&.positive? } %>
+              <%= render DS::Disclosure.new(variant: :inline, open: broken_down, body_class: "mt-1 space-y-1 pl-9") do |disclosure| %>
+                <% disclosure.with_summary_content do %>
+                  <span class="inline-flex items-center gap-1 pl-9 text-xs text-secondary hover:text-primary">
+                    <%= icon "chevron-right", size: "xs", class: "group-open:rotate-90 motion-safe:transition-transform" %>
+                    <%= t(".break_down", count: subcategories.size) %>
+                  </span>
+                <% end %>
+                <% subcategories.each do |sub| %>
+                  <div class="flex items-center gap-3">
+                    <div class="min-w-0 grow">
+                      <p class="text-sm text-primary truncate"><%= sub.name %></p>
+                      <% if (average = @estimate[sub.id]) %>
+                        <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, Current.family.currency), precision: 0)) %></p>
+                      <% end %>
+                    </div>
+                    <div class="w-32 shrink-0">
+                      <%= render "month_plans/budgets/amount_field", category: sub, amount: @amounts[sub.id], suggested: @estimate[sub.id], target: "sub" %>
+                    </div>
+                  </div>
+                <% end %>
+                <p class="text-xs text-secondary"><%= t(".break_down_hint") %></p>
               <% end %>
-            </div>
-            <div class="w-32 shrink-0">
-              <%= number_field_tag "amounts[#{category.id}]", (@amounts[category.id]&.positive? ? @amounts[category.id].to_s("F") : nil),
-                    step: "0.01", min: 0, placeholder: "0",
-                    class: "w-full rounded-md border border-primary bg-container px-2 py-1.5 text-sm text-right text-primary",
-                    aria: { label: t(".amount_for", category: category.name) } %>
-            </div>
+            <% end %>
           </div>
         <% end %>
       </div>

@@ -39,6 +39,13 @@ en:
         hint: "How much you want to spend each month on each category. It repeats every month until you change it; earlier months stay as they were. Leave empty what you do not want to budget."
         average: "You usually spend %{amount} a month"
         amount_for: "%{category} budget"
+        prefilled: "This is your first budget: it comes filled in with what you usually spend on each category. Change anything before saving."
+        total: "Monthly total:"
+        suggest: Fill in with what you usually spend
+        break_down:
+          one: Break down by its subcategory
+          other: "Break down by its %{count} subcategories"
+        break_down_hint: Once a subcategory has an amount, the main category becomes the sum of them all.
         submit: Save
       update:
         success: Budget saved.

@@ -20,8 +20,8 @@
 # in the Excluded or Transfers categories. Only spending counts: income and
 # refunds are left out, so the estimate errs on the side of caution.
 class Forecast::VariableEstimate
-  SAME_MONTH_YEARS = 3
-  RECENT_MONTHS = 6
+  SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
+  RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
 
   attr_reader :family, :accounts, :today
 
@@ -37,10 +37,7 @@ class Forecast::VariableEstimate
     values = sample_months(month.beginning_of_month).filter_map do |sample|
       monthly_totals.dig(account.id, sample) || 0 if covered?(account, sample)
     end
-    return BigDecimal("0") if values.empty?
-
-    values = trimmed(values)
-    (values.sum.to_d / values.size).round(2)
+    TrimmedMonthlyAverage.mean(values)
   end
 
   # What `account` has already spent on variable things in `month`, to know
@@ -59,10 +56,7 @@ class Forecast::VariableEstimate
     values = sample_months(month.beginning_of_month).filter_map do |sample|
       combined_total(sample) if sample >= start.beginning_of_month
     end
-    return BigDecimal("0") if values.empty?
-
-    values = trimmed(values)
-    (values.sum.to_d / values.size).round(2)
+    TrimmedMonthlyAverage.mean(values)
   end
 
   def combined_spent(month)
@@ -71,17 +65,7 @@ class Forecast::VariableEstimate
 
   # The months averaged for `month`, newest first.
   def sample_months(month)
-    same = []
-    years_back = 1
-
-    while same.size < SAME_MONTH_YEARS
-      candidate = month << (12 * years_back)
-      same << candidate if candidate < current_month
-      years_back += 1
-    end
-
-    recent = (1..RECENT_MONTHS).map { |back| current_month << back }
-    (same + recent).uniq
+    TrimmedMonthlyAverage.sample_months(month, today: today)
   end
 
   private
@@ -91,13 +75,6 @@ class Forecast::VariableEstimate
 
     def current_month
       today.beginning_of_month
-    end
-
-    # One value fewer at each end, once there are at least three to choose from.
-    def trimmed(values)
-      return values if values.size < 3
-
-      values.sort[1..-2]
     end
 
     # A month counts once the account has movements in it or before it.
