@@ -446,6 +446,8 @@ Rails.application.routes.draw do
 
   # Fulas Bank: spending by category and subcategory ("Resumen").
   resources :category_summaries, only: %i[index show], path: "resumen"
+  # Fulas Bank: the necessary / discretionary / saving target and classes.
+  resource :spending_split, only: %i[edit update], path: "resumen/reparto"
 
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection

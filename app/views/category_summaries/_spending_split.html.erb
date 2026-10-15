@@ -1,0 +1,57 @@
+<%# locals: (split:) %>
+<%# Fulas Bank: the 50/30/20 split of the period with real figures
+    (see Category::SpendingSplit). %>
+<% colors = { essential: "bg-info", discretionary: "bg-warning", savings: "bg-success" } %>
+<section class="space-y-2">
+  <div class="flex items-center justify-between px-1 text-xs text-secondary">
+    <span><%= t(".title") %></span>
+    <%= link_to t(".settings"), edit_spending_split_path, class: "hover:text-primary", data: { turbo_frame: :modal } %>
+  </div>
+  <div class="rounded-xl bg-container shadow-border-xs p-4 space-y-3">
+    <% if split.any? %>
+      <% parts = split.parts %>
+      <div class="space-y-1">
+        <div class="flex h-3 w-full overflow-hidden rounded-full bg-surface-inset" role="img"
+             aria-label="<%= parts.map { |part| "#{t(".#{part.key}")} #{part.share} %" }.join(", ") %>">
+          <% parts.each do |part| %>
+            <% width = part.share.clamp(0, 100) %>
+            <% if width.positive? %>
+              <div class="h-full <%= colors[part.key] %>" style="width: <%= width %>%"></div>
+            <% end %>
+          <% end %>
+        </div>
+        <div class="flex h-1.5 w-full overflow-hidden rounded-full opacity-40" aria-hidden="true">
+          <% parts.each do |part| %>
+            <div class="h-full <%= colors[part.key] %>" style="width: <%= part.target %>%"></div>
+          <% end %>
+        </div>
+        <p class="text-xs text-secondary"><%= t(".bars_hint", target: split.target.join(" / ")) %></p>
+      </div>
+
+      <ul class="divide-y divide-divider text-sm">
+        <% parts.each do |part| %>
+          <% off_target = part.key == :savings ? part.share < part.target : part.share > part.target %>
+          <li class="flex items-center justify-between gap-3 py-2">
+            <span class="flex items-center gap-2 text-primary">
+              <span class="h-2.5 w-2.5 rounded-full <%= colors[part.key] %>"></span>
+              <%= t(".#{part.key}") %>
+            </span>
+            <span class="flex items-center gap-3">
+              <span class="privacy-sensitive text-primary"><%= format_money(part.amount, precision: 0) %></span>
+              <span class="w-24 text-right <%= off_target ? "text-warning" : "text-success" %>">
+                <%= t(".share", share: part.share, target: part.target) %>
+              </span>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+
+      <% if split.unclassified.amount.positive? %>
+        <p class="text-xs text-secondary"><%= t(".unclassified", amount: format_money(split.unclassified, precision: 0)) %></p>
+      <% end %>
+      <p class="text-xs text-secondary"><%= t(".hint", income: format_money(split.income, precision: 0)) %></p>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".no_income") %></p>
+    <% end %>
+  </div>
+</section>
