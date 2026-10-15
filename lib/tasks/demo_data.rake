@@ -33,6 +33,14 @@ namespace :demo_data do
     puts "✅ Done in #{(Time.now - start).round(2)}s"
   end
 
+  desc "Load Fulas Bank's Spanish example family (replaces only the previous example family)"
+  task fulas: :environment do
+    start = Time.now
+    family = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42)).generate!
+    entries = Entry.joins(:account).where(accounts: { family_id: family.id }).count
+    puts "✅ #{family.name}: #{family.accounts.count} cuentas y #{entries} movimientos en #{(Time.now - start).round(1)} s"
+  end
+
   desc "Load full realistic demo dataset"
   task default: :environment do
     start    = Time.now
