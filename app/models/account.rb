@@ -178,7 +178,10 @@ class Account < ApplicationRecord
       super(attribute, options)
     end
 
-    def create_and_sync(attributes, skip_initial_sync: false, opening_balance_date: nil)
+    # `without_opening_balance`: an account whose value comes only from what is
+    # recorded in it later (shares bought over the years), so it gets no
+    # opening anchor and starts the day before its oldest entry.
+    def create_and_sync(attributes, skip_initial_sync: false, opening_balance_date: nil, without_opening_balance: false)
       attributes[:accountable_attributes] ||= {} # Ensure accountable is created, even if empty
       # Default cash_balance to balance unless explicitly provided (e.g., Crypto sets it to 0)
       attrs = attributes.dup
@@ -192,34 +195,36 @@ class Account < ApplicationRecord
       transaction do
         account.save!
 
-        manager = Account::OpeningBalanceManager.new(account)
-        result = manager.set_opening_balance(
-          balance: initial_balance || account.balance,
-          date: opening_balance_date
-        )
-        raise result.error if result.error
-
-        # When the opening balance differs from the entered current balance
-        # (a loan created with its original principal), the opening anchor is
-        # the account's only entry — the initial sync would recalculate
-        # today's balance back to it, silently discarding what the user just
-        # typed. Anchor today's balance too so both survive.
-        #
-        # Only when the opening anchor is on an earlier day: the opening date
-        # is user-supplied and may be today, and a same-day reconciliation
-        # would be matched to the opening anchor by date and overwrite it.
-        # On its own date the opening balance wins.
-        if initial_balance && initial_balance != account.balance && manager.opening_date < Date.current
-          # An explicit reconciliation, not CurrentBalanceManager: for cash
-          # accounts its transaction-adjustment strategy computes a zero delta
-          # here (account.balance already holds the entered value) and would
-          # only rewrite the opening anchor, leaving today's balance unanchored
-          # for the first sync.
-          reconciliation = Account::ReconciliationManager.new(account).reconcile_balance(
-            balance: account.balance,
-            date: Date.current
+        unless without_opening_balance
+          manager = Account::OpeningBalanceManager.new(account)
+          result = manager.set_opening_balance(
+            balance: initial_balance || account.balance,
+            date: opening_balance_date
           )
-          raise reconciliation.error_message unless reconciliation.success?
+          raise result.error if result.error
+
+          # When the opening balance differs from the entered current balance
+          # (a loan created with its original principal), the opening anchor is
+          # the account's only entry — the initial sync would recalculate
+          # today's balance back to it, silently discarding what the user just
+          # typed. Anchor today's balance too so both survive.
+          #
+          # Only when the opening anchor is on an earlier day: the opening date
+          # is user-supplied and may be today, and a same-day reconciliation
+          # would be matched to the opening anchor by date and overwrite it.
+          # On its own date the opening balance wins.
+          if initial_balance && initial_balance != account.balance && manager.opening_date < Date.current
+            # An explicit reconciliation, not CurrentBalanceManager: for cash
+            # accounts its transaction-adjustment strategy computes a zero delta
+            # here (account.balance already holds the entered value) and would
+            # only rewrite the opening anchor, leaving today's balance unanchored
+            # for the first sync.
+            reconciliation = Account::ReconciliationManager.new(account).reconcile_balance(
+              balance: account.balance,
+              date: Date.current
+            )
+            raise reconciliation.error_message unless reconciliation.success?
+          end
         end
 
         account.auto_share_with_family! if account.family.share_all_by_default?

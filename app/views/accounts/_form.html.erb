@@ -1,4 +1,4 @@
-<%# locals: (account:, url:, name_label: nil, name_placeholder: nil, balance_label: nil, balance_hint: nil, show_opening_balance_date: true) %>
+<%# locals: (account:, url:, name_label: nil, name_placeholder: nil, balance_label: nil, balance_hint: nil, show_opening_balance_date: true, balance_required: true) %>
 <%# The optional labels let each account type word the shared fields in its
     own terms (a loan's "name" is the loan's name, its "balance" what is still
     owed), and a type that derives the opening date from its own fields can
@@ -16,7 +16,7 @@
     <%= form.text_field :name, placeholder: name_placeholder || t(".name_placeholder"), required: "required", label: name_label || t(".name_label") %>
 
     <% unless account.linked? %>
-      <%= form.money_field :balance, label: balance_label || t(".balance"), required: true, default_currency: Current.family.currency %>
+      <%= form.money_field :balance, label: balance_label || t(".balance"), required: balance_required, default_currency: Current.family.currency %>
       <% if balance_hint.present? %>
         <p class="text-xs text-secondary"><%= balance_hint %></p>
       <% end %>

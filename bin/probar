@@ -55,6 +55,8 @@ export FULAS_CODESPACE=true SELF_HOSTED=true
 export DEFAULT_LOCALE="${DEFAULT_LOCALE:-es}" DEFAULT_CURRENCY="${DEFAULT_CURRENCY:-EUR}"
 export DEFAULT_COUNTRY="${DEFAULT_COUNTRY:-ES}" DEFAULT_DATE_FORMAT="${DEFAULT_DATE_FORMAT:-%d/%m/%Y}"
 export DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE:-Europe/Madrid}" DEFAULT_NUMBER_FORMAT="${DEFAULT_NUMBER_FORMAT:-1.234,56}"
+# Share prices from Yahoo Finance (free, no key), as in the Mac install.
+export SECURITIES_PROVIDER="${SECURITIES_PROVIDER:-yahoo_finance}"
 
 # No ActiveRecord encryption keys are set, in either mode: data stays
 # readable whichever mode runs, as it was before this mode existed. A real

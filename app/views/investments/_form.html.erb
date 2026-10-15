@@ -1,9 +1,9 @@
 <%# locals: (account:, url:) %>
 
-<%= render "accounts/form", account: account, url: url do |form| %>
+<%= render "accounts/form", account: account, url: url, balance_required: account.persisted?, balance_hint: (t("investments.form.balance_hint") if account.new_record?) do |form| %>
   <%= form.fields_for :accountable do |investment_form| %>
     <%= investment_form.select :subtype,
-                       grouped_options_for_select(Investment.subtypes_grouped_for_select(currency: Current.family.currency), account.accountable.subtype),
-                       { label: true, prompt: t("investments.form.subtype_prompt"), include_blank: t("investments.form.none") } %>
+                       Investment.subtypes_for_select(current: account.accountable.subtype),
+                       { label: t("investments.form.subtype"), include_blank: t("investments.form.none") } %>
   <% end %>
 <% end %>

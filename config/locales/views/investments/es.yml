@@ -4,6 +4,8 @@ es:
     edit:
       edit: Editar %{account}
     form:
+      subtype: "Tipo de inversión"
+      balance_hint: "Opcional. Déjalo vacío si vas a apuntar las compras una a una (por ejemplo, 100 acciones de BBVA el 01/03/2019 a 3,40 €): el valor saldrá de ellas."
       none: Ninguno
       subtype_prompt: Selecciona el tipo de inversión
     new:
@@ -11,6 +13,12 @@ es:
     show:
       chart_title: Valor total
     subtypes:
+      stocks:
+        short: Acciones
+        long: Acciones y ETF
+      fixed_income:
+        short: Renta fija
+        long: Depósitos y renta fija
       brokerage:
         short: Corretaje
         long: Cuenta de corretaje (Brokerage)
@@ -172,7 +180,7 @@ es:
         long: Cuenta de jubilación
       mutual_fund:
         short: Fondo de inversión
-        long: Fondo de inversión (Mutual Fund)
+        long: Fondo de inversión
       gold:
         short: Oro
         long: Oro (físico o digital)

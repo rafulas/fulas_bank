@@ -85,6 +85,10 @@ class Investment < ApplicationRecord
     "gold_mf" => { short: "Gold MF", long: "Gold Mutual Fund", region: "in", tax_treatment: :taxable },
     "sgb" => { short: "SGB", long: "Sovereign Gold Bond", region: "in", tax_treatment: :tax_advantaged },
 
+    # === Spain (Fulas Bank) ===
+    "stocks" => { short: "Stocks", long: "Stocks and ETFs", region: "eu", tax_treatment: :taxable },
+    "fixed_income" => { short: "Fixed income", long: "Deposits and fixed income", region: "eu", tax_treatment: :taxable },
+
     # === Generic (available everywhere) ===
     "pension" => { short: "Pension", long: "Pension", region: nil, tax_treatment: :tax_deferred },
     "retirement" => { short: "Retirement", long: "Retirement Account", region: nil, tax_treatment: :tax_deferred },
@@ -94,6 +98,10 @@ class Investment < ApplicationRecord
     "trust" => { short: "Trust", long: "Trust", region: nil, tax_treatment: :taxable },
     "other" => { short: "Other", long: "Other Investment", region: nil, tax_treatment: :taxable }
   }.freeze
+
+  # Fulas Bank: the only types offered when creating or editing an account.
+  # The rest stay valid for accounts that already have them.
+  OFFERED_SUBTYPES = %w[stocks mutual_fund pension fixed_income other].freeze
 
   def tax_treatment
     SUBTYPES.dig(subtype, :tax_treatment) || :taxable
@@ -126,6 +134,14 @@ class Investment < ApplicationRecord
       "CHF" => "eu",
       "INR" => "in"
     }.freeze
+
+    # [label, key] for the offered types, plus the account's own if it has
+    # another one, so editing never loses it.
+    def subtypes_for_select(current: nil)
+      keys = OFFERED_SUBTYPES
+      keys += [ current ] if current.present? && SUBTYPES.key?(current) && !keys.include?(current)
+      keys.map { |key| [ long_subtype_label_for(key), key ] }
+    end
 
     # Returns subtypes grouped by region for use with grouped_options_for_select
     # Optionally accepts currency to prioritize user's region first
