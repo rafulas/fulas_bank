@@ -406,7 +406,8 @@ class Import < ApplicationRecord
         category: csv_value(row, category_col_label, "category").to_s,
         tags: csv_value(row, tags_col_label, "tags").to_s,
         entity_type: csv_value(row, entity_type_col_label, "entity_type", "account_type", "type").to_s,
-        notes: csv_value(row, notes_col_label, "notes").to_s
+        notes: csv_value(row, notes_col_label, "notes").to_s,
+        merchant: csv_value(row, merchant_col_label, "merchant").to_s
       }
     end
 

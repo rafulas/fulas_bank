@@ -76,6 +76,7 @@ es:
         category_label: Categoría
         tags_label: Etiquetas
         notes_label: Notas
+        merchant_label: Comercio
         apply_configuration: Aplicar configuración
         incomes_are_positive: Los ingresos son positivos
         incomes_are_negative: Los ingresos son negativos
@@ -265,6 +266,7 @@ es:
       tags: Etiquetas
       account: Cuenta
       notes: Notas
+      merchant: Comercio
       qty: Cantidad
       ticker: Ticker
       exchange: Bolsa

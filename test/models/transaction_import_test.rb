@@ -70,6 +70,39 @@ class TransactionImportTest < ActiveSupport::TestCase
     assert_equal "complete", @import.status
   end
 
+  test "imports the merchant column, reusing a merchant with the same name" do
+    lidl = @import.family.merchants.create!(name: "Lidl")
+    csv = <<~CSV
+      date,name,amount,merchant
+      01/01/2024,Compra 1,10,LIDL
+      01/02/2024,Compra 2,20,Mercadona
+      01/03/2024,Compra 3,30,mercadona
+      01/04/2024,Compra 4,40,
+    CSV
+
+    @import.update!(
+      raw_file_str: csv,
+      date_col_label: "date",
+      amount_col_label: "amount",
+      name_col_label: "name",
+      merchant_col_label: "merchant",
+      date_format: "%m/%d/%Y",
+      account: accounts(:depository)
+    )
+    @import.generate_rows_from_csv
+    @import.mappings.create! key: "", create_when_empty: false, mappable: nil, type: "Import::CategoryMapping"
+    @import.mappings.create! key: "", create_when_empty: false, mappable: nil, type: "Import::TagMapping"
+    @import.reload
+
+    assert_difference -> { @import.family.merchants.count } => 1 do
+      @import.publish
+    end
+
+    merchants = @import.entries.order(:date).map { |entry| entry.transaction.merchant&.name }
+    assert_equal [ "Lidl", "Mercadona", "Mercadona", nil ], merchants
+    assert_equal lidl, @import.entries.find_by(name: "Compra 1").transaction.merchant
+  end
+
   test "imports transactions with separate type column for signage convention" do
     import = <<~CSV
       date,amount,amount_type

@@ -14,6 +14,9 @@
 # - The category is two columns, Categoría and Subcategoría. They are joined
 #   as "Categoría:Subcategoría", which the category mapping already reads as a
 #   parent and its child, so "Transporte:Combustible" matches "Combustible".
+# - There are two texts: Concepto (the bank's wording) and Nota (what the
+#   user wrote). A movement has one notes field, so both go there, the note
+#   first. Comercio is read as the merchant.
 class Import::BilanceExport
   HEADERS = %w[titulo fecha importe categoria subcategoria cuentas].freeze
   TRANSFER = /\Ade (.+ a .+)\z/i
@@ -43,6 +46,7 @@ class Import::BilanceExport
     import.category_col_label = header("categoria")
     import.tags_col_label = header("etiquetas")
     import.notes_col_label = header("concepto")
+    import.merchant_col_label = header("comercio")
     import.account_col_label = header("cuentas") if import.account.nil?
     import.amount_type_strategy = "signed_amount"
     import.signage_convention = "inflows_positive"
@@ -56,7 +60,7 @@ class Import::BilanceExport
   # and a transfer's second side is an extra row.
   def adjust(mapped_rows, csv_rows)
     adjusted = mapped_rows.zip(csv_rows).flat_map do |row, csv_row|
-      row = row.merge(category: category_for(row, csv_row))
+      row = row.merge(category: category_for(row, csv_row), notes: notes_for(row, csv_row))
 
       origin, destination = transfer_accounts(csv_row)
       next [ row ] if origin.nil? || row[:amount].blank?
@@ -92,6 +96,15 @@ class Import::BilanceExport
 
       subcategory = csv_row[header("subcategoria")].to_s.strip
       subcategory.present? && row[:category].present? ? "#{row[:category]}:#{subcategory}" : row[:category]
+    end
+
+    # The user's Nota above the bank's Concepto, when the notes are read from
+    # Concepto as configured. An empty one is left out.
+    def notes_for(row, csv_row)
+      return row[:notes] unless import.notes_col_label == header("concepto")
+
+      note = header("nota") ? csv_row[header("nota")].to_s.strip : ""
+      [ note, row[:notes].to_s.strip ].reject(&:blank?).join("\n\n")
     end
 
     # [origin, destination] for a transfer row, nil otherwise. Account names

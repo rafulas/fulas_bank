@@ -18,6 +18,7 @@ module ImportsHelper
       tags: I18n.t("imports.column_labels.tags"),
       account: I18n.t("imports.column_labels.account"),
       notes: I18n.t("imports.column_labels.notes"),
+      merchant: I18n.t("imports.column_labels.merchant"),
       qty: I18n.t("imports.column_labels.qty"),
       ticker: I18n.t("imports.column_labels.ticker"),
       exchange: I18n.t("imports.column_labels.exchange"),

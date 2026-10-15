@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1389,6 +1389,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.string "entity_type"
     t.string "exchange_operating_mic"
     t.uuid "import_id", null: false
+    t.string "merchant"
     t.string "merchant_color"
     t.string "merchant_website"
     t.string "name"
@@ -1475,6 +1476,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.jsonb "extracted_data"
     t.uuid "family_id", null: false
     t.uuid "import_session_id"
+    t.string "merchant_col_label"
     t.string "name_col_label"
     t.string "normalized_csv_str"
     t.string "notes_col_label"

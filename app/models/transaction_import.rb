@@ -26,6 +26,7 @@ class TransactionImport < Import
 
         category = mappings.categories.mappable_for(row.category)
         tags = row.tags_list.map { |tag| mappings.tags.mappable_for(tag) }.compact
+        merchant = merchant_for(row.merchant)
 
         # Use account's currency when no currency column was mapped in CSV, with family currency as fallback
         effective_currency = currency_col_label.present? ? row.currency : (mapped_account.currency.presence || family.currency)
@@ -46,6 +47,7 @@ class TransactionImport < Import
           # Update existing transaction instead of creating a new one
           duplicate_entry.transaction.category = category if category.present?
           duplicate_entry.transaction.tags = tags if tags.any?
+          duplicate_entry.transaction.merchant = merchant if merchant.present?
           duplicate_entry.notes = row.notes if row.notes.present?
           duplicate_entry.import = self
           duplicate_entry.import_locked = true  # Protect from provider sync overwrites
@@ -57,6 +59,7 @@ class TransactionImport < Import
           new_transactions << Transaction.new(
             category: category,
             tags: tags,
+            merchant: merchant,
             entry: Entry.new(
               account: mapped_account,
               date: row.date_iso,
@@ -87,7 +90,7 @@ class TransactionImport < Import
   end
 
   def column_keys
-    base = %i[date amount name currency category tags notes]
+    base = %i[date amount name merchant currency category tags notes]
     base.unshift(:account) if account.nil?
     base
   end
@@ -102,6 +105,20 @@ class TransactionImport < Import
     return [] if entity_type_col_label.nil?
 
     csv_rows.map { |row| row[entity_type_col_label] }.uniq
+  end
+
+  # Fulas Bank: the family's merchant with that name, created when there is
+  # none yet. Names match ignoring case and surrounding spaces, so «LIDL» and
+  # «Lidl» are one merchant. Remembered per import, so each name is looked up
+  # once however many rows carry it.
+  def merchant_for(name)
+    name = name.to_s.squish
+    return if name.blank?
+
+    @merchants_by_name ||= {}
+    @merchants_by_name[name.downcase] ||=
+      family.merchants.where("LOWER(name) = ?", name.downcase).first ||
+      family.merchants.create!(name: name)
   end
 
   def csv_template
