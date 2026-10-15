@@ -27,7 +27,7 @@
     <%= render DS::EmptyState.new(icon: "line-chart", title: t(".empty_title"), description: t(".empty_description")) %>
   <% else %>
     <div class="@container">
-      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+      <div class="grid grid-cols-2 @2xl:grid-cols-5 gap-2">
         <%= summary_card title: t(".value") do %>
           <span class="whitespace-nowrap"><%= format_money(overview.total_value, precision: 0) %></span>
         <% end %>
@@ -40,7 +40,17 @@
         <%= summary_card title: t(".return") do %>
           <%= overview.total_return_ratio ? number_to_percentage(overview.total_return_ratio * 100, precision: 2) : "—" %>
         <% end %>
+        <%# Fulas Bank: the yearly return, weighting when each euro went in. %>
+        <%= summary_card title: t(".annual_return") do %>
+          <% annual = overview.annual_return.rate %>
+          <% if annual %>
+            <span class="<%= annual.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(annual * 100, precision: 2) %></span>
+          <% else %>
+            —
+          <% end %>
+        <% end %>
       </div>
+      <p class="mt-2 text-xs text-secondary"><%= t(".annual_return_hint") %></p>
     </div>
 
     <% if overview.by_kind.size > 1 %>
@@ -80,6 +90,13 @@
       <% table.with_column(t(".return"), numeric: true) do |row| %>
         <% if row.return_ratio %>
           <span class="<%= row.return_ratio.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(row.return_ratio * 100, precision: 2) %></span>
+        <% else %>
+          —
+        <% end %>
+      <% end %>
+      <% table.with_column(t(".annual_return"), numeric: true) do |row| %>
+        <% if (annual = overview.annual_return.rate_for(row.account)) %>
+          <span class="<%= annual.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(annual * 100, precision: 2) %></span>
         <% else %>
           —
         <% end %>
