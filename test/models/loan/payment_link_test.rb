@@ -49,4 +49,23 @@ class Loan::PaymentLinkTest < ActiveSupport::TestCase
     assert_not_includes candidates, linked
     assert_not_includes candidates, before_origination
   end
+
+  test "candidates reach back to the first instalment however many other charges there are" do
+    early = create_transaction(account: accounts(:depository), amount: 1_000, date: Date.new(2026, 2, 1), name: "Cuota febrero")
+    600.times do |i|
+      create_transaction(account: accounts(:depository), amount: 12, date: Date.new(2026, 6, 1) + (i % 90), name: "Café #{i}")
+    end
+
+    assert_includes @loan.payment_candidates, early
+  end
+
+  test "correcting the start date re-anchors the linked payments" do
+    entry = create_transaction(account: accounts(:depository), amount: 1_000, date: Date.new(2026, 3, 1))
+    @loan.link_payment!(entry)
+
+    @loan.update!(start_date: Date.new(2026, 2, 1))
+
+    valuation = @loan_account.entries.find_by(entryable_type: "Valuation", date: Date.new(2026, 3, 1))
+    assert_equal BigDecimal("11000"), valuation.amount, "March is now the first instalment"
+  end
 end

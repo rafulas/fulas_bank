@@ -1,6 +1,22 @@
 ---
 es:
   valuations:
+    default_names:
+      opening_anchor:
+        asset: "Precio de compra"
+        loan: "Importe inicial"
+        investment: "Valor inicial"
+        balance: "Saldo inicial"
+      current_anchor:
+        asset: "Valor actual"
+        loan: "Saldo pendiente"
+        investment: "Valor actual"
+        balance: "Saldo actual"
+      reconciliation:
+        asset: "Actualización del valor"
+        loan: "Actualización del saldo pendiente"
+        investment: "Actualización del valor"
+        balance: "Actualización del saldo"
     confirmation_contents:
       this_will: Esto %{action_verb} el valor de la cuenta el
       to_colon: 'a:'
