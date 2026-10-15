@@ -52,6 +52,8 @@ mode="${PROBAR_MODE:-production}"
 # Development and production use one database, whatever the container calls it.
 export POSTGRES_DB="${POSTGRES_DB:-sure_development}"
 export FULAS_CODESPACE=true SELF_HOSTED=true
+# The login page offers «Entrar con los datos de ejemplo» (the demo family).
+export FULAS_DEMO_LOGIN=true
 export DEFAULT_LOCALE="${DEFAULT_LOCALE:-es}" DEFAULT_CURRENCY="${DEFAULT_CURRENCY:-EUR}"
 export DEFAULT_COUNTRY="${DEFAULT_COUNTRY:-ES}" DEFAULT_DATE_FORMAT="${DEFAULT_DATE_FORMAT:-%d/%m/%Y}"
 export DEFAULT_TIMEZONE="${DEFAULT_TIMEZONE:-Europe/Madrid}" DEFAULT_NUMBER_FORMAT="${DEFAULT_NUMBER_FORMAT:-1.234,56}"

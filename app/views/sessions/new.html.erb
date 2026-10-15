@@ -9,6 +9,24 @@
   </div>
 <% end %>
 
+<% if @demo_login && !@prefill_demo_credentials %>
+  <div class="mb-4 space-y-3">
+    <%= render DS::Alert.new(
+          variant: :info,
+          title: t(".demo_login_title"),
+          message: t(".demo_login_message")
+        ) %>
+    <%= render DS::Button.new(
+          text: t(".demo_login_button"),
+          href: sessions_path,
+          variant: :outline,
+          full_width: true,
+          params: { email: @demo_login[:email], password: @demo_login[:password] },
+          data: { turbo: false }
+        ) %>
+  </div>
+<% end %>
+
 <% passkey_login_enabled = AuthConfig.passkey_login_enabled? %>
 
 <% if AuthConfig.local_login_form_visible? %>
