@@ -1,0 +1,119 @@
+<%# locals: (account:, performance:) %>
+<%# Fulas Bank: the overview of an investment account, like the bank's own
+    "Evolución y rentabilidad" (see Investment::Performance). %>
+<% ytd = performance.year_to_date %>
+<div class="space-y-4">
+  <div class="@container">
+    <div class="grid grid-cols-1 @md:grid-cols-3 gap-2">
+      <%= summary_card title: t(".value") do %>
+        <span class="whitespace-nowrap privacy-sensitive"><%= format_money(account.balance_money) %></span>
+        <span class="block text-xs font-normal text-secondary"><%= l(performance.series.last&.dig(:date) || Date.current, format: "%d/%m/%Y") %></span>
+      <% end %>
+      <%= summary_card title: t(".gain_ytd") do %>
+        <% if ytd %>
+          <span class="whitespace-nowrap privacy-sensitive <%= ytd.gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(ytd.gain) %></span>
+        <% else %>
+          —
+        <% end %>
+      <% end %>
+      <%= summary_card title: t(".return_ytd") do %>
+        <% if ytd&.return_ratio %>
+          <span class="<%= ytd.return_ratio.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(ytd.return_ratio * 100, precision: 2) %></span>
+        <% else %>
+          —
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <% if performance.any? %>
+    <%= render DS::Card.new(class: "gap-3") do %>
+      <div data-controller="investment-performance"
+           data-investment-performance-series-value="<%= performance.series.map { |point| [ point[:date].iso8601, point[:value].to_f, point[:flow].to_f ] }.to_json %>"
+           data-investment-performance-currency-value="<%= performance.currency %>"
+           data-investment-performance-today-value="<%= Date.current.iso8601 %>"
+           data-investment-performance-labels-value="<%= {
+             value: t(".tooltip_value"), gain: t(".tooltip_gain"), contributed: t(".tooltip_contributed"),
+             from: t(".from"), to: t(".to")
+           }.to_json %>"
+           class="space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-medium text-primary uppercase"><%= t(".evolution") %></h3>
+          <div class="flex gap-1" role="group" aria-label="<%= t(".unit") %>">
+            <% [ [ "money", "€" ], [ "percent", "%" ] ].each do |unit, label| %>
+              <button type="button" class="px-3 py-1 text-sm rounded-md border border-primary text-primary"
+                      data-investment-performance-target="unitButton"
+                      data-investment-performance-unit-param="<%= unit %>"
+                      data-action="investment-performance#selectUnit"><%= label %></button>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-1" role="group" aria-label="<%= t(".period") %>">
+          <% %w[1m 3m ytd 1y all custom].each do |period| %>
+            <button type="button" class="px-3 py-1 text-xs rounded-md text-secondary hover:text-primary"
+                    data-investment-performance-target="periodButton"
+                    data-investment-performance-period-param="<%= period %>"
+                    data-action="investment-performance#selectPeriod"><%= t(".periods.#{period}") %></button>
+          <% end %>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-sm" data-investment-performance-target="custom" hidden>
+          <label class="text-secondary" for="<%= dom_id(account, :performance_from) %>"><%= t(".from") %></label>
+          <input type="date" id="<%= dom_id(account, :performance_from) %>" class="rounded-md border border-primary bg-container px-2 py-1 text-primary"
+                 min="<%= performance.first_date&.iso8601 %>" max="<%= Date.current.iso8601 %>"
+                 data-investment-performance-target="from" data-action="change->investment-performance#selectCustom">
+          <label class="text-secondary" for="<%= dom_id(account, :performance_to) %>"><%= t(".to") %></label>
+          <input type="date" id="<%= dom_id(account, :performance_to) %>" class="rounded-md border border-primary bg-container px-2 py-1 text-primary"
+                 min="<%= performance.first_date&.iso8601 %>" max="<%= Date.current.iso8601 %>"
+                 data-investment-performance-target="to" data-action="change->investment-performance#selectCustom">
+        </div>
+
+        <p class="text-xs text-secondary" data-investment-performance-target="range"></p>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-3 h-64 relative" data-investment-performance-target="canvas"></div>
+          <dl class="space-y-2 text-sm">
+            <div>
+              <dt class="text-secondary"><%= t(".gain") %></dt>
+              <dd class="text-lg font-medium privacy-sensitive" data-investment-performance-target="gain">—</dd>
+            </div>
+            <div>
+              <dt class="text-secondary"><%= t(".return") %></dt>
+              <dd class="text-lg font-medium" data-investment-performance-target="returnRatio">—</dd>
+            </div>
+            <div>
+              <dt class="text-secondary"><%= t(".contributed") %></dt>
+              <dd class="text-lg font-medium text-primary privacy-sensitive" data-investment-performance-target="contributed">—</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <%= render DS::EmptyState.new(icon: "line-chart", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% end %>
+
+  <%= render DS::Card.new(class: "gap-2") do %>
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="text-sm font-medium text-primary uppercase"><%= t(".recent") %></h3>
+      <%= link_to t(".all_movements"), account_path(account, tab: "activity"), class: "text-sm text-secondary hover:text-primary", data: { turbo_frame: "_top" } %>
+    </div>
+    <% movements = performance.recent_movements %>
+    <% if movements.any? %>
+      <ul class="divide-y divide-divider">
+        <% movements.each do |entry| %>
+          <li class="flex items-center justify-between gap-3 py-2 text-sm">
+            <span class="min-w-0">
+              <span class="block text-xs text-secondary"><%= l(entry.date, format: "%d/%m/%Y") %></span>
+              <%= link_to entry.name, entry_path(entry), class: "block truncate text-primary hover:underline", data: { turbo_frame: "drawer" } %>
+            </span>
+            <span class="shrink-0 privacy-sensitive whitespace-nowrap <%= entry.amount.negative? ? "text-success" : "text-primary" %>"><%= format_money(-entry.amount_money) %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".no_movements") %></p>
+    <% end %>
+  <% end %>
+</div>

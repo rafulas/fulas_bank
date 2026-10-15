@@ -12,10 +12,41 @@ en:
       title: Enter account balance
     show:
       chart_title: Total value
+    tabs:
+      overview:
+        value: Value
+        gain_ytd: Gain this year
+        return_ytd: Return this year
+        evolution: Performance
+        unit: Show in money or percent
+        period: Period
+        periods:
+          1m: Last month
+          3m: Last 3 months
+          ytd: This year
+          1y: Last year
+          all: Since the start
+          custom: Custom dates
+        from: From
+        to: to
+        gain: Gain
+        return: Return
+        contributed: Contributions
+        tooltip_value: Invested
+        tooltip_gain: Gained so far
+        tooltip_contributed: Put in so far
+        empty_title: No performance yet
+        empty_description: "It shows once the account has more than a day of history. Record contributions as transactions (or import the bank's file into this account) and update its value with \"Update balance\"."
+        recent: Latest movements
+        all_movements: See all
+        no_movements: No money movements yet.
     subtypes:
       stocks:
         short: Stocks
         long: Stocks and ETFs
+      savings_insurance:
+        short: Savings insurance
+        long: Savings insurance
       fixed_income:
         short: Fixed income
         long: Deposits and fixed income

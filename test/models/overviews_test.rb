@@ -50,7 +50,7 @@ class OverviewsTest < ActiveSupport::TestCase
   end
 
   test "the investment types offered are the Spanish ones, keeping an account's own" do
-    assert_equal %w[stocks mutual_fund pension fixed_income other], Investment.subtypes_for_select.map(&:last)
+    assert_equal %w[stocks mutual_fund pension savings_insurance fixed_income other], Investment.subtypes_for_select.map(&:last)
     assert_includes Investment.subtypes_for_select(current: "401k").map(&:last), "401k"
   end
 end

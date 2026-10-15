@@ -7,6 +7,14 @@ class OverviewsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user = users(:family_admin)
   end
 
+  test "an investment account opens on its performance overview" do
+    get account_url(accounts(:investment))
+
+    assert_response :success
+    assert_match I18n.t("investments.tabs.overview.gain_ytd"), response.body
+    assert_match I18n.t("investments.tabs.overview.recent"), response.body
+  end
+
   test "the loans page lists each loan with what is still owed" do
     get loans_overview_url
 
