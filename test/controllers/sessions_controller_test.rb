@@ -135,6 +135,27 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "trial copies offer signing in as the example family" do
+    with_env_overrides FULAS_DEMO_LOGIN: "true" do
+      get new_session_path
+    end
+
+    assert_response :success
+    assert_select "form[action=?] input[name=email][value=?]", sessions_path, "user@example.com"
+    assert_select "button", text: I18n.t("sessions.new.demo_login_button")
+  end
+
+  test "the example family button needs the flag and the example user" do
+    get new_session_path
+    assert_select "button", text: I18n.t("sessions.new.demo_login_button"), count: 0
+
+    User.stubs(:exists?).returns(false)
+    with_env_overrides FULAS_DEMO_LOGIN: "true" do
+      get new_session_path
+    end
+    assert_select "button", text: I18n.t("sessions.new.demo_login_button"), count: 0
+  end
+
   test "login page" do
     get new_session_url
     assert_response :success

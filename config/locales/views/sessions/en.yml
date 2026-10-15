@@ -34,5 +34,8 @@ en:
       passkey_button: Sign in with a passkey
       passkey_unsupported: This browser does not support passkeys.
       no_auth_methods_enabled: No authentication methods are currently enabled. Please contact an administrator.
+      demo_login_title: "Trial environment"
+      demo_login_message: "Sign in with your own user or look around the example family, with made-up accounts and transactions."
+      demo_login_button: "Sign in with the example data"
       demo_banner_title: "Demo Mode Active"
       demo_banner_message: "This is a demonstration environment. Login credentials have been pre-filled for your convenience. Please do not enter real or sensitive information."

@@ -37,6 +37,7 @@ class SessionsController < ApplicationController
       @email = params[:email]
       @password = params[:password]
     end
+    @demo_login = demo_login
   end
 
   def create
@@ -545,6 +546,20 @@ class SessionsController < ApplicationController
       return unless user&.super_admin?
 
       Rails.logger.info("[AUTH] Super admin override login: user_id=#{user.id} email=#{user.email}")
+    end
+
+    # Fulas Bank trial copies (bin/probar, in a Codespace or in VS Code)
+    # offer a button that signs in as the example family, when it has been
+    # loaded. The real install on the Mac does not set FULAS_DEMO_LOGIN.
+    def demo_login
+      return unless ActiveModel::Type::Boolean.new.cast(ENV["FULAS_DEMO_LOGIN"])
+
+      demo = Rails.application.config_for(:demo)
+      return unless demo["email"].present? && User.exists?(email: demo["email"])
+
+      { email: demo["email"], password: demo["password"] }
+    rescue RuntimeError, Errno::ENOENT, Psych::SyntaxError
+      nil
     end
 
     def demo_host_match?(demo)
