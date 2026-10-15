@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Starts Fulas Bank for a trial run (used by the "Probar Fulas Bank"
-# Codespace, see .devcontainer/probar). Prepares the database, loads the demo
+# Codespace, see .devcontainer/probar). Prepares the database, loads the example
 # family once, then runs the web server and the background worker.
 #
 # By default it runs in production mode: code is loaded once and assets are
@@ -80,11 +80,18 @@ fi
 RAILS_ENV=development bin/rails db:prepare
 echo "$schema_version" > "$schema_marker"
 
-marker=tmp/.probar-demo-loaded
+# The example family (Demo::FulasGenerator, user@example.com): loaded once,
+# and again when the marker's version goes up because the example data
+# changed. It replaces only the previous example family; other users and
+# their data are kept.
+marker=tmp/.probar-demo-fulas-v1
 if [[ ! -f "$marker" ]]; then
-  echo "Cargando datos de ejemplo (solo la primera vez, tarda unos minutos)…"
-  SKIP_CLEAR=1 RAILS_ENV=development bin/rails demo_data:default
-  touch "$marker"
+  echo "Cargando la familia de ejemplo (solo esta vez, tarda unos minutos)…"
+  if RAILS_ENV=development bin/rails demo_data:fulas; then
+    touch "$marker"
+  else
+    echo "(No se ha podido cargar la familia de ejemplo; sigo.)"
+  fi
 fi
 
 # A Codespace that was stopped leaves the old server's pid file behind, and
