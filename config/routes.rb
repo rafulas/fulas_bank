@@ -565,6 +565,7 @@ Rails.application.routes.draw do
     resource :pending_duplicate_merges, only: %i[new create]
     resource :category, only: :update, controller: :transaction_categories
     resource :expense_type, only: :update, controller: "transactions/expense_types"
+    resource :subscription, only: %i[create update], controller: "transactions/subscriptions"
     resource :card_statement, only: :update, controller: "transactions/card_statements"
     resource :card_financing, only: %i[new create edit update destroy], controller: "transactions/card_financings"
     resources :attachments, only: %i[show create destroy], controller: :transaction_attachments
@@ -735,6 +736,13 @@ Rails.application.routes.draw do
       end
       resources :maintenance_items, only: %i[new create edit update destroy]
       resource :roadtrip_import, only: %i[new create]
+    end
+  end
+  # Fulas Bank: what the subscriptions cost (see SubscriptionsOverview).
+  resources :subscription_costs, only: :index, path: "suscripciones" do
+    member do
+      patch :could_drop
+      patch :mark
     end
   end
   resources :credit_cards, only: %i[new create edit update] do

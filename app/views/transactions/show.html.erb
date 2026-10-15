@@ -152,6 +152,13 @@
       <% end %>
     <% end %>
 
+    <%# Fulas Bank: the subscription a charge pays. %>
+    <% if !@entry.transaction.transfer? && @entry.amount.positive? %>
+      <% dialog.with_section(title: t(".subscription"), open: SubscriptionLink.new(@entry).current.present?) do %>
+        <%= render "transactions/subscription", entry: @entry, can_edit: can_annotate_entry? %>
+      <% end %>
+    <% end %>
+
     <% unless @entry.transaction.transfer? %>
       <% dialog.with_section(title: t(".expense_type"), open: true) do %>
         <%= render "transactions/expense_type", entry: @entry, can_edit: can_annotate_entry? %>
