@@ -39,6 +39,10 @@ class Demo::FulasGenerator
       @family = create_family!(email)
       create_accounts!
       create_movements!
+      # Before syncing: a sync also runs AssetLinker, which would otherwise
+      # take these charges for its own proposals first.
+      car_logbook!
+      flat_records!
       create_budgets!
       create_forecast_items!
     end
@@ -492,16 +496,10 @@ class Demo::FulasGenerator
     # ------------------------------------------------------------- finishing
 
     # Balances, holdings and the rest are worked out by syncing each account,
-    # as after an import. Then the logbook and the flat's list are filled in,
-    # and the app looks for recurring payments and for the charges left
-    # unlinked, as it does on its own after a sync.
+    # as after an import. Then the app looks for recurring payments and for
+    # the charges left unlinked, as it does on its own after a sync.
     def finish!
       family.accounts.each { |account| Sync.create!(syncable: account).perform }
-
-      ActiveRecord::Base.transaction do
-        car_logbook!
-        flat_records!
-      end
 
       RecurringTransaction::Pipeline.new(family).run!(backfill: true)
       AssetLinker.new(family, since: nil).run!
