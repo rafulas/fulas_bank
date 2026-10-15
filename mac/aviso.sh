@@ -49,6 +49,17 @@ fi
 ahora=false
 [[ "${1:-}" == "--ahora" ]] && ahora=true
 
+# An update is running (actualizar.sh leaves this mark while it works): the
+# old version is still the one running, so do not offer the new one again.
+# A mark older than an hour is from an update that was cut short.
+LOCK="$DIR/registros/actualizando"
+if [[ -f "$LOCK" ]] && (( $(date '+%s') - $(cat "$LOCK" 2> /dev/null || echo 0) < 3600 )); then
+  if $ahora; then
+    osascript -e 'display dialog "Fulas Bank se está actualizando ahora mismo. Espera a que termine la ventana del Terminal." with title "Fulas Bank" buttons {"Aceptar"} default button "Aceptar" with icon note' > /dev/null 2>&1
+  fi
+  exit 0
+fi
+
 # A window with one button, only when asked from the menu.
 tell() {
   $ahora || return 0
