@@ -90,8 +90,9 @@ class Category::AnalysisTest < ActiveSupport::TestCase
 
     assert_equal funds, sale.inflow_transaction.reload.category, "the cash from selling is categorized as an investment"
 
-    assert_equal [ [ "Hogar", 500 ], [ "Inversiones", 200 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
-    assert_equal [ [ "Inversiones", 150 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+    # Each main category nets its money in and out: 200 put in, 150 taken out.
+    assert_equal [ [ "Hogar", 500 ], [ "Inversiones", 50 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+    assert_empty analysis.income_slices
 
     assert instalment.outflow_transaction.counts_by_kind?
     assert contribution.outflow_transaction.counts_by_kind?
