@@ -4,16 +4,23 @@ es:
     edit:
       edit: Editar %{account}
     form:
+      create: "Añadir vehículo"
+      name_label: "Nombre"
+      name_placeholder: "Cupra Ateca, BMW R nineT…"
+      value_label: "Valor actual estimado"
+      value_hint: "Lo que te darían hoy por él. Cuenta en tu patrimonio y, con el precio de compra, da cuánto valor ha perdido."
+      value_date_label: "Fecha del valor"
+      value_date_hint: "Normalmente hoy. Puedes actualizar el valor cuando quieras desde la ficha del vehículo."
       purchase_price: Precio de compra
       purchase_date: Fecha de compra
       purchase_hint: Con el precio de compra se calcula cuánto valor ha perdido el coche y su coste total.
       make: Marca
-      make_placeholder: Toyota
+      make_placeholder: Cupra
       mileage: Kilometraje
       mileage_placeholder: '15000'
       mileage_unit: Unidad
       model: Modelo
-      model_placeholder: Camry
+      model_placeholder: Ateca
       year: Año
       year_placeholder: '2025'
       mileage_unit_kilometers: Kilómetros
