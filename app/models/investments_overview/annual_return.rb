@@ -14,7 +14,14 @@
 # Accounts with no flows to measure (a fund whose value is typed by hand and
 # nothing else) are left out, and so are those that cannot be solved (money
 # only went one way, or everything on one day): #measured tells which counted.
+#
+# A return is only given as yearly once there is at least a year of history,
+# as banks and fund managers do: 380 % gained in six days, "annualised", is a
+# number with dozens of digits that says nothing. Until then #young? is true
+# and the page shows the plain return instead.
 class InvestmentsOverview::AnnualReturn
+  MIN_DAYS = 365
+
   attr_reader :accounts, :currency, :today
 
   # @param accounts [Array<Account>] investment and crypto accounts
@@ -27,15 +34,16 @@ class InvestmentsOverview::AnnualReturn
 
   # @return [Float, nil] the yearly rate (0.0785 is 7,85 %)
   def rate
-    return if measured.empty?
+    flows = with_flows.flat_map { |account| flows_for(account) }
+    return if flows.size < 2 || short?(flows)
 
-    Portfolio::Xirr.rate_or_nil(measured.flat_map { |account| flows_for(account) })&.to_f
+    Portfolio::Xirr.rate_or_nil(flows)&.to_f
   end
 
   # @return [Float, nil] one account's yearly rate
   def rate_for(account)
     flows = flows_for(account)
-    return if flows.size < 2
+    return if flows.size < 2 || short?(flows)
 
     Portfolio::Xirr.rate_or_nil(flows)&.to_f
   end
@@ -45,7 +53,22 @@ class InvestmentsOverview::AnnualReturn
     @measured ||= accounts.select { |account| rate_for(account) }
   end
 
+  # Whether an account (or, without one, the whole portfolio) has money in it
+  # but less than a year of history to give a yearly return.
+  def young?(account = nil)
+    flows = account ? flows_for(account) : with_flows.flat_map { |each| flows_for(each) }
+    flows.size >= 2 && short?(flows)
+  end
+
   private
+    def with_flows
+      accounts.select { |account| flows_for(account).size >= 2 }
+    end
+
+    def short?(flows)
+      (today - flows.map(&:first).min).to_i < MIN_DAYS
+    end
+
     # [[date, amount]] in `currency`, from the investor's side.
     def flows_for(account)
       @flows_for ||= {}

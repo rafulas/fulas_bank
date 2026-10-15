@@ -45,6 +45,8 @@
           <% annual = overview.annual_return.rate %>
           <% if annual %>
             <span class="<%= annual.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(annual * 100, precision: 2) %></span>
+          <% elsif overview.annual_return.young? %>
+            <span class="text-sm font-normal text-secondary"><%= t(".under_a_year") %></span>
           <% else %>
             —
           <% end %>
@@ -97,6 +99,8 @@
       <% table.with_column(t(".annual_return"), numeric: true) do |row| %>
         <% if (annual = overview.annual_return.rate_for(row.account)) %>
           <span class="<%= annual.negative? ? "text-destructive" : "text-success" %>"><%= number_to_percentage(annual * 100, precision: 2) %></span>
+        <% elsif overview.annual_return.young?(row.account) %>
+          <span class="text-secondary"><%= t(".under_a_year") %></span>
         <% else %>
           —
         <% end %>
