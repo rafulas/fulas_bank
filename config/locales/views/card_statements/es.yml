@@ -67,3 +67,20 @@ es:
         finished: terminado
         mismatch: Las cuotas no llegan al importe financiado. Revisa los datos con la app del banco.
         no_financings: "Ningún gasto financiado. Para financiar uno, ábrelo y pulsa «Financiar este gasto»."
+        reconcile: Conciliar ahora
+        bank: En el banco
+        matched: Coincide
+        different: "Cobrado %{amount} (%{difference} de diferencia)"
+        not_found: Sin encontrar
+        upcoming: Pendiente
+        reconcile_hint: "Después de cada importación, la app busca en %{account} el «Adeudo mensual de tarjeta» y lo apunta como pago a la tarjeta, y divide la «Operación financiada con tarjeta» en cuotas (pago a la tarjeta) y comisiones (gasto)."
+    reconciliations:
+      create:
+        success:
+          zero: No había cargos nuevos de la tarjeta.
+          one: 1 cargo de la tarjeta conciliado.
+          other: "%{count} cargos de la tarjeta conciliados."
+    reconciler:
+      payment_name: "Pago desde %{account}"
+      installments_name: Cuotas de compras financiadas
+      fees_name: Comisiones e intereses de la financiación

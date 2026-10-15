@@ -67,3 +67,20 @@ en:
         finished: finished
         mismatch: The instalments do not cover the amount financed. Check the figures in the bank's app.
         no_financings: "No purchases in instalments. To finance one, open it and choose \"Pay in instalments\"."
+        reconcile: Reconcile now
+        bank: At the bank
+        matched: Matches
+        different: "Charged %{amount} (%{difference} off)"
+        not_found: Not found
+        upcoming: Upcoming
+        reconcile_hint: "After every import, the app looks in %{account} for the card's monthly charge and files it as a payment to the card, and splits the instalments charge into instalments (a payment to the card) and fees (spending)."
+    reconciliations:
+      create:
+        success:
+          zero: No new card charges.
+          one: 1 card charge reconciled.
+          other: "%{count} card charges reconciled."
+    reconciler:
+      payment_name: "Payment from %{account}"
+      installments_name: Instalments of financed purchases
+      fees_name: Financing fees and interest
