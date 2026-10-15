@@ -88,6 +88,9 @@ class Investment < ApplicationRecord
     # === Spain (Fulas Bank) ===
     "stocks" => { short: "Stocks", long: "Stocks and ETFs", region: "eu", tax_treatment: :taxable },
     "fixed_income" => { short: "Fixed income", long: "Deposits and fixed income", region: "eu", tax_treatment: :taxable },
+    # A savings insurance (PIAS, unit linked, the company's savings plan...):
+    # money paid in every month, its value updated by hand from the bank.
+    "savings_insurance" => { short: "Savings insurance", long: "Savings insurance", region: "eu", tax_treatment: :tax_advantaged },
 
     # === Generic (available everywhere) ===
     "pension" => { short: "Pension", long: "Pension", region: nil, tax_treatment: :tax_deferred },
@@ -101,7 +104,7 @@ class Investment < ApplicationRecord
 
   # Fulas Bank: the only types offered when creating or editing an account.
   # The rest stay valid for accounts that already have them.
-  OFFERED_SUBTYPES = %w[stocks mutual_fund pension fixed_income other].freeze
+  OFFERED_SUBTYPES = %w[stocks mutual_fund pension savings_insurance fixed_income other].freeze
 
   def tax_treatment
     SUBTYPES.dig(subtype, :tax_treatment) || :taxable

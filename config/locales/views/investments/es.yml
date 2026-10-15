@@ -12,10 +12,41 @@ es:
       title: Introduce el saldo de la cuenta
     show:
       chart_title: Valor total
+    tabs:
+      overview:
+        value: Tengo (valor de la inversión)
+        gain_ytd: Ganancias este año
+        return_ytd: Rentabilidad este año
+        evolution: Evolución y rentabilidad
+        unit: Ver en euros o en porcentaje
+        period: Periodo
+        periods:
+          1m: Último mes
+          3m: Últimos 3 meses
+          ytd: Este año
+          1y: Último año
+          all: Desde el inicio
+          custom: Fecha personalizada
+        from: Desde
+        to: hasta
+        gain: Ganancias
+        return: Rentabilidad
+        contributed: Aportaciones
+        tooltip_value: Tenía invertido
+        tooltip_gain: Llevaba ganado
+        tooltip_contributed: Llevaba aportado
+        empty_title: Todavía no hay evolución
+        empty_description: "Aparece en cuanto la cuenta tenga más de un día de historia. Apunta las aportaciones como movimientos (o importa el Excel del banco en esta cuenta) y actualiza el valor con «Actualizar saldo»."
+        recent: Últimos movimientos
+        all_movements: Ver todos
+        no_movements: Sin movimientos de dinero todavía.
     subtypes:
       stocks:
         short: Acciones
         long: Acciones y ETF
+      savings_insurance:
+        short: Seguro de ahorro
+        long: Seguro de ahorro
       fixed_income:
         short: Renta fija
         long: Depósitos y renta fija

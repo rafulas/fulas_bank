@@ -22,6 +22,14 @@ class OverviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", account_path(accounts(:investment))
   end
 
+  test "an investment account opens on its performance overview" do
+    get account_url(accounts(:investment))
+
+    assert_response :success
+    assert_match I18n.t("investments.tabs.overview.gain_ytd"), response.body
+    assert_match I18n.t("investments.tabs.overview.recent"), response.body
+  end
+
   test "the forecast table opens on its own in a wide dialog" do
     get table_forecast_url(period: "1y")
 

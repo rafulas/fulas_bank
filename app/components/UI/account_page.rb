@@ -54,7 +54,9 @@ class UI::AccountPage < ApplicationComponent
   def tabs
     base_tabs = case account.accountable_type
     when "Investment", "Crypto"
-      [ :activity, :holdings ]
+      # Fulas Bank: the performance overview (value, gain and return by
+      # period) first, like the bank's own page.
+      [ :overview, :activity, :holdings ]
     when "Loan"
       account.loan.amortizable? ? [ :activity, :overview, :schedule, :payments ] : [ :activity, :overview, :payments ]
     when "Property"
@@ -108,6 +110,10 @@ class UI::AccountPage < ApplicationComponent
       locals = { account: account }
       locals[:as_of] = as_of if account.accountable_type == "Loan"
       locals[:logbook] = vehicle_logbook if account.accountable_type == "Vehicle"
+      if account.accountable_type.in?(%w[Investment Crypto])
+        return render("investments/tabs/overview", account: account, performance: Investment::Performance.new(account, today: as_of))
+      end
+
       render "#{account.accountable_type.downcase.pluralize}/tabs/#{tab}", **locals
     when :refuels, :workshop, :running_costs
       render "vehicles/tabs/#{tab}", account: account, logbook: vehicle_logbook
