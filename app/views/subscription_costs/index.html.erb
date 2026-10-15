@@ -1,0 +1,102 @@
+<%# Fulas Bank: the subscriptions and what they cost (see SubscriptionsOverview),
+    like Bilance's calculator but with the real ones. %>
+<% overview = @overview %>
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-4 pb-6">
+  <div class="rounded-xl bg-container shadow-border-xs p-5 space-y-4">
+    <div>
+      <p class="text-sm text-secondary"><%= t(".yearly") %></p>
+      <p class="text-3xl font-medium text-primary privacy-sensitive"><%= format_money(overview.yearly) %></p>
+    </div>
+    <div class="grid grid-cols-3 gap-3 text-sm">
+      <div>
+        <p class="text-secondary"><%= t(".monthly") %></p>
+        <p class="font-medium text-primary privacy-sensitive"><%= format_money(overview.monthly) %></p>
+      </div>
+      <div>
+        <p class="text-secondary"><%= t(".five_years") %></p>
+        <p class="font-medium text-primary privacy-sensitive"><%= format_money(overview.five_years, precision: 0) %></p>
+      </div>
+      <div>
+        <p class="text-secondary"><%= t(".could_save") %></p>
+        <p class="font-medium privacy-sensitive <%= overview.could_save_yearly.positive? ? "text-success" : "text-primary" %>"><%= t(".per_year", amount: format_money(overview.could_save_yearly)) %></p>
+      </div>
+    </div>
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  </div>
+
+  <div class="flex items-center justify-between px-1 text-xs text-secondary">
+    <span><%= t(".list", count: overview.rows.size) %></span>
+    <span><%= t(".could_drop") %></span>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <% if overview.rows.empty? %>
+      <p class="p-4 text-sm text-secondary"><%= t(".empty") %></p>
+    <% end %>
+    <% overview.rows.each_with_index do |row, index| %>
+      <% series = row.series %>
+      <%= render "shared/ruler" unless index.zero? %>
+      <div class="flex items-center gap-3 px-4 py-3 <%= "opacity-60" if row.could_drop %>">
+        <%= render "subscription_costs/logo", series: series %>
+        <div class="min-w-0 grow">
+          <%= link_to series.display_name, edit_recurring_transaction_path(series), class: "block truncate text-sm font-medium text-primary hover:underline", data: { turbo_frame: :modal } %>
+          <p class="text-xs text-secondary privacy-sensitive">
+            <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
+            <% if row.last_paid_on %>
+              · <%= t(".last_paid", date: l(row.last_paid_on, format: "%-d %b")) %>
+            <% end %>
+          </p>
+          <% if row.price_change %>
+            <p class="text-xs text-warning privacy-sensitive">
+              <%= t(".price_change", from: format_money(Money.new(row.price_change.previous_amount, row.price_change.currency)),
+                                     to: format_money(Money.new(row.price_change.new_amount, row.price_change.currency)),
+                                     date: l(row.price_change.effective_on, format: "%-d %b %Y")) %>
+            </p>
+          <% end %>
+        </div>
+        <div class="shrink-0 text-right">
+          <p class="text-sm font-medium text-primary privacy-sensitive"><%= t(".per_month", amount: format_money(row.monthly)) %></p>
+          <p class="text-xs text-secondary privacy-sensitive"><%= t(".per_year", amount: format_money(row.monthly * 12, precision: 0)) %></p>
+        </div>
+        <%= form_with url: could_drop_subscription_cost_path(series), method: :patch, data: { controller: "auto-submit-form", turbo_frame: :_top } do %>
+          <%= hidden_field_tag :could_drop, "0", id: nil %>
+          <%= check_box_tag :could_drop, "1", row.could_drop, id: dom_id(series, :could_drop),
+                class: "checkbox checkbox--light", aria: { label: t(".could_drop_label", name: series.display_name) },
+                data: { auto_submit_form_target: "auto", autosubmit_trigger_event: "change" } %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <% candidates = overview.other_candidates %>
+  <% if candidates.any? %>
+    <details class="rounded-xl bg-container shadow-border-xs">
+      <summary class="cursor-pointer px-4 py-3 text-sm text-primary"><%= t(".candidates", count: candidates.size) %></summary>
+      <div class="divide-y divide-divider">
+        <% candidates.each do |series| %>
+          <div class="flex items-center gap-3 px-4 py-2.5">
+            <%= render "subscription_costs/logo", series: series %>
+            <div class="min-w-0 grow">
+              <p class="truncate text-sm text-primary"><%= series.display_name %></p>
+              <p class="text-xs text-secondary privacy-sensitive"><%= format_money(series.amount_money) %> · <%= frequency_label(series) %></p>
+            </div>
+            <%= render DS::Button.new(text: t(".mark"), variant: :outline, size: :sm, href: mark_subscription_cost_path(series), method: :patch) %>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <div class="flex flex-wrap gap-2">
+    <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, size: :sm, href: new_recurring_transaction_path, frame: :modal) %>
+    <%= render DS::Link.new(text: t(".all_recurring"), icon: "receipt", variant: :ghost, size: :sm, href: recurring_transactions_path) %>
+  </div>
+  <p class="px-1 text-xs text-secondary"><%= t(".link_hint") %></p>
+</div>

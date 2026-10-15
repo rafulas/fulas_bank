@@ -1,0 +1,47 @@
+---
+en:
+  subscription_costs:
+    index:
+      title: Subscriptions
+      subtitle: What your subscriptions cost a month, a year and in five years.
+      yearly: A year
+      monthly: A month
+      five_years: In 5 years
+      could_save: You could save
+      per_year: "%{amount}/year"
+      per_month: "%{amount}/month"
+      hint: "At today's prices: a yearly one counts its share of each month. Tick the ones you could drop to see what you would save."
+      list:
+        one: 1 subscription
+        other: "%{count} subscriptions"
+      could_drop: Could drop
+      could_drop_label: "Could drop %{name}"
+      empty: "No subscriptions yet. Open a charge (Netflix, Spotify, iCloud…) and choose \"Create subscription\", or mark one of your recurring payments below."
+      last_paid: "last paid %{date}"
+      price_change: "Went from %{from} to %{to} on %{date}"
+      candidates:
+        one: "Is it a subscription? 1 more recurring payment"
+        other: "Is any a subscription? %{count} more recurring payments"
+      mark: It is a subscription
+      add: Add subscription
+      all_recurring: See all recurring payments
+      link_hint: "Each charge goes with its subscription by shop and amount, so two from Apple (Music at 10.99 and iCloud at 2.99) are two subscriptions. If one goes with the wrong one, change it in its detail."
+    mark:
+      success: "%{name} is now a subscription."
+  transactions:
+    show:
+      subscription: Subscription
+    subscription:
+      linked: "Goes with %{name} (%{amount})."
+      not_linked: Not linked to any subscription.
+      change: This charge's subscription
+      none: None
+      new_name: New subscription's name
+      create: Create subscription
+    subscriptions:
+      update:
+        success: Subscription updated.
+        failed: Could not link it. That subscription may have no payment near this date.
+      create:
+        success: "Subscription %{name} created."
+        failed: Could not create it. A matching recurring payment may already exist; look for it in the list.

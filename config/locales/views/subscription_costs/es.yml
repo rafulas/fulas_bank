@@ -1,0 +1,47 @@
+---
+es:
+  subscription_costs:
+    index:
+      title: Suscripciones
+      subtitle: Lo que te cuestan tus suscripciones al mes, al año y en cinco años.
+      yearly: Al año
+      monthly: Al mes
+      five_years: En 5 años
+      could_save: Podrías ahorrar
+      per_year: "%{amount}/año"
+      per_month: "%{amount}/mes"
+      hint: "Con los precios de hoy: una anual cuenta su parte de cada mes. Marca las que podrías quitar para ver lo que ahorrarías."
+      list:
+        one: 1 suscripción
+        other: "%{count} suscripciones"
+      could_drop: Podría quitarla
+      could_drop_label: "Podría quitar %{name}"
+      empty: "Todavía no tienes suscripciones. Abre un cargo (Netflix, Spotify, iCloud…) y pulsa «Crear suscripción», o marca abajo alguno de tus recurrentes."
+      last_paid: "último cobro %{date}"
+      price_change: "Subió de %{from} a %{to} el %{date}"
+      candidates:
+        one: "¿Es una suscripción? 1 recurrente más"
+        other: "¿Alguna es una suscripción? %{count} recurrentes más"
+      mark: Es una suscripción
+      add: Añadir suscripción
+      all_recurring: Ver todos los recurrentes
+      link_hint: "Cada cargo va con su suscripción por comercio e importe; así dos de Apple (Music a 10,99 € e iCloud a 2,99 €) son dos suscripciones. Si alguno va con la que no es, cámbialo en su detalle."
+    mark:
+      success: "%{name} ahora es una suscripción."
+  transactions:
+    show:
+      subscription: Suscripción
+    subscription:
+      linked: "Va con %{name} (%{amount})."
+      not_linked: No va con ninguna suscripción.
+      change: Suscripción de este cargo
+      none: Ninguna
+      new_name: Nombre de la suscripción nueva
+      create: Crear suscripción
+    subscriptions:
+      update:
+        success: Suscripción actualizada.
+        failed: No se ha podido vincular. Puede que esa suscripción no tenga cobros cerca de esta fecha.
+      create:
+        success: "Suscripción %{name} creada."
+        failed: No se ha podido crear. Puede que ya exista un recurrente igual; búscalo en la lista.

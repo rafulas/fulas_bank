@@ -446,6 +446,13 @@ Rails.application.routes.draw do
 
   # Fulas Bank: spending by category and subcategory ("Resumen").
   resources :category_summaries, only: %i[index show], path: "resumen"
+  # Fulas Bank: what the subscriptions cost (see SubscriptionsOverview).
+  resources :subscription_costs, only: :index, path: "suscripciones" do
+    member do
+      patch :could_drop
+      patch :mark
+    end
+  end
 
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection
@@ -563,6 +570,7 @@ Rails.application.routes.draw do
     resource :pending_duplicate_merges, only: %i[new create]
     resource :category, only: :update, controller: :transaction_categories
     resource :expense_type, only: :update, controller: "transactions/expense_types"
+    resource :subscription, only: %i[create update], controller: "transactions/subscriptions"
     resource :card_statement, only: :update, controller: "transactions/card_statements"
     resource :card_financing, only: %i[new create edit update destroy], controller: "transactions/card_financings"
     resources :attachments, only: %i[show create destroy], controller: :transaction_attachments
