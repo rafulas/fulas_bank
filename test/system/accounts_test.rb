@@ -60,7 +60,8 @@ class AccountsTest < ApplicationSystemTestCase
   end
 
   test "can create vehicle account" do
-    assert_account_created "Vehicle" do
+    # A vehicle has no bank: its form leaves the institution out.
+    assert_account_created "Vehicle", institution: false, submit: "Add vehicle" do
       fill_in "Make", with: "Toyota"
       fill_in "Model", with: "Camry"
       fill_in "Year", with: "2020"
@@ -139,7 +140,7 @@ class AccountsTest < ApplicationSystemTestCase
       assert_field "account[name]"
     end
 
-    def assert_account_created(accountable_type, &block)
+    def assert_account_created(accountable_type, institution: true, submit: "Create Account", &block)
       click_link Accountable.from_type(accountable_type).singular_display_name
       # Loans skip the method selector and open their setup form directly.
       click_link "Enter account balance" if accountable_type.in?(%w[Depository Investment Crypto CreditCard])
@@ -152,13 +153,17 @@ class AccountsTest < ApplicationSystemTestCase
       fill_in "account[name]", with: account_name
       fill_in "account[balance]", with: 100.99
       find("summary", text: "Additional details").click
-      fill_in "Institution name", with: institution_name
-      fill_in "Institution domain", with: institution_domain
+      if institution
+        fill_in "Institution name", with: institution_name
+        fill_in "Institution domain", with: institution_domain
+      else
+        assert_no_field "Institution name"
+      end
       fill_in "Notes", with: notes
 
       yield if block_given?
 
-      click_button "Create Account"
+      click_button submit
 
       # Wait for the new account's page before using the sidebar: that page
       # opens the account's group by itself, so toggling it while the
@@ -176,8 +181,10 @@ class AccountsTest < ApplicationSystemTestCase
       assert_text account_name
 
       created_account = Account.order(:created_at).last
-      assert_equal institution_name, created_account[:institution_name]
-      assert_equal institution_domain, created_account[:institution_domain]
+      if institution
+        assert_equal institution_name, created_account[:institution_name]
+        assert_equal institution_domain, created_account[:institution_domain]
+      end
       assert_equal notes, created_account[:notes]
 
       visit account_url(created_account)
@@ -191,14 +198,16 @@ class AccountsTest < ApplicationSystemTestCase
 
       update_account_details(
         name: "Updated account name",
-        institution_name: updated_institution_name,
-        institution_domain: updated_institution_domain,
+        institution_name: (updated_institution_name if institution),
+        institution_domain: (updated_institution_domain if institution),
         notes: updated_notes
       )
 
       created_account.reload
-      assert_equal updated_institution_name, created_account[:institution_name]
-      assert_equal updated_institution_domain, created_account[:institution_domain]
+      if institution
+        assert_equal updated_institution_name, created_account[:institution_name]
+        assert_equal updated_institution_domain, created_account[:institution_domain]
+      end
       assert_equal updated_notes, created_account[:notes]
     end
 
@@ -211,11 +220,13 @@ class AccountsTest < ApplicationSystemTestCase
           open_account_edit_dialog unless has_field?("account[name]", wait: 0)
 
           fill_in "account[name]", with: name
-          unless has_field?("Institution name", wait: 0)
+          unless has_field?("Notes", wait: 0)
             find("summary", text: "Additional details").click
           end
-          fill_in "Institution name", with: institution_name
-          fill_in "Institution domain", with: institution_domain
+          if institution_name
+            fill_in "Institution name", with: institution_name
+            fill_in "Institution domain", with: institution_domain
+          end
           fill_in "Notes", with: notes
           click_button "Update Account"
 
