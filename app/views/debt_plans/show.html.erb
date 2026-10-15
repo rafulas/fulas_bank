@@ -15,12 +15,21 @@
   <% else %>
     <%# What the plan achieves %>
     <div class="@container">
-      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+      <div class="grid grid-cols-2 @2xl:grid-cols-5 gap-2">
         <%= summary_card title: t(".debt_today") do %>
           <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_balance, currency, precision: 0) %></span>
         <% end %>
         <%= summary_card title: t(".debt_free") do %>
           <span class="first-letter:uppercase"><%= schedule.payoff_date ? l(schedule.payoff_date, format: "%B %Y") : "—" %></span>
+        <% end %>
+        <%# Fulas Bank: the first loan cleared, as Bilance's calculator shows. %>
+        <%= summary_card title: t(".first_paid_off") do %>
+          <% if (first = schedule.first_paid_off) %>
+            <span class="first-letter:uppercase"><%= l(first.paid_off_on, format: "%B %Y") %></span>
+            <span class="block text-xs text-secondary font-normal truncate"><%= first.loan.name %></span>
+          <% else %>
+            —
+          <% end %>
         <% end %>
         <%= summary_card title: t(".interest") do %>
           <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_interest, currency, precision: 0) %></span>
@@ -33,6 +42,11 @@
         <% end %>
       </div>
     </div>
+
+    <%# Fulas Bank: a loan whose interest eats its whole payment never goes down. %>
+    <% schedule.growing_loans.each do |loan| %>
+      <%= render DS::Alert.new(variant: :warning, message: t(".growing", name: loan.name)) %>
+    <% end %>
 
     <% if schedule.months.any? %>
       <%= render DS::Card.new(class: "gap-3") do %>

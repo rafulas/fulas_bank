@@ -31,6 +31,8 @@ es:
       empty_title: No hay préstamos
       empty_description: "Añade tus préstamos en Préstamos (con su pendiente, su tipo de interés y su cuota) y aquí verás el plan para terminarlos antes."
       debt_today: Deuda hoy
+      first_paid_off: Primera deuda saldada
+      growing: "%{name}: los intereses de cada mes son iguales o mayores que su cuota, así que con la cuota sola la deuda no baja. Sube la cuota o ponlo primero en el plan."
       debt_free: Sin deudas en
       interest: Intereses
       savings: Ahorro frente a solo cuotas
