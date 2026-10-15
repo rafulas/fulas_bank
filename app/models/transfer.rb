@@ -190,17 +190,25 @@ class Transfer < ApplicationRecord
 
     # Fulas Bank: the cash from selling an investment counts as income (see
     # Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL), so, mirror of a
-    # contribution, it goes to the investments category when it has none.
+    # contribution, it goes to "Inversiones financieras" when it has no
+    # category and the family has the default categories.
+    #
+    # The accounts are read with a query rather than through each leg's
+    # entry: a transfer can be created before its entries (they are added
+    # right after), and reading the association here would cache it empty.
     def categorize_investment_withdrawal
-      inflow = inflow_transaction
-      return if inflow.nil? || inflow.category_id.present?
+      return if inflow_transaction.nil? || inflow_transaction.category_id.present?
 
-      from = from_account
-      to = to_account
+      legs = Entry.where(entryable_type: "Transaction", entryable_id: [ outflow_transaction_id, inflow_transaction_id ])
+                  .joins(:account)
+                  .pluck(:entryable_id, "accounts.accountable_type", "accounts.family_id")
+                  .index_by(&:first)
+      from = legs[outflow_transaction_id]
+      to = legs[inflow_transaction_id]
       return if from.nil? || to.nil?
-      return unless INVESTMENT_ACCOUNT_TYPES.include?(from.accountable_type) && INVESTMENT_ACCOUNT_TYPES.exclude?(to.accountable_type)
+      return unless INVESTMENT_ACCOUNT_TYPES.include?(from[1]) && INVESTMENT_ACCOUNT_TYPES.exclude?(to[1])
 
-      category = to.family.investment_contributions_category
-      inflow.update!(category: category) if category.present?
+      category = Category.find_by(family_id: to[2], name: Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME)
+      inflow_transaction.update!(category: category) if category
     end
 end

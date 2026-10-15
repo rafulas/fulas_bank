@@ -78,6 +78,7 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     card = @family.accounts.create!(name: "Tarjeta", balance: 0, currency: "USD", accountable: CreditCard.new)
     savings = @family.accounts.create!(name: "Ahorro", balance: 0, currency: "USD", accountable: Depository.new)
     investing = @family.categories.create!(name: "Inversiones", color: "#a448d8")
+    funds = @family.categories.create!(name: Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME, color: "#a448d8", parent: investing)
 
     instalment = transfer(from: @account, to: loan, amount: 500, date: Date.new(2026, 10, 4))
     instalment.outflow_transaction.update!(category: @home)
@@ -87,11 +88,10 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     transfer(from: @account, to: card, amount: 80, date: Date.new(2026, 10, 7))
     transfer(from: @account, to: savings, amount: 300, date: Date.new(2026, 10, 8))
 
-    sale_category = sale.inflow_transaction.reload.category
-    assert_equal @family.investment_contributions_category, sale_category, "the cash from selling is categorized as an investment"
+    assert_equal funds, sale.inflow_transaction.reload.category, "the cash from selling is categorized as an investment"
 
     assert_equal [ [ "Hogar", 500 ], [ "Inversiones", 200 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
-    assert_equal [ [ sale_category.name, 150 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+    assert_equal [ [ "Inversiones", 150 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
 
     assert instalment.outflow_transaction.counts_by_kind?
     assert contribution.outflow_transaction.counts_by_kind?
