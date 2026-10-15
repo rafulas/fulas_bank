@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -411,6 +411,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
     t.index ["user_id"], name: "index_budgets_on_user_id"
   end
 
+  create_table "card_financings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.uuid "entry_id"
+    t.uuid "family_id", null: false
+    t.decimal "fee_amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.decimal "financed_amount", precision: 19, scale: 4, null: false
+    t.decimal "installment_amount", precision: 19, scale: 4, null: false
+    t.integer "installments_count", null: false
+    t.string "name", null: false
+    t.date "purchase_date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_card_financings_on_account_id"
+    t.index ["entry_id"], name: "index_card_financings_on_entry_id", unique: true
+    t.index ["family_id"], name: "index_card_financings_on_family_id"
+    t.check_constraint "fee_amount >= 0::numeric", name: "chk_card_financings_fee_not_negative"
+    t.check_constraint "financed_amount > 0::numeric", name: "chk_card_financings_amount_positive"
+    t.check_constraint "installment_amount > 0::numeric", name: "chk_card_financings_installment_positive"
+    t.check_constraint "installments_count >= 1 AND installments_count <= 120", name: "chk_card_financings_installments"
+  end
+
   create_table "categories", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "classification_unused", default: "expense", null: false
     t.string "color", default: "#6172F3", null: false
@@ -585,12 +607,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
     t.decimal "annual_fee", precision: 10, scale: 2
     t.decimal "apr", precision: 10, scale: 2
     t.decimal "available_credit", precision: 10, scale: 2
+    t.integer "consolidation_days", default: 0, null: false
     t.datetime "created_at", null: false
     t.date "expiration_date"
     t.jsonb "locked_attributes", default: {}
     t.decimal "minimum_payment", precision: 10, scale: 2
+    t.uuid "payment_account_id"
+    t.integer "payment_day"
+    t.integer "statement_closing_day"
     t.string "subtype"
     t.datetime "updated_at", null: false
+    t.index ["payment_account_id"], name: "index_credit_cards_on_payment_account_id"
+    t.check_constraint "consolidation_days >= 0 AND consolidation_days <= 10", name: "chk_credit_cards_consolidation_days"
+    t.check_constraint "payment_day >= 1 AND payment_day <= 31", name: "chk_credit_cards_payment_day"
+    t.check_constraint "statement_closing_day >= 1 AND statement_closing_day <= 31", name: "chk_credit_cards_closing_day"
   end
 
   create_table "cryptos", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -2868,6 +2898,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
     t.string "kind", default: "standard", null: false
     t.jsonb "locked_attributes", default: {}
     t.uuid "merchant_id"
+    t.boolean "next_card_statement", default: false, null: false
     t.uuid "transfer_id"
     t.datetime "updated_at", null: false
     t.index "(((extra -> 'goal'::text) ->> 'pledge_id'::text))", name: "ix_transactions_extra_goal_pledge_id", unique: true, where: "(((extra -> 'goal'::text) ->> 'pledge_id'::text) IS NOT NULL)"
@@ -3125,6 +3156,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
   add_foreign_key "budget_shares", "users", column: "viewer_id"
   add_foreign_key "budgets", "families"
   add_foreign_key "budgets", "users", on_delete: :cascade
+  add_foreign_key "card_financings", "accounts", on_delete: :cascade
+  add_foreign_key "card_financings", "entries", on_delete: :nullify
+  add_foreign_key "card_financings", "families", on_delete: :cascade
   add_foreign_key "categories", "families"
   add_foreign_key "categorization_comparisons", "families"
   add_foreign_key "categorization_comparisons", "transactions", on_delete: :nullify
@@ -3135,6 +3169,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_110000) do
   add_foreign_key "coinspot_items", "families"
   add_foreign_key "coinstats_accounts", "coinstats_items"
   add_foreign_key "coinstats_items", "families"
+  add_foreign_key "credit_cards", "accounts", column: "payment_account_id", on_delete: :nullify
   add_foreign_key "debt_plan_extra_payments", "debt_plans", on_delete: :cascade
   add_foreign_key "debt_plans", "accounts", on_delete: :nullify
   add_foreign_key "debt_plans", "families", on_delete: :cascade

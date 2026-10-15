@@ -145,6 +145,13 @@
       <% end %>
     <% end %>
 
+    <%# Fulas Bank: the card statement it goes in, and paying it in instalments. %>
+    <% if @entry.account.accountable_type == "CreditCard" && !@entry.transaction.transfer? %>
+      <% dialog.with_section(title: t(".card_statement"), open: true) do %>
+        <%= render "transactions/card_statement", entry: @entry, can_edit: can_annotate_entry? %>
+      <% end %>
+    <% end %>
+
     <% unless @entry.transaction.transfer? %>
       <% dialog.with_section(title: t(".expense_type"), open: true) do %>
         <%= render "transactions/expense_type", entry: @entry, can_edit: can_annotate_entry? %>

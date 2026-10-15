@@ -87,6 +87,7 @@ es:
       tabs:
         activity: Actividad
         holdings: Posiciones
+        card_statement: Extracto y cobro
         overview: Resumen
         schedule: Cuadro de amortización
         payments: Pagos

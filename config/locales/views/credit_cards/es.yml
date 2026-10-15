@@ -6,6 +6,14 @@ es:
     form:
       annual_fee: Cuota anual
       annual_fee_placeholder: '99'
+      statement_title: Extracto mensual
+      statement_hint: "Con el día de cierre y el de cobro, la app sabe en qué extracto va cada gasto, cuánto te cobrarán y cuándo. Si no los pones, la tarjeta funciona como siempre."
+      statement_closing_day: Día de cierre (31 = último del mes)
+      payment_day: Día de cobro
+      payment_account: Se cobra de la cuenta
+      payment_account_none: Ninguna
+      consolidation_days: Días hábiles que tarda en apuntar un gasto
+      consolidation_hint: "Un gasto en fin de semana o festivo se apunta el siguiente día hábil. Si además el banco tarda (por ejemplo, un gasto del jueves 28 que no entra en el cierre del 31), pon aquí cuántos días hábiles."
       apr: TAE
       apr_placeholder: '15.99'
       available_credit: Crédito disponible

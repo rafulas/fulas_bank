@@ -1,5 +1,5 @@
 module ForecastsHelper
-  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia }.freeze
+  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia, card: :indigo }.freeze
 
   # An expected amount from the user's side: income with a plus sign, spending
   # with a minus sign.
@@ -22,6 +22,8 @@ module ForecastsHelper
   def forecast_line_edit_path(flow)
     return edit_forecast_item_path(flow.record) if flow.record
     return debt_plan_path if flow.source == :debt_plan
+    # A card's statement or instalment changes on the card itself.
+    return account_path(flow.card, tab: "card_statement") if flow.source == :card && flow.card
 
     edit_forecast_adjustment_path(key: flow.key, date: flow.date.iso8601, amount: flow.amount.abs.to_s, name: flow.name)
   end

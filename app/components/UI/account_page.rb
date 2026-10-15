@@ -63,6 +63,9 @@ class UI::AccountPage < ApplicationComponent
       [ :activity, :overview, :expenses ]
     when "Vehicle"
       [ :overview, :activity, :refuels, :workshop, :running_costs ]
+    when "CreditCard"
+      # Fulas Bank: the monthly statement first, once the card has its days.
+      account.credit_card.statement_cycle.configured? ? [ :card_statement, :activity ] : [ :activity ]
     else
       [ :activity ]
     end
@@ -128,6 +131,8 @@ class UI::AccountPage < ApplicationComponent
       render_payments_tab
     when :statements
       render_statement_tab
+    when :card_statement
+      render "credit_cards/tabs/statement", account: account, cycle: CreditCard::Cycle.new(account, today: as_of)
     end
   end
 

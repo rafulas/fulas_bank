@@ -563,6 +563,8 @@ Rails.application.routes.draw do
     resource :pending_duplicate_merges, only: %i[new create]
     resource :category, only: :update, controller: :transaction_categories
     resource :expense_type, only: :update, controller: "transactions/expense_types"
+    resource :card_statement, only: :update, controller: "transactions/card_statements"
+    resource :card_financing, only: %i[new create edit update destroy], controller: "transactions/card_financings"
     resources :attachments, only: %i[show create destroy], controller: :transaction_attachments
 
     collection do
