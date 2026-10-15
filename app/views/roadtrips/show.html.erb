@@ -1,0 +1,54 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="max-w-3xl space-y-4 pb-6">
+  <% if @vehicles.empty? %>
+    <%= render DS::EmptyState.new(icon: "car", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <% @vehicles.each do |account| %>
+        <% vehicle = account.vehicle %>
+        <% logbook = vehicle.logbook %>
+        <%= link_to account_path(account), id: dom_id(account, :roadtrip), class: "block rounded-xl bg-container shadow-border-xs p-4 space-y-3 hover:bg-container-hover" do %>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <%= render DS::FilledIcon.new(icon: vehicle.fuel_type == "electric" ? "zap" : "car", hex_color: Vehicle.color, size: "md") %>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-primary"><%= account.name %></p>
+                <p class="truncate text-xs text-secondary"><%= [ [ vehicle.make, vehicle.model ].compact.join(" ").presence, vehicle.year, vehicle.license_plate ].compact.join(" · ") %></p>
+              </div>
+            </div>
+            <% if logbook.maintenance_alerts.any? %>
+              <%= render DS::Pill.new(label: t(".alerts", count: logbook.maintenance_alerts.size), tone: :warning, icon: "wrench", marker: false, size: :sm) %>
+            <% end %>
+          </div>
+
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            <div>
+              <dt class="text-secondary"><%= t(".mileage") %></dt>
+              <dd class="text-sm text-primary whitespace-nowrap"><%= vehicle_distance(logbook.odometer, vehicle) || "—" %></dd>
+            </div>
+            <div>
+              <dt class="text-secondary"><%= t(".consumption") %></dt>
+              <dd class="text-sm text-primary whitespace-nowrap"><%= vehicle_consumption(logbook.average_consumption, vehicle) || "—" %></dd>
+            </div>
+            <div>
+              <dt class="text-secondary"><%= t(".spent_this_year", year: logbook.as_of.year) %></dt>
+              <dd class="text-sm text-primary whitespace-nowrap privacy-sensitive"><%= format_money(logbook.year_total) %></dd>
+            </div>
+            <div>
+              <dt class="text-secondary"><%= t(".last_refuel") %></dt>
+              <dd class="text-sm text-primary whitespace-nowrap"><%= (refuel = logbook.last_refuel) ? l(refuel.date, format: "%d/%m/%Y") : "—" %></dd>
+            </div>
+          </dl>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_vehicle_path, frame: :modal) %>
+</div>

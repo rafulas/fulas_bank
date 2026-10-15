@@ -12,7 +12,7 @@ class SidebarNavigationTest < ActionDispatch::IntegrationTest
     assert_select "nav a[href=?]", budgets_path, count: 0
 
     hrefs = css_select("nav a").map { |link| link["href"] }
-    order = [ transactions_path, category_summaries_path, month_plan_path, forecast_path, loans_overview_path, investments_overview_path, reports_path ]
+    order = [ transactions_path, category_summaries_path, month_plan_path, forecast_path, loans_overview_path, investments_overview_path, roadtrip_path, reports_path ]
     positions = order.map { |path| hrefs.index(path) }
 
     assert positions.all?, "every entry is in the sidebar"

@@ -1,0 +1,16 @@
+---
+en:
+  roadtrips:
+    show:
+      title: RoadTrip
+      subtitle: Your cars and motorbikes, with their mileage, consumption and costs.
+      empty_title: No vehicles
+      empty_description: "Add your cars and motorbikes as Vehicle accounts and, in each one, import its RoadTrip data."
+      alerts:
+        one: "%{count} alert"
+        other: "%{count} alerts"
+      mileage: Mileage
+      consumption: Average consumption
+      spent_this_year: "Spent in %{year}"
+      last_refuel: Last refuel
+      add: Add vehicle
