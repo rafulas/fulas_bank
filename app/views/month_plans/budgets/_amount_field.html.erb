@@ -1,0 +1,7 @@
+<%# locals: (category:, amount:, suggested:, target:) %>
+<%# One amount box of the budget editor, for a main category or a subcategory. %>
+<%= number_field_tag "amounts[#{category.id}]", (amount&.positive? ? amount.to_s("F") : nil),
+      step: "0.01", min: 0, placeholder: "0",
+      class: "w-full rounded-md border border-primary bg-container px-2 py-1.5 text-sm text-right text-primary read-only:bg-surface-inset read-only:text-secondary",
+      data: { month_budget_target: target, suggested: (suggested.round.to_i.to_s if suggested&.positive?), action: "input->month-budget#refresh" },
+      aria: { label: t("month_plans.budgets.edit.amount_for", category: category.name) } %>

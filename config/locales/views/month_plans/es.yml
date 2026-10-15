@@ -39,6 +39,13 @@ es:
         hint: "Cuánto quieres gastar al mes en cada categoría. Se repite cada mes hasta que lo cambies; los meses anteriores no cambian. Deja vacío lo que no quieras presupuestar."
         average: "Sueles gastar %{amount} al mes"
         amount_for: "Presupuesto de %{category}"
+        prefilled: "Este es tu primer presupuesto: viene relleno con lo que sueles gastar en cada categoría. Cambia lo que quieras antes de guardar."
+        total: "Total al mes:"
+        suggest: Rellenar con lo que sueles gastar
+        break_down:
+          one: Detallar por su subcategoría
+          other: "Detallar por sus %{count} subcategorías"
+        break_down_hint: Si pones importe en alguna subcategoría, la categoría principal pasa a ser la suma de todas.
         submit: Guardar
       update:
         success: Presupuesto guardado.

@@ -38,24 +38,14 @@
         </div>
 
         <% plan.budget_rows.each do |row| %>
-          <% red = plan.ahead_of_pace?(row) %>
-          <div class="px-4 py-3 border-t border-divider space-y-1.5">
-            <div class="flex items-center justify-between gap-3">
-              <span class="flex items-center gap-2 min-w-0 text-sm font-medium text-primary">
-                <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
-                <span class="truncate"><%= row.category.name %></span>
-              </span>
-              <span class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
-            </div>
-            <div class="flex items-center justify-between gap-3 text-xs">
-              <span class="text-secondary privacy-sensitive"><%= t(".spent", amount: format_money(Money.new(row.spent, currency))) %></span>
-              <span class="privacy-sensitive <%= red ? "text-destructive" : "text-success" %>">
-                <%= t(row.over? ? ".over_budget" : ".left_to_spend", amount: format_money(Money.new(row.available.abs, currency))) %>
-              </span>
-            </div>
-            <div class="h-2 rounded-full overflow-hidden <%= red ? "bg-destructive/10" : "bg-success/10" %>">
-              <div class="h-full rounded-full <%= red ? "bg-destructive" : "bg-success" %>" style="width: <%= [ row.share * 100, 100 ].min.round(1) %>%"></div>
-            </div>
+          <div class="px-4 py-3 border-t border-divider space-y-2">
+            <%= render "month_plans/budget_row", plan: plan, row: row, currency: currency %>
+            <%# Fulas Bank: the subcategories given their own amount. %>
+            <% row.children.each do |child| %>
+              <div class="pl-8">
+                <%= render "month_plans/budget_row", plan: plan, row: child, currency: currency %>
+              </div>
+            <% end %>
           </div>
         <% end %>
       <% else %>

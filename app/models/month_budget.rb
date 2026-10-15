@@ -10,6 +10,8 @@
 # - Saving a month's amounts applies them to that month and to the later
 #   months already created, never to earlier ones.
 # - Amounts go on main categories; each covers its subcategories' spending.
+#   A main category can be broken down into its subcategories: then its
+#   amount is the sum of theirs, and each subcategory has its own limit.
 class MonthBudget
   attr_reader :family, :user, :month
 
@@ -24,13 +26,18 @@ class MonthBudget
     @categories ||= family.categories.roots.reject(&:analytics_neutral?).sort_by(&:display_sort_key)
   end
 
-  # { category_id => amount } for the month: its own, or else the latest
-  # earlier month's.
+  # The subcategories of a main category that can be given their own amount.
+  def subcategories_of(category)
+    subcategories_by_parent.fetch(category.id, [])
+  end
+
+  # { category_id => amount } for the month, main categories and
+  # subcategories: its own, or else the latest earlier month's.
   def amounts
     source = initialized_budget || previous_budget
     return {} unless source
 
-    source.budget_categories.reject(&:subcategory?).to_h { |row| [ row.category_id, row[:budgeted_spending].to_d ] }
+    source.budget_categories.to_h { |row| [ row.category_id, row[:budgeted_spending].to_d ] }
   end
 
   # Gives a month without a budget the amounts of the latest earlier month
@@ -50,11 +57,11 @@ class MonthBudget
   end
 
   # Sets the month's amounts ({ category_id => amount }) and those of the
-  # later months already created.
+  # later months already created. A main category with any subcategory
+  # amount gets the sum of those; otherwise its own, and its subcategories
+  # none (they share the main category's).
   def save!(new_amounts)
-    allowed = categories.map(&:id).to_set
-    clean = new_amounts.to_h.transform_keys(&:to_s).select { |id, _| allowed.include?(id) }
-                       .transform_values { |value| [ value.to_s.tr(",", ".").to_d, 0 ].max }
+    clean = resolve(new_amounts)
 
     Budget.transaction do
       budgets = [ bootstrap(month), *later_budgets ].compact.uniq
@@ -65,7 +72,36 @@ class MonthBudget
     true
   end
 
+  # Every category id a budget can carry: the main ones and their subcategories.
+  def category_ids
+    categories.map(&:id) + subcategories_by_parent.values.flatten.map(&:id)
+  end
+
   private
+    def subcategories_by_parent
+      @subcategories_by_parent ||= family.categories.where(parent_id: categories.map(&:id))
+                                         .reject(&:analytics_neutral?)
+                                         .sort_by(&:display_sort_key)
+                                         .group_by(&:parent_id)
+    end
+
+    def resolve(new_amounts)
+      typed = new_amounts.to_h.transform_keys(&:to_s)
+                         .transform_values { |value| [ value.to_s.tr(",", ".").to_d, 0 ].max }
+
+      categories.each_with_object({}) do |category, result|
+        subs = subcategories_of(category).to_h { |sub| [ sub.id, typed.fetch(sub.id, 0.to_d) ] }
+
+        if subs.values.any?(&:positive?)
+          result.merge!(subs)
+          result[category.id] = subs.values.sum
+        else
+          subs.each_key { |id| result[id] = 0.to_d }
+          result[category.id] = typed[category.id] if typed.key?(category.id)
+        end
+      end
+    end
+
     def owner_scope
       family.budgets.where(user_id: bootstrap_owner_id)
     end
@@ -101,7 +137,7 @@ class MonthBudget
     def apply(budget, amounts)
       rows = budget.budget_categories.includes(:category).to_a
       rows.each do |row|
-        amount = row.subcategory? ? 0 : amounts.fetch(row.category_id, row[:budgeted_spending].to_d)
+        amount = amounts.fetch(row.category_id, row[:budgeted_spending].to_d)
         row.update!(budgeted_spending: amount) if row[:budgeted_spending].to_d != amount
       end
 

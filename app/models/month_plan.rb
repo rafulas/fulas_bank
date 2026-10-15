@@ -22,7 +22,13 @@ class MonthPlan
     "other" => "other"
   }.freeze
 
-  BudgetRow = Data.define(:category, :budgeted, :spent) do
+  # A budgeted main category, with the subcategories given their own
+  # amount (`children`, the same kind of row) when it is broken down.
+  BudgetRow = Data.define(:category, :budgeted, :spent, :children) do
+    def initialize(category:, budgeted:, spent:, children: [])
+      super
+    end
+
     def available
       budgeted - spent
     end
@@ -98,16 +104,23 @@ class MonthPlan
   def budget_rows
     return [] unless budget
 
-    # Main categories only: each one's amount already covers its
-    # subcategories (see MonthBudget).
-    @budget_rows ||= budget.budget_categories.filter_map do |budget_category|
-      next if budget_category.subcategory?
+    # Main categories: each one's amount already covers its subcategories
+    # (see MonthBudget). The subcategories with an amount of their own go
+    # under it.
+    @budget_rows ||= begin
+      all = budget.budget_categories.includes(:category).to_a
+      subs = all.select(&:subcategory?).group_by { |row| row.category.parent_id }
 
-      budgeted = (budget_category[:budgeted_spending] || 0).to_d
-      next unless budgeted.positive?
+      all.filter_map do |budget_category|
+        next if budget_category.subcategory?
 
-      BudgetRow.new(category: budget_category.category, budgeted: budgeted, spent: budget_category.actual_spending.to_d)
-    end.sort_by { |row| -row.budgeted }
+        budgeted = (budget_category[:budgeted_spending] || 0).to_d
+        next unless budgeted.positive?
+
+        children = subs.fetch(budget_category.category_id, []).filter_map { |sub| budget_row(sub) }.sort_by { |row| -row.budgeted }
+        budget_row(budget_category, children: children)
+      end.sort_by { |row| -row.budgeted }
+    end
   end
 
   def budget_total
@@ -223,6 +236,13 @@ class MonthPlan
   end
 
   private
+    def budget_row(budget_category, children: [])
+      budgeted = (budget_category[:budgeted_spending] || 0).to_d
+      return unless budgeted.positive?
+
+      BudgetRow.new(category: budget_category.category, budgeted: budgeted, spent: budget_category.actual_spending.to_d, children: children)
+    end
+
     def money(amount)
       Money.new(amount, currency)
     end

@@ -51,6 +51,33 @@ class MonthBudgetTest < ActiveSupport::TestCase
     assert_equal BigDecimal("350"), MonthBudget.new(@family, user: @user, month: later).amounts[@food.id]
   end
 
+  test "a category broken down into subcategories is their sum, and each keeps its own amount" do
+    restaurants = categories(:subcategory)
+    groceries = @family.categories.create!(name: "Supermercado", parent: @food, color: "#506cd8", lucide_icon: "shapes")
+
+    MonthBudget.new(@family, user: @user, month: @next_month).save!(@food.id => "999", restaurants.id => "120", groceries.id => "380")
+
+    amounts = MonthBudget.new(@family, user: @user, month: @next_month).amounts
+    assert_equal BigDecimal("500"), amounts[@food.id]
+    assert_equal BigDecimal("120"), amounts[restaurants.id]
+    assert_equal BigDecimal("380"), amounts[groceries.id]
+    assert_equal BigDecimal("500"), budget_for(@next_month).budgeted_spending
+
+    rows = MonthPlan.new(@family, user: @user, month: @next_month).budget_rows
+    assert_equal [ groceries, restaurants ], rows.find { |row| row.category == @food }.children.map(&:category)
+  end
+
+  test "emptying the subcategories gives the main category its own amount again" do
+    restaurants = categories(:subcategory)
+    MonthBudget.new(@family, user: @user, month: @next_month).save!(restaurants.id => "120")
+
+    MonthBudget.new(@family, user: @user, month: @next_month).save!(@food.id => "300", restaurants.id => "")
+
+    amounts = MonthBudget.new(@family, user: @user, month: @next_month).amounts
+    assert_equal BigDecimal("300"), amounts[@food.id]
+    assert_equal BigDecimal("0"), amounts[restaurants.id].to_d
+  end
+
   test "Planes shows the main categories with a budget" do
     MonthBudget.new(@family, user: @user, month: @next_month).save!(@food.id => "300")
 

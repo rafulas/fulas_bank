@@ -1,0 +1,22 @@
+<%# locals: (plan:, row:, currency:) %>
+<%# One budgeted category of Planes (a main category or one of its subcategories):
+    its amount, what was spent, what is left and the bar. %>
+<% red = plan.ahead_of_pace?(row) %>
+<div class="space-y-1.5">
+  <div class="flex items-center justify-between gap-3">
+    <span class="flex items-center gap-2 min-w-0 text-sm font-medium text-primary">
+      <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
+      <span class="truncate"><%= row.category.name %></span>
+    </span>
+    <span class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
+  </div>
+  <div class="flex items-center justify-between gap-3 text-xs">
+    <span class="text-secondary privacy-sensitive"><%= t("month_plans.show.spent", amount: format_money(Money.new(row.spent, currency))) %></span>
+    <span class="privacy-sensitive <%= red ? "text-destructive" : "text-success" %>">
+      <%= t(row.over? ? "month_plans.show.over_budget" : "month_plans.show.left_to_spend", amount: format_money(Money.new(row.available.abs, currency))) %>
+    </span>
+  </div>
+  <div class="h-2 rounded-full overflow-hidden <%= red ? "bg-destructive/10" : "bg-success/10" %>">
+    <div class="h-full rounded-full <%= red ? "bg-destructive" : "bg-success" %>" style="width: <%= [ row.share * 100, 100 ].min.round(1) %>%"></div>
+  </div>
+</div>
