@@ -1,0 +1,36 @@
+<%# locals: (entry:, financing:) %>
+<%# Fulas Bank: a card purchase paid in instalments, with the figures the
+    bank's app shows when it is financed (see CardFinancing). %>
+<%= styled_form_with model: financing, scope: :card_financing, url: transaction_card_financing_path(entry),
+      method: (financing.persisted? ? :patch : :post), class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if financing.errors.any? %>
+    <%= render DS::Alert.new(message: financing.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <p class="text-sm text-secondary"><%= t(".purchase", name: entry.name, date: l(entry.date, format: "%d/%m/%Y"), amount: format_money(entry.amount_money.abs)) %></p>
+
+  <div class="space-y-3">
+    <%= form.number_field :financed_amount, label: t(".financed_amount"), step: "0.01", min: 0.01, required: true %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :installments_count, label: t(".installments_count"), step: 1, min: 1, max: 120, required: true %>
+      <%= form.number_field :installment_amount, label: t(".installment_amount"), step: "0.01", min: 0.01, required: true %>
+    </div>
+    <%= form.number_field :fee_amount, label: t(".fee_amount"), step: "0.01", min: 0 %>
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if financing.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: transaction_card_financing_path(entry),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

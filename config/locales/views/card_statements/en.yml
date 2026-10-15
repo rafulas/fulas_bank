@@ -1,0 +1,69 @@
+---
+en:
+  transactions:
+    show:
+      card_statement: Card statement
+    card_statement:
+      in_statement: "Goes in the statement closing on %{closes}, charged on %{charged}."
+      next_statement: Move to the next statement
+      next_statement_hint: For a purchase the bank booked late, in the following month's statement.
+      not_configured: Set the card's closing and payment days under "Edit" to see which statement each purchase goes in.
+      financed:
+        one: "Financed in 1 instalment of %{amount}"
+        other: "Financed in %{count} instalments of %{amount}"
+      fee: "Fee: %{amount}"
+      edit_financing: Change or remove the financing
+      finance: Pay in instalments
+    card_statements:
+      update:
+        success: Statement updated.
+    card_financings:
+      new:
+        title: Pay in instalments
+      edit:
+        title: Financing
+      form:
+        purchase: "%{name}, %{date}, %{amount}"
+        financed_amount: Amount financed
+        installments_count: Number of instalments
+        installment_amount: Each instalment
+        fee_amount: Fee (charged the first month)
+        hint: "Use the figures your bank's app shows. The purchase leaves its month's statement; that payment day the fee is charged, and each following one an instalment."
+        submit: Save
+        delete: Remove the financing
+        resource: financing
+      create:
+        success: Purchase financed.
+      update:
+        success: Financing updated.
+      destroy:
+        success: Financing removed.
+  credit_cards:
+    tabs:
+      statement:
+        current: "Current statement (%{from} – %{to})"
+        charged_on: "Charged on %{date} to %{account}"
+        no_account: the payment account
+        last_closed: "Last statement (closed %{date})"
+        was_charged: "Charged on %{date}"
+        will_be_charged: "To be charged on %{date}"
+        statements: Statements
+        period: Period
+        in_progress: In progress
+        purchases: Purchases
+        financed_column: Financed
+        charge: Charged
+        charge_date: Payment day
+        hint: "The charge is the period's purchases minus what was financed, which is charged apart with its fee and instalments. A purchase can be moved to the next statement from its detail."
+        financed_title: Purchases in instalments
+        edit: "Change %{name}"
+        plan:
+          one: "1 instalment of %{amount}"
+          other: "%{count} instalments of %{amount}"
+        fee: "fee %{amount}"
+        cost: "costs you %{amount}"
+        progress: "%{paid} of %{count} instalments paid · %{pending} left"
+        next: "next: %{date}, %{amount}"
+        finished: finished
+        mismatch: The instalments do not cover the amount financed. Check the figures in the bank's app.
+        no_financings: "No purchases in instalments. To finance one, open it and choose \"Pay in instalments\"."

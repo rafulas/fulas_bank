@@ -87,6 +87,7 @@ en:
       tabs:
         activity: Activity
         holdings: Holdings
+        card_statement: Statement
         overview: Overview
         schedule: Schedule
         payments: Payments

@@ -22,6 +22,8 @@ class Entry < ApplicationRecord
   # Read side only, so a transaction can say which bills it paid. The foreign key
   # already nullifies on delete, so this adds no lifecycle behaviour.
   has_many :recurring_allocations, dependent: nil, inverse_of: :entry
+  # Fulas Bank: a card purchase paid in instalments (the database nullifies it).
+  has_one :card_financing, dependent: nil
 
   delegated_type :entryable, types: Entryable::TYPES, dependent: :destroy
   accepts_nested_attributes_for :entryable

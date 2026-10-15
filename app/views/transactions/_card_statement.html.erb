@@ -1,0 +1,46 @@
+<%# locals: (entry:, can_edit:) %>
+<%# Fulas Bank: a credit card movement's statement (see CreditCard::Cycle) and,
+    for a purchase, paying it in instalments (CardFinancing). %>
+<% cycle = entry.account.credit_card.statement_cycle %>
+<% transaction = entry.transaction %>
+<% financing = entry.card_financing %>
+
+<div class="px-3 py-2 space-y-3" id="<%= dom_id(entry, :card_statement) %>">
+  <% if cycle.configured? %>
+    <% month = cycle.statement_month_for(entry.date, next_statement: transaction.next_card_statement) %>
+    <p class="text-sm text-secondary">
+      <%= t(".in_statement", closes: format_date(cycle.closing_date(month)), charged: format_date(cycle.charge_date(month))) %>
+    </p>
+
+    <% if can_edit %>
+      <%= styled_form_with scope: :card_statement, url: transaction_card_statement_path(entry), method: :patch,
+            data: { controller: "auto-submit-form", turbo_frame: :_top } do |form| %>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm text-primary" id="<%= dom_id(entry, :next_statement_label) %>"><%= t(".next_statement") %></p>
+            <p class="text-xs text-secondary"><%= t(".next_statement_hint") %></p>
+          </div>
+          <%= form.toggle :next_card_statement, { checked: transaction.next_card_statement, "aria-labelledby": dom_id(entry, :next_statement_label),
+                data: { auto_submit_form_target: "auto" } } %>
+        </div>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t(".not_configured") %></p>
+  <% end %>
+
+  <% if financing %>
+    <div class="rounded-lg bg-surface-inset p-3 text-sm space-y-1">
+      <p class="text-primary font-medium"><%= t(".financed", count: financing.installments_count, amount: format_money(financing.installment_amount_money)) %></p>
+      <% if financing.fee_amount.positive? %>
+        <p class="text-secondary"><%= t(".fee", amount: format_money(financing.fee_amount_money)) %></p>
+      <% end %>
+      <% if can_edit %>
+        <%= link_to t(".edit_financing"), edit_transaction_card_financing_path(entry), class: "text-sm text-secondary hover:text-primary underline", data: { turbo_frame: :modal } %>
+      <% end %>
+    </div>
+  <% elsif can_edit && entry.amount.positive? %>
+    <%= render DS::Link.new(text: t(".finance"), icon: "calendar-clock", variant: :outline, size: :sm,
+          href: new_transaction_card_financing_path(entry), frame: :modal) %>
+  <% end %>
+</div>

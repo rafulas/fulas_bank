@@ -7,7 +7,11 @@ class CreditCardsController < ApplicationController
     :minimum_payment,
     :apr,
     :annual_fee,
-    :expiration_date
+    :expiration_date,
+    :statement_closing_day,
+    :payment_day,
+    :payment_account_id,
+    :consolidation_days
   )
 
   def update

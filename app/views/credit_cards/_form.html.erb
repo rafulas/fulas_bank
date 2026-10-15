@@ -33,6 +33,29 @@
                                         placeholder: t("credit_cards.form.annual_fee_placeholder"),
                                         min: 0 %>
       </div>
+
+      <%# Fulas Bank: the monthly statement (see CreditCard::Cycle). %>
+      <%= render "shared/ruler", classes: "my-4" %>
+      <p class="text-sm font-medium text-primary"><%= t("credit_cards.form.statement_title") %></p>
+      <p class="text-xs text-secondary"><%= t("credit_cards.form.statement_hint") %></p>
+      <div class="flex items-center gap-2">
+        <%= credit_card_form.number_field :statement_closing_day,
+                                        label: t("credit_cards.form.statement_closing_day"),
+                                        placeholder: "31", min: 1, max: 31 %>
+        <%= credit_card_form.number_field :payment_day,
+                                        label: t("credit_cards.form.payment_day"),
+                                        placeholder: "5", min: 1, max: 31 %>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= credit_card_form.select :payment_account_id,
+                                    Current.family.accounts.accessible_by(Current.user).visible
+                                           .where(accountable_type: "Depository").alphabetically.map { |each| [ each.name, each.id ] },
+                                    { include_blank: t("credit_cards.form.payment_account_none"), label: t("credit_cards.form.payment_account") } %>
+        <%= credit_card_form.number_field :consolidation_days,
+                                        label: t("credit_cards.form.consolidation_days"),
+                                        min: 0, max: 10 %>
+      </div>
+      <p class="text-xs text-secondary"><%= t("credit_cards.form.consolidation_hint") %></p>
     <% end %>
 
     <% enable_banking_account = account.provider_account_for("EnableBankingAccount") if account.persisted? %>

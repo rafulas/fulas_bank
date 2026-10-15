@@ -6,6 +6,14 @@ en:
     form:
       annual_fee: Annual fee
       annual_fee_placeholder: '99'
+      statement_title: Monthly statement
+      statement_hint: "With the closing and payment days, the app knows which statement each purchase goes to, how much will be charged and when. Without them, the card works as before."
+      statement_closing_day: Closing day (31 = last of the month)
+      payment_day: Payment day
+      payment_account: Paid from account
+      payment_account_none: None
+      consolidation_days: Working days to book a purchase
+      consolidation_hint: "A purchase on a weekend or holiday is booked the next working day. If the bank takes longer (say a purchase on Thursday the 28th misses the closing on the 31st), set how many working days."
       apr: APR
       apr_placeholder: '15.99'
       available_credit: Available credit

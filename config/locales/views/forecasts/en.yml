@@ -3,6 +3,9 @@ en:
   forecasts:
     variable_line: Variable spending %{month}
     debt_plan_line: "%{loan} payment (debt plan)"
+    card_statement_line: "%{card}: %{month} statement"
+    card_fee_line: "Financing fee: %{name}"
+    card_installment_line: "Instalment %{number}/%{count}: %{name}"
     debt_plan_extra_line: "Extra repayment: %{name}"
     show:
       title: Forecast
@@ -58,6 +61,7 @@ en:
         planned: One-off
         variable: Variable spending
         debt_plan: Debt plan
+        card: Card
   forecast_items:
     form:
       name: Description

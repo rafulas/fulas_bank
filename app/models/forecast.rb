@@ -14,6 +14,11 @@
 #   4. When the debt plan feeds the forecast (DebtPlan::ForecastFeed), its
 #      loan payments and one-off contributions, which replace the recurring
 #      movements linked to the loans from next month on.
+#   5. For a card with its statement days set (CreditCard::Cycle), what it
+#      will charge for the purchases already made (the statement still open
+#      and the last one if it has not been charged yet) on its payment day,
+#      and the fees and instalments of its purchases paid in instalments
+#      (CardFinancing), in the account it is paid from.
 #
 # The user can change the date, amount or name of a line of 1 and 3, or leave
 # it out, from the table; those changes are ForecastAdjustments, applied here
@@ -40,8 +45,8 @@ class Forecast
   # One expected movement. `key` identifies a line the app works out by itself
   # (recurring or variable) so the user's changes to it can be found again;
   # `record` is the ForecastItem behind a one-off line.
-  Flow = Data.define(:date, :account, :amount, :name, :source, :key, :skipped, :adjusted, :record) do
-    def initialize(date:, account:, amount:, name:, source:, key: nil, skipped: false, adjusted: false, record: nil)
+  Flow = Data.define(:date, :account, :amount, :name, :source, :key, :skipped, :adjusted, :record, :card) do
+    def initialize(date:, account:, amount:, name:, source:, key: nil, skipped: false, adjusted: false, record: nil, card: nil)
       super
     end
 
@@ -94,7 +99,7 @@ class Forecast
   # (with `skipped`), which do not count in any balance. On the same day, the
   # month's variable spending goes last.
   def flows
-    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows + debt_plan_flows)
+    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows + debt_plan_flows + card_flows)
                  .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
   end
 
@@ -388,6 +393,47 @@ class Forecast
         next unless window.cover?(date)
 
         Flow.new(date: date, account: account, amount: amount, name: name, source: :debt_plan)
+      end
+    end
+
+    # ---- 5. Credit card statements and instalments ----
+
+    def card_flows
+      card_accounts.flat_map do |card|
+        cycle = CreditCard::Cycle.new(card, today: today)
+        next [] unless cycle.configured?
+
+        account = accounts_by_id[card.credit_card.payment_account_id] || main_account
+        next [] unless account
+
+        statement_flows(card, cycle, account) + financing_flows(card, cycle, account)
+      end
+    end
+
+    # The purchases already made: the open statement and the last one while
+    # it has not been charged. Later purchases are in "Gastos varios".
+    def statement_flows(card, cycle, account)
+      month = cycle.statement_month_for(today)
+      cycle.statements_between(month.prev_month, month).filter_map do |statement|
+        next unless window.cover?(statement.charged_on) && statement.amount.positive?
+
+        Flow.new(date: statement.charged_on, account: account, amount: statement.amount.round(2), source: :card, card: card,
+                 name: I18n.t("forecasts.card_statement_line", card: card.name, month: I18n.l(statement.closes_on, format: "%B %Y")))
+      end
+    end
+
+    def financing_flows(card, cycle, account)
+      card.card_financings.flat_map do |financing|
+        financing.charges(cycle).filter_map do |charge|
+          next unless window.cover?(charge.date)
+
+          name = if charge.kind == :fee
+            I18n.t("forecasts.card_fee_line", name: financing.name)
+          else
+            I18n.t("forecasts.card_installment_line", name: financing.name, number: charge.number, count: financing.installments_count)
+          end
+          Flow.new(date: charge.date, account: account, amount: charge.amount.round(2), name: name, source: :card, card: card)
+        end
       end
     end
 

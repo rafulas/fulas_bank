@@ -1,0 +1,91 @@
+<%# locals: (account:, cycle:) %>
+<%# Fulas Bank: a credit card's statements and its purchases paid in
+    instalments (see CreditCard::Cycle and CardFinancing). %>
+<% card = account.credit_card %>
+<% today = cycle.today %>
+<% current = cycle.current %>
+<% last_closed = cycle.last_closed %>
+<% financings = account.card_financings.includes(entry: :entryable).order(purchase_date: :desc).to_a %>
+
+<div class="space-y-4">
+  <div class="@container">
+    <div class="grid grid-cols-1 @md:grid-cols-2 gap-2">
+      <%= summary_card title: t(".current", from: l(current.opens_on, format: "%-d %b"), to: l(current.closes_on, format: "%-d %b")) do %>
+        <span class="whitespace-nowrap privacy-sensitive"><%= format_money(current.amount_money) %></span>
+        <span class="block text-xs font-normal text-secondary">
+          <%= t(".charged_on", date: l(current.charged_on, format: "%-d %B"), account: card.payment_account&.name || t(".no_account")) %>
+        </span>
+      <% end %>
+      <%= summary_card title: t(".last_closed", date: l(last_closed.closes_on, format: "%-d %b")) do %>
+        <span class="whitespace-nowrap privacy-sensitive"><%= format_money(last_closed.amount_money) %></span>
+        <span class="block text-xs font-normal <%= last_closed.charged?(today) ? "text-secondary" : "text-warning" %>">
+          <%= t(last_closed.charged?(today) ? ".was_charged" : ".will_be_charged", date: l(last_closed.charged_on, format: "%-d %B")) %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <%= render DS::Card.new(class: "gap-2") do %>
+    <h3 class="text-sm font-medium text-primary uppercase"><%= t(".statements") %></h3>
+    <%= render DS::Table.new(rows: cycle.recent, dense: true, label: t(".statements")) do |table| %>
+      <% table.with_column(t(".period")) do |statement| %>
+        <span class="text-primary"><%= l(statement.opens_on, format: "%-d/%m") %> – <%= l(statement.closes_on, format: "%-d/%m/%y") %></span>
+        <% if statement.open?(today) %>
+          <span class="block text-xs text-secondary"><%= t(".in_progress") %></span>
+        <% end %>
+      <% end %>
+      <% table.with_column(t(".purchases"), numeric: true, class: "privacy-sensitive") { |statement| format_money(statement.purchases_money) } %>
+      <% table.with_column(t(".financed_column"), numeric: true, class: "privacy-sensitive") { |statement| statement.financed.positive? ? format_money(-statement.financed_money) : "—" } %>
+      <% table.with_column(t(".charge"), numeric: true, class: "privacy-sensitive font-medium bg-info/10") { |statement| format_money(statement.amount_money) } %>
+      <% table.with_column(t(".charge_date"), numeric: true) { |statement| l(statement.charged_on, format: "%d/%m/%y") } %>
+    <% end %>
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  <% end %>
+
+  <%= render DS::Card.new(class: "gap-2") do %>
+    <h3 class="text-sm font-medium text-primary uppercase"><%= t(".financed_title") %></h3>
+    <% if financings.any? %>
+      <ul class="divide-y divide-divider">
+        <% financings.each do |financing| %>
+          <% next_charge = financing.next_charge(today: today, cycle: cycle) %>
+          <li class="py-3 space-y-1 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <span class="min-w-0">
+                <span class="block truncate text-primary font-medium"><%= financing.name %></span>
+                <span class="block text-xs text-secondary"><%= l(financing.purchase_date, format: "%d/%m/%Y") %> · <%= format_money(financing.financed_amount_money) %></span>
+              </span>
+              <% if financing.entry %>
+                <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: edit_transaction_card_financing_path(financing.entry), frame: :modal,
+                      aria: { label: t(".edit", name: financing.name) }) %>
+              <% end %>
+            </div>
+            <p class="text-xs text-secondary privacy-sensitive">
+              <%= t(".plan", count: financing.installments_count, amount: format_money(financing.installment_amount_money)) %>
+              <% if financing.fee_amount.positive? %>
+                · <%= t(".fee", amount: format_money(financing.fee_amount_money)) %>
+              <% end %>
+              · <%= t(".cost", amount: format_money(Money.new(financing.cost, financing.currency))) %>
+            </p>
+            <% paid = financing.paid_installments(today: today, cycle: cycle) %>
+            <div class="h-1.5 rounded-full overflow-hidden bg-surface-inset">
+              <div class="h-full rounded-full bg-success" style="width: <%= (paid * 100.0 / financing.installments_count).round(1) %>%"></div>
+            </div>
+            <p class="text-xs text-secondary privacy-sensitive">
+              <%= t(".progress", paid: paid, count: financing.installments_count, pending: format_money(Money.new(financing.pending_amount(today: today, cycle: cycle), financing.currency))) %>
+              <% if next_charge %>
+                · <%= t(".next", date: l(next_charge.date, format: "%-d %B %Y"), amount: format_money(Money.new(next_charge.amount, financing.currency))) %>
+              <% else %>
+                · <%= t(".finished") %>
+              <% end %>
+            </p>
+            <% if financing.mismatch? %>
+              <p class="text-xs text-warning"><%= t(".mismatch") %></p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".no_financings") %></p>
+    <% end %>
+  <% end %>
+</div>

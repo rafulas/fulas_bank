@@ -1,0 +1,69 @@
+---
+es:
+  transactions:
+    show:
+      card_statement: Extracto de la tarjeta
+    card_statement:
+      in_statement: "Va en el extracto que cierra el %{closes} y se cobra el %{charged}."
+      next_statement: Pasar al extracto siguiente
+      next_statement_hint: Para un gasto que el banco apuntó tarde y entró en el extracto del mes siguiente.
+      not_configured: "Pon el día de cierre y el de cobro en «Editar» de la tarjeta para saber en qué extracto va cada gasto."
+      financed:
+        one: "Financiado en 1 cuota de %{amount}"
+        other: "Financiado en %{count} cuotas de %{amount}"
+      fee: "Comisión: %{amount}"
+      edit_financing: Cambiar o quitar la financiación
+      finance: Financiar este gasto
+    card_statements:
+      update:
+        success: Extracto actualizado.
+    card_financings:
+      new:
+        title: Financiar este gasto
+      edit:
+        title: Financiación
+      form:
+        purchase: "%{name}, %{date}, %{amount}"
+        financed_amount: Importe financiado
+        installments_count: Número de cuotas
+        installment_amount: Importe de cada cuota
+        fee_amount: Comisión (se cobra el primer mes)
+        hint: "Pon lo que te muestra la app del banco al financiar. El gasto sale del extracto de su mes; ese día de cobro se cobra la comisión y, en los siguientes, cada cuota."
+        submit: Guardar
+        delete: Quitar la financiación
+        resource: financiación
+      create:
+        success: Gasto financiado.
+      update:
+        success: Financiación actualizada.
+      destroy:
+        success: Financiación quitada.
+  credit_cards:
+    tabs:
+      statement:
+        current: "Extracto en curso (%{from} – %{to})"
+        charged_on: "Se cobra el %{date} en %{account}"
+        no_account: la cuenta de cobro
+        last_closed: "Último extracto (cierre %{date})"
+        was_charged: "Cobrado el %{date}"
+        will_be_charged: "Se cobrará el %{date}"
+        statements: Extractos
+        period: Periodo
+        in_progress: En curso
+        purchases: Gastos
+        financed_column: Financiado
+        charge: A cobrar
+        charge_date: Día de cobro
+        hint: "Lo que se cobra es lo gastado en el periodo menos lo financiado, que se cobra aparte con su comisión y sus cuotas. Un gasto se puede pasar al extracto siguiente desde su detalle."
+        financed_title: Pagos financiados
+        edit: "Cambiar %{name}"
+        plan:
+          one: "1 cuota de %{amount}"
+          other: "%{count} cuotas de %{amount}"
+        fee: "comisión %{amount}"
+        cost: "te cuesta %{amount}"
+        progress: "%{paid} de %{count} cuotas pagadas · quedan %{pending}"
+        next: "siguiente: %{date}, %{amount}"
+        finished: terminado
+        mismatch: Las cuotas no llegan al importe financiado. Revisa los datos con la app del banco.
+        no_financings: "Ningún gasto financiado. Para financiar uno, ábrelo y pulsa «Financiar este gasto»."
