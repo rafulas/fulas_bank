@@ -41,6 +41,18 @@ class InvestmentsOverview::AnnualReturnTest < ActiveSupport::TestCase
     assert_in_delta 500.0 / 3_000, result.rate, 0.001
   end
 
+  test "less than a year of history is not annualised" do
+    shares = investment("Acciones BBVA", balance: 1_920)
+    contribute(shares, 400, @today - 6)
+
+    result = annual_return([ shares ])
+
+    assert_nil result.rate_for(shares), "380 % in six days would annualise to a number with dozens of digits"
+    assert_nil result.rate
+    assert result.young?(shares)
+    assert result.young?
+  end
+
   private
     def annual_return(accounts)
       InvestmentsOverview::AnnualReturn.new(accounts, currency: "EUR", today: @today)

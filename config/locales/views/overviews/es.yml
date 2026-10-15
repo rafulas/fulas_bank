@@ -25,8 +25,9 @@ es:
       debt_plan: Plan de deuda
   investments_overviews:
     show:
+      under_a_year: Menos de un año
       annual_return: Rentabilidad anual
-      annual_return_hint: "Rentabilidad: lo ganado sobre lo aportado. Rentabilidad anual (TIR): lo que has ganado al año, teniendo en cuenta cuándo aportaste cada euro; así una aportación de hace un mes no pesa como una de hace cinco años."
+      annual_return_hint: "Rentabilidad: lo ganado sobre lo aportado. Rentabilidad anual (TIR): lo que has ganado al año, teniendo en cuenta cuándo aportaste cada euro; así una aportación de hace un mes no pesa como una de hace cinco años. Solo se da con al menos un año de historia, como hacen los bancos: con menos, anualizar dispara la cifra."
       refresh_prices: Actualizar precios
       refreshing_prices: Actualizando…
       title: Inversiones
