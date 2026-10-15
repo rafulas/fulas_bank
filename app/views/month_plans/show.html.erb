@@ -61,9 +61,10 @@
       <% else %>
         <p class="p-4 text-sm text-secondary"><%= t(".no_budget") %></p>
       <% end %>
-      <%= link_to budgets_path, class: "flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover" do %>
-        <%= icon "plus", size: "sm" %>
-        <span><%= t(".edit_budget") %></span>
+      <%= link_to edit_month_plan_budget_path(month: plan.month.strftime("%Y-%m")), data: { turbo_frame: :modal },
+            class: "flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover" do %>
+        <%= icon(plan.budget_rows.any? ? "pencil" : "plus", size: "sm") %>
+        <span><%= t(plan.budget_rows.any? ? ".edit_budget" : ".add_budget") %></span>
       <% end %>
     </div>
   </section>

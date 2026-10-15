@@ -98,7 +98,11 @@ class MonthPlan
   def budget_rows
     return [] unless budget
 
+    # Main categories only: each one's amount already covers its
+    # subcategories (see MonthBudget).
     @budget_rows ||= budget.budget_categories.filter_map do |budget_category|
+      next if budget_category.subcategory?
+
       budgeted = (budget_category[:budgeted_spending] || 0).to_d
       next unless budgeted.positive?
 
