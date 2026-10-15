@@ -22,6 +22,11 @@ en:
       variable: Variable spending
       variable_on: Include variable spending
       main_account: Main account
+      cushion: Minimum cushion
+      cushion_placeholder: "E.g. 1000"
+      cushion_breached_title: "On %{date} you would drop below your %{cushion} cushion"
+      cushion_breached: "That day %{account} would be at %{balance}. Lowest: %{lowest} on %{lowest_on}. Check the table to see what causes it and whether a payment can move."
+      cushion_ok: "%{account} stays above %{cushion} until %{date}."
       variable_off: Recurring and one-off only
       today: Balance today
       on_date: Expected on %{date}

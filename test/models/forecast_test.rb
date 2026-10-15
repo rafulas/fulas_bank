@@ -20,6 +20,18 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal 1_000 - 40 * flows.size, forecast.balances_on(Date.current + 400)[@account].amount
   end
 
+  test "warns of the first day the account drops below the cushion, and its lowest point" do
+    @family.forecast_items.create!(account: @account, name: "Seguro coche", amount: 300, nature: "outflow", date: Date.current + 10)
+    @family.forecast_items.create!(account: @account, name: "Viaje", amount: 500, nature: "outflow", date: Date.current + 20)
+    @family.forecast_items.create!(account: @account, name: "Nómina", amount: 2_000, nature: "inflow", date: Date.current + 25)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 30, include_variable: false)
+
+    assert_equal [ Date.current + 20, Money.new(200, @account.currency) ], forecast.first_below(@account, 500)
+    assert_nil forecast.first_below(@account, 100)
+    assert_equal [ Date.current + 20, Money.new(200, @account.currency) ], forecast.lowest_balance(@account)
+  end
+
   test "a salary brings money in" do
     create_series(@account, name: "Nómina", amount: -2_000)
 

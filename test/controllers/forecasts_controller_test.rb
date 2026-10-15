@@ -12,6 +12,19 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#forecast-chart[data-controller='time-series-chart']"
   end
 
+  test "keeps the cushion and warns when the main account would drop below it" do
+    get forecast_url(cushion: "999999999")
+
+    assert_response :success
+    assert_equal "999999999.0", @user.reload.preferences[Forecast::CUSHION_PREFERENCE]
+    assert_select "input[name='cushion'][value='999999999']"
+    warning = I18n.t("forecasts.show.cushion_breached_title", locale: @user.locale.presence || I18n.default_locale)
+    assert_match ERB::Util.html_escape(warning.split(/%\{\w+\}/).max_by(&:size)), response.body
+
+    get forecast_url(cushion: "")
+    assert_nil @user.reload.preferences[Forecast::CUSHION_PREFERENCE]
+  end
+
   test "shows one account up to a typed date, without the variable spending" do
     get forecast_url(account_id: accounts(:depository).id, until: (Date.current + 2.years).iso8601, variable: "0")
 

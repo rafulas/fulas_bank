@@ -33,6 +33,8 @@ class Forecast
   ACCOUNT_TYPES = %w[Depository Investment Crypto].freeze
   CARD_TYPES = %w[CreditCard].freeze
   MAIN_ACCOUNT_PREFERENCE = "forecast_main_account_id".freeze
+  # Fulas Bank: the least the main account should ever have ("colchón").
+  CUSHION_PREFERENCE = "forecast_cushion".freeze
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
@@ -156,7 +158,29 @@ class Forecast
   # The lowest expected total and when, to warn before money runs short. It
   # looks at every day with a line too, which the weekly chart may skip.
   def lowest_total
-    (dates | active_flows.map(&:date)).sort.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount }
+    checked_dates.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount }
+  end
+
+  # The first day `account` is expected to drop below `minimum` (in its own
+  # currency), and its balance that day; nil when it never does. Like
+  # #lowest_total, it looks at every day with a line.
+  def first_below(account, minimum)
+    return if account.nil? || minimum.nil?
+
+    checked_dates.each do |date|
+      balance = balance_of(account, date)
+      return [ date, Money.new(balance, account.currency) ] if balance < minimum
+    end
+
+    nil
+  end
+
+  # The lowest expected balance of `account` and when.
+  def lowest_balance(account)
+    return if account.nil?
+
+    date, balance = checked_dates.map { |day| [ day, balance_of(account, day) ] }.min_by { |_, amount| amount }
+    [ date, Money.new(balance, account.currency) ]
   end
 
   # A Series for the chart: the total, or one account's balance.
@@ -176,6 +200,11 @@ class Forecast
 
     def weekly?
       (through - today).to_i > DAILY_POINTS_LIMIT
+    end
+
+    # The chart's days and every day with a line.
+    def checked_dates
+      @checked_dates ||= (dates | active_flows.map(&:date)).sort
     end
 
     # The chart's days: every day, or one a week for long horizons.

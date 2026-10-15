@@ -10,6 +10,7 @@
 <% today_value = selected ? Money.new(selected.balance, selected.currency) : forecast.total_on(Date.current) %>
 <% end_value = selected ? forecast.balances_on(@through)[selected] : forecast.total_on(@through) %>
 <% lowest_date, lowest_value = forecast.lowest_total %>
+<% below_date, below_value = forecast.first_below(@main_account, @cushion) %>
 
 <div class="space-y-4 pb-6 lg:pb-12">
   <% if @accounts.empty? %>
@@ -55,6 +56,27 @@
               {},
               { class: "form-field__input w-auto", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" } %>
       </label>
+      <%# Fulas Bank: the least the main account should have. %>
+      <label class="text-sm text-secondary flex flex-col gap-1">
+        <%= t(".cushion") %>
+        <%= form.number_field :cushion, value: @cushion&.to_i, min: 0, step: 1, placeholder: t(".cushion_placeholder"),
+              class: "form-field__input w-32", "data-auto-submit-form-target": "auto", "data-autosubmit-trigger-event": "change" %>
+      </label>
+    <% end %>
+
+    <% if @cushion && @main_account %>
+      <% cushion_money = Money.new(@cushion, @main_account.currency) %>
+      <% if below_date %>
+        <% low_date, low_value = forecast.lowest_balance(@main_account) %>
+        <%= render DS::Alert.new(
+          variant: :warning,
+          title: t(".cushion_breached_title", date: l(below_date, format: :long), cushion: format_money(cushion_money, precision: 0)),
+          message: t(".cushion_breached", account: @main_account.name, balance: format_money(below_value),
+                     lowest: format_money(low_value), lowest_on: l(low_date, format: "%-d/%m/%Y"))
+        ) %>
+      <% else %>
+        <%= render DS::Alert.new(variant: :success, message: t(".cushion_ok", account: @main_account.name, cushion: format_money(cushion_money, precision: 0), date: format_date(@through))) %>
+      <% end %>
     <% end %>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
