@@ -17,6 +17,7 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
                  [ import.date_col_label, import.name_col_label, import.amount_col_label,
                    import.category_col_label, import.tags_col_label, import.notes_col_label ]
     assert_nil import.account_col_label
+    assert_equal "Comercio", import.merchant_col_label
     assert_equal [ "1,234.56", "%Y-%m-%d", "inflows_positive", "signed_amount" ],
                  [ import.number_format, import.date_format, import.signage_convention, import.amount_type_strategy ]
   end
@@ -41,6 +42,27 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
     assert_equal [ [ "BBVA Casa a medias", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ],
                  transfers.map { |row| [ row.account, row.signed_amount ] }
     assert_equal 6, import.rows.count
+  end
+
+  test "reads Comercio as the merchant and keeps both Nota and Concepto in the notes" do
+    csv = <<~CSV
+      Título,Fecha,Importe,Categoría,Subcategoría,Etiquetas,Concepto,Comercio,Cuentas,Nota
+      Revisión moto,2026-10-07 00:00:00.000,-120.00€,Transporte,,,PAGO CON TARJETA // TALLER,Taller Pepe,Tarjeta Repsol,"Cambio de aceite
+      y filtro"
+      Lidl,2026-10-06 00:00:00.000,-45.98€,Compras,,,COMPRA LIDL,,Tarjeta Repsol,
+      Café,2026-10-05 00:00:00.000,-2.10€,Compras,,,,,Tarjeta Repsol,Con Mar
+    CSV
+    import = @family.imports.create!(type: "TransactionImport", raw_file_str: csv, col_sep: ",", account: accounts(:credit_card))
+    Import::BankPreset.apply(import)
+    import.reload.generate_rows_from_csv
+
+    assert_equal "Comercio", import.reload.merchant_col_label
+    rows = import.rows.index_by(&:name)
+    assert_equal "Taller Pepe", rows["Revisión moto"].merchant
+    assert_equal "Cambio de aceite\ny filtro\n\nPAGO CON TARJETA // TALLER", rows["Revisión moto"].notes
+    assert_equal "COMPRA LIDL", rows["Lidl"].notes
+    assert_equal "Con Mar", rows["Café"].notes
+    assert_equal "", rows["Lidl"].merchant.to_s
   end
 
   test "joins category and subcategory" do
