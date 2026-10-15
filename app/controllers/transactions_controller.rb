@@ -1,6 +1,9 @@
 class TransactionsController < ApplicationController
   include EntryableResource
 
+  # Fulas Bank: how far ahead the "Upcoming" tab looks for recurring payments.
+  UPCOMING_DAYS = 45
+
   before_action :set_entry_for_unlock, only: :unlock
   before_action :set_entry_for_tags, only: :update_tags
   before_action :store_params!, only: :index, unless: :next_page_request?
@@ -79,13 +82,15 @@ class TransactionsController < ApplicationController
       Current.accessible_entries.uncategorized_transactions.count
     end
 
-    # Load projected recurring transactions for next 10 days
+    # Load projected recurring transactions for the upcoming window.
+    # Fulas Bank: 45 days instead of 10, so the "Upcoming" tab shows this
+    # month's and next month's bills, not only the next few days.
     @projected_recurring = Rails.cache.fetch(projected_recurring_cache_key, expires_in: 1.day) do
       Current.family.recurring_transactions
                     .accessible_by(Current.user)
                     .active
                     .where("next_expected_date <= ? AND next_expected_date >= ?",
-                           10.days.from_now.to_date,
+                           UPCOMING_DAYS.days.from_now.to_date,
                            Date.current)
                     .includes(:merchant)
                     .to_a
@@ -532,7 +537,7 @@ class TransactionsController < ApplicationController
     # name/logo, but editing a FamilyMerchant or a shared ProviderMerchant
     # doesn't touch `recurring_transactions`.
     def projected_recurring_cache_key
-      "transactions_projected_recurring/v5/#{Current.family.id}/#{Current.user.id}/#{Date.current}/" \
+      "transactions_projected_recurring/v6/#{Current.family.id}/#{Current.user.id}/#{Date.current}/" \
         "#{Current.family.recurring_transactions_version}/#{Current.family.accounts_status_version}/" \
         "#{Current.family.recurring_transaction_merchants_version}/#{Current.account_share_version}"
     end

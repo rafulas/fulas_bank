@@ -22,6 +22,19 @@ class OverviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", account_path(accounts(:investment))
   end
 
+  test "the investments page refreshes the prices of every share in one go" do
+    InvestmentsOverview::PriceRefresh.any_instance.expects(:run)
+      .returns(InvestmentsOverview::PriceRefresh::Result.new(updated: %w[AAPL], failed: []))
+
+    get investments_overview_url
+    assert_select "form[action=?]", refresh_prices_investments_overview_path
+
+    post refresh_prices_investments_overview_url
+
+    assert_redirected_to investments_overview_url
+    assert_equal I18n.t("investments_overviews.refresh_prices.success", count: 1), flash[:notice]
+  end
+
   test "the forecast table opens on its own in a wide dialog" do
     get table_forecast_url(period: "1y")
 

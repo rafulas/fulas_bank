@@ -9,6 +9,35 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     @entry = entries(:transaction)
   end
 
+  # Fulas Bank: a movement marked fixed or recurring gets the 🔁 in the list
+  # even though marking does not match it to the series it creates.
+  test "a movement marked fixed shows the recurring icon in the list" do
+    @entry.transaction.update!(expense_type: "fixed")
+
+    get transactions_url
+
+    assert_response :success
+    assert_select "##{dom_id(@entry)} span[title=?]", I18n.t("transactions.transaction.fixed_tooltip")
+  end
+
+  test "the upcoming tab shows the next weeks' recurring payments, and offers to find them when there are none" do
+    series = @user.family.recurring_transactions.create!(
+      account: accounts(:depository), name: "Seguro Mapfre", amount: 47,
+      currency: "USD", expected_day_of_month: (Date.current + 30).day, status: "active", manual: true,
+      bill_type: "bill", last_occurrence_date: Date.current - 1, next_expected_date: Date.current + 30
+    )
+
+    get transactions_url(tab: "upcoming")
+    assert_select "#upcoming-group-#{series.next_expected_date}"
+
+    @user.family.recurring_transactions.update_all(status: "inactive")
+    Rails.cache.clear
+
+    get transactions_url(tab: "upcoming")
+    assert_select "form[action=?]", identify_recurring_transactions_path
+    assert_select "a[href=?]", recurring_transactions_path
+  end
+
   # Bills has always linked out to transactions. Until now nothing linked back,
   # so a transaction that settled a bill was a dead end. The link-back is part
   # of the preview-gated bills surface, so the viewer needs the flag.

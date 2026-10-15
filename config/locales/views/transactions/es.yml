@@ -178,6 +178,10 @@ es:
       pending: Pendiente
       pending_tooltip: Transacción pendiente — puede cambiar al confirmarse
       recurring_tooltip: "Recurrente: %{name}"
+      fixed_tooltip: Fijo
+      ending_tooltip: Recurrente (con fin)
+      one_time_expense_tooltip: Gasto puntual (no cuenta en medias ni presupuestos)
+      one_time_income_tooltip: Ingreso puntual (no cuenta en medias ni presupuestos)
       linked_with_provider: Vinculado con %{provider}
       activity_type_tooltip: Tipo de actividad de inversión
       possible_duplicate: "¿Duplicada?"
@@ -187,6 +191,10 @@ es:
       split: Dividida
       split_tooltip: Esta transacción se ha dividido en varias entradas
       split_child_tooltip: Parte de una transacción dividida
+    upcoming_empty:
+      title: No hay recurrentes con pago en los próximos %{days} días
+      description: Los recurrentes salen de Recibos. Búscalos en tu historial, o marca un movimiento como fijo o recurrente.
+      bills: Ir a Recibos
     merge_duplicate:
       success: Transacciones combinadas correctamente
       failure: No se pudieron combinar las transacciones

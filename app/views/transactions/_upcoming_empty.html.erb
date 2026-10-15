@@ -1,0 +1,25 @@
+<%# Fulas Bank: the empty "Upcoming" tab. Sure's own empty state pointed to an
+    "Identify patterns" button that only exists on the Bills page, so the
+    button and a link to that page are offered right here. %>
+<div class="flex flex-col items-center justify-center gap-4 py-24 px-4 text-center">
+  <div class="space-y-2">
+    <p class="text-secondary"><%= t(".title", days: TransactionsController::UPCOMING_DAYS) %></p>
+    <p class="text-subdued max-w-sm text-sm"><%= t(".description") %></p>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-center gap-2">
+    <%= render DS::Link.new(
+      text: t("recurring_transactions.identify_patterns"),
+      icon: "search",
+      variant: "outline",
+      href: identify_recurring_transactions_path,
+      method: :post
+    ) %>
+    <%= render DS::Link.new(
+      text: t(".bills"),
+      icon: "receipt",
+      variant: "ghost",
+      href: recurring_transactions_path
+    ) %>
+  </div>
+</div>

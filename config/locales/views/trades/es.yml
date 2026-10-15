@@ -26,6 +26,7 @@ es:
       type_interest: Interés
       dividend_requires_security: Se requiere un valor para los dividendos
       trade_requires_security: Se requiere un valor (símbolo) para las operaciones de compra y venta
+      purchase_funding_name: "Aportación para comprar %{ticker}"
     header:
       buy: Comprar
       sell: Vender

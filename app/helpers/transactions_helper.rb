@@ -7,6 +7,24 @@ module TransactionsHelper
     allocation&.recurring_occurrence&.recurring_transaction
   end
 
+  # Fulas Bank: the hover text of the 🔁 next to a movement, or nil when it
+  # gets none. A payment the app matched to a series names that series. A
+  # movement the user marked fixed or recurring gets it too: marking creates
+  # the series from the movement, but does not match the movement to it.
+  #
+  # @param entry [Entry] a transaction entry, with its allocations preloaded
+  # @return [String, nil]
+  def entry_recurring_tooltip(entry)
+    if (series = entry_recurring_series(entry))
+      return t("transactions.transaction.recurring_tooltip", name: series.display_name)
+    end
+
+    case entry.entryable.try(:expense_type)
+    when "fixed" then t("transactions.transaction.fixed_tooltip")
+    when "recurring" then t("transactions.transaction.ending_tooltip")
+    end
+  end
+
   # @return [Array<Hash>] the filters offered above the transaction list, each
   #   with the key its partial is named for, a translated label and an icon
   def transaction_search_filters

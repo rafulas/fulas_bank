@@ -1,11 +1,26 @@
+<% overview = @overview %>
+
 <% content_for :page_header do %>
-  <div class="space-y-1 mb-6">
-    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
-    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+    <div class="space-y-1">
+      <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+      <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+    </div>
+    <%# Fulas Bank: one button for the prices of every share, instead of the
+        "Actualizar" inside each position. %>
+    <% if overview.rows.any? %>
+      <%= render DS::Button.new(
+        text: t(".refresh_prices"),
+        icon: "refresh-cw",
+        variant: :outline,
+        size: :sm,
+        href: refresh_prices_investments_overview_path,
+        method: :post,
+        data: { turbo_submits_with: t(".refreshing_prices") }
+      ) %>
+    <% end %>
   </div>
 <% end %>
-
-<% overview = @overview %>
 
 <div class="max-w-3xl space-y-4 pb-6">
   <% if overview.rows.empty? %>
