@@ -26,6 +26,7 @@ en:
       type_interest: Interest
       dividend_requires_security: Security is required for dividends
       trade_requires_security: A security (ticker) is required for buy and sell trades
+      purchase_funding_name: "Money in to buy %{ticker}"
     header:
       buy: Buy
       sell: Sell

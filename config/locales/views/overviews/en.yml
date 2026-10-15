@@ -25,6 +25,8 @@ en:
       debt_plan: Debt plan
   investments_overviews:
     show:
+      refresh_prices: Refresh prices
+      refreshing_prices: Refreshing…
       title: Investments
       subtitle: What your investments are worth, what you put in and what you gained.
       empty_title: No investments
@@ -46,3 +48,12 @@ en:
       price: Price
       edit_fund: "Edit %{fund}"
       stale_prices: Some prices are more than a week old.
+
+    refresh_prices:
+      nothing: No shares with automatic prices to refresh. Fund prices are typed in by hand.
+      success:
+        one: Price refreshed for 1 security.
+        other: Prices refreshed for %{count} securities.
+      partial:
+        one: "Price refreshed for 1 security. No price found for: %{failed}"
+        other: "Prices refreshed for %{count} securities. No price found for: %{failed}"

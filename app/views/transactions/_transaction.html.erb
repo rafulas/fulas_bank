@@ -87,14 +87,15 @@
 
                   <div class="flex items-center gap-1 flex-shrink-0">
                     <% if transaction.one_time? %>
-                      <span class="text-orange-500" title="One-time <%= entry.amount.negative? ? "income" : "expense" %> (excluded from averages)">
+                      <span class="text-warning" title="<%= t(entry.amount.negative? ? "transactions.transaction.one_time_income_tooltip" : "transactions.transaction.one_time_expense_tooltip") %>">
                         <%= icon "asterisk", size: "sm", color: "current" %>
                       </span>
                     <% end %>
 
-                    <%# Recurring indicator: the movement belongs to a recurring series %>
-                    <% if (series = entry_recurring_series(entry)) %>
-                      <span class="text-secondary" title="<%= t("transactions.transaction.recurring_tooltip", name: series.display_name) %>">
+                    <%# Recurring indicator: the movement belongs to a recurring series,
+                        or (Fulas Bank) the user marked it fixed or recurring. %>
+                    <% if (recurring_title = entry_recurring_tooltip(entry)) %>
+                      <span class="text-secondary" title="<%= recurring_title %>">
                         <%= icon "repeat", size: "sm", color: "current" %>
                       </span>
                     <% end %>
@@ -214,8 +215,10 @@
       </div>
 
       <div class="shrink-0 col-span-4 lg:col-span-2 ml-auto flex items-center justify-end gap-2 <%= "opacity-50" if entry.excluded %>">
-        <%# Protection indicator - shows on hover when entry is protected from sync %>
-        <% if entry.protected_from_sync? && !entry.excluded? %>
+        <%# Protection indicator - shows on hover when entry is protected from sync.
+            Fulas Bank: only while bank sync is on (ACCOUNT_PROVIDER_LINKS); with
+            statements imported by hand there is no sync to protect from. %>
+        <% if Rails.configuration.x.account_provider_links && entry.protected_from_sync? && !entry.excluded? %>
           <%= link_to entry_path(entry),
                 data: { turbo_frame: "drawer", turbo_prefetch: false },
                 class: "invisible group-hover:visible transition-opacity",

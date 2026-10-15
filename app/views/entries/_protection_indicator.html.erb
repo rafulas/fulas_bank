@@ -2,7 +2,8 @@
 
 <%# Protection indicator - shows when entry is protected from sync overwrites %>
 <%= turbo_frame_tag dom_id(entry, :protection) do %>
-  <% if entry.protected_from_sync? && !entry.excluded? %>
+  <%# Fulas Bank: hidden while bank sync is off, like the lock in the list. %>
+  <% if Rails.configuration.x.account_provider_links && entry.protected_from_sync? && !entry.excluded? %>
   <details class="group shadow-border-xs bg-container rounded-xl mb-3 text-xs text-secondary">
     <summary class="flex items-center justify-between gap-2 cursor-pointer px-3 py-2">
       <div class="flex items-center gap-2">

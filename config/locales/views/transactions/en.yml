@@ -181,6 +181,10 @@ en:
       pending: Pending
       pending_tooltip: Pending transaction — may change when posted
       recurring_tooltip: "Recurring: %{name}"
+      fixed_tooltip: Fixed
+      ending_tooltip: Recurring (ends)
+      one_time_expense_tooltip: One-time expense (left out of averages and budgets)
+      one_time_income_tooltip: One-time income (left out of averages and budgets)
       linked_with_provider: Linked with %{provider}
       activity_type_tooltip: Investment activity type
       possible_duplicate: Duplicate?
@@ -190,6 +194,10 @@ en:
       split: Split
       split_tooltip: This transaction has been split into multiple entries
       split_child_tooltip: Part of a split transaction
+    upcoming_empty:
+      title: No recurring payments in the next %{days} days
+      description: Recurring payments come from the Bills page. Find them in your history, or mark a movement as fixed or recurring.
+      bills: Go to Bills
     merge_duplicate:
       success: Transactions merged successfully
       failure: Could not merge transactions

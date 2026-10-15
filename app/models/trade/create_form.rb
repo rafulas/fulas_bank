@@ -84,12 +84,43 @@ class Trade::CreateForm
         )
       )
 
-      if trade_entry.save
+      saved = Entry.transaction do
+        trade_entry.save && fund_purchase!(trade_entry, sec)
+      end
+
+      if saved
         trade_entry.lock_saved_attributes!
         account.sync_later
       end
 
       trade_entry
+    end
+
+    # Fulas Bank: an investment account can be kept purchase by purchase, with
+    # no money ever moved into it. A buy there would leave the account's cash
+    # negative, and its value (shares minus that negative cash) would be the
+    # gain rather than what it is worth. So the part of a buy the account's
+    # cash does not cover is recorded as money put into the account that day,
+    # a funds movement, which never counts as income or spending.
+    #
+    # @return [Boolean] true, or false (rolling back) when it cannot be saved
+    def fund_purchase!(trade_entry, sec)
+      return true unless type == "buy"
+
+      shortfall = trade_entry.amount.to_d - [ account.cash_balance.to_d, 0 ].max
+      return true unless shortfall.positive?
+
+      deposit = account.entries.build(
+        name: I18n.t("trades.form.purchase_funding_name", ticker: sec.ticker),
+        date: trade_entry.date,
+        amount: -shortfall,
+        currency: trade_entry.currency,
+        entryable: Transaction.new(kind: "funds_movement")
+      )
+      return true if deposit.save
+
+      trade_entry.errors.merge!(deposit.errors)
+      raise ActiveRecord::Rollback
     end
 
     # Dividends are always a Trade. Security is required.

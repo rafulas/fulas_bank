@@ -25,6 +25,8 @@ es:
       debt_plan: Plan de deuda
   investments_overviews:
     show:
+      refresh_prices: Actualizar precios
+      refreshing_prices: Actualizando…
       title: Inversiones
       subtitle: Lo que valen tus inversiones, lo que has aportado y lo que has ganado.
       empty_title: Sin inversiones
@@ -46,3 +48,12 @@ es:
       price: Valor liquidativo
       edit_fund: "Editar %{fund}"
       stale_prices: Hay valores liquidativos de hace más de una semana.
+
+    refresh_prices:
+      nothing: No hay acciones con precio automático que actualizar. Los valores liquidativos de los fondos se escriben a mano.
+      success:
+        one: Precio actualizado de 1 valor.
+        other: Precios actualizados de %{count} valores.
+      partial:
+        one: "Precio actualizado de 1 valor. No se encontró precio para: %{failed}"
+        other: "Precios actualizados de %{count} valores. No se encontró precio para: %{failed}"

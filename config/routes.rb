@@ -750,7 +750,9 @@ Rails.application.routes.draw do
     get :schedule
     resources :extra_payments, only: %i[create destroy], module: :debt_plans
   end
-  resource :investments_overview, only: :show, path: "inversiones"
+  resource :investments_overview, only: :show, path: "inversiones" do
+    post :refresh_prices
+  end
   resource :roadtrip, only: :show, path: "roadtrip"
   resources :investment_funds, only: %i[new create edit update destroy], path: "inversiones/fondos"
   resource :investment_fund_prices, only: %i[edit update], path: "inversiones/valores-liquidativos", controller: "investment_funds/prices"
