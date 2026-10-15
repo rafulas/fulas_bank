@@ -16,6 +16,14 @@ DIR="${FULAS_DIR:-$HOME/FulasBank}"
 RAW="https://raw.githubusercontent.com/$REPO/$REF/mac"
 DMG_URL="https://github.com/$REPO/releases/download/app-mac/FulasBank.dmg"
 cd "$DIR"
+
+# While this runs, the hourly check (aviso.sh) still sees the old version
+# running and would offer the update again. This mark tells it to wait.
+LOCK="$DIR/registros/actualizando"
+mkdir -p "$DIR/registros"
+date '+%s' > "$LOCK"
+trap 'rm -f "$LOCK"' EXIT
+
 PORT="$(grep '^PORT=' .env | cut -d= -f2)"
 PORT="${PORT:-3000}"
 
@@ -27,7 +35,6 @@ for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
 done
 chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh
-"$DIR/aviso.sh" --instalar || true
 docker compose pull
 
 echo "▶ Reiniciando"
@@ -55,6 +62,9 @@ rm -rf "$tmp"
 
 docker image prune -f > /dev/null 2>&1 || true
 rm -f "$DIR/registros/aviso-pospuesto"
+# The hourly check is set up again (in case aviso.sh changed) only now: it
+# runs once straight away, and must find the new version already running.
+"$DIR/aviso.sh" --instalar || true
 echo "Fulas Bank actualizado."
 # Back to the app, which the update closed to replace it.
 if [[ -d "/Applications/Fulas Bank.app" ]]; then
