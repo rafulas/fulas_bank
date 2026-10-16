@@ -18,19 +18,20 @@ class DragAndDropImportTest < ApplicationSystemTestCase
 
     # Manually make form and input visible
     execute_script("
-      var form = document.querySelector('form[action=\"#{imports_path}\"]');
+      var form = document.querySelector('form[action=\"#{smart_imports_path}\"]');
       form.classList.remove('hidden');
-      var input = document.querySelector('input[name=\"import[import_file]\"]');
+      var input = document.querySelector('input[name=\"file\"]');
       input.classList.remove('hidden');
       input.style.display = 'block';
     ")
 
-    attach_file "import[import_file]", file_path
+    attach_file "file", file_path
 
     # Submit the form manually since we bypassed the 'drop' event listener which triggers submit
-    find("form[action='#{imports_path}']").evaluate_script("this.requestSubmit()")
+    find("form[action='#{smart_imports_path}']").evaluate_script("this.requestSubmit()")
 
-    # Redirect lands on configuration step; flash may not be visible in CI
-    assert_text "Configure your import"
+    # Fulas Bank: the file goes to the smart import, which lands on the
+    # configuration step when it knows the account, or asks which one first.
+    assert_current_path(%r{/imports/[^/]+/configuration|/importar/[^/]+/edit})
   end
 end
