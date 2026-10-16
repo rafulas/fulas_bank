@@ -537,12 +537,14 @@ Rails.application.routes.draw do
       patch :remap_security
       post :reset_security
       post :sync_prices
+      patch :update_price
     end
   end
   resources :trades, only: %i[show new create update destroy] do
     member do
       post :unlock
     end
+    resource :bank_link, only: %i[create destroy], module: :trades
   end
   resources :valuations, only: %i[show new create update destroy] do
     post :confirm_create, on: :collection

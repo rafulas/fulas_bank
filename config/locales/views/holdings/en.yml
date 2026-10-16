@@ -18,8 +18,12 @@ en:
       success: Security reset to provider value.
     sync_prices:
       success: Market data synced successfully.
-      unavailable: Market data sync is not available for offline securities.
+      unavailable: The provider could not find this security. Check the ticker and its market (for example BBVA.MC) or type the price by hand with the pencil next to "Current Market Price".
+      back_online: Security found. It now gets prices; the account is being recalculated.
       provider_error: Could not fetch latest prices. Please try again in a few minutes.
+    update_price:
+      success: Price saved. The account is being recalculated.
+      error: Enter a price above zero and a date that is not in the future.
     errors:
       security_collision: "Cannot remap: you already have a holding for %{ticker} on %{date}."
     cost_basis_sources:
@@ -58,6 +62,14 @@ en:
         its returns or value.
       missing_data: Missing data
     show:
+      edit_price: Type the price by hand
+      manual_price_source: by hand, %{date}
+      manual_price_hint: If no price arrives for %{ticker}, type it yourself. It is used from that day until a newer one exists.
+      manual_price_label: Price per share (%{currency})
+      manual_price_date_label: Price date
+      save_price: Save price
+      offline_description: "%{ticker} was not found when it was created, so it gets no prices. Press \"Find price\" to try again."
+      find_price_button: Find price
       avg_cost_label: Average Cost
       current_market_price_label: Current Market Price
       delete: Delete

@@ -19,7 +19,9 @@ class Balance::ForwardCalculator < Balance::BaseCalculator
       start_cash_balance, start_non_cash_balance = resolve_starting_balances
 
       calc_start_date.upto(calc_end_date).map do |date|
-        valuation = sync_cache.get_valuation(date)
+        # Fulas Bank: an account without brokerage cash is worth its
+        # positions; a typed value would only stand for cash it lacks.
+        valuation = without_cash? ? nil : sync_cache.get_valuation(date)
 
         if valuation
           end_cash_balance = derive_cash_balance_on_date_from_total(
@@ -108,6 +110,10 @@ class Balance::ForwardCalculator < Balance::BaseCalculator
     end
 
     def opening_starting_balances
+      # Fulas Bank: an account without brokerage cash starts from what its
+      # positions were worth the day before, and never holds cash.
+      return [ 0, holdings_value_for_date(calculation_start_date.prev_day) ] if without_cash?
+
       # When the window starts before the opening anchor (a reconciliation or
       # other entry was backfilled with a date earlier than the anchor), we have
       # no known balance for that earlier start date. Seed flat at zero — the

@@ -1,8 +1,8 @@
 class HoldingsController < ApplicationController
   include StreamExtensions
 
-  before_action :set_holding, only: %i[show update destroy unlock_cost_basis remap_security reset_security sync_prices]
-  before_action :require_holding_write_permission!, only: %i[update destroy unlock_cost_basis remap_security reset_security sync_prices]
+  before_action :set_holding, only: %i[show update destroy unlock_cost_basis remap_security reset_security sync_prices update_price]
+  before_action :require_holding_write_permission!, only: %i[update destroy unlock_cost_basis remap_security reset_security sync_prices update_price]
 
   def index
     @account = accessible_accounts.find(params[:account_id])
@@ -100,8 +100,35 @@ class HoldingsController < ApplicationController
     end
   end
 
+  # Fulas Bank: the market price typed by hand, for a security the provider
+  # does not price (or has not priced yet). Stored for the chosen day, and the
+  # account is recalculated so the position is worth shares x that price.
+  def update_price
+    price = params.dig(:holding, :price).to_s.tr(",", ".").to_d
+    date = parse_price_date(params.dig(:holding, :price_date))
+
+    if price.positive? && date
+      @holding.security.set_manual_price!(price, currency: @holding.currency, date: date)
+      @holding.account.sync_later
+      flash[:notice] = t(".success")
+    else
+      flash[:alert] = t(".error")
+    end
+
+    redirect_to account_path(@holding.account, tab: "holdings")
+  end
+
   def sync_prices
     security = @holding.security
+
+    # Fulas Bank: an offline security (one no provider found when it was
+    # created) is asked for again before giving up, so BBVA.MC starts getting
+    # prices once Yahoo Finance is set up.
+    if security.offline? && security.try_bring_online!(currency: @holding.currency)
+      @holding.account.sync_later
+      redirect_to account_path(@holding.account, tab: "holdings"), notice: t("holdings.sync_prices.back_online")
+      return
+    end
 
     if security.offline?
       redirect_to account_path(@holding.account, tab: "holdings"),
@@ -169,6 +196,16 @@ class HoldingsController < ApplicationController
         }
       end
     end
+    # The day a typed price is for: today, unless another past day was chosen.
+    def parse_price_date(value)
+      return Date.current if value.blank?
+
+      date = Date.iso8601(value.to_s)
+      date if date <= Date.current
+    rescue Date::Error
+      nil
+    end
+
     def set_holding
       @holding = Current.family.holdings
                    .joins(:account)

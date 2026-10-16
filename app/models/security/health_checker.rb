@@ -125,7 +125,9 @@ class Security::HealthChecker
           failed_fetch_count: MAX_CONSECUTIVE_FAILURES + 1,
           failed_fetch_at: Time.current
         )
-        security.prices.delete_all
+        # Fulas Bank: prices the user typed by hand are not provider data;
+        # they stay, so the position keeps its value.
+        security.prices.where(manual: false).delete_all
       end
     end
 end

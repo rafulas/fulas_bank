@@ -1,0 +1,24 @@
+---
+es:
+  trades:
+    show:
+      bank_link: Movimiento del banco
+    bank_link:
+      view: Ver
+      unlink: Desvincular
+      link: Vincular
+      hint_buy: "¿De qué movimiento del banco salió el dinero de esta compra? Por ejemplo, el cargo en tu cuenta o el descuento de la nómina."
+      hint_sell: "¿A qué movimiento del banco llegó el dinero de esta venta?"
+      no_candidates: No hay movimientos del banco parecidos %{days} días antes o después. Importa antes el extracto de esa fecha.
+    bank_links:
+      create:
+        success: Operación vinculada al movimiento de %{name}.
+        error: No se ha podido vincular ese movimiento.
+      destroy:
+        success: Operación desvinculada del movimiento del banco.
+  transactions:
+    show:
+      linked_trade: Operación de inversión
+    linked_trade:
+      view: Ver
+      unlink: Desvincular

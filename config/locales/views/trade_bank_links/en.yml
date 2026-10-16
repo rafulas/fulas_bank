@@ -1,0 +1,24 @@
+---
+en:
+  trades:
+    show:
+      bank_link: Bank movement
+    bank_link:
+      view: View
+      unlink: Unlink
+      link: Link
+      hint_buy: Which bank movement paid for this buy? For example, the charge on your account or the deduction from your payslip.
+      hint_sell: Which bank movement received the money of this sale?
+      no_candidates: There are no similar bank movements %{days} days either side. Import the statement for that date first.
+    bank_links:
+      create:
+        success: Trade linked to the movement in %{name}.
+        error: That movement could not be linked.
+      destroy:
+        success: Trade unlinked from the bank movement.
+  transactions:
+    show:
+      linked_trade: Investment trade
+    linked_trade:
+      view: View
+      unlink: Unlink

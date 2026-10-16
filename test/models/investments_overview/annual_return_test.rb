@@ -53,6 +53,17 @@ class InvestmentsOverview::AnnualReturnTest < ActiveSupport::TestCase
     assert result.young?
   end
 
+  test "an account without brokerage cash measures its buys and sales, not stray money movements" do
+    shares = investment("Acciones", balance: 1_500)
+    shares.accountable.update_column(:brokerage_cash, false)
+    security = Security.create!(ticker: "BBVA.MC", offline: true)
+    create_trade(security, account: shares, qty: 100, price: 10, date: @today - 365, currency: "EUR")
+    # A deposit left over from when the account had cash: not money put in.
+    contribute(shares, 5_000, @today - 365)
+
+    assert_in_delta 0.5, annual_return([ shares.reload ]).rate_for(shares), 0.001
+  end
+
   private
     def annual_return(accounts)
       InvestmentsOverview::AnnualReturn.new(accounts, currency: "EUR", today: @today)

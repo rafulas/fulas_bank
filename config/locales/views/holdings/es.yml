@@ -18,8 +18,12 @@ es:
       success: Valor restablecido al valor del proveedor.
     sync_prices:
       success: Datos de mercado sincronizados correctamente.
-      unavailable: La sincronización de datos de mercado no está disponible para valores fuera de línea.
+      unavailable: Yahoo Finance no encuentra este valor. Comprueba el ticker con su mercado (por ejemplo BBVA.MC) o escribe el precio a mano con el lápiz de «Precio de mercado actual».
+      back_online: Valor encontrado. Ya recibe precios; la cuenta se está recalculando.
       provider_error: No se pudieron obtener los precios más recientes. Inténtalo de nuevo en unos minutos.
+    update_price:
+      success: Precio guardado. La cuenta se está recalculando.
+      error: Escribe un precio mayor que cero y una fecha que no sea futura.
     errors:
       security_collision: 'No se puede reasignar: ya tienes una posición para %{ticker} en la fecha %{date}.'
     cost_basis_sources:
@@ -58,6 +62,14 @@ es:
       missing_data: Datos faltantes
     show:
       avg_cost_label: Costo promedio
+      edit_price: Escribir el precio a mano
+      manual_price_source: a mano, %{date}
+      manual_price_hint: Si no llega el precio de %{ticker}, escríbelo tú. Se usa desde ese día hasta que haya uno más reciente.
+      manual_price_label: Precio por acción (%{currency})
+      manual_price_date_label: Fecha del precio
+      save_price: Guardar precio
+      offline_description: No se encontró %{ticker} al crearlo, así que no recibe precios. Pulsa «Buscar precio» para volver a intentarlo.
+      find_price_button: Buscar precio
       current_market_price_label: Precio de mercado actual
       delete: Eliminar
       delete_subtitle: Esto eliminará la posición y todas tus operaciones asociadas en esta cuenta. Esta acción no se puede deshacer.

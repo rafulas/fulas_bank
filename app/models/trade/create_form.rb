@@ -65,6 +65,10 @@ class Trade::CreateForm
         return entry
       end
 
+      # Fulas Bank: a ticker no provider found once (say, before Yahoo
+      # Finance was set up) is asked for again, so it gets market prices.
+      sec.try_bring_online!(currency: currency) if sec.offline? && sec.offline_reason.blank?
+
       signed_qty = sell_side_trade? ? -qty.to_d.abs : qty.to_d.abs
       signed_amount = signed_qty * price.to_d + fee.to_d
       label = SECURITY_TRADE_LABELS.fetch(type)
@@ -106,6 +110,9 @@ class Trade::CreateForm
     # @return [Boolean] true, or false (rolling back) when it cannot be saved
     def fund_purchase!(trade_entry, sec)
       return true unless type == "buy"
+      # Without brokerage cash the buy is paid from a bank account outside
+      # this one, and the account is worth only its positions.
+      return true unless account.brokerage_cash?
 
       shortfall = trade_entry.amount.to_d - [ account.cash_balance.to_d, 0 ].max
       return true unless shortfall.positive?

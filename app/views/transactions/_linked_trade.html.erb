@@ -1,0 +1,32 @@
+<%# locals: (entry:, trade:, can_edit:) %>
+<%# Fulas Bank: the buy or sale of shares this movement paid for (see
+    Trade::BankLink). %>
+
+<% trade_entry = trade.entry %>
+<div class="px-3 py-2 space-y-3">
+  <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-primary bg-container">
+    <div class="flex items-start gap-3 min-w-0">
+      <%= icon "chart-line", size: "md" %>
+      <div class="min-w-0 space-y-1">
+        <p class="text-sm font-medium text-primary truncate"><%= trade_entry.name %></p>
+        <p class="text-xs text-secondary">
+          <%= trade_entry.account.name %> · <%= format_date(trade_entry.date) %> ·
+          <span class="privacy-sensitive"><%= format_money(trade_entry.amount_money.abs) %></span>
+        </p>
+      </div>
+    </div>
+    <%= render DS::Link.new(text: t(".view"), variant: :ghost, size: :sm, href: trade_path(trade_entry), frame: :drawer) %>
+  </div>
+
+  <% if can_edit %>
+    <%= render DS::Button.new(
+          text: t(".unlink"),
+          icon: "unlink",
+          variant: :outline,
+          size: :sm,
+          href: trade_bank_link_path(trade_entry),
+          method: :delete,
+          frame: :_top
+        ) %>
+  <% end %>
+</div>

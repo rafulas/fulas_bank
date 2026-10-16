@@ -9,14 +9,18 @@
     <% end %>
 
     <div class="space-y-2">
-      <%= form.select :type, [
-          [t(".type_buy"), "buy"],
-          [t(".type_sell"), "sell"],
-          [t(".type_deposit"), "deposit"],
-          [t(".type_withdrawal"), "withdrawal"],
-          [t(".type_dividend"), "dividend"],
-          [t(".type_interest"), "interest"]
-      ],
+      <%# Fulas Bank: an account without brokerage cash has no money of its own
+          to deposit, withdraw or collect dividends into: only buys and sales. %>
+      <% type_options = [ [ t(".type_buy"), "buy" ], [ t(".type_sell"), "sell" ] ] %>
+      <% if account.nil? || account.brokerage_cash? %>
+        <% type_options += [
+             [ t(".type_deposit"), "deposit" ],
+             [ t(".type_withdrawal"), "withdrawal" ],
+             [ t(".type_dividend"), "dividend" ],
+             [ t(".type_interest"), "interest" ]
+           ] %>
+      <% end %>
+      <%= form.select :type, type_options,
       { label: t(".type"), selected: type },
       { data: {
           action: "trade-form#changeType",

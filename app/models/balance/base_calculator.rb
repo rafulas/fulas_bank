@@ -44,7 +44,26 @@ class Balance::BaseCalculator
       sync_cache.get_holdings_value(date)
     end
 
+    # Fulas Bank: an investment account without brokerage cash (see
+    # Account#brokerage_cash?) whose positions are recorded trade by trade.
+    # Its buys and sales are paid from bank accounts outside it, so its cash
+    # is always zero and it is worth what its positions are worth: the money
+    # of a trade does not move in or out of it, and a typed balance (the
+    # opening one, say) does not stand for cash it does not have.
+    #
+    # An account with no trades (funds valued by hand, for instance) keeps the
+    # usual rules, or the value typed for it would be lost.
+    def without_cash?
+      return @without_cash if defined?(@without_cash)
+
+      @without_cash = account.balance_type == :investment &&
+        !account.brokerage_cash? &&
+        account.entries.where(entryable_type: "Trade").exists?
+    end
+
     def derive_cash_balance_on_date_from_total(total_balance:, date:)
+      return 0 if without_cash?
+
       if account.balance_type == :investment
         total_balance - holdings_value_for_date(date)
       elsif account.balance_type == :cash
@@ -112,6 +131,10 @@ class Balance::BaseCalculator
       if account.balance_type == :non_cash && account.accountable_type == "Loan"
         non_cash_inflows = txn_inflow_sum.abs
         non_cash_outflows = txn_outflow_sum
+      elsif without_cash?
+        # Only the positions move: a buy adds to them, a sale takes away.
+        non_cash_outflows = trade_cash_inflow_sum.abs
+        non_cash_inflows = trade_cash_outflow_sum
       elsif account.balance_type != :non_cash
         cash_inflows = txn_inflow_sum.abs + trade_cash_inflow_sum.abs + income_inflow_sum.abs
         cash_outflows = txn_outflow_sum + trade_cash_outflow_sum + income_outflow_sum
@@ -132,7 +155,7 @@ class Balance::BaseCalculator
     def derive_cash_balance(cash_balance, date)
       entries = sync_cache.get_entries(date)
 
-      if account.balance_type == :non_cash
+      if account.balance_type == :non_cash || without_cash?
         0
       else
         cash_balance + signed_entry_flows(entries)

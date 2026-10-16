@@ -1,5 +1,5 @@
 class Security < ApplicationRecord
-  include Provided, PlanRestrictionTracker
+  include Provided, PlanRestrictionTracker, ManualPricing
 
   # Transient attribute for search results -- not persisted
   attr_accessor :search_currency
@@ -248,10 +248,19 @@ class Security < ApplicationRecord
     self.class.exchange_name_for(exchange_operating_mic)
   end
 
+  # Fulas Bank: falls back to the latest stored price when today has none and
+  # the provider cannot be asked (an offline security with a price typed by
+  # hand some days ago, or a weekend).
   def current_price
-    @current_price ||= find_or_fetch_price
-    return nil if @current_price.nil?
-    Money.new(@current_price.price, @current_price.currency)
+    record = current_price_record
+    return nil if record.nil?
+    Money.new(record.price, record.currency)
+  end
+
+  # The price #current_price shows, with its date (and whether the user typed
+  # it): today's, fetched if needed, or else the latest one stored.
+  def current_price_record
+    @current_price ||= find_or_fetch_price || latest_price
   end
 
   def to_combobox_option

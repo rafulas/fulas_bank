@@ -4,8 +4,9 @@
 # market data provider (Yahoo Finance) and recalculate the value of the
 # accounts that hold it.
 #
-# Shares typed in by hand ("offline", no provider) are skipped, and so are
-# the funds held by participaciones, whose valor liquidativo the user types.
+# Shares no provider found ("offline") are asked for again and skipped if
+# still unknown, and so are the funds held by participaciones, whose valor
+# liquidativo the user types.
 class InvestmentsOverview::PriceRefresh
   LOOKBACK_DAYS = 31
 
@@ -55,8 +56,18 @@ class InvestmentsOverview::PriceRefresh
       end
     end
 
+    # Fulas Bank: a share no provider found when it was created is asked for
+    # again first (Security#try_bring_online!), so it joins the refresh as
+    # soon as Yahoo Finance knows it.
     def securities
-      holdings_by_account.values.flatten.map(&:security).compact.uniq.reject(&:offline?)
+      holdings = holdings_by_account.values.flatten
+      holdings.map(&:security).compact.uniq.select do |security|
+        next true unless security.offline?
+        next false if security.cash?
+
+        currency = holdings.find { |holding| holding.security_id == security.id }&.currency
+        security.try_bring_online!(currency: currency)
+      end
     end
 
     # Each account recalculated once, only for the shares it holds that

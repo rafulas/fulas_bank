@@ -1,6 +1,10 @@
 class Investment < ApplicationRecord
   include Accountable
 
+  # Fulas Bank: turning brokerage cash on or off changes what the account is
+  # worth on every day of its history, so it is recalculated.
+  after_update_commit :recalculate_account, if: :saved_change_to_brokerage_cash?
+
   # Tax treatment categories:
   # - taxable: Gains taxed when realized
   # - tax_deferred: Taxes deferred until withdrawal
@@ -166,4 +170,9 @@ class Investment < ApplicationRecord
       end
     end
   end
+
+  private
+    def recalculate_account
+      account&.sync_later
+    end
 end

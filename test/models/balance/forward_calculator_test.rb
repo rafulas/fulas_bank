@@ -670,6 +670,56 @@ class Balance::ForwardCalculatorTest < ActiveSupport::TestCase
     )
   end
 
+  # Fulas Bank: an investment account without brokerage cash is worth just its
+  # positions. The money of its trades comes from (and goes to) bank accounts
+  # outside it, and a typed balance or a stray deposit does not count as cash.
+  test "investment account without brokerage cash is worth its holdings and never holds cash" do
+    account = create_account_with_ledger(
+      account: { type: Investment, currency: "USD" },
+      entries: [
+        { type: "opening_anchor", date: 3.days.ago.to_date, balance: 5000 },
+        { type: "transaction", date: 2.days.ago.to_date, amount: -300 },
+        { type: "trade", date: 1.day.ago.to_date, ticker: "AAPL", qty: 10, price: 100 }
+      ],
+      holdings: [
+        { date: 1.day.ago.to_date, ticker: "AAPL", qty: 10, price: 100, amount: 1000 },
+        { date: Date.current, ticker: "AAPL", qty: 10, price: 110, amount: 1100 }
+      ]
+    )
+    account.accountable.update_column(:brokerage_cash, false)
+    account.reload
+
+    calculated = Balance::ForwardCalculator.new(account).calculate
+
+    assert_calculated_ledger_balances(
+      calculated_data: calculated,
+      expected_data: [
+        {
+          date: 3.days.ago.to_date,
+          legacy_balances: { balance: 0, cash_balance: 0 },
+          balances: { start_cash: 0, start_non_cash: 0, end_cash: 0, end_non_cash: 0 }
+        },
+        {
+          date: 2.days.ago.to_date,
+          legacy_balances: { balance: 0, cash_balance: 0 },
+          balances: { start_cash: 0, start_non_cash: 0, end_cash: 0, end_non_cash: 0 }
+        },
+        {
+          date: 1.day.ago.to_date,
+          legacy_balances: { balance: 1000, cash_balance: 0 },
+          balances: { start_cash: 0, start_non_cash: 0, end_cash: 0, end_non_cash: 1000 },
+          flows: { cash_inflows: 0, cash_outflows: 0, non_cash_inflows: 1000, non_cash_outflows: 0, net_market_flows: 0 }
+        },
+        {
+          date: Date.current,
+          legacy_balances: { balance: 1100, cash_balance: 0 },
+          balances: { start_cash: 0, start_non_cash: 1000, end_cash: 0, end_non_cash: 1100 },
+          flows: { net_market_flows: 100 }
+        }
+      ]
+    )
+  end
+
   # ------------------------------------------------------------------------------------------------
   # Incremental calculation (window_start_date)
   # ------------------------------------------------------------------------------------------------

@@ -1,0 +1,21 @@
+<%# locals: (holding:, price_record:) %>
+<%# Fulas Bank: the market price, with its day when it is not today's and a
+    note when the user typed it, and the pencil that opens the price form. %>
+<dd id="<%= dom_id(holding, :current_market_price) %>" class="text-primary flex items-center gap-2">
+  <% if price_record %>
+    <%= format_money(Money.new(price_record.price, price_record.currency)) %>
+    <% if price_record.respond_to?(:manual) && price_record.manual %>
+      <span class="text-xs text-secondary">(<%= t("holdings.show.manual_price_source", date: l(price_record.date, format: :short)) %>)</span>
+    <% elsif price_record.date.present? && price_record.date < Date.current %>
+      <span class="text-xs text-secondary">(<%= l(price_record.date, format: :short) %>)</span>
+    <% end %>
+  <% else %>
+    <%= t("holdings.show.unknown") %>
+  <% end %>
+  <button type="button"
+          data-action="click->holding-security-remap#toggle"
+          class="text-secondary hover:text-primary"
+          aria-label="<%= t("holdings.show.edit_price") %>">
+    <%= icon "pencil", size: "xs" %>
+  </button>
+</dd>

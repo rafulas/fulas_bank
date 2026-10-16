@@ -87,6 +87,10 @@ class Security::Price::Importer
       is_provisional = db_price&.provisional
 
       # Choose price and currency from the same source to avoid mismatches
+      # Fulas Bank: whether the stored price is kept as it is (see below); a
+      # kept price the user typed by hand stays marked as manual.
+      keeps_db_price = !(clear_cache || is_provisional) && has_db_price
+
       chosen_price, chosen_currency = if clear_cache || is_provisional
         # For provisional/cache clear: only use provider price, let gap-fill handle missing
         # This ensures stale DB values don't persist when provider has no weekend data
@@ -122,7 +126,8 @@ class Security::Price::Importer
         date:        date,
         price:       chosen_price,
         currency:    chosen_currency || "USD",
-        provisional: provisional
+        provisional: provisional,
+        manual:      keeps_db_price && !used_locf && db_price.manual
       }
     end
 
