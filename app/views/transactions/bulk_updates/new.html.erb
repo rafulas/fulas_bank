@@ -17,6 +17,30 @@
             <%= form.text_area :notes, label: t(".notes_label"), placeholder: t(".notes_placeholder"), rows: 5 %>
           </div>
         <% end %>
+
+        <%# Fulas Bank: recurring series, fixed/recurring/variable and excluded
+            (Transaction::BulkClassification). Blank leaves each one as it is. %>
+        <%= render DS::Disclosure.new(title: t(".recurring_section"), open: true) do %>
+          <div class="space-y-2">
+            <%= form.select :recurring,
+                  [ [ t(".recurring_new"), "new" ] ] +
+                    Current.family.recurring_transactions.active.includes(:merchant).to_a
+                           .sort_by { |series| series.display_name.to_s.downcase }
+                           .map { |series| [ t(".recurring_existing", name: series.display_name), series.id ] },
+                  { include_blank: t(".no_change"), label: t(".recurring_label") } %>
+            <p class="text-xs text-secondary"><%= t(".recurring_hint") %></p>
+
+            <%= form.select :expense_type,
+                  Transaction::ExpenseClassifiable::EXPENSE_TYPES.map { |type| [ t("transactions.expense_type.types.#{type}"), type ] },
+                  { include_blank: t(".no_change"), label: t(".expense_type_label") } %>
+            <%= form.date_field :end_on, label: t(".end_on_label") %>
+            <p class="text-xs text-secondary"><%= t(".expense_type_hint") %></p>
+
+            <%= form.select :excluded,
+                  [ [ t(".exclude"), "1" ], [ t(".include"), "0" ] ],
+                  { include_blank: t(".no_change"), label: t(".excluded_label") } %>
+          </div>
+        <% end %>
       </div>
 
       <div class="flex justify-end gap-2 mt-auto">

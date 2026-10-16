@@ -9,6 +9,18 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     @entry = entries(:transaction)
   end
 
+  test "the detail lists similar movements, marking the recurring ones" do
+    twin = Entry.create!(account: @entry.account, name: @entry.name, date: @entry.date - 30, amount: @entry.amount,
+                         currency: @entry.currency, entryable: Transaction.new(expense_type: "fixed"))
+
+    get transaction_url(@entry), headers: { "Turbo-Frame" => "drawer" }
+
+    assert_response :success
+    assert_select "#transaction_similar a[href='#{entry_path(twin)}']" do
+      assert_select "span[title]", minimum: 1
+    end
+  end
+
   # Fulas Bank: a movement marked fixed or recurring gets the 🔁 in the list
   # even though marking does not match it to the series it creates.
   test "a movement marked fixed shows the recurring icon in the list" do

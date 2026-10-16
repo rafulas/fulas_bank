@@ -1,0 +1,6 @@
+<%# locals: (plan:, row:) %>
+<%# Fulas Bank: the budget of the month this movement counts against, as in
+    Planes: amount, spent, left and the bar. %>
+<div class="px-3 py-2" id="transaction_budget">
+  <%= render "month_plans/budget_row", plan: plan, row: row, currency: plan.currency %>
+</div>

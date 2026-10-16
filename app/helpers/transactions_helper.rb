@@ -1,4 +1,17 @@
 module TransactionsHelper
+  # Fulas Bank: [plan, budget row] for the month and category a movement's
+  # spending counts against, or nil when it has no budget there (or is not
+  # spending: income, transfers, excluded movements).
+  def transaction_budget_for(entry)
+    transaction = entry.transaction
+    return if entry.excluded? || entry.amount.negative? || transaction.category.nil?
+    return unless transaction.counts_by_kind?
+
+    plan = MonthPlan.new(Current.family, user: Current.user, month: entry.date)
+    row = plan.budget_row_for(transaction.category)
+    [ plan, row ] if row
+  end
+
   # The recurring series (a bill, a salary, a subscription) this movement was
   # matched to, if any, for the mark in the transaction list. Uses the
   # allocations the list preloads; elsewhere it loads them.

@@ -110,6 +110,21 @@
         <% end %>
       </div>
     <% end %>
+    <%# Fulas Bank: the month's budget for this movement's category, and the
+        movements like it (as Bilance shows them). %>
+    <% if (budget_view = transaction_budget_for(@entry)) %>
+      <% dialog.with_section(title: t(".budget_title", month: l(@entry.date, format: "%B").capitalize), open: true) do %>
+        <%= render "transactions/budget", plan: budget_view.first, row: budget_view.last %>
+      <% end %>
+    <% end %>
+
+    <% similar = Transaction::Similar.new(@entry, scope: Current.accessible_entries) %>
+    <% if similar.any? %>
+      <% dialog.with_section(title: t(".similar_title"), open: true) do %>
+        <%= render "transactions/similar", similar: similar %>
+      <% end %>
+    <% end %>
+
     <% dialog.with_section(title: t(".details")) do %>
       <div class="space-y-2">
         <%= styled_form_with model: @entry,
