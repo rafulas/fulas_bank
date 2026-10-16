@@ -36,6 +36,9 @@ en:
         errors_notice_mobile: You have errors in your data.  Tap over the error tooltip to see
           details.
         title: Clean your data
+        skipped_future_rows:
+          one: "1 transaction dated after today was left out. Import it once its date has come."
+          other: "%{count} transactions dated after today were left out. Import them once their date has come."
         data_cleaned: Your data has been cleaned
         next_step: Next step
         all_rows: All rows

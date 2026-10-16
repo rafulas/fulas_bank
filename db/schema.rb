@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1489,6 +1489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_180000) do
     t.integer "rows_to_skip", default: 0, null: false
     t.integer "sequence"
     t.string "signage_convention", default: "inflows_positive"
+    t.integer "skipped_future_rows_count", default: 0, null: false
     t.string "status"
     t.jsonb "summary", default: {}, null: false
     t.string "tags_col_label"

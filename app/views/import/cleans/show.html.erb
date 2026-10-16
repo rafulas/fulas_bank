@@ -10,6 +10,10 @@
     <p class="text-secondary text-sm"><%= t(".description") %></p>
   </div>
 
+  <% if @import.skipped_future_rows_count.positive? %>
+    <%= render DS::Alert.new(message: t(".skipped_future_rows", count: @import.skipped_future_rows_count), variant: :warning) %>
+  <% end %>
+
   <% if @import.cleaned? %>
     <div class="bg-container border border-tertiary rounded-lg p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
       <div class="flex items-center gap-2">
