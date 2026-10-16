@@ -142,6 +142,7 @@ class Family < ApplicationRecord
   has_many :forecast_items, dependent: :destroy
   has_many :forecast_adjustments, dependent: :destroy
   has_many :investment_funds, dependent: :destroy
+  has_many :insurances, dependent: :destroy
   has_many :card_financings, dependent: :destroy
   has_one :debt_plan, dependent: :destroy
   has_many :recurring_occurrences, dependent: :destroy

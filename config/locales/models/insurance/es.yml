@@ -1,0 +1,26 @@
+---
+es:
+  activerecord:
+    models:
+      insurance: Seguro
+    attributes:
+      insurance:
+        name: Nombre
+        kind: Tipo
+        account: Lo que asegura
+        insurer: Aseguradora
+        policy_number: Número de póliza
+        premium: Importe
+        payment_frequency: Frecuencia de pago
+        renewal_date: Fecha de renovación
+        documents: Documentos
+    errors:
+      models:
+        insurance:
+          attributes:
+            account:
+              wrong_type: "no encaja con un seguro de %{kind}"
+            documents:
+              too_many: "no pueden ser más de %{max} archivos"
+              too_large: "«%{filename}» supera los %{max_mb} MB"
+              invalid_format: "«%{filename}» no es una imagen ni un PDF"

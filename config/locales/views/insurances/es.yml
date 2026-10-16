@@ -1,0 +1,110 @@
+---
+es:
+  insurances:
+    default_name: Seguro
+    per_year: al año
+    inactive: Dado de baja
+    no_premium: Sin prima
+    renews_today: Renueva hoy
+    renews_in:
+      one: Renueva mañana
+      other: "Renueva en %{count} días"
+    renews_on: "Renueva el %{date}"
+    premium_per:
+      annual: "%{amount} al año"
+      semiannual: "%{amount} cada semestre"
+      quarterly: "%{amount} cada trimestre"
+      monthly: "%{amount} al mes"
+    kinds:
+      car: Coche
+      motorcycle: Moto
+      home: Hogar
+      life: Vida
+      health: Salud
+      accident: Accidentes
+      travel: Viaje
+      pet: Mascotas
+      liability: Responsabilidad civil
+      burial: Decesos
+      other: Otro
+    frequencies:
+      annual: Anual
+      semiannual: Semestral
+      quarterly: Trimestral
+      monthly: Mensual
+    asset_types:
+      vehicle: vehículo
+      property: vivienda
+    asset_card:
+      title: Seguros
+      add: Añadir seguro
+      none: Sin seguro vinculado. Añádelo aquí o vincula uno que ya tengas desde Seguros.
+      assistance: "Asistencia:"
+      per_year: "%{amount} al año"
+    index:
+      title: Seguros
+      subtitle: Todas tus pólizas, lo que cuestan y cuándo renuevan.
+      empty_title: Sin seguros
+      empty_description: Añade tus seguros de coche, moto, hogar, vida, salud… y vincula cada uno al coche o la vivienda que cubre.
+      active_count: Seguros en vigor
+      annual_total: Coste al año
+      monthly_total: Coste al mes
+      next_renewal: Próxima renovación
+      renewing_soon:
+        one: "%{names} renueva en menos de 30 días: buen momento para comparar precios."
+        other: "%{names} renuevan en menos de 30 días: buen momento para comparar precios."
+      uninsured_title: Sin seguro
+      uninsured_hint: Estos vehículos y viviendas no tienen ningún seguro en vigor vinculado.
+      insure: Añadir seguro
+      add: Añadir seguro
+      inactive:
+        one: "%{count} seguro dado de baja"
+        other: "%{count} seguros dados de baja"
+    form:
+      kind: Tipo
+      payment_frequency: Se paga
+      name: Nombre
+      name_placeholder: Seguro Cupra Ateca
+      account: Lo que asegura
+      no_account: Nada (seguro personal)
+      account_hint: El coche o la moto para los seguros de vehículo, la vivienda para el de hogar.
+      insurer: Aseguradora
+      insurer_placeholder: Mapfre
+      policy_number: Número de póliza
+      premium: Importe de cada pago
+      assistance_phone: Teléfono de asistencia
+      start_date: Fecha de alta
+      renewal_date: Fecha de renovación
+      renewal_hint: Se renueva cada año ese mismo día; la app avisa 30 días antes.
+      coverage: Coberturas
+      coverage_placeholder: Todo riesgo con franquicia de 300 €
+      notes: Notas
+      documents: Póliza y recibos
+      documents_hint:
+        one: "Imagen o PDF, hasta %{count} archivo de %{size} MB."
+        other: "Imágenes o PDF, hasta %{count} archivos de %{size} MB cada uno."
+      active: En vigor
+      active_hint: Desactívalo si das de baja el seguro; queda guardado en «dados de baja».
+      submit: Guardar
+      delete: Eliminar seguro
+      resource: seguro
+    documents:
+      title:
+        one: "%{count} documento"
+        other: "%{count} documentos"
+      open: "Abrir %{filename}"
+      download: "Descargar %{filename}"
+      delete: "Eliminar %{filename}"
+      resource: documento
+      destroy:
+        success: Documento eliminado.
+    new:
+      title: Añadir seguro
+    edit:
+      title: Editar seguro
+    create:
+      success: Seguro añadido.
+    update:
+      success: Seguro guardado.
+    destroy:
+      success: Seguro eliminado.

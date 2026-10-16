@@ -1,0 +1,46 @@
+<%# locals: (insurance:, today: Date.current) %>
+
+<%= link_to edit_insurance_path(insurance),
+      id: dom_id(insurance),
+      data: { turbo_frame: :modal },
+      class: class_names("block rounded-xl bg-container shadow-border-xs p-4 space-y-3 hover:bg-container-hover", "opacity-60": !insurance.active?) do %>
+  <div class="flex items-start justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <% if (asset = insurance.account&.accountable) %>
+        <%= render DS::FilledIcon.new(icon: insurance.icon, hex_color: asset.class.color, size: "md") %>
+      <% else %>
+        <%= render DS::FilledIcon.new(icon: insurance.icon, variant: :surface, size: "md") %>
+      <% end %>
+      <div class="min-w-0">
+        <p class="truncate text-sm font-medium text-primary"><%= insurance.name %></p>
+        <p class="truncate text-xs text-secondary">
+          <%= [ t("insurances.kinds.#{insurance.kind}"), insurance.insurer, insurance.policy_number ].compact.join(" · ") %>
+        </p>
+      </div>
+    </div>
+    <div class="text-right shrink-0">
+      <p class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= insurance.annual_cost ? format_money(insurance.annual_cost) : "—" %></p>
+      <p class="text-xs text-secondary"><%= t("insurances.per_year") %></p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 text-xs text-secondary">
+    <% if insurance.account %>
+      <%= render DS::Pill.new(label: insurance.account.name, tone: :info, icon: "link", marker: false, size: :sm) %>
+    <% end %>
+    <% if insurance.active? %>
+      <%= insurance_renewal_pill(insurance, today: today) %>
+    <% else %>
+      <%= render DS::Pill.new(label: t("insurances.inactive"), tone: :neutral, marker: false, size: :sm) %>
+    <% end %>
+    <% if insurance.premium && insurance.payment_frequency != "annual" %>
+      <span class="privacy-sensitive"><%= insurance_premium_label(insurance) %></span>
+    <% end %>
+    <% if insurance.coverage %>
+      <span class="truncate"><%= insurance.coverage %></span>
+    <% end %>
+    <% if insurance.documents.attached? %>
+      <span class="inline-flex items-center gap-1"><%= icon "paperclip", size: "xs" %><%= insurance.documents.size %></span>
+    <% end %>
+  </div>
+<% end %>

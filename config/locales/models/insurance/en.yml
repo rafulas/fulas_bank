@@ -1,0 +1,26 @@
+---
+en:
+  activerecord:
+    models:
+      insurance: Insurance
+    attributes:
+      insurance:
+        name: Name
+        kind: Type
+        account: What it insures
+        insurer: Insurer
+        policy_number: Policy number
+        premium: Amount
+        payment_frequency: Payment frequency
+        renewal_date: Renewal date
+        documents: Documents
+    errors:
+      models:
+        insurance:
+          attributes:
+            account:
+              wrong_type: "does not fit a %{kind} policy"
+            documents:
+              too_many: "cannot be more than %{max} files"
+              too_large: "%{filename} is larger than %{max_mb} MB"
+              invalid_format: "%{filename} is not an image or a PDF"

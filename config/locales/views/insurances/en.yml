@@ -1,0 +1,110 @@
+---
+en:
+  insurances:
+    default_name: Insurance
+    per_year: a year
+    inactive: Cancelled
+    no_premium: No premium
+    renews_today: Renews today
+    renews_in:
+      one: Renews tomorrow
+      other: "Renews in %{count} days"
+    renews_on: "Renews on %{date}"
+    premium_per:
+      annual: "%{amount} a year"
+      semiannual: "%{amount} every six months"
+      quarterly: "%{amount} a quarter"
+      monthly: "%{amount} a month"
+    kinds:
+      car: Car
+      motorcycle: Motorbike
+      home: Home
+      life: Life
+      health: Health
+      accident: Accident
+      travel: Travel
+      pet: Pet
+      liability: Liability
+      burial: Funeral
+      other: Other
+    frequencies:
+      annual: Annual
+      semiannual: Every six months
+      quarterly: Quarterly
+      monthly: Monthly
+    asset_types:
+      vehicle: vehicle
+      property: home
+    asset_card:
+      title: Insurance
+      add: Add insurance
+      none: No insurance linked. Add one here or link one you already have from Insurance.
+      assistance: "Assistance:"
+      per_year: "%{amount} a year"
+    index:
+      title: Insurance
+      subtitle: All your policies, what they cost and when they renew.
+      empty_title: No insurance
+      empty_description: Add your car, motorbike, home, life and health policies, and link each one to the car or home it covers.
+      active_count: Policies in force
+      annual_total: Cost per year
+      monthly_total: Cost per month
+      next_renewal: Next renewal
+      renewing_soon:
+        one: "%{names} renews within 30 days: a good time to compare prices."
+        other: "%{names} renew within 30 days: a good time to compare prices."
+      uninsured_title: Not insured
+      uninsured_hint: These vehicles and homes have no policy in force linked to them.
+      insure: Add insurance
+      add: Add insurance
+      inactive:
+        one: "%{count} cancelled policy"
+        other: "%{count} cancelled policies"
+    form:
+      kind: Type
+      payment_frequency: Paid
+      name: Name
+      name_placeholder: Car insurance
+      account: What it insures
+      no_account: Nothing (personal policy)
+      account_hint: The car or motorbike for vehicle policies, the home for home insurance.
+      insurer: Insurer
+      insurer_placeholder: Insurer name
+      policy_number: Policy number
+      premium: Amount of each payment
+      assistance_phone: Assistance phone
+      start_date: Start date
+      renewal_date: Renewal date
+      renewal_hint: It renews every year on that day; the app warns 30 days before.
+      coverage: Cover
+      coverage_placeholder: Fully comprehensive, 300 excess
+      notes: Notes
+      documents: Policy and receipts
+      documents_hint:
+        one: "Image or PDF, up to %{count} file of %{size} MB."
+        other: "Images or PDFs, up to %{count} files of %{size} MB each."
+      active: In force
+      active_hint: Turn it off if you cancel the policy; it is kept under cancelled policies.
+      submit: Save
+      delete: Delete insurance
+      resource: insurance
+    documents:
+      title:
+        one: "%{count} document"
+        other: "%{count} documents"
+      open: "Open %{filename}"
+      download: "Download %{filename}"
+      delete: "Delete %{filename}"
+      resource: document
+      destroy:
+        success: Document deleted.
+    new:
+      title: Add insurance
+    edit:
+      title: Edit insurance
+    create:
+      success: Insurance added.
+    update:
+      success: Insurance saved.
+    destroy:
+      success: Insurance deleted.

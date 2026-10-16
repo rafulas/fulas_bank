@@ -1,0 +1,82 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% overview = @overview %>
+
+<div class="max-w-3xl space-y-4 pb-6">
+  <% if overview.empty? %>
+    <%= render DS::EmptyState.new(icon: "shield", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="@container">
+      <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+        <%= summary_card title: t(".active_count") do %>
+          <%= overview.active.size %>
+        <% end %>
+        <%= summary_card title: t(".annual_total") do %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= format_money(overview.annual_total, precision: 0) %></span>
+        <% end %>
+        <%= summary_card title: t(".monthly_total") do %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= format_money(overview.monthly_total) %></span>
+        <% end %>
+        <%= summary_card title: t(".next_renewal") do %>
+          <% if (next_one = overview.next_renewal) %>
+            <span class="whitespace-nowrap"><%= l(next_one.next_renewal(overview.today), format: "%d/%m/%Y") %></span>
+          <% else %>
+            —
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if (soon = overview.renewing_soon).any? %>
+      <%= render DS::Alert.new(
+        variant: :warning,
+        message: t(".renewing_soon", names: soon.map(&:name).to_sentence, count: soon.size)
+      ) %>
+    <% end %>
+
+    <div id="insurances" class="space-y-2">
+      <% overview.active.each do |insurance| %>
+        <%= render "insurances/insurance", insurance: insurance, today: overview.today %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if (uninsured = overview.uninsured_assets).any? %>
+    <%= render DS::Card.new(class: "gap-2") do %>
+      <h3 class="text-sm font-medium text-primary"><%= t(".uninsured_title") %></h3>
+      <p class="text-xs text-secondary"><%= t(".uninsured_hint") %></p>
+      <ul class="divide-y divide-subdued">
+        <% uninsured.each do |account| %>
+          <li id="<%= dom_id(account, :uninsured) %>" class="flex items-center justify-between gap-3 py-2 text-sm">
+            <span class="truncate text-primary"><%= account.name %></span>
+            <%= render DS::Link.new(
+              text: t(".insure"),
+              icon: "plus",
+              variant: :ghost,
+              size: :sm,
+              href: new_insurance_path(account_id: account.id),
+              frame: :modal
+            ) %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+
+  <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, href: new_insurance_path, frame: :modal) %>
+
+  <% if overview.inactive.any? %>
+    <%= render DS::Disclosure.new(title: t(".inactive", count: overview.inactive.size), align: "left") do %>
+      <div class="space-y-2 pt-2">
+        <% overview.inactive.each do |insurance| %>
+          <%= render "insurances/insurance", insurance: insurance, today: overview.today %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
