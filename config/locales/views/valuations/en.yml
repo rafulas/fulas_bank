@@ -1,6 +1,22 @@
 ---
 en:
   valuations:
+    default_names:
+      opening_anchor:
+        asset: "Original purchase price"
+        loan: "Original principal"
+        investment: "Opening account value"
+        balance: "Opening balance"
+      current_anchor:
+        asset: "Current market value"
+        loan: "Current loan balance"
+        investment: "Current account value"
+        balance: "Current balance"
+      reconciliation:
+        asset: "Manual value update"
+        loan: "Manual principal update"
+        investment: "Manual value update"
+        balance: "Manual balance update"
     confirmation_contents:
       this_will: "This will %{action_verb} the account value on"
       to_colon: "to:"

@@ -4,6 +4,13 @@ en:
     edit:
       edit: Edit %{account}
     form:
+      create: "Add vehicle"
+      name_label: "Name"
+      name_placeholder: "Family car, motorbike…"
+      value_label: "Estimated current value"
+      value_hint: "What it would sell for today. It counts in your net worth and, with the purchase price, shows how much value it has lost."
+      value_date_label: "Value date"
+      value_date_hint: "Usually today. You can update the value any time from the vehicle page."
       purchase_price: Purchase price
       purchase_date: Purchase date
       purchase_hint: The purchase price shows how much value the car has lost and its total cost.

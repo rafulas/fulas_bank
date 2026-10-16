@@ -137,10 +137,34 @@ class AssetLinker
     rule_for(account, transaction)
   end
 
-  # The record of `account` a charge should go to instead of a new one: same
-  # kind, a few days away, with no charge yet (see existing_match).
+  # Whether a charge could be a cost of `account`, for the list a user picks
+  # the charge from: tagged with this asset, or in a category of its kind
+  # (Combustible, Peajes... for a vehicle; Comunidad, Reformas... for a home),
+  # or not categorized yet. A charge tagged with another asset, or in a
+  # category that is not about this kind of asset (Supermercado, Médico...),
+  # is not. Categories shared with other things (Seguros, Impuestos, Multas)
+  # need the tag.
+  def charge_fits?(entry, account)
+    transaction = entry.entryable
+    return true if account.property? && transaction.loan_payment?
+
+    tagged = tagged_assets(transaction)
+    return tagged.include?(account) if tagged.any?
+
+    return true if transaction.category.nil?
+
+    rules = account.vehicle? ? VEHICLE_RULES : PROPERTY_RULES
+    rule = category_rule(rules, transaction)
+    rule.present? && !rule.needs_tag
+  end
+
+  # The record of `account` a charge the user links by hand should go to
+  # instead of a new one: same kind, a few days away, and either with no
+  # charge yet or with one the app only suggested. The user's choice beats the
+  # app's guess, so a refuel the app paired with another charge of those days
+  # takes this one rather than getting a duplicate (see existing_match).
   def match_for(account, kind, entry)
-    existing_match(account, kind, entry)
+    existing_match(account, kind, entry) || existing_match(account, kind, entry, suggested: true)
   end
 
   private
@@ -234,10 +258,14 @@ class AssetLinker
     end
 
     # An existing record of the same kind, a few days from the charge and not
-    # linked to any: the closest in date, then in amount.
-    def existing_match(account, kind, entry)
-      records_for(account)
-        .where(entry_id: nil, suggestion: nil, kind: kind)
+    # linked to any (or, with `suggested`, linked only by an unconfirmed
+    # suggestion of the app's): the closest in date, then in amount.
+    def existing_match(account, kind, entry, suggested: false)
+      records = records_for(account)
+      records = suggested ? records.where(suggestion: "link").where.not(entry_id: entry.id) : records.where(entry_id: nil, suggestion: nil)
+
+      records
+        .where(kind: kind)
         .where(date: (entry.date - SAME_CHARGE_DAYS)..(entry.date + SAME_CHARGE_DAYS))
         .to_a
         .min_by { |record| [ (record.date - entry.date).abs, (record.amount.to_d - entry.amount.abs).abs ] }

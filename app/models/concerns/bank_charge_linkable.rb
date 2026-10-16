@@ -78,8 +78,11 @@ module BankChargeLinkable
   end
 
   # Outgoing purchases of the family around this record's date that are not
-  # already linked to another record: closest amount first (when the record
-  # has one), then closest date.
+  # already linked to another record and could be a cost of this asset (see
+  # AssetLinker#charge_fits?): a supermarket or a doctor is never offered for
+  # a refuel. The likeliest one comes first (closest amount, when the record
+  # has one, then closest date); the rest follow by date, newest first, so
+  # the list reads like the bank statement.
   def candidate_entries(scope: family.entries, limit: MATCH_LIMIT)
     return [] if date.blank?
 
@@ -87,16 +90,23 @@ module BankChargeLinkable
                       .where(date: (date - MATCH_WINDOW)..(date + MATCH_WINDOW))
                       .where("entries.amount > 0")
                       .where.not(id: AssetLink.linked_entry_ids(except: self))
-                      .includes(:account)
-                      .order(date: :desc)
+                      .where.not(account_id: asset_account.id)
+                      .preload(:account, entryable: [ :tags, { category: :parent } ])
+                      .order(date: :desc, created_at: :desc)
                       .limit(200)
                       .to_a
 
+    linker = AssetLinker.new(family)
+    candidates.select! { |entry| linker.charge_fits?(entry, asset_account) }
+    return [] if candidates.empty?
+
     target = amount.to_d
-    candidates.sort_by do |entry|
+    best = candidates.min_by do |entry|
       amount_gap = target.positive? ? ((entry.amount - target).abs / target) : 0
       [ amount_gap, (entry.date - date).abs ]
-    end.first(limit)
+    end
+
+    [ best, *(candidates - [ best ]) ].first(limit)
   end
 
   private

@@ -1,8 +1,9 @@
-<%# locals: (account:, url:, name_label: nil, name_placeholder: nil, balance_label: nil, balance_hint: nil, show_opening_balance_date: true, balance_required: true) %>
+<%# locals: (account:, url:, name_label: nil, name_placeholder: nil, balance_label: nil, balance_hint: nil, show_opening_balance_date: true, balance_required: true, opening_balance_date_label: nil, opening_balance_date_hint: nil, show_institution: true, submit_label: nil) %>
 <%# The optional labels let each account type word the shared fields in its
     own terms (a loan's "name" is the loan's name, its "balance" what is still
     owed), and a type that derives the opening date from its own fields can
-    leave the date out. %>
+    leave the date out. A type no bank holds (a car, a motorbike) can leave
+    the institution fields out. %>
 
 <% if @error_message.present? %>
   <%= render DS::Alert.new(message: @error_message, variant: :error) %>
@@ -24,10 +25,10 @@
 
     <% if show_opening_balance_date && account.new_record? && !account.linked? %>
       <%= form.date_field :opening_balance_date,
-          label: t(".opening_balance_date_label"),
+          label: opening_balance_date_label || t(".opening_balance_date_label"),
           value: Time.zone.today,
           required: true %>
-      <p class="text-xs text-secondary"><%= t(".opening_balance_date_hint") %></p>
+      <p class="text-xs text-secondary"><%= opening_balance_date_hint || t(".opening_balance_date_hint") %></p>
     <% end %>
 
     <%= yield form %>
@@ -49,13 +50,15 @@
       </summary>
 
       <div class="space-y-2 mt-2 pl-4 border-l border-primary">
-        <%= form.text_field :institution_name,
-            label: t(".institution_name_label"),
-            placeholder: account.provider&.institution_name || t(".institution_name_placeholder") %>
+        <% if show_institution %>
+          <%= form.text_field :institution_name,
+              label: t(".institution_name_label"),
+              placeholder: account.provider&.institution_name || t(".institution_name_placeholder") %>
 
-        <%= form.text_field :institution_domain,
-            label: t(".institution_domain_label"),
-            placeholder: account.provider&.institution_domain || t(".institution_domain_placeholder") %>
+          <%= form.text_field :institution_domain,
+              label: t(".institution_domain_label"),
+              placeholder: account.provider&.institution_domain || t(".institution_domain_placeholder") %>
+        <% end %>
 
         <%= form.text_area :notes,
             label: t(".notes_label"),
@@ -70,5 +73,5 @@
     </details>
   </div>
 
-  <%= form.submit %>
+  <%= submit_label ? form.submit(submit_label) : form.submit %>
 <% end %>

@@ -60,6 +60,28 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     assert_equal BigDecimal("54.37"), log.amount
   end
 
+  test "offers only charges that look like a vehicle cost, the likeliest first and the rest by date" do
+    family = accounts(:vehicle).family
+    fuel = family.categories.create!(name: "Combustible", color: "#506cd8")
+    groceries = family.categories.create!(name: "Supermercado", color: "#68b448")
+    other_car = family.accounts.create!(name: "BMW NineT", balance: 0, currency: "USD", accountable: Vehicle.new)
+    bmw_tag = family.tags.create!(name: "BMW NineT")
+
+    repsol = create_transaction(name: "Repsol", date: 5.days.ago.to_date, amount: 70, category: fuel)
+    shell = create_transaction(name: "Shell", date: 1.day.ago.to_date, amount: 40, category: fuel)
+    cepsa = create_transaction(name: "Cepsa", date: 8.days.ago.to_date, amount: 30, category: fuel)
+    uncategorized = create_transaction(name: "Sin categoría", date: 3.days.ago.to_date, amount: 20)
+    supermarket = create_transaction(name: "Ahorramas", date: 2.days.ago.to_date, amount: 69, category: groceries)
+    for_the_bmw = create_transaction(name: "Repsol moto", date: 2.days.ago.to_date, amount: 70, category: fuel, tags: [ bmw_tag ])
+
+    candidates = @vehicle.logs.new(kind: "fuel", date: 5.days.ago.to_date, amount: 70).candidate_entries
+
+    assert_equal [ repsol, shell, uncategorized, cepsa ], candidates
+    assert_not_includes candidates, supermarket
+    assert_not_includes candidates, for_the_bmw, "a charge tagged with the other vehicle is that one's"
+    assert_includes other_car.vehicle.logs.new(kind: "fuel", date: 2.days.ago.to_date, amount: 70).candidate_entries, for_the_bmw
+  end
+
   test "does not offer a bank charge already linked to another log" do
     charge = create_transaction(name: "REPSOL", date: Date.current, amount: 50)
     @vehicle.logs.create!(kind: "fuel", date: Date.current, amount: 50, entry: charge)

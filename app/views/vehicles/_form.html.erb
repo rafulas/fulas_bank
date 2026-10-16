@@ -1,6 +1,14 @@
 <%# locals: (account:, url:) %>
 
-<%= render "accounts/form", account: account, url: url do |form| %>
+<%= render "accounts/form", account: account, url: url,
+           name_label: t("vehicles.form.name_label"),
+           name_placeholder: t("vehicles.form.name_placeholder"),
+           balance_label: t("vehicles.form.value_label"),
+           balance_hint: t("vehicles.form.value_hint"),
+           opening_balance_date_label: t("vehicles.form.value_date_label"),
+           opening_balance_date_hint: t("vehicles.form.value_date_hint"),
+           show_institution: false,
+           submit_label: (t("vehicles.form.create") if account.new_record?) do |form| %>
   <%= render "shared/ruler", classes: "my-4" %>
 
   <div class="space-y-2">

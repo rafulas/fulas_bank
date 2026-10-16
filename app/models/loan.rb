@@ -35,6 +35,13 @@ class Loan < ApplicationRecord
   # Bank movements recorded as payments of this loan's instalments.
   has_many :payment_links, class_name: "Loan::PaymentLink", dependent: :destroy
 
+  # Fields the amortisation schedule is built from. When one changes (a
+  # corrected start date, say), the balances anchored at each linked payment
+  # are worked out again from the new schedule.
+  SCHEDULE_ATTRIBUTES = %w[initial_balance interest_rate rate_type term_months start_date payment_day
+                           payment_amount variable_rate_schedule].freeze
+  after_update_commit :reanchor_linked_payments, if: -> { (saved_changes.keys & SCHEDULE_ATTRIBUTES).any? }
+
   # Movements this far either side of the expected instalment, in amount, are
   # offered as candidates on the loan's Payments tab.
   PAYMENT_MATCH_TOLERANCE = BigDecimal("0.25")
@@ -150,6 +157,14 @@ class Loan < ApplicationRecord
                       .where.not(id: linked)
     origin = origination_date
     candidates = candidates.where(date: origin..) if origin
+
+    # Only charges near some instalment's amount are worth loading. Without
+    # this, the newest 500 charges of every kind were read and a family with a
+    # busy current account only got the last few months' instalments offered.
+    amounts = schedule.payments.map { |payment| payment.payment.amount }.select(&:positive?)
+    return [] if amounts.empty?
+
+    candidates = candidates.where(amount: (amounts.min * (1 - PAYMENT_MATCH_TOLERANCE))..(amounts.max * (1 + PAYMENT_MATCH_TOLERANCE)))
     candidates = candidates.includes(:account).order(date: :desc).limit(500).to_a
 
     candidates.select do |entry|
@@ -182,6 +197,16 @@ class Loan < ApplicationRecord
     end
 
     account.sync_later
+  end
+
+  # Each linked payment's anchor, again, from the current schedule. A
+  # payment whose month the schedule no longer covers keeps its anchor.
+  private def reanchor_linked_payments
+    payment_links.includes(:entry).each do |link|
+      adjust_balance_to_schedule(link.entry.date)
+    end
+  rescue ActiveRecord::RecordInvalid => error
+    Rails.logger.warn("Loan #{id}: could not re-anchor linked payments: #{error.message}")
   end
 
   private def asset_account_must_be_a_family_asset

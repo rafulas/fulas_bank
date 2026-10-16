@@ -55,9 +55,10 @@ class Vehicles::LogsController < Vehicles::BaseController
   end
 
   # Opened from a bank movement for a record that already exists: the charge
-  # comes preselected, and is saved with the rest of the form.
+  # comes preselected (replacing one the app only suggested), and is saved
+  # with the rest of the form.
   def edit
-    if (entry = linkable_entry(params[:entry_id])) && @log.entry_id.nil?
+    if (entry = linkable_entry(params[:entry_id])) && (@log.entry_id.nil? || @log.suggestion == "link")
       @log.entry = entry
       @linking_entry = entry
     end

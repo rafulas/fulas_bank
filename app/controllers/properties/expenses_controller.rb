@@ -44,7 +44,7 @@ class Properties::ExpensesController < Properties::BaseController
   # Opened from a bank movement for an expense that already exists: the
   # charge comes preselected, and is saved with the rest of the form.
   def edit
-    if (entry = linkable_entry(params[:entry_id])) && @expense.entry_id.nil?
+    if (entry = linkable_entry(params[:entry_id])) && (@expense.entry_id.nil? || @expense.suggestion == "link")
       @expense.entry = entry
       @linking_entry = entry
     end

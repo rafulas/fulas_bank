@@ -15,8 +15,25 @@ class Valuation::Name
     end
   end
 
+  # Fulas Bank: the translation key for this name ("reconciliation.loan"...).
+  # The names are stored in English when the valuation is created, so the
+  # views show this translation in their place while the name is unchanged.
+  def i18n_key
+    kind = %w[opening_anchor current_anchor].include?(valuation_kind) ? valuation_kind : "reconciliation"
+    "#{kind}.#{group}"
+  end
+
   private
     attr_reader :valuation_kind, :accountable_type
+
+    def group
+      case accountable_type
+      when "Property", "Vehicle" then "asset"
+      when "Loan" then "loan"
+      when "Investment", "Crypto", "OtherAsset" then "investment"
+      else "balance"
+      end
+    end
 
     def opening_anchor_name
       case accountable_type
