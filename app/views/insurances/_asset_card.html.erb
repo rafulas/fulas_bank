@@ -1,0 +1,45 @@
+<%# locals: (account:) %>
+<%# The policies that insure this vehicle or property, on its overview tab. %>
+
+<% insurances = account.insurances.active.alphabetically.to_a %>
+
+<%= render DS::Card.new(id: dom_id(account, :insurances), class: "gap-3") do %>
+  <div class="flex items-center justify-between gap-2">
+    <h3 class="text-sm font-medium text-primary"><%= t("insurances.asset_card.title") %></h3>
+    <%= render DS::Link.new(
+      text: t("insurances.asset_card.add"),
+      variant: :ghost,
+      size: :sm,
+      icon: "plus",
+      href: new_insurance_path(account_id: account.id, return_to_account: account.id),
+      frame: :modal
+    ) %>
+  </div>
+
+  <% if insurances.any? %>
+    <ul class="divide-y divide-subdued">
+      <% insurances.each do |insurance| %>
+        <li class="flex items-start justify-between gap-3 py-2 text-sm">
+          <div class="min-w-0">
+            <%= link_to insurance.name, edit_insurance_path(insurance, return_to_account: account.id), data: { turbo_frame: :modal }, class: "text-primary hover:underline" %>
+            <p class="text-secondary">
+              <%= [ insurance.insurer, insurance.coverage ].compact.join(" · ").presence || t("insurances.kinds.#{insurance.kind}") %>
+            </p>
+            <% if insurance.assistance_phone %>
+              <p class="text-secondary">
+                <%= t("insurances.asset_card.assistance") %>
+                <%= link_to insurance.assistance_phone, "tel:#{insurance.assistance_phone.gsub(/[^\d+]/, "")}", class: "text-primary underline" %>
+              </p>
+            <% end %>
+          </div>
+          <div class="flex flex-col items-end gap-1 shrink-0">
+            <span class="text-primary privacy-sensitive whitespace-nowrap"><%= insurance.annual_cost ? t("insurances.asset_card.per_year", amount: format_money(insurance.annual_cost)) : "—" %></span>
+            <%= insurance_renewal_pill(insurance) %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t("insurances.asset_card.none") %></p>
+  <% end %>
+<% end %>

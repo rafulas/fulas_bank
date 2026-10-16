@@ -99,6 +99,8 @@
 
   <%= render "vehicles/tabs/vehicle_sheet", account: account, logbook: logbook %>
 
+  <%= render "insurances/asset_card", account: account %>
+
   <% if !logbook.empty? && (recent = logbook.recent).any? %>
     <%= render DS::Card.new(class: "gap-3") do %>
       <h3 class="text-sm font-medium text-primary"><%= t(".recent") %></h3>

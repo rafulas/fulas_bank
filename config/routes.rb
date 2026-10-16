@@ -769,6 +769,10 @@ Rails.application.routes.draw do
     post :refresh_prices
   end
   resource :roadtrip, only: :show, path: "roadtrip"
+  # Fulas Bank: the insurance policies, tied to the vehicle or home they cover.
+  resources :insurances, except: :show, path: "seguros" do
+    resources :documents, only: %i[show destroy], controller: "insurances/documents"
+  end
   resources :investment_funds, only: %i[new create edit update destroy], path: "inversiones/fondos"
   resource :investment_fund_prices, only: %i[edit update], path: "inversiones/valores-liquidativos", controller: "investment_funds/prices"
   resources :forecast_items, only: %i[new create edit update destroy]

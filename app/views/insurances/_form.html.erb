@@ -1,0 +1,73 @@
+<%# locals: (insurance:, return_to_account: nil) %>
+
+<%= styled_form_with model: insurance, url: (insurance.persisted? ? insurance_path(insurance) : insurances_path), class: "space-y-4", multipart: true, data: { turbo_frame: :_top } do |form| %>
+  <% if insurance.errors.any? %>
+    <%= render DS::Alert.new(message: insurance.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <% if return_to_account %>
+    <%= hidden_field_tag :return_to_account, return_to_account %>
+  <% end %>
+
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.select :kind, insurance_kind_options, { label: t(".kind") }, required: true %>
+      <%= form.select :payment_frequency, insurance_frequency_options, { label: t(".payment_frequency") }, required: true %>
+    </div>
+    <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
+
+    <%= form.select :account_id, insurance_asset_options(insurable_assets), { label: t(".account"), include_blank: t(".no_account") } %>
+    <p class="text-xs text-secondary"><%= t(".account_hint") %></p>
+
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.text_field :insurer, label: t(".insurer"), placeholder: t(".insurer_placeholder") %>
+      <%= form.text_field :policy_number, label: t(".policy_number") %>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :premium, label: t(".premium"), step: "0.01", min: 0 %>
+      <%= form.text_field :assistance_phone, label: t(".assistance_phone"), placeholder: "900 000 000" %>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.date_field :start_date, label: t(".start_date") %>
+      <%= form.date_field :renewal_date, label: t(".renewal_date") %>
+    </div>
+    <p class="text-xs text-secondary"><%= t(".renewal_hint") %></p>
+    <%= form.text_field :coverage, label: t(".coverage"), placeholder: t(".coverage_placeholder") %>
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+
+    <%= form.file_field :documents,
+                        label: t(".documents"),
+                        multiple: true,
+                        accept: Insurance::DOCUMENT_TYPES.join(",") %>
+    <p class="text-xs text-secondary">
+      <%= t(".documents_hint", count: Insurance::MAX_DOCUMENTS, size: Insurance::MAX_DOCUMENT_SIZE / 1.megabyte) %>
+    </p>
+
+    <% if insurance.persisted? %>
+      <div class="flex items-center justify-between gap-3">
+        <div class="space-y-1">
+          <p class="text-sm font-medium text-primary"><%= t(".active") %></p>
+          <p class="text-xs text-secondary"><%= t(".active_hint") %></p>
+        </div>
+        <%= form.toggle :active %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if insurance.persisted? %>
+  <%= render "insurances/documents", insurance: insurance %>
+
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: insurance_path(insurance),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>
