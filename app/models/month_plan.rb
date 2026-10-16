@@ -123,6 +123,17 @@ class MonthPlan
     end
   end
 
+  # Fulas Bank: the budget line a movement in `category` counts against: the
+  # subcategory's own, when it has an amount, or else its main category's.
+  # Nil when neither is budgeted this month.
+  def budget_row_for(category)
+    return if category.nil?
+
+    rows = budget_rows.flat_map { |row| [ row, *row.children ] }
+    rows.find { |row| row.category.id == category.id } ||
+      (category.parent_id && budget_rows.find { |row| row.category.id == category.parent_id })
+  end
+
   def budget_total
     money(budget_rows.sum(&:budgeted))
   end

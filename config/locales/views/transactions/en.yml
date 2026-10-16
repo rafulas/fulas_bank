@@ -10,7 +10,23 @@ en:
       linked_to: Linked to
       unlink: Unlink
     bulk_updates:
+      create:
+        success:
+          one: "1 transaction updated"
+          other: "%{count} transactions updated"
       new:
+        recurring_section: "Recurring and type"
+        recurring_label: "Recurring"
+        no_change: "(no change)"
+        recurring_new: "Create a new recurring series from these transactions"
+        recurring_existing: "Payments of: %{name}"
+        recurring_hint: "The selected transactions become payments of that series (transfers are skipped). New builds it from the most recent one."
+        expense_type_label: "Fixed, recurring or variable"
+        end_on_label: "Last payment date (recurring only)"
+        expense_type_hint: "Fixed and recurring repeat and the forecast projects them; recurring needs the last payment date."
+        excluded_label: "Exclude from reports and budgets"
+        exclude: "Exclude"
+        include: "Include"
         cancel: Cancel
         category_label: Category
         category_prompt: Select a category
@@ -71,6 +87,8 @@ en:
     new:
       new_transaction: New transaction
     show:
+      budget_title: "%{month} budget"
+      similar_title: "Similar transactions"
       keep_both: No, keep both
       loan_payment: Loan Payment
       mark_recurring: Mark as Recurring

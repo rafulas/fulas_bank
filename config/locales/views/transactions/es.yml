@@ -10,7 +10,23 @@ es:
       linked_to: Vinculado a
       unlink: Desvincular
     bulk_updates:
+      create:
+        success:
+          one: "1 movimiento actualizado"
+          other: "%{count} movimientos actualizados"
       new:
+        recurring_section: "Recurrente y tipo"
+        recurring_label: "Recurrente"
+        no_change: "(no cambiar)"
+        recurring_new: "Crear un recurrente nuevo con estos movimientos"
+        recurring_existing: "Pagos de: %{name}"
+        recurring_hint: "Los movimientos elegidos pasan a ser pagos de ese recurrente (los traspasos no). Con «nuevo», se crea a partir del más reciente."
+        expense_type_label: "Fijo, recurrente o variable"
+        end_on_label: "Fecha del último pago (solo para recurrente)"
+        expense_type_hint: "Fijo y recurrente se repiten y el Forecast los prevé; recurrente necesita la fecha del último pago."
+        excluded_label: "Excluir de informes y presupuestos"
+        exclude: "Excluir"
+        include: "No excluir"
         cancel: Cancelar
         category_label: Categoría
         category_prompt: Selecciona una categoría
@@ -71,6 +87,8 @@ es:
     new:
       new_transaction: Nueva transacción
     show:
+      budget_title: "Presupuesto de %{month}"
+      similar_title: "Transacciones similares"
       keep_both: No, mantener ambas
       loan_payment: Pago de préstamo
       mark_recurring: Marcar como recurrente

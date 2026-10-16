@@ -136,4 +136,41 @@ class Transactions::BulkUpdatesControllerTest < ActionDispatch::IntegrationTest
     transaction_entry.reload
     assert_equal [ new_tag.id ], transaction_entry.transaction.tag_ids
   end
+
+  test "bulk update makes the selected movements payments of one new recurring series, and excludes them" do
+    account = accounts(:depository)
+    entries = [ 3, 2, 1 ].map do |months|
+      Entry.create!(account: account, name: "Apple.com", date: months.months.ago.to_date, amount: 4.99, currency: "USD",
+                    entryable: Transaction.new)
+    end
+
+    assert_difference -> { RecurringTransaction.count } => 1 do
+      post transactions_bulk_update_url, params: {
+        bulk_update: { entry_ids: entries.map(&:id), recurring: "new", expense_type: "fixed", excluded: "1" }
+      }
+    end
+
+    assert_redirected_to transactions_url
+    series = RecurringTransaction.order(:created_at).last
+    entries.each do |entry|
+      entry.reload
+      assert entry.excluded?
+      assert_equal series, entry.transaction.recurring_series
+      assert_equal "fixed", entry.transaction.expense_type
+    end
+  end
+
+  test "bulk update links the selected movements to an existing recurring series" do
+    account = accounts(:depository)
+    first = Entry.create!(account: account, name: "Netflix", date: 2.months.ago.to_date, amount: 12.99, currency: "USD", entryable: Transaction.new)
+    series = RecurringTransaction.create_from_transaction(first.transaction)
+    second = Entry.create!(account: account, name: "NETFLIX.COM", date: 1.month.ago.to_date, amount: 12.99, currency: "USD", entryable: Transaction.new)
+
+    assert_no_difference -> { RecurringTransaction.count } do
+      post transactions_bulk_update_url, params: { bulk_update: { entry_ids: [ first.id, second.id ], recurring: series.id } }
+    end
+
+    assert_equal series, first.reload.transaction.recurring_series
+    assert_equal series, second.reload.transaction.recurring_series
+  end
 end
