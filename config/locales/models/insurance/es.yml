@@ -15,6 +15,7 @@ es:
         renewal_date: Fecha de renovación
         documents: Documentos
         installments: Plazos
+        payment_account: Cuenta de cobro
     errors:
       models:
         insurance:

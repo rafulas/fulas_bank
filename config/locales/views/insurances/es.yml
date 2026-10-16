@@ -27,6 +27,9 @@ es:
       remove: Quitar plazo
       add: Añadir plazo
       repeat_hint: Se repiten cada año en las mismas fechas.
+      payment_account: Se cobran en
+      main_account: La cuenta principal del Forecast
+      forecast_hint: El Forecast prevé cada plazo en esta cuenta, todos los años. Si un año cambia un plazo, edítalo en la tabla del Forecast.
     premium_per:
       annual: "%{amount} al año"
       semiannual: "%{amount} cada semestre"

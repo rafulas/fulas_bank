@@ -2,6 +2,7 @@
 en:
   forecasts:
     variable_line: Variable spending %{month}
+    insurance_line: "%{name} (instalment %{number} of %{count})"
     debt_plan_line: "%{loan} payment (debt plan)"
     card_statement_line: "%{card}: %{month} statement"
     card_fee_line: "Financing fee: %{name}"
@@ -67,6 +68,7 @@ en:
         variable: Variable spending
         debt_plan: Debt plan
         card: Card
+        insurance: Insurance
   forecast_items:
     form:
       name: Description

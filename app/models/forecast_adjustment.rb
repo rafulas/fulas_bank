@@ -7,11 +7,12 @@
 # line's key:
 #   recurring:<series id>:<the payment's original date, YYYY-MM-DD>
 #   variable:<account id>:<the month, YYYY-MM>
+#   insurance:<insurance id>:<the instalment's date, YYYY-MM-DD>
 # A change whose line no longer exists (the series ended, the month has
 # passed) is simply ignored.
 class ForecastAdjustment < ApplicationRecord
   UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".freeze
-  KEY_FORMAT = /\A(?:recurring:#{UUID}:\d{4}-\d{2}-\d{2}|variable:#{UUID}:\d{4}-\d{2})\z/
+  KEY_FORMAT = /\A(?:(?:recurring|insurance):#{UUID}:\d{4}-\d{2}-\d{2}|variable:#{UUID}:\d{4}-\d{2})\z/
 
   belongs_to :family
 
@@ -21,6 +22,10 @@ class ForecastAdjustment < ApplicationRecord
 
   def self.recurring_key(series, original_date)
     "recurring:#{series.id}:#{original_date.iso8601}"
+  end
+
+  def self.insurance_key(insurance, date)
+    "insurance:#{insurance.id}:#{date.iso8601}"
   end
 
   def self.variable_key(account, month)
@@ -36,12 +41,17 @@ class ForecastAdjustment < ApplicationRecord
   end
 
   private
-    # The key names a series or an account: it has to be one of this family's.
+    # The key names a series, a policy or an account: it has to be one of
+    # this family's.
     def key_belongs_to_family
       return unless family && self.class.valid_key?(key)
 
       _, id, _ = key.split(":")
-      exists = kind == "recurring" ? family.recurring_transactions.exists?(id) : family.accounts.exists?(id)
+      exists = case kind
+      when "recurring" then family.recurring_transactions.exists?(id)
+      when "insurance" then family.insurances.exists?(id)
+      else family.accounts.exists?(id)
+      end
       errors.add(:key, :invalid) unless exists
     end
 end

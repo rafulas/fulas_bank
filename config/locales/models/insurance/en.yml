@@ -15,6 +15,7 @@ en:
         renewal_date: Renewal date
         documents: Documents
         installments: Instalments
+        payment_account: Account charged
     errors:
       models:
         insurance:

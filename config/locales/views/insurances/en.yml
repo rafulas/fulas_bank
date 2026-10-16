@@ -27,6 +27,9 @@ en:
       remove: Remove instalment
       add: Add instalment
       repeat_hint: They repeat every year on the same dates.
+      payment_account: Charged to
+      main_account: The Forecast's main account
+      forecast_hint: The Forecast expects each instalment in this account, every year. If one changes some year, edit it in the Forecast table.
     premium_per:
       annual: "%{amount} a year"
       semiannual: "%{amount} every six months"

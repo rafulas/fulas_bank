@@ -60,6 +60,13 @@ class InsurancesController < ApplicationController
     end
     helper_method :insurable_assets
 
+    # Fulas Bank: the current accounts and cards the user can see, where the
+    # instalments may be charged.
+    def insurance_payment_accounts
+      @insurance_payment_accounts ||= accessible_accounts.visible.where(accountable_type: %w[Depository CreditCard]).alphabetically.to_a
+    end
+    helper_method :insurance_payment_accounts
+
     # "Seguro Cupra Ateca" for a car policy opened from the car's page.
     def default_name(kind, account)
       [ t("insurances.default_name"), account&.name ].compact.join(" ") if account
@@ -83,6 +90,10 @@ class InsurancesController < ApplicationController
         :premium, :payment_frequency, :start_date, :renewal_date, :active, :notes,
         installments: %i[date amount]
       )
+      if params[:insurance].key?(:payment_account_id)
+        payment_id = params.dig(:insurance, :payment_account_id).to_s
+        permitted = permitted.merge(payment_account: payment_id.blank? ? nil : (insurance_payment_accounts.find { |account| account.id == payment_id } || raise(ActiveRecord::RecordNotFound)))
+      end
       return permitted unless params[:insurance].key?(:account_id)
 
       account_id = params.dig(:insurance, :account_id).to_s

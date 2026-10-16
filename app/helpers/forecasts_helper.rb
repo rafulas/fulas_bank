@@ -1,5 +1,5 @@
 module ForecastsHelper
-  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia, card: :indigo }.freeze
+  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia, card: :indigo, insurance: :green }.freeze
 
   # An expected amount from the user's side: income with a plus sign, spending
   # with a minus sign.
