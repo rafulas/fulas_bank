@@ -4,18 +4,18 @@
 <div class="@container">
 <div class="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-4 gap-3">
   <%# Total Income Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
+  <div class="bg-container rounded-xl shadow-border-xs px-5 py-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("trending-up", size: "sm") %>
-        <h3 class="text-sm font-medium text-secondary truncate">
+        <h3 class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary truncate">
           <%= t("reports.summary.total_income") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
+      <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_income].format %>
       </p>
 
@@ -41,18 +41,18 @@
   </div>
 
   <%# Total Expenses Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
+  <div class="bg-container rounded-xl shadow-border-xs px-5 py-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("trending-down", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary truncate">
+        <h3 class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary truncate">
           <%= t("reports.summary.total_expenses") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
+      <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_expenses].format %>
       </p>
 
@@ -78,18 +78,18 @@
   </div>
 
   <%# Net Savings Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
+  <div class="bg-container rounded-xl shadow-border-xs px-5 py-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("piggy-bank", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary truncate">
+        <h3 class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary truncate">
           <%= t("reports.summary.net_savings") %>
         </h3>
       </div>
     </div>
 
     <div class="space-y-2">
-      <p class="text-xl font-semibold whitespace-nowrap privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
+      <p class="font-amount text-xl font-bold whitespace-nowrap privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
         <%= metrics[:net_savings].format %>
       </p>
 
@@ -100,11 +100,11 @@
   </div>
 
   <%# Budget Performance Card %>
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
+  <div class="bg-container rounded-xl shadow-border-xs px-5 py-4">
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center gap-2">
         <%= icon("gauge", class: "w-5 h-5") %>
-        <h3 class="text-sm font-medium text-secondary truncate">
+        <h3 class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary truncate">
           <%= t("reports.summary.budget_performance") %>
         </h3>
       </div>
@@ -112,7 +112,7 @@
 
     <div class="space-y-2">
       <% if metrics[:budget_percent] %>
-        <p class="text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
+        <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
           <%= metrics[:budget_percent] %>%
         </p>
 
