@@ -559,6 +559,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Fulas Bank: "not a duplicate" on Inicio's possible double charges.
+  resources :duplicate_charge_dismissals, only: :create
+
   resources :transactions, only: %i[index new create show update destroy] do
     resource :split, only: %i[new create edit update destroy]
     resource :transfer_match, only: %i[new create]

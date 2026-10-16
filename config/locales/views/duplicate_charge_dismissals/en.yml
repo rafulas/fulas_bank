@@ -1,0 +1,5 @@
+---
+en:
+  duplicate_charge_dismissals:
+    create:
+      dismissed: Done. That charge will not show as a duplicate again.

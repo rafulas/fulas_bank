@@ -1,0 +1,5 @@
+---
+es:
+  duplicate_charge_dismissals:
+    create:
+      dismissed: Hecho. Ese cargo ya no saldrá como duplicado.

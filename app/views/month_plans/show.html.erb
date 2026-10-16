@@ -10,8 +10,8 @@
 
 <div class="max-w-2xl space-y-6 pb-6">
   <div class="flex items-center gap-2">
-    <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_plan_path(month: (plan.month << 1).strftime("%Y-%m")), aria: { label: t(".previous") }) %>
-    <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_plan_path(month: (plan.month >> 1).strftime("%Y-%m")), aria: { label: t(".next") }) %>
+    <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_plan_path(month: (plan.month << 1).strftime("%Y-%m"), view: (@view if @view == "timeline")), aria: { label: t(".previous") }) %>
+    <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_plan_path(month: (plan.month >> 1).strftime("%Y-%m"), view: (@view if @view == "timeline")), aria: { label: t(".next") }) %>
     <span class="text-sm font-medium text-primary first-letter:uppercase"><%= plan.current_month? ? t(".this_month") : l(plan.month, format: "%B %Y") %></span>
   </div>
 
@@ -83,6 +83,16 @@
       </div>
     </div>
 
+    <%# Fulas Bank: calendar or FlowVista's timeline %>
+    <% month_param = plan.month.strftime("%Y-%m") %>
+    <%= render DS::SegmentedControl.new(aria_label: t(".view_aria")) do |control| %>
+      <% control.with_segment(t(".views.calendar"), href: month_plan_path(month: month_param), active: @view != "timeline") %>
+      <% control.with_segment(t(".views.timeline"), href: month_plan_path(month: month_param, view: "timeline"), active: @view == "timeline") %>
+    <% end %>
+
+    <% if @view == "timeline" %>
+      <%= render "month_plans/timeline", plan: plan %>
+    <% else %>
     <%# Calendar %>
     <div class="rounded-xl bg-container shadow-border-xs p-2 space-y-1">
       <div class="grid grid-cols-7 gap-1 text-center text-xs text-secondary">
@@ -137,6 +147,7 @@
           <% end %>
         </div>
       </div>
+    <% end %>
     <% end %>
 
     <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">

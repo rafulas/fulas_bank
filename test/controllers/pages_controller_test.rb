@@ -41,7 +41,25 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
 
     assert_select "#free-cash-title", text: /#{I18n.t("pages.dashboard.free_cash.title")}/
-    assert_select "section[aria-labelledby='free-cash-title'] dd", count: 2
+    assert_select "section[aria-labelledby='free-cash-title'] dd", count: 6
+    assert_select "#cash-cushion-title"
+    assert_select "#savings-flow-title"
+    assert_select "#next-payments-title"
+  end
+
+  test "dashboard flags a possible double charge, and forgets it once dismissed" do
+    account = accounts(:depository)
+    first = create_transaction(account: account, name: "Farmacia Centro", amount: 12.45, date: Date.current)
+    second = create_transaction(account: account, name: "Farmacia Centro", amount: 12.45, date: Date.current)
+
+    get root_path
+    assert_select "#duplicate-charges", text: /Farmacia Centro/
+
+    post duplicate_charge_dismissals_path(key: [ first.id, second.id ].sort.join(":"))
+    assert_redirected_to root_path
+
+    get root_path
+    assert_select "#duplicate-charges", text: /Farmacia Centro/, count: 0
   end
 
   test "inactive user's existing session is revoked" do
@@ -101,9 +119,17 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
       category_totals: []
     )
 
+    # The dashboard's own period is built once; the free cash card also
+    # reads the spending of the same stretch of the period before, which
+    # ends before the dashboard's period starts.
     income_statement.expects(:build_period_total)
-      .with(classification: "expense", period: kind_of(Period))
+      .with { |*args, **kwargs| (opts = kwargs.presence || args.last)[:classification] == "expense" && opts[:period].date_range.cover?(Date.current) }
       .once
+      .returns(fake_expense_period_total)
+
+    income_statement.expects(:build_period_total)
+      .with { |*args, **kwargs| (opts = kwargs.presence || args.last)[:classification] == "expense" && opts[:period].end_date < Date.current }
+      .at_most_once
       .returns(fake_expense_period_total)
 
     income_statement.expects(:build_period_total)

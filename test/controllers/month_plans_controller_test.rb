@@ -14,6 +14,14 @@ class MonthPlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", month_plan_path(month: (Date.current.beginning_of_month << 1).strftime("%Y-%m"))
   end
 
+  test "shows the recurring payments as a timeline" do
+    get month_plan_url(view: "timeline")
+
+    assert_response :success
+    assert_select "#payments-timeline"
+    assert_select "a[aria-current='true']", text: I18n.t("month_plans.show.views.timeline")
+  end
+
   test "goes to another month, and ignores a malformed one" do
     get month_plan_url(month: "2026-03")
     assert_response :success

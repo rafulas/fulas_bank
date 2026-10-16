@@ -1,0 +1,58 @@
+<%# locals: (plan:) %>
+<%# Fulas Bank: FlowVista's "Bill Timeline" — the month as a line, each day's
+    payments as dots on it (green paid, orange still to pay, red overdue),
+    and below them every payment in date order. %>
+<% currency = plan.currency %>
+<% days = (plan.month..plan.end_of_month).to_a %>
+<% dot_class = ->(payment) { { paid: "bg-success", overdue: "bg-destructive" }.fetch(payment.state, "bg-warning") } %>
+
+<div class="rounded-xl bg-container shadow-border-xs p-4 space-y-3" id="payments-timeline">
+  <div class="overflow-x-auto">
+    <div class="min-w-xl">
+      <div class="grid items-end gap-px" style="grid-template-columns: repeat(<%= days.size %>, minmax(0, 1fr));">
+        <% days.each do |date| %>
+          <% day_payments = plan.payments_by_day.fetch(date, []) %>
+          <div class="flex flex-col-reverse items-center gap-1 min-h-16 pb-1">
+            <% day_payments.each do |payment| %>
+              <span class="<%= class_names("w-3 h-3 rounded-full ring-2 ring-container", dot_class.call(payment)) %>"
+                    title="<%= payment.name %> · <%= payment.income? ? "+" : "−" %><%= format_money(Money.new(payment.amount, currency)) %>">
+                <span class="sr-only"><%= payment.name %></span>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="relative h-1 rounded-full bg-surface-inset">
+        <% if plan.current_month? %>
+          <% today_left = ((plan.today.day - 0.5) / days.size * 100).round(2) %>
+          <span class="absolute -top-1.5 w-0.5 h-4 rounded-full bg-brand" style="left: <%= today_left %>%;" title="<%= t(".today") %>"></span>
+        <% end %>
+      </div>
+
+      <div class="grid pt-1 text-xs text-secondary" style="grid-template-columns: repeat(<%= days.size %>, minmax(0, 1fr));">
+        <% days.each do |date| %>
+          <span class="<%= class_names("text-center", "font-semibold text-brand" => date == plan.today) %>">
+            <%= date.day if date.day == 1 || (date.day % 5).zero? || date == plan.today %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-4 text-xs text-secondary">
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-success"></span><%= t(".legend.paid") %></span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span><%= t(".legend.pending") %></span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-destructive"></span><%= t(".legend.overdue") %></span>
+  </div>
+</div>
+
+<% if plan.payments.any? %>
+  <div class="rounded-xl bg-container shadow-border-xs overflow-hidden divide-y divide-divider">
+    <% plan.payments.each do |payment| %>
+      <%= render "month_plans/payment_line", payment: payment, currency: currency %>
+    <% end %>
+  </div>
+<% else %>
+  <p class="px-1 text-sm text-secondary"><%= t(".empty") %></p>
+<% end %>

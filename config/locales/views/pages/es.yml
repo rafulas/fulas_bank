@@ -45,7 +45,46 @@ es:
         expense: Gastos
         spent: "Gastado el %{percent} de lo ingresado"
         saving: "Ahorro: %{percent}"
+        saving_vs_target: "Ahorras el %{percent} · referencia %{target}"
         no_income: Todavía no hay ingresos en este periodo
+        days_left_label: Quedan
+        days:
+          one: 1 día
+          other: "%{count} días"
+        period_over: Periodo cerrado
+        daily_average_label: Gasto medio
+        per_day: "%{amount}/día"
+        per_day_left_label: Puedes gastar
+        change_label: Frente al periodo anterior
+        no_change: Igual
+      cash_cushion:
+        title: Colchón de efectivo
+        months:
+          one: "%{months} mes de gastos"
+          other: "%{months} meses de gastos"
+        detail: "%{cash} en cuentas para un gasto típico de %{monthly} al mes"
+        levels:
+          low: "Por debajo de lo recomendable (%{min}-%{max} meses)"
+          ok: "Dentro de lo recomendable (%{min}-%{max} meses)"
+          high: "Por encima de %{max} meses: parte podría estar invertida"
+        no_data: Todavía no hay gastos suficientes para calcularlo
+      savings_flow:
+        title: Ahorro e inversión en este periodo
+        share: "El %{percent} de tus ingresos"
+        detail: "%{saved} enviados a ahorro e inversión · %{withdrawn} sacados"
+        no_accounts: Añade una cuenta de inversión o una cuenta de ahorro para ver cuánto apartas
+      next_payments:
+        title: Próximos pagos
+        see_all: Ver línea de tiempo
+        none: No hay pagos recurrentes pendientes
+      duplicates:
+        title:
+          one: Un posible cargo duplicado
+          other: "%{count} posibles cargos duplicados"
+        hint: Mismo importe y mismo comercio, el mismo día o el siguiente. Revisa si te han cobrado dos veces.
+        and: "y"
+        twice: "%{amount} × 2"
+        dismiss: No es duplicado
       welcome: Bienvenido de nuevo, %{name}
       subtitle: Esto es lo que está pasando con tus finanzas
       new: Nuevo
