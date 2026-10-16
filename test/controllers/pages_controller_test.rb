@@ -119,9 +119,17 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
       category_totals: []
     )
 
+    # The dashboard's own period is built once; the free cash card also
+    # reads the spending of the same stretch of the period before, which
+    # ends before the dashboard's period starts.
     income_statement.expects(:build_period_total)
-      .with(classification: "expense", period: kind_of(Period))
+      .with { |*args, **kwargs| (opts = kwargs.presence || args.last)[:classification] == "expense" && opts[:period].date_range.cover?(Date.current) }
       .once
+      .returns(fake_expense_period_total)
+
+    income_statement.expects(:build_period_total)
+      .with { |*args, **kwargs| (opts = kwargs.presence || args.last)[:classification] == "expense" && opts[:period].end_date < Date.current }
+      .at_most_once
       .returns(fake_expense_period_total)
 
     income_statement.expects(:build_period_total)
