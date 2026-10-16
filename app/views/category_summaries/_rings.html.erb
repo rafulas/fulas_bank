@@ -16,14 +16,14 @@
       <div data-donut-chart-target="contentContainer" class="flex justify-center items-center h-full">
         <div data-donut-chart-target="defaultContent" class="flex flex-col items-center text-center">
           <span class="text-secondary"><%= icon(side == :spent ? "minus" : "plus", size: "sm") %></span>
-          <p class="font-amount text-lg font-bold text-primary privacy-sensitive" data-donut-chart-target="amount"><%= format_money(total, precision: 0) %></p>
+          <p class="font-amount text-lg font-bold text-primary privacy-sensitive whitespace-nowrap" data-donut-chart-target="amount"><%= format_money(total, precision: 0) %></p>
           <p class="text-xs text-secondary"><%= t(".#{side}") %></p>
         </div>
 
         <% slices.each do |slice| %>
           <div id="segment_<%= side %>_<%= slice.id %>" class="hidden flex flex-col items-center text-center px-4">
             <p class="text-xs text-secondary truncate max-w-full"><%= slice.name %></p>
-            <p class="font-amount text-lg font-bold text-primary privacy-sensitive" data-donut-chart-target="amount"><%= format_money(Money.new(slice.amount, analysis.currency), precision: 0) %></p>
+            <p class="font-amount text-lg font-bold text-primary privacy-sensitive whitespace-nowrap" data-donut-chart-target="amount"><%= format_money(Money.new(slice.amount, analysis.currency), precision: 0) %></p>
             <% if total.amount.positive? %>
               <p class="text-xs text-secondary"><%= number_to_percentage(slice.amount / total.amount * 100, precision: 0) %></p>
             <% end %>

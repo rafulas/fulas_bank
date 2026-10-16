@@ -6,18 +6,18 @@
 <div id="month-summary-<%= summary.month.strftime("%Y-%m") %>" class="space-y-2">
   <div class="flex items-center justify-between px-1 pt-2 text-sm font-medium text-primary">
     <h3 class="first-letter:uppercase text-base font-semibold"><%= month_name %></h3>
-    <span class="privacy-sensitive font-amount font-bold"><%= forecast_signed_amount(summary.net.amount, summary.net.currency) %></span>
+    <span class="privacy-sensitive font-amount font-bold whitespace-nowrap"><%= forecast_signed_amount(summary.net.amount, summary.net.currency) %></span>
   </div>
 
   <div class="bg-container rounded-xl shadow-border-xs overflow-hidden">
     <p class="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary bg-surface-inset"><%= t(".title", month: month_name) %></p>
     <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-primary">
       <div class="px-4 py-2 text-center">
-        <p class="font-amount font-bold text-destructive privacy-sensitive"><%= format_money(summary.spent) %></p>
+        <p class="font-amount font-bold text-destructive privacy-sensitive whitespace-nowrap"><%= format_money(summary.spent) %></p>
         <p class="text-xs text-secondary"><%= t(".spent") %></p>
       </div>
       <div class="px-4 py-2 text-center">
-        <p class="font-amount font-bold text-success privacy-sensitive"><%= format_money(summary.income) %></p>
+        <p class="font-amount font-bold text-success privacy-sensitive whitespace-nowrap"><%= format_money(summary.income) %></p>
         <p class="text-xs text-secondary"><%= t(".income") %></p>
       </div>
       <div class="px-4 py-2 text-center">
@@ -30,7 +30,7 @@
         <% end %>
       </div>
       <div class="px-4 py-2 text-center">
-        <p class="font-amount font-bold text-brand"><%= summary.savings_rate %>%</p>
+        <p class="font-amount font-bold text-brand whitespace-nowrap"><%= summary.savings_rate %>%</p>
         <p class="text-xs text-secondary"><%= t(".savings_rate") %></p>
       </div>
     </div>

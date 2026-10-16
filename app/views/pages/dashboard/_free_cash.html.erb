@@ -15,11 +15,11 @@
     <dl class="min-w-64 space-y-2">
       <div class="flex items-center justify-between gap-6 pb-2 border-b border-divider">
         <dt class="flex items-center gap-2 text-sm font-medium text-primary"><span class="w-2 h-2 rounded-sm bg-success" aria-hidden="true"></span><%= t("pages.dashboard.free_cash.income") %></dt>
-        <dd class="font-amount text-lg font-bold text-success privacy-sensitive"><%= format_money(income) %></dd>
+        <dd class="font-amount text-lg font-bold text-success privacy-sensitive whitespace-nowrap"><%= format_money(income) %></dd>
       </div>
       <div class="flex items-center justify-between gap-6">
         <dt class="flex items-center gap-2 text-sm font-medium text-primary"><span class="w-2 h-2 rounded-sm bg-destructive" aria-hidden="true"></span><%= t("pages.dashboard.free_cash.expense") %></dt>
-        <dd class="font-amount text-lg font-bold text-destructive privacy-sensitive"><%= format_money(expense) %></dd>
+        <dd class="font-amount text-lg font-bold text-destructive privacy-sensitive whitespace-nowrap"><%= format_money(expense) %></dd>
       </div>
     </dl>
   </div>
