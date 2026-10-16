@@ -1,6 +1,37 @@
 ---
 es:
   recurring_transactions:
+    index:
+      title: Recurrentes
+      subtitle: Recibos, suscripciones, ingresos y ahorro que se repiten, con lo que suman al mes.
+      list_title: Movimientos recurrentes
+      tabs_aria: Tipo de recurrente
+      tabs:
+        all: Todos
+        bills: Facturas
+        subscriptions: Suscripciones
+        income: Ingresos
+        savings: Ahorro
+      kinds:
+        bills: Factura
+        subscriptions: Suscripción
+        income: Ingreso
+        savings: Ahorro
+      totals:
+        fixed_costs: Gastos fijos al mes
+        subscriptions: Suscripciones al mes
+        income: Ingresos al mes
+        savings: Ahorro al mes
+      next: Próximo
+      before: "antes %{amount}"
+      edit: "Editar %{name}"
+      detection: Detección automática
+      empty:
+        all: Todavía no hay movimientos recurrentes. Pulsa «Identificar patrones» o añade uno desde Planes.
+        bills: No hay facturas recurrentes.
+        subscriptions: No hay suscripciones.
+        income: No hay ingresos recurrentes.
+        savings: No hay traspasos periódicos a cuentas de ahorro o inversión.
     title: Transacciones Recurrentes
     upcoming: Próximas Transacciones Recurrentes
     projected: Proyectado

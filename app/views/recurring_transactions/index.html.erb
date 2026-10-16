@@ -1,74 +1,149 @@
-<%= content_for :page_title, t("recurring_transactions.title") %>
-<%= content_for :page_actions do %>
-  <% unless @family.recurring_transactions_disabled? %>
-    <%= render DS::Menu.new do |menu| %>
-      <% menu.with_item(
-          variant: "button",
-          text: t("recurring_transactions.cleanup_stale"),
-          href: cleanup_recurring_transactions_path,
-          method: :post,
-          icon: "trash-2") %>
-    <% end %>
+<%# Fulas Bank: «Recurrentes», after FlowVista's "Detected Recurring" — what
+    each kind adds up to a month, then every recurring movement in tabs
+    (bills, subscriptions, income, savings), and below the detection
+    settings that used to be the whole page. %>
+<% overview = @overview %>
+<% currency = overview.currency %>
 
-    <%= render DS::Link.new(
-      text: t("recurring_transactions.identify_patterns"),
-      icon: "search",
-      variant: "outline",
-      href: identify_recurring_transactions_path,
-      method: :post
-    ) %>
-  <% end %>
+<% content_for :page_header do %>
+  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div class="space-y-1">
+      <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+      <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+    </div>
+    <% unless @family.recurring_transactions_disabled? %>
+      <div class="flex items-center gap-2">
+        <%= render DS::Link.new(
+              text: t("recurring_transactions.identify_patterns"),
+              icon: "search",
+              variant: "outline",
+              href: identify_recurring_transactions_path,
+              method: :post
+            ) %>
+        <%= render DS::Menu.new do |menu| %>
+          <% menu.with_item(
+              variant: "button",
+              text: t("recurring_transactions.cleanup_stale"),
+              href: cleanup_recurring_transactions_path,
+              method: :post,
+              icon: "trash-2") %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 <% end %>
 
-<div class="space-y-4 flex flex-col">
-  <div class="bg-container rounded-xl shadow-border-xs p-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm font-medium text-primary"><%= t("recurring_transactions.settings.enable_label") %></p>
-        <p class="text-xs text-secondary"><%= t("recurring_transactions.settings.enable_description") %></p>
-      </div>
-      <%= form_with url: update_settings_recurring_transactions_path, method: :patch, data: { turbo_frame: "_top", controller: "auto-submit-form" } do |f| %>
-        <%= f.hidden_field :recurring_transactions_disabled, value: @family.recurring_transactions_disabled? ? "false" : "true" %>
-        <%= render DS::Toggle.new(
-          id: "recurring_transactions_enabled",
-          name: "toggle_display",
-          checked: !@family.recurring_transactions_disabled?,
-          data: { auto_submit_form_target: "auto" }
-        ) %>
-      <% end %>
-    </div>
+<div class="max-w-4xl space-y-6 pb-6">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <%= summary_card(title: t(".totals.fixed_costs"), tone: :negative) do %><%= format_money(overview.fixed_costs) %><% end %>
+    <%= summary_card(title: t(".totals.subscriptions")) do %><%= format_money(overview.monthly_total("subscriptions")) %><% end %>
+    <%= summary_card(title: t(".totals.income"), tone: :positive) do %><%= format_money(overview.monthly_total("income")) %><% end %>
+    <%= summary_card(title: t(".totals.savings"), tone: :brand) do %><%= format_money(overview.monthly_total("savings")) %><% end %>
   </div>
 
-  <% unless @family.recurring_transactions_disabled? %>
-    <%= render DS::Alert.new(title: t("recurring_transactions.info.title"), variant: :info) do %>
-      <p><%= t("recurring_transactions.info.manual_description") %></p>
-      <p><%= t("recurring_transactions.info.automatic_description") %></p>
-      <ul class="list-disc list-inside space-y-0.5">
-        <% t("recurring_transactions.info.triggers").each do |trigger| %>
-          <li><%= trigger %></li>
-        <% end %>
-      </ul>
+  <% if @suggested.any? && !@family.recurring_transactions_disabled? %>
+    <%= render "recurring_transactions/suggested_series", suggested: @suggested %>
+  <% end %>
+
+  <section class="space-y-3" aria-labelledby="recurring-list-title">
+    <h2 id="recurring-list-title" class="sr-only"><%= t(".list_title") %></h2>
+    <%= render DS::SegmentedControl.new(aria_label: t(".tabs_aria"), class: "overflow-x-auto max-w-full") do |control| %>
+      <% RecurringOverview::TABS.each do |tab| %>
+        <% control.with_segment("#{t(".tabs.#{tab}")} · #{overview.count(tab)}", href: recurring_transactions_path(tab: tab), active: @tab == tab) %>
+      <% end %>
     <% end %>
 
-      <% if @suggested.any? %>
-        <%= render "recurring_transactions/suggested_series", suggested: @suggested %>
-      <% end %>
-
-      <%# The Bills workspace is preview-gated, so the card that leads into it
-          only renders for opted-in users. %>
-      <% if preview_features_enabled? %>
-        <div class="bg-container rounded-xl shadow-border-xs p-4 flex items-center justify-between gap-4">
-          <div>
-            <p class="text-sm font-medium text-primary"><%= t("recurring_transactions.manage.title") %></p>
-            <p class="text-xs text-secondary"><%= t("recurring_transactions.manage.description") %></p>
+    <% rows = overview.rows_for(@tab) %>
+    <% if rows.any? %>
+      <div class="rounded-xl bg-container shadow-border-xs overflow-hidden divide-y divide-divider" id="recurring-rows">
+        <% rows.each do |row| %>
+          <% series = row.series %>
+          <div class="flex items-center gap-3 px-4 py-3">
+            <%= render DS::FilledIcon.new(variant: :solid, icon: series.category&.lucide_icon || "repeat", hex_color: series.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-primary"><%= row.name %></p>
+              <p class="truncate text-xs text-secondary">
+                <%= [ series.category&.name, frequency_label(series) ].compact_blank.join(" · ") %>
+              </p>
+            </div>
+            <% if @tab == "all" %>
+              <span class="hidden md:inline-flex">
+                <%= render DS::Pill.new(label: t(".kinds.#{row.kind}"), tone: { "income" => :success, "savings" => :info, "subscriptions" => :violet }.fetch(row.kind, :neutral), marker: false) %>
+              </span>
+            <% end %>
+            <div class="hidden sm:block w-28 shrink-0 text-right">
+              <p class="text-xs text-secondary"><%= t(".next") %></p>
+              <p class="text-sm text-primary"><%= row.next_date ? l(row.next_date, format: t("month_plans.show.long_date")) : "—" %></p>
+            </div>
+            <div class="w-32 shrink-0 text-right">
+              <p class="<%= class_names("font-amount text-sm font-bold privacy-sensitive whitespace-nowrap", row.income? ? "text-success" : "text-primary") %>">
+                <%= row.income? ? "+" : "−" %><%= format_money(row.amount) %>
+              </p>
+              <% if (change = row.price_change) %>
+                <p class="<%= class_names("text-xs privacy-sensitive whitespace-nowrap", row.price_up? && !row.income? ? "text-destructive" : "text-success") %>">
+                  <%= row.price_up? ? "↑" : "↓" %> <%= t(".before", amount: format_money(Money.new(change.previous_amount.abs, change.currency))) %>
+                </p>
+              <% end %>
+            </div>
+            <% if preview_features_enabled? %>
+              <%= render DS::Link.new(icon: "pencil", variant: :icon, href: edit_recurring_transaction_path(series), frame: :modal, aria: { label: t(".edit", name: row.name) }) %>
+            <% end %>
           </div>
-          <%= render DS::Link.new(
-                text: t("recurring_transactions.manage.cta"),
-                icon: "receipt",
-                variant: "outline",
-                href: bills_path(view: "all")
-              ) %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="rounded-xl bg-container shadow-border-xs p-4 text-sm text-secondary"><%= t(".empty.#{@tab}") %></p>
+    <% end %>
+  </section>
+
+  <%= render DS::Disclosure.new(title: t(".detection"), align: "left") do %>
+    <div class="space-y-4 pt-2">
+      <div class="bg-container rounded-xl shadow-border-xs p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-primary"><%= t("recurring_transactions.settings.enable_label") %></p>
+            <p class="text-xs text-secondary"><%= t("recurring_transactions.settings.enable_description") %></p>
+          </div>
+          <%= form_with url: update_settings_recurring_transactions_path, method: :patch, data: { turbo_frame: "_top", controller: "auto-submit-form" } do |f| %>
+            <%= f.hidden_field :recurring_transactions_disabled, value: @family.recurring_transactions_disabled? ? "false" : "true" %>
+            <%= render DS::Toggle.new(
+              id: "recurring_transactions_enabled",
+              name: "toggle_display",
+              checked: !@family.recurring_transactions_disabled?,
+              data: { auto_submit_form_target: "auto" }
+            ) %>
+          <% end %>
         </div>
+      </div>
+
+      <% unless @family.recurring_transactions_disabled? %>
+        <%= render DS::Alert.new(title: t("recurring_transactions.info.title"), variant: :info) do %>
+          <p><%= t("recurring_transactions.info.manual_description") %></p>
+          <p><%= t("recurring_transactions.info.automatic_description") %></p>
+          <ul class="list-disc list-inside space-y-0.5">
+            <% t("recurring_transactions.info.triggers").each do |trigger| %>
+              <li><%= trigger %></li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <%# The Bills workspace is preview-gated, so the card that leads into it
+            only renders for opted-in users. %>
+        <% if preview_features_enabled? %>
+          <div class="bg-container rounded-xl shadow-border-xs p-4 flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium text-primary"><%= t("recurring_transactions.manage.title") %></p>
+              <p class="text-xs text-secondary"><%= t("recurring_transactions.manage.description") %></p>
+            </div>
+            <%= render DS::Link.new(
+                  text: t("recurring_transactions.manage.cta"),
+                  icon: "receipt",
+                  variant: "outline",
+                  href: bills_path(view: "all")
+                ) %>
+          </div>
+        <% end %>
       <% end %>
+    </div>
   <% end %>
 </div>

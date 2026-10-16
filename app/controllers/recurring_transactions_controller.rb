@@ -4,7 +4,9 @@
 class RecurringTransactionsController < ApplicationController
   include RecurringFeatureGuardable
 
-  layout "settings"
+  # Fulas Bank: the list is a page of the app («Recurrentes»); the rest
+  # keeps the settings frame.
+  layout -> { action_name == "index" ? "application" : "settings" }
 
   # Small on purpose: the picker narrows by searching, not by paging, and a
   # fixed cap keeps the dialog free of pagination (whose shared partial
@@ -30,6 +32,9 @@ class RecurringTransactionsController < ApplicationController
     @recurring_transactions = scope.where.not(status: :suggested)
                                    .order(status: :asc, next_expected_date: :asc)
     @family = Current.family
+    @overview = RecurringOverview.new(Current.family, user: Current.user)
+    @tab = RecurringOverview::TABS.include?(params[:tab]) ? params[:tab] : "all"
+    @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("recurring_transactions.index.title"), nil ] ]
   end
 
   # Detection proposes, the user disposes: confirming makes the suggestion a

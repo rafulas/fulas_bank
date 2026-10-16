@@ -30,6 +30,7 @@ en:
         roadtrip: RoadTrip
         insurances: Insurance
         subscriptions: Subscriptions
+        recurring: Recurring
         month_plan: Plans
         summary: Summary
         goals: Goals

@@ -14,6 +14,14 @@ class SavingsFlow
     @income = income
   end
 
+  # Investment and crypto accounts, and the savings kinds of depository one.
+  def self.saving_account?(account)
+    return false if account.nil?
+
+    INVESTING_TYPES.include?(account.accountable_type) ||
+      (account.accountable_type == "Depository" && SAVINGS_SUBTYPES.include?(account.subtype))
+  end
+
   def currency
     family.currency
   end
@@ -47,16 +55,11 @@ class SavingsFlow
     end
 
     def saving_ids
-      @saving_ids ||= accounts.select { |account| saving_account?(account) }.map(&:id)
+      @saving_ids ||= accounts.select { |account| self.class.saving_account?(account) }.map(&:id)
     end
 
     def everyday_ids
       @everyday_ids ||= accounts.map(&:id) - saving_ids
-    end
-
-    def saving_account?(account)
-      INVESTING_TYPES.include?(account.accountable_type) ||
-        (account.accountable_type == "Depository" && SAVINGS_SUBTYPES.include?(account.subtype))
     end
 
     # Transfers from the everyday accounts into the savings ones

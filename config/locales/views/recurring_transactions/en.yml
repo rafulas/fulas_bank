@@ -1,6 +1,37 @@
 ---
 en:
   recurring_transactions:
+    index:
+      title: Recurring
+      subtitle: Bills, subscriptions, income and savings that repeat, with what they add up to a month.
+      list_title: Recurring movements
+      tabs_aria: Kind of recurring movement
+      tabs:
+        all: All
+        bills: Bills
+        subscriptions: Subscriptions
+        income: Income
+        savings: Savings
+      kinds:
+        bills: Bill
+        subscriptions: Subscription
+        income: Income
+        savings: Savings
+      totals:
+        fixed_costs: Fixed costs a month
+        subscriptions: Subscriptions a month
+        income: Income a month
+        savings: Savings a month
+      next: Next
+      before: "was %{amount}"
+      edit: "Edit %{name}"
+      detection: Automatic detection
+      empty:
+        all: No recurring movements yet. Press "Identify patterns" or add one from Plans.
+        bills: No recurring bills.
+        subscriptions: No subscriptions.
+        income: No recurring income.
+        savings: No regular transfers to savings or investment accounts.
     title: Recurring Transactions
     upcoming: Upcoming Recurring Transactions
     projected: Projected
