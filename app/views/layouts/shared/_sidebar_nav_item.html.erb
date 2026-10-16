@@ -1,0 +1,22 @@
+<%# locals: (name:, path:, icon:, icon_custom:, active:, mobile_only: false, preview: false) %>
+<%# Fulas Bank: desktop menu row, icon and name side by side (the mobile bottom
+    bar keeps the stacked layouts/shared/nav_item). %>
+<%= link_to path,
+      class: class_names(
+        "group relative flex items-center gap-3 h-9 pointer-coarse:h-11 pl-3 pr-2 rounded-lg text-sm focus-ring transition-colors",
+        active ? "bg-container shadow-xs text-primary font-medium" : "text-secondary hover:bg-surface-hover hover:text-primary"
+      ),
+      aria: { current: ("page" if active) } do %>
+  <%= tag.span class: class_names("absolute left-0 top-2 bottom-2 w-1 rounded-r-sm", "bg-nav-indicator" => active) %>
+
+  <span class="relative flex">
+    <%= icon(icon, color: "current", custom: icon_custom) %>
+    <% if preview %>
+      <span class="absolute -top-0.5 -right-0.5">
+        <%= render DS::Pill.new(tone: :violet, dot_only: true, title: t("shared.preview")) %>
+      </span>
+    <% end %>
+  </span>
+
+  <span class="truncate"><%= name %></span>
+<% end %>
