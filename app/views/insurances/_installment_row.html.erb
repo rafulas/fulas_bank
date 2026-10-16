@@ -1,0 +1,22 @@
+<%# locals: (date: nil, amount: nil) %>
+<%# Fulas Bank: one instalment of a policy paid in custom instalments. %>
+<div class="flex items-end gap-2" data-insurance-installments-target="row">
+  <div class="form-field grow">
+    <div class="form-field__body">
+      <label class="form-field__label"><%= t("insurances.installments.date") %></label>
+      <input type="date" name="insurance[installments][][date]" value="<%= date %>" class="form-field__input">
+    </div>
+  </div>
+  <div class="form-field grow">
+    <div class="form-field__body">
+      <label class="form-field__label"><%= t("insurances.installments.amount") %></label>
+      <input type="number" name="insurance[installments][][amount]" value="<%= amount %>" step="0.01" min="0" class="form-field__input">
+    </div>
+  </div>
+  <%= render DS::Button.new(
+        icon: "x",
+        variant: :icon,
+        aria: { label: t("insurances.installments.remove") },
+        data: { action: "insurance-installments#remove" }
+      ) %>
+</div>

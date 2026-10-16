@@ -80,7 +80,8 @@ class InsurancesController < ApplicationController
     def insurance_params
       permitted = params.require(:insurance).permit(
         :name, :kind, :insurer, :policy_number, :coverage, :assistance_phone,
-        :premium, :payment_frequency, :start_date, :renewal_date, :active, :notes
+        :premium, :payment_frequency, :start_date, :renewal_date, :active, :notes,
+        installments: %i[date amount]
       )
       return permitted unless params[:insurance].key?(:account_id)
 

@@ -9,10 +9,12 @@
     <%= hidden_field_tag :return_to_account, return_to_account %>
   <% end %>
 
-  <div class="space-y-3">
+  <div class="space-y-3" data-controller="insurance-installments">
     <div class="grid grid-cols-2 gap-2">
       <%= form.select :kind, insurance_kind_options, { label: t(".kind") }, required: true %>
-      <%= form.select :payment_frequency, insurance_frequency_options, { label: t(".payment_frequency") }, required: true %>
+      <%= form.select :payment_frequency, insurance_frequency_options, { label: t(".payment_frequency") },
+                      required: true,
+                      data: { insurance_installments_target: "frequency", action: "insurance-installments#toggle" } %>
     </div>
     <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
 
@@ -24,14 +26,18 @@
       <%= form.text_field :policy_number, label: t(".policy_number") %>
     </div>
     <div class="grid grid-cols-2 gap-2">
-      <%= form.number_field :premium, label: t(".premium"), step: "0.01", min: 0 %>
+      <div data-insurance-installments-target="premium" class="<%= "hidden" if insurance.custom_payments? %>">
+        <%= form.number_field :premium, label: t(".premium"), step: "0.01", min: 0 %>
+      </div>
       <%= form.text_field :assistance_phone, label: t(".assistance_phone"), placeholder: "900 000 000" %>
     </div>
     <div class="grid grid-cols-2 gap-2">
-      <%= form.date_field :start_date, label: t(".start_date") %>
+      <%= form.date_field :start_date, label: t(".start_date"), data: { insurance_installments_target: "startDate" } %>
       <%= form.date_field :renewal_date, label: t(".renewal_date") %>
     </div>
     <p class="text-xs text-secondary"><%= t(".renewal_hint") %></p>
+
+    <%= render "insurances/installments", insurance: insurance %>
     <%= form.text_field :coverage, label: t(".coverage"), placeholder: t(".coverage_placeholder") %>
     <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
 

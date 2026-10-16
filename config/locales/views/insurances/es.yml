@@ -10,11 +10,29 @@ es:
       one: Renueva mañana
       other: "Renueva en %{count} días"
     renews_on: "Renueva el %{date}"
+    installments_count:
+      one: 1 plazo
+      other: "%{count} plazos"
+    next_installment: "próximo el %{date}: %{amount}"
+    installments:
+      title: Plazos
+      hint: "Cada cobro con su fecha e importe. Para rellenarlos de golpe: cuántos plazos, cada cuántos días y de cuánto; empiezan en la fecha de alta."
+      count: Plazos
+      every_days: Cada (días)
+      each_amount: Importe de cada uno
+      fill: Crear plazos
+      fill_error: Pon la fecha de alta, el número de plazos (hasta 24) y cada cuántos días.
+      date: Fecha
+      amount: Importe
+      remove: Quitar plazo
+      add: Añadir plazo
+      repeat_hint: Se repiten cada año en las mismas fechas.
     premium_per:
       annual: "%{amount} al año"
       semiannual: "%{amount} cada semestre"
       quarterly: "%{amount} cada trimestre"
       monthly: "%{amount} al mes"
+      custom: "%{amount} por plazo"
     kinds:
       car: Coche
       motorcycle: Moto
@@ -32,6 +50,7 @@ es:
       semiannual: Semestral
       quarterly: Trimestral
       monthly: Mensual
+      custom: Personalizado (plazos)
     asset_types:
       vehicle: vehículo
       property: vivienda

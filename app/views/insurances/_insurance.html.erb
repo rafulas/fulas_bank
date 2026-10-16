@@ -33,7 +33,9 @@
     <% else %>
       <%= render DS::Pill.new(label: t("insurances.inactive"), tone: :neutral, marker: false, size: :sm) %>
     <% end %>
-    <% if insurance.premium && insurance.payment_frequency != "annual" %>
+    <% if insurance.custom_payments? %>
+      <span class="privacy-sensitive"><%= insurance_installments_label(insurance, today: today) %></span>
+    <% elsif insurance.premium && insurance.payment_frequency != "annual" %>
       <span class="privacy-sensitive"><%= insurance_premium_label(insurance) %></span>
     <% end %>
     <% if insurance.coverage %>

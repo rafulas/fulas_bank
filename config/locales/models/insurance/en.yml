@@ -14,12 +14,17 @@ en:
         payment_frequency: Payment frequency
         renewal_date: Renewal date
         documents: Documents
+        installments: Instalments
     errors:
       models:
         insurance:
           attributes:
             account:
               wrong_type: "does not fit a %{kind} policy"
+            installments:
+              blank: "are needed: add at least one with its date and amount"
+              too_many: "cannot be more than %{max}"
+              invalid: "need a date and an amount that is not negative"
             documents:
               too_many: "cannot be more than %{max} files"
               too_large: "%{filename} is larger than %{max_mb} MB"
