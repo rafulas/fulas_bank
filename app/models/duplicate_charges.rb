@@ -67,7 +67,7 @@ class DuplicateCharges
             .where("entries.amount > 0")
             .joins("INNER JOIN transactions dup_t ON dup_t.id = entries.entryable_id")
             .where("dup_t.kind = ?", "standard")
-            .includes(:account, entryable: :merchant)
+            .preload(:account, entryable: :merchant)
             .to_a
     end
 
