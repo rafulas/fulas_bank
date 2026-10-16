@@ -1,8 +1,12 @@
-<%# locals: (title:, content:) %>
+<%# locals: (title:, content:, tone: nil) %>
+<%# Fulas Bank: FlowVista-style figure card — small uppercase label, the
+    figure in the amount font, and an optional coloured band (tone). %>
+<% band = { brand: "border-t-4 border-t-brand", positive: "border-t-4 border-t-success", negative: "border-t-4 border-t-destructive", warning: "border-t-4 border-t-warning" }[tone&.to_sym] %>
+<% figure = { brand: "text-brand", positive: "text-success", negative: "text-destructive" }.fetch(tone&.to_sym, "text-primary") %>
 
-<div class="rounded-xl bg-container shadow-xs border border-alpha-black-25 p-4">
-  <h4 class="text-secondary text-sm"><%= title %></h4>
-  <p class="text-xl font-medium text-primary privacy-sensitive">
+<div class="<%= class_names("rounded-xl bg-container shadow-border-xs px-5 py-4 space-y-1.5", band) %>">
+  <h4 class="text-secondary text-xs font-semibold uppercase tracking-wider"><%= title %></h4>
+  <p class="<%= class_names("font-amount text-xl lg:text-2xl font-bold privacy-sensitive [&_.text-xs]:font-sans [&_.text-sm]:font-sans", figure) %>">
     <%= content %>
   </p>
 </div>

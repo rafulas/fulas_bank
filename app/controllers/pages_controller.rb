@@ -51,6 +51,8 @@ class PagesController < ApplicationController
     net_totals = income_statement.net_category_totals(period: @period)
 
     @cashflow_sankey_data = build_cashflow_sankey_data(net_totals, income_totals, expense_totals, family_currency)
+    # Fulas Bank: FlowVista's "free cash" card at the top of Inicio.
+    @free_cash = { income: Money.new(income_totals.total, family_currency), expense: Money.new(expense_totals.total, family_currency) }
     @outflows_data = build_outflows_donut_data(net_totals)
     # Preview-gated: skip the query outright rather than loading rows the
     # section won't be built from.

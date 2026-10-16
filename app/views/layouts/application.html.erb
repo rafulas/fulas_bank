@@ -101,7 +101,13 @@ end %>
 
     <%# DESKTOP - Left navbar %>
     <div class="hidden lg:block border-r border-divider" data-sidebar-resize-target="navbar">
-      <nav class="h-full flex flex-col shrink-0 w-48 py-4 px-2 overflow-y-auto" aria-label="<%= t("layouts.application.main_menu") %>">
+      <%# Fulas Bank: in the Mac app (Tauri, desktop/src/bridge.ts) the window's
+          traffic lights sit over the top-left corner, so the menu starts lower
+          there. The bridge sets window.__sureChrome before this page runs. %>
+      <script nonce="<%= content_security_policy_nonce %>">
+        if (window.__sureChrome || window.__TAURI__) document.documentElement.setAttribute("data-desktop-shell", "");
+      </script>
+      <nav data-app-menu class="h-full flex flex-col shrink-0 w-48 py-4 [[data-desktop-shell]_&]:pt-11 px-2 overflow-y-auto" aria-label="<%= t("layouts.application.main_menu") %>">
         <%= link_to home_path, class: "flex items-center gap-3 px-2 mb-6 rounded-lg focus-ring" do %>
           <%= image_tag "logomark-color.svg", class: "w-9 h-9 shrink-0", alt: "" %>
           <span class="text-lg font-semibold text-primary truncate"><%= product_name %></span>

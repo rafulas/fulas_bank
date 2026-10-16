@@ -28,13 +28,13 @@
   <% else %>
     <div class="@container">
       <div class="grid grid-cols-2 @2xl:grid-cols-5 gap-2">
-        <%= summary_card title: t(".value") do %>
+        <%= summary_card title: t(".value"), tone: :brand do %>
           <span class="whitespace-nowrap"><%= format_money(overview.total_value, precision: 0) %></span>
         <% end %>
         <%= summary_card title: t(".contributed") do %>
           <span class="whitespace-nowrap"><%= format_money(overview.total_contributed, precision: 0) %></span>
         <% end %>
-        <%= summary_card title: t(".gain") do %>
+        <%= summary_card title: t(".gain"), tone: (overview.total_gain.negative? ? :negative : :positive) do %>
           <span class="whitespace-nowrap <%= overview.total_gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(overview.total_gain, precision: 0) %></span>
         <% end %>
         <%= summary_card title: t(".return") do %>
@@ -63,7 +63,7 @@
           <div class="space-y-1">
             <div class="flex justify-between gap-3 text-sm">
               <span class="truncate text-primary"><%= label %></span>
-              <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap"><%= format_money(money, precision: 0) %></span>
+              <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-bold"><%= format_money(money, precision: 0) %></span>
             </div>
             <% if total.positive? %>
               <div class="h-1.5 rounded-full overflow-hidden bg-surface-inset">
@@ -169,7 +169,7 @@
         <% holdings.each do |holding| %>
           <div class="flex justify-between gap-3 text-sm">
             <span class="truncate text-primary"><%= holding.name %></span>
-            <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap"><%= format_money(holding.amount_money) %></span>
+            <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-bold"><%= format_money(holding.amount_money) %></span>
           </div>
         <% end %>
       </div>

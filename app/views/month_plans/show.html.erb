@@ -23,12 +23,12 @@
         <div class="p-4 space-y-3">
           <div class="flex items-center justify-between gap-3">
             <div>
-              <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.budget_spent) %></p>
+              <p class="text-2xl text-primary privacy-sensitive font-amount font-bold"><%= format_money(plan.budget_spent) %></p>
               <p class="text-xs text-secondary"><%= t(".spent_so_far") %></p>
             </div>
-            <%= render DS::ProgressRing.new(percent: plan.budget_share, size: 40, stroke_width: 4, tone: plan.budget_share > (plan.elapsed_share * 100) ? :destructive : :success) %>
+            <%= render DS::ProgressRing.new(percent: plan.budget_share, size: 64, stroke_width: 6, tone: plan.budget_share > (plan.elapsed_share * 100) ? :destructive : :success) %>
             <div class="text-right">
-              <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.budget_total, precision: 0) %></p>
+              <p class="text-2xl text-secondary privacy-sensitive font-amount font-bold"><%= format_money(plan.budget_total, precision: 0) %></p>
               <p class="text-xs text-secondary"><%= t(".total_budget") %></p>
             </div>
           </div>
@@ -65,7 +65,7 @@
     <div class="rounded-xl bg-container shadow-border-xs">
       <div class="flex items-center justify-between gap-3 p-4">
         <div>
-          <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.paid_total) %></p>
+          <p class="text-sm text-primary privacy-sensitive font-amount font-bold"><%= format_money(plan.paid_total) %></p>
           <p class="text-xs text-secondary"><%= t(".paid_so_far") %></p>
         </div>
         <div class="flex items-center gap-2">
@@ -73,13 +73,13 @@
           <%= render DS::ProgressRing.new(percent: 100 - plan.paid_share, size: 40, stroke_width: 4, tone: :warning) %>
         </div>
         <div class="text-right">
-          <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(plan.pending_total) %></p>
+          <p class="text-sm text-primary privacy-sensitive font-amount font-bold"><%= format_money(plan.pending_total) %></p>
           <p class="text-xs text-secondary"><%= t(".to_pay") %></p>
         </div>
       </div>
       <div class="flex items-center justify-between gap-3 px-4 py-3 border-t border-divider text-sm">
         <span class="flex items-center gap-2 text-primary"><%= icon "layers", size: "sm" %><%= t(".balance_after") %></span>
-        <span class="font-medium text-primary privacy-sensitive"><%= format_money(plan.balance_after_recurring) %></span>
+        <span class="text-primary privacy-sensitive font-amount font-bold"><%= format_money(plan.balance_after_recurring) %></span>
       </div>
     </div>
 
@@ -121,7 +121,7 @@
       <div class="space-y-1">
         <div class="flex items-center justify-between px-1 text-xs text-secondary">
           <span><%= t(".groups.#{group.key}") %></span>
-          <span class="privacy-sensitive"><%= number_with_delimiter(group.paid_total.round) %>/<%= format_money(Money.new(group.total, currency), precision: 0) %></span>
+          <span class="privacy-sensitive font-amount font-bold"><%= number_with_delimiter(group.paid_total.round) %>/<%= format_money(Money.new(group.total, currency), precision: 0) %></span>
         </div>
         <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">
           <% group.payments.each_with_index do |payment, index| %>

@@ -8,7 +8,7 @@
       <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
       <span class="truncate"><%= row.category.name %></span>
     </span>
-    <span class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
+    <span class="text-sm text-primary privacy-sensitive font-amount font-bold"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
   </div>
   <div class="flex items-center justify-between gap-3 text-xs">
     <span class="text-secondary privacy-sensitive"><%= t("month_plans.show.spent", amount: format_money(Money.new(row.spent, currency))) %></span>

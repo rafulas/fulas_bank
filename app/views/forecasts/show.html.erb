@@ -83,13 +83,13 @@
       <%= summary_card title: t(".today") do %>
         <%= format_money today_value %>
       <% end %>
-      <%= summary_card title: t(".on_date", date: format_date(@through)) do %>
+      <%= summary_card title: t(".on_date", date: format_date(@through)), tone: :brand do %>
         <%= format_money end_value %>
       <% end %>
       <%= summary_card title: t(".difference") do %>
         <%= format_money(end_value - today_value) %>
       <% end %>
-      <%= summary_card title: t(".lowest") do %>
+      <%= summary_card title: t(".lowest"), tone: :negative do %>
         <% if lowest_value %>
           <%= format_money lowest_value %>
           <span class="block text-xs text-secondary font-normal mt-1"><%= t(".lowest_on", date: format_date(lowest_date)) %></span>

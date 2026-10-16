@@ -12,16 +12,14 @@
 
   <%= render "category_summaries/rings", analysis: @analysis %>
 
-  <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
-    <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-primary">
-      <span class="first-letter:uppercase"><%= category_summary_total_label(@period) %></span>
-      <span class="privacy-sensitive"><%= format_money(@analysis.net, precision: 0) %></span>
-    </div>
-    <%= render "shared/ruler" %>
-    <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-      <span class="flex items-center gap-2 text-primary"><%= icon "piggy-bank", size: "sm" %><%= t(".savings_rate") %></span>
-      <span class="text-primary"><%= @analysis.savings_rate %>%</span>
-    </div>
+  <%# Fulas Bank: the period's result and savings rate as figure cards. %>
+  <div class="grid grid-cols-2 gap-3">
+    <%= summary_card title: category_summary_total_label(@period), tone: (@analysis.net.negative? ? :negative : :positive) do %>
+      <span class="whitespace-nowrap"><%= format_money(@analysis.net, precision: 0) %></span>
+    <% end %>
+    <%= summary_card title: t(".savings_rate"), tone: :brand do %>
+      <%= @analysis.savings_rate %>%
+    <% end %>
   </div>
 
   <%= render "category_summaries/spending_split", split: @spending_split %>

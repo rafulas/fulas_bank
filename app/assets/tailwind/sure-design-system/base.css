@@ -33,6 +33,11 @@
     @apply text-gray-200;
   }
 
+  /* Fulas Bank: titles in Outfit, as in FlowVista. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
   /* We control the sizing through DialogComponent, so reset this value */
   dialog:modal {
     max-width: 100dvw;

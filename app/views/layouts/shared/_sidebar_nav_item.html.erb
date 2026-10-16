@@ -4,7 +4,7 @@
 <%= link_to path,
       class: class_names(
         "group relative flex items-center gap-3 h-9 pointer-coarse:h-11 pl-3 pr-2 rounded-lg text-sm focus-ring transition-colors",
-        active ? "bg-container shadow-xs text-primary font-medium" : "text-secondary hover:bg-surface-hover hover:text-primary"
+        active ? "bg-brand-subtle text-brand font-semibold" : "text-secondary hover:bg-surface-hover hover:text-primary"
       ),
       aria: { current: ("page" if active) } do %>
   <%= tag.span class: class_names("absolute left-0 top-2 bottom-2 w-1 rounded-r-sm", "bg-nav-indicator" => active) %>

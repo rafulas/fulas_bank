@@ -1,16 +1,26 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
-  "$version": "2.1.0",
+  "$version": "2.2.0",
   "$description": "Sure design tokens. Single source of truth. Hand-edit; run `npm run tokens:build` to regenerate CSS. Template syntax in $value strings: `{path.to.token}` resolves to `var(--path-to-token)`; `{path|N%}` becomes `--alpha(var(--path) / N%)`. Utility tokens whose value lacks `{}` are treated as raw Tailwind class lists for @apply.",
 
   "font": {
     "sans": {
-      "$value": "'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      "$value": "'Figtree', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
       "$type": "fontFamily"
     },
     "mono": {
       "$value": "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
       "$type": "fontFamily"
+    },
+    "display": {
+      "$value": "'Outfit', 'Figtree', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "$type": "fontFamily",
+      "$description": "Fulas Bank: page, section and card titles."
+    },
+    "amount": {
+      "$value": "'IBM Plex Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      "$type": "fontFamily",
+      "$description": "Fulas Bank: money amounts and key figures."
     },
     "weight": {
       "medium": { "$value": 500, "$type": "fontWeight" },
@@ -28,7 +38,7 @@
     "info":        { "$value": "{color.blue.600}",   "$type": "color", "$extensions": { "sure.dark": "{color.blue.500}" } },
     "shadow":      { "$value": "{color.black|6%}",   "$type": "color", "$extensions": { "sure.dark": "{color.white|8%}" } },
 
-    "link":                  { "$value": "{color.blue.600}",         "$type": "color", "$extensions": { "sure.dark": "{color.blue.500}" } },
+    "link":                  { "$value": "{color.brand}",            "$type": "color", "$extensions": { "sure.dark": "{color.brand}" } },
     "focus-ring":            { "$value": "{color.alpha-black.700}",  "$type": "color", "$extensions": { "sure.dark": "{color.alpha-white.700}" } },
     "tertiary":              { "$value": "{color.alpha-black.100}",  "$type": "color", "$extensions": { "sure.dark": "{color.alpha-white.200}" } },
     "surface":               { "$value": "{color.gray.50}",          "$type": "color", "$extensions": { "sure.dark": "{color.black}" } },
@@ -39,22 +49,25 @@
     "container-hover":       { "$value": "{color.gray.50}",          "$type": "color", "$extensions": { "sure.dark": "{color.gray.800}" } },
     "container-inset":       { "$value": "{color.gray.50}",          "$type": "color", "$extensions": { "sure.dark": "{color.gray.800}" } },
     "container-inset-hover": { "$value": "{color.gray.100}",         "$type": "color", "$extensions": { "sure.dark": "{color.gray.700}" } },
-    "nav-indicator":         { "$value": "{color.black}",            "$type": "color", "$extensions": { "sure.dark": "{color.white}" } },
+    "nav-indicator":         { "$value": "{color.brand}",            "$type": "color", "$extensions": { "sure.dark": "{color.brand}" } },
+    "brand":                 { "$value": "#096B62",                  "$type": "color", "$extensions": { "sure.dark": "#4CB9AA" }, "$description": "Fulas Bank: main accent (teal)." },
+    "brand-hover":           { "$value": "#06504A",                  "$type": "color", "$extensions": { "sure.dark": "#7DD3C6" } },
+    "brand-subtle":          { "$value": "#E6F2F0",                  "$type": "color", "$extensions": { "sure.dark": "#0E2E2B" }, "$description": "Fulas Bank: active menu row and other brand-tinted fills." },
     "toggle-track":          { "$value": "{color.gray.300}",         "$type": "color", "$extensions": { "sure.dark": "{color.gray.700}" } },
     "destructive-subtle":    { "$value": "{color.red.200}",          "$type": "color", "$extensions": { "sure.dark": "{color.red.800}" } },
 
     "gray": {
-      "25":  { "$value": "#FAFAFA", "$type": "color" },
-      "50":  { "$value": "#F7F7F7", "$type": "color" },
-      "100": { "$value": "#F0F0F0", "$type": "color" },
-      "200": { "$value": "#E7E7E7", "$type": "color" },
-      "300": { "$value": "#CFCFCF", "$type": "color" },
-      "400": { "$value": "#9E9E9E", "$type": "color" },
-      "500": { "$value": "#737373", "$type": "color" },
-      "600": { "$value": "#5C5C5C", "$type": "color" },
-      "700": { "$value": "#363636", "$type": "color" },
-      "800": { "$value": "#242424", "$type": "color" },
-      "900": { "$value": "#171717", "$type": "color" },
+      "25":  { "$value": "#FCFBFA", "$type": "color" },
+      "50":  { "$value": "#FAF9F7", "$type": "color" },
+      "100": { "$value": "#F0EEEB", "$type": "color" },
+      "200": { "$value": "#E6E3DE", "$type": "color" },
+      "300": { "$value": "#D0CCC5", "$type": "color" },
+      "400": { "$value": "#9D978E", "$type": "color" },
+      "500": { "$value": "#6B665F", "$type": "color" },
+      "600": { "$value": "#55514B", "$type": "color" },
+      "700": { "$value": "#36332F", "$type": "color" },
+      "800": { "$value": "#24221F", "$type": "color" },
+      "900": { "$value": "#151412", "$type": "color" },
       "DEFAULT": { "$value": "{color.gray.500}",       "$type": "color" },
       "tint-5":  { "$value": "{color.gray.500|5%}",    "$type": "color" },
       "tint-10": { "$value": "{color.gray.500|10%}",   "$type": "color" }
@@ -259,6 +272,11 @@
     }
   },
 
+  "radius": {
+    "$description": "Fulas Bank: overrides of Tailwind's radius scale (rounded-xl cards, as in FlowVista).",
+    "xl": { "$value": "16px", "$type": "dimension" }
+  },
+
   "shadow": {
     "xs": { "$value": "0px 1px 2px 0px {color.black|6%}",   "$type": "shadow", "$extensions": { "sure.dark": "0px 1px 2px 0px {color.white|8%}" } },
     "sm": { "$value": "0px 1px 6px 0px {color.black|6%}",   "$type": "shadow", "$extensions": { "sure.dark": "0px 1px 6px 0px {color.white|8%}" } },
@@ -272,8 +290,8 @@
   },
 
   "utility": {
-    "bg-inverse":             { "$type": "utility", "$value": "{color.gray.800}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.white}" } },
-    "bg-inverse-hover":       { "$type": "utility", "$value": "{color.gray.700}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.100}" } },
+    "bg-inverse":             { "$type": "utility", "$value": "{color.brand}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.white}" } },
+    "bg-inverse-hover":       { "$type": "utility", "$value": "{color.brand-hover}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.100}" } },
     "bg-subdued":             { "$type": "utility", "$value": "{color.gray.400}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.400}" } },
     "bg-overlay": {
       "$type": "utility",
@@ -295,7 +313,7 @@
 
     "shadow-border-xs": {
       "$type": "utility",
-      "$value": "{shadow.xs}, 0px 0px 0px 1px {color.alpha-black.50}",
+      "$value": "0px 1px 3px 0px {color.black|5%}, 0px 4px 16px -2px {color.black|4%}, 0px 0px 0px 1px {color.alpha-black.25}",
       "$extensions": {
         "sure.utility": { "raw": "box-shadow" },
         "sure.dark": "{shadow.xs}, 0px 0px 0px 1px {color.alpha-white.50}"
@@ -344,8 +362,8 @@
 
     "divide-subdued":     { "$type": "utility", "$value": "{color.alpha-black.50}",  "$extensions": { "sure.utility": { "prefix": "divide" }, "sure.dark": "{color.alpha-white.200}" } },
 
-    "button-bg-primary":           { "$type": "utility", "$value": "{color.gray.900}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.white}" } },
-    "button-bg-primary-hover":     { "$type": "utility", "$value": "{color.gray.800}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.50}" } },
+    "button-bg-primary":           { "$type": "utility", "$value": "{color.brand}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.white}" } },
+    "button-bg-primary-hover":     { "$type": "utility", "$value": "{color.brand-hover}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.50}" } },
     "button-bg-secondary":         { "$type": "utility", "$value": "{color.gray.50}",  "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.700}" } },
     "button-bg-secondary-hover":   { "$type": "utility", "$value": "{color.gray.100}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.600}" } },
     "button-bg-secondary-strong":       { "$type": "utility", "$value": "{color.gray.200}", "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.700}" } },
@@ -360,6 +378,6 @@
 
     "tab-item-active":  { "$type": "utility", "$value": "{color.white}",     "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.700}" } },
     "tab-item-hover":   { "$type": "utility", "$value": "{color.gray.200}",  "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.gray.800}" } },
-    "tab-bg-group":     { "$type": "utility", "$value": "{color.gray.50}",   "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.alpha-black.700}" } }
+    "tab-bg-group":     { "$type": "utility", "$value": "{color.gray.100}",  "$extensions": { "sure.utility": { "prefix": "bg" }, "sure.dark": "{color.alpha-black.700}" } }
   }
 }
