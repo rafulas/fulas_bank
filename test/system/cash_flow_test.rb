@@ -157,7 +157,7 @@ class CashFlowTest < ApplicationSystemTestCase
     sign_in @user
     assert_selector "#cashflow-preview svg .sankey-link"
     install_posthog_fake
-    find("#cashflow-preview").scroll_to(:center)
+    scroll_preview_into_view
     assert_selector "#cashflow-preview [data-preview-sankey-chart-target='chart'] svg"
     assert_event_count "sankey_preview_displayed", 1
     page.execute_script("document.dispatchEvent(new Event('posthog:ready'))")
@@ -227,7 +227,7 @@ class CashFlowTest < ApplicationSystemTestCase
     install_posthog_fake
     assert_event_count "sankey_preview_displayed", 0
     section.find("[data-dashboard-section-target='button']").click
-    find("#cashflow-preview").scroll_to(:center)
+    scroll_preview_into_view
     assert_event_count "sankey_preview_displayed", 1
     within "#cashflow-preview" do
       find_button("Expand", enable_aria_label: true).send_keys(:enter)
@@ -283,7 +283,7 @@ class CashFlowTest < ApplicationSystemTestCase
         };
         document.dispatchEvent(new Event('posthog:ready'));
       JS
-      find("#cashflow-preview").scroll_to(:center)
+      scroll_preview_into_view
       assert_event_count "sankey_preview_displayed", 1
       within "#cashflow-preview" do
         click_button "Expand", enable_aria_label: true
@@ -416,6 +416,21 @@ class CashFlowTest < ApplicationSystemTestCase
         document.querySelector('#cashflow-preview').setAttribute('data-sankey-preview-feedback-key-value', 'test-public-token');
         document.dispatchEvent(new Event('posthog:ready'));
       JS
+    end
+
+    # Capybara's Element#scroll_to scrolls the element's own content, not the
+    # page, so the preview only "appeared" when it happened to start on
+    # screen. Scroll it off and back into the middle of the view, so the
+    # visibility observer sees it arrive wherever the layout put it.
+    def scroll_preview_into_view
+      page.execute_script(<<~JS)
+        const preview = document.querySelector("#cashflow-preview");
+        const main = document.getElementById("main");
+        main.scrollTop = preview.offsetTop + preview.offsetHeight + main.clientHeight;
+      JS
+      # Let the observer notice it left before bringing it back.
+      page.evaluate_async_script("const done = arguments[arguments.length - 1]; requestAnimationFrame(() => requestAnimationFrame(() => done()))")
+      page.execute_script("document.querySelector('#cashflow-preview').scrollIntoView({ block: 'center' })")
     end
 
     def assert_event_count(event, count)
