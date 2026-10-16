@@ -53,6 +53,8 @@ class DS::Table::Column < DesignSystemComponent
         ("text-xs" if @dense),
         ("border-t border-subdued" if index.positive?),
         ("font-medium" if @row_header),
+        # Fulas Bank: figures in the amount font, as in FlowVista.
+        ("font-amount" if @numeric),
         alignment_classes,
         @cell_class
       )

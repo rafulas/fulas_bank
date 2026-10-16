@@ -10,7 +10,7 @@
           <%= icon("briefcase", size: "sm") %>
           <span class="text-sm text-secondary"><%= t("reports.investment_performance.portfolio_value") %></span>
         </div>
-        <p class="text-xl text-primary privacy-sensitive font-amount font-bold">
+        <p class="text-xl text-primary privacy-sensitive font-amount font-bold whitespace-nowrap">
           <%= format_money(investment_metrics[:portfolio_value]) %>
         </p>
       </div>
@@ -53,7 +53,7 @@
           <%= icon("arrow-down-to-line", size: "sm") %>
           <span class="text-sm text-secondary"><%= t("reports.investment_performance.contributions") %></span>
         </div>
-        <p class="text-xl text-primary privacy-sensitive font-amount font-bold">
+        <p class="text-xl text-primary privacy-sensitive font-amount font-bold whitespace-nowrap">
           <%= format_money(investment_metrics[:period_contributions]) %>
         </p>
       </div>
@@ -64,7 +64,7 @@
           <%= icon("arrow-up-from-line", size: "sm") %>
           <span class="text-sm text-secondary"><%= t("reports.investment_performance.withdrawals") %></span>
         </div>
-        <p class="text-xl text-primary privacy-sensitive font-amount font-bold">
+        <p class="text-xl text-primary privacy-sensitive font-amount font-bold whitespace-nowrap">
           <%= format_money(investment_metrics[:period_withdrawals]) %>
         </p>
       </div>
@@ -105,7 +105,7 @@
                     </div>
                   </td>
                   <td class="py-3 px-4 lg:px-6 text-right text-secondary"><%= number_to_percentage(holding.weight || 0, precision: 1) %></td>
-                  <td class="py-3 px-4 lg:px-6 text-right text-primary privacy-sensitive font-amount font-bold"><%= format_money(holding.amount_money) %></td>
+                  <td class="py-3 px-4 lg:px-6 text-right text-primary privacy-sensitive font-amount font-bold whitespace-nowrap"><%= format_money(holding.amount_money) %></td>
                   <td class="py-3 px-4 lg:px-6 text-right">
                     <% if holding.trend %>
                       <span style="color: <%= holding.trend.color %>">
@@ -141,7 +141,7 @@
                   show_dot: false,
                   title: t("accounts.tax_treatment_descriptions.#{treatment}")
                 ) %>
-                <span class="text-sm text-primary privacy-sensitive font-amount font-bold">
+                <span class="text-sm text-primary privacy-sensitive font-amount font-bold whitespace-nowrap">
                   <%= format_money(data[:total_gain]) %>
                 </span>
               </div>
@@ -149,11 +149,11 @@
               <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
                   <span class="text-secondary"><%= t("reports.investment_performance.unrealized_gains") %></span>
-                  <span class="text-primary privacy-sensitive font-amount font-bold"><%= format_money(data[:unrealized_gain]) %></span>
+                  <span class="text-primary privacy-sensitive font-amount font-bold whitespace-nowrap"><%= format_money(data[:unrealized_gain]) %></span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-secondary"><%= t("reports.investment_performance.realized_gains") %></span>
-                  <span class="text-primary privacy-sensitive font-amount font-bold"><%= format_money(data[:realized_gain]) %></span>
+                  <span class="text-primary privacy-sensitive font-amount font-bold whitespace-nowrap"><%= format_money(data[:realized_gain]) %></span>
                 </div>
               </div>
 
@@ -233,7 +233,7 @@
                   <p class="text-xs text-secondary"><%= account.short_subtype_label %></p>
                 </div>
               </div>
-              <p class="text-primary privacy-sensitive font-amount font-bold"><%= format_money(account.balance_money) %></p>
+              <p class="text-primary privacy-sensitive font-amount font-bold whitespace-nowrap"><%= format_money(account.balance_money) %></p>
             <% end %>
           <% end %>
         </div>
