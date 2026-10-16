@@ -58,6 +58,11 @@ class Insurance < ApplicationRecord
     ASSET_TYPES.key(account&.accountable_type) || "other"
   end
 
+  # Before saving, the currency is the asset's or the family's.
+  def currency
+    super || account&.currency || family&.currency
+  end
+
   def icon
     ICONS.fetch(kind, "shield")
   end
@@ -96,7 +101,7 @@ class Insurance < ApplicationRecord
 
   private
     def inherit_currency
-      self.currency ||= account&.currency || family&.currency
+      self[:currency] ||= currency
     end
 
     def account_is_an_insurable_asset
