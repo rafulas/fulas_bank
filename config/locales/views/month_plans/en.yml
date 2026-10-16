@@ -21,8 +21,8 @@ en:
       to_pay: to pay
       balance_after: Balance after recurring
       groups:
-        bills: Bills and services
-        loans: Loans and leases
+        bills: Bills and insurance
+        loans: Loans and mortgage
         subscriptions: Subscriptions
         income: Income
         other: Other

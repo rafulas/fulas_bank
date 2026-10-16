@@ -65,6 +65,8 @@
           <p class="text-sm font-medium text-primary privacy-sensitive"><%= t(".per_month", amount: format_money(row.monthly)) %></p>
           <p class="text-xs text-secondary privacy-sensitive"><%= t(".per_year", amount: format_money(row.monthly * 12, precision: 0)) %></p>
         </div>
+        <%= render DS::Button.new(text: t(".cancel"), variant: :ghost, size: :sm, href: cancel_subscription_cost_path(series), method: :patch,
+              confirm: CustomConfirm.new(title: t(".cancel_confirm_title", name: series.display_name), body: t(".cancel_confirm_body"), btn_text: t(".cancel"))) %>
         <%= form_with url: could_drop_subscription_cost_path(series), method: :patch, data: { controller: "auto-submit-form", turbo_frame: :_top } do %>
           <%= hidden_field_tag :could_drop, "0", id: nil %>
           <%= check_box_tag :could_drop, "1", row.could_drop, id: dom_id(series, :could_drop),
@@ -74,6 +76,29 @@
       </div>
     <% end %>
   </div>
+
+  <% if overview.cancelled.any? %>
+    <details class="rounded-xl bg-container shadow-border-xs">
+      <summary class="cursor-pointer px-4 py-3 text-sm text-primary"><%= t(".cancelled", count: overview.cancelled.size) %></summary>
+      <div class="divide-y divide-divider">
+        <% overview.cancelled.each do |series| %>
+          <div class="flex items-center gap-3 px-4 py-2.5">
+            <%= render "subscription_costs/logo", series: series %>
+            <div class="min-w-0 grow">
+              <p class="truncate text-sm text-secondary"><%= series.display_name %></p>
+              <p class="text-xs text-secondary privacy-sensitive">
+                <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
+                <% if series.cancelled_on %>
+                  · <%= t(".cancelled_on", date: l(series.cancelled_on, format: "%-d %b %Y")) %>
+                <% end %>
+              </p>
+            </div>
+            <%= render DS::Button.new(text: t(".resume"), variant: :outline, size: :sm, href: resume_subscription_cost_path(series), method: :patch) %>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
 
   <% candidates = overview.other_candidates %>
   <% if candidates.any? %>

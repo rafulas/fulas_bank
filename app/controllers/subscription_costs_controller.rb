@@ -13,6 +13,20 @@ class SubscriptionCostsController < ApplicationController
     redirect_to subscription_costs_path
   end
 
+  # Cancels a subscription: it stops counting from today.
+  def cancel
+    series = accessible_series.typed_subscription.find(params[:id])
+    SubscriptionsOverview.cancel!(series)
+    redirect_to subscription_costs_path, notice: t(".success", name: series.display_name)
+  end
+
+  # Takes a cancelled subscription up again.
+  def resume
+    series = accessible_series.typed_subscription.find(params[:id])
+    SubscriptionsOverview.resume!(series)
+    redirect_to subscription_costs_path, notice: t(".success", name: series.display_name)
+  end
+
   # Turns another recurring payment into a subscription.
   def mark
     series = accessible_series.find(params[:id])

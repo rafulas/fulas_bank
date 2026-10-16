@@ -134,6 +134,8 @@
               :id, :name,
               { label: t(".category_label"), include_blank: t(".category_blank") } %>
 
+        <p class="col-span-2 -mt-1 text-xs text-secondary"><%= t(".bill_type_hint") %></p>
+
         <div data-frequency-fields-target="group" data-presets="installment" class="hidden col-span-2">
           <%= f.number_field :end_after_count,
                 label: t(".installment_count_label"),

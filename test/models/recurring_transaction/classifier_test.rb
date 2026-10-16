@@ -109,7 +109,68 @@ class RecurringTransaction::ClassifierTest < ActiveSupport::TestCase
     assert_equal "bill", insurer.bill_type
   end
 
+  # Fulas Bank: a subscription is only what can be cancelled at will.
+  test "spanish insurance on a card is a bill, not a subscription" do
+    result = Classifier.classify(name: "MAPFRE SEGUROS AUTO", entries: entries_of(47, 47), account: @credit_card)
+
+    assert_equal "bill", result.bill_type
+    assert_not result.autopay
+  end
+
+  test "a mortgage or a loan is an installment" do
+    assert_equal "installment", Classifier.classify(name: "CUOTA HIPOTECA", entries: entries_of(650, 650)).bill_type
+    assert_equal "installment", Classifier.classify(name: "Préstamo coche", entries: entries_of(220, 220)).bill_type
+  end
+
+  test "spanish utilities and telecom are bills" do
+    assert_equal "bill", Classifier.classify(name: "IBERDROLA CLIENTES", entries: entries_of(60), account: @credit_card).bill_type
+    assert_equal "bill", Classifier.classify(name: "MOVISTAR", entries: entries_of(45, 45), account: @credit_card).bill_type
+  end
+
+  test "a named service wins over bill-like wording" do
+    assert_equal "subscription", Classifier.classify(name: "MOVISTAR PLUS", entries: entries_of(12, 12)).bill_type
+    assert_equal "subscription", Classifier.classify(name: "Gimnasio VivaGym", entries: entries_of(29.9, 29.9)).bill_type
+  end
+
+  test "the category decides when the name says nothing" do
+    insurance = category("Seguro del vehículo")
+    charges = entries_of(9.99, 9.99)
+    charges.each { |entry| entry.entryable.update!(category: insurance) }
+    assert_equal "bill", Classifier.classify(name: "SOMEOBSCURESERVICE", entries: charges, account: @credit_card).bill_type
+
+    digital = category("Servicios digitales")
+    charges = entries_of(30, 25)
+    charges.each { |entry| entry.entryable.update!(category: digital) }
+    assert_equal "subscription", Classifier.classify(name: "ANOTHERSERVICE", entries: charges).bill_type
+  end
+
+  test "a subcategory of Gastos financieros is an obligation" do
+    parent = category("Gastos financieros")
+    child = @family.categories.create!(name: "Mi seguro raro", parent: parent, color: "#b86460", lucide_icon: "shield")
+    series = recurring_transactions(:netflix_subscription)
+    series.update_columns(name: "ALGO", merchant_id: nil, category_id: child.id)
+
+    assert Classifier.obligatory?(series.reload)
+  end
+
+  test "refile_obligations! moves misfiled subscriptions and leaves real ones" do
+    real = recurring_transactions(:netflix_subscription)
+    real.update_columns(bill_type: "subscription")
+    insurance = recurring_transactions(:inactive_subscription)
+    insurance.update_columns(bill_type: "subscription", merchant_id: nil, name: "SEGURO HOGAR MUTUA")
+
+    Classifier.refile_obligations!(@family)
+
+    assert real.reload.typed_subscription?
+    assert insurance.reload.typed_bill?
+  end
+
   private
+    def category(name)
+      @family.categories.find_by(name: name) ||
+        @family.categories.create!(name: name, color: "#b86460", lucide_icon: "shield")
+    end
+
     def entries_of(*amounts)
       amounts.map.with_index do |amount, index|
         @depository.entries.create!(

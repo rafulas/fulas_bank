@@ -23,11 +23,23 @@ es:
         one: "¿Es una suscripción? 1 recurrente más"
         other: "¿Alguna es una suscripción? %{count} recurrentes más"
       mark: Es una suscripción
+      cancel: Cancelar
+      cancel_confirm_title: "¿Cancelar %{name}?"
+      cancel_confirm_body: Deja de contar desde hoy en el total, el Forecast y Planes. Puedes volver a activarla cuando quieras.
+      cancelled:
+        one: 1 suscripción cancelada
+        other: "%{count} suscripciones canceladas"
+      cancelled_on: "cancelada el %{date}"
+      resume: Volver a activar
       add: Añadir suscripción
       all_recurring: Ver todos los recurrentes
       link_hint: "Cada cargo va con su suscripción por comercio e importe; así dos de Apple (Music a 10,99 € e iCloud a 2,99 €) son dos suscripciones. Si alguno va con la que no es, cámbialo en su detalle."
     mark:
       success: "%{name} ahora es una suscripción."
+    cancel:
+      success: "%{name} cancelada. Ya no cuenta en el Forecast."
+    resume:
+      success: "%{name} vuelve a estar activa."
   transactions:
     show:
       subscription: Suscripción

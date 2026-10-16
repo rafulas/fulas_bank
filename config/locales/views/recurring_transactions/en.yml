@@ -120,6 +120,7 @@ en:
       account_label: Paid from
       account_blank: Any account
       bill_type_label: Kind
+      bill_type_hint: "A subscription is something you can cancel whenever you like (Netflix, Apple, the gym). A bill or insurance is something you must pay (car insurance, power, HOA). A loan is payments that end (mortgage, loan)."
       installment_count_label: Number of payments
       installment_count_hint: The plan ends after this many payments and shows its progress until then.
       renews_on_label: Renews
