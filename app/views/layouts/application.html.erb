@@ -101,7 +101,7 @@ end %>
 
     <%# DESKTOP - Left navbar %>
     <div class="hidden lg:block border-r border-divider" data-sidebar-resize-target="navbar">
-      <nav class="h-full flex flex-col shrink-0 w-56 py-4 px-3 overflow-y-auto" aria-label="<%= t(".main_menu") %>">
+      <nav class="h-full flex flex-col shrink-0 w-48 py-4 px-2 overflow-y-auto" aria-label="<%= t("layouts.application.main_menu") %>">
         <%= link_to home_path, class: "flex items-center gap-3 px-2 mb-6 rounded-lg focus-ring" do %>
           <%= image_tag "logomark-color.svg", class: "w-9 h-9 shrink-0", alt: "" %>
           <span class="text-lg font-semibold text-primary truncate"><%= product_name %></span>
