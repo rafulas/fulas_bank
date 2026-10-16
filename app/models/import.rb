@@ -290,8 +290,19 @@ class Import < ApplicationRecord
     family.sync_later
 
     update! status: :complete
+    remember_statement_reference!
   rescue => error
     update! status: :failed, error: error.message
+  end
+
+  # Fulas Bank: the account a statement was imported into learns the IBAN on
+  # the statement, so the next one is recognised on its own (see
+  # Import::AccountGuess). An account keeps the first reference it learns.
+  def remember_statement_reference!
+    return if account.nil? || statement_reference.blank? || account.statement_reference.present?
+    return if family.accounts.where(statement_reference: statement_reference).exists?
+
+    account.update_column(:statement_reference, statement_reference)
   end
 
   def revert_later

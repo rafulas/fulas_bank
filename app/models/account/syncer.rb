@@ -15,6 +15,8 @@ class Account::Syncer
   def perform_post_sync
     account.family.auto_match_transfers!(account: account)
     AssetLinker.run_quietly(account.family)
+    TradeLinker.run_quietly(account.family)
+    InsuranceLinker.run_quietly(account.family)
   end
 
   private

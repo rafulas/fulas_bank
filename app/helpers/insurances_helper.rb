@@ -45,4 +45,9 @@ module InsurancesHelper
 
     render DS::Pill.new(label: label, tone: insurance.renews_soon?(today) ? :warning : :neutral, icon: "calendar", marker: false, size: :sm)
   end
+
+  # Fulas Bank: the colour of an instalment's status (see Insurance::Instalment).
+  def insurance_payment_tone(status)
+    { paid: :success, suggested: :warning, overdue: :error, upcoming: :neutral }.fetch(status, :neutral)
+  end
 end

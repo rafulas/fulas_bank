@@ -1,5 +1,13 @@
 <%# locals: (import:) %>
 
+<%# Fulas Bank: the account the statement goes to, with a way to change it. %>
+<% if import.account.present? && import.pending? %>
+  <div class="flex items-center justify-between gap-3 mb-4 p-3 rounded-lg bg-container-inset text-sm">
+    <span class="text-secondary"><%= t("smart_imports.account_line", account: import.account.name) %></span>
+    <%= render DS::Link.new(text: t("smart_imports.change_account"), variant: :ghost, size: :sm, href: edit_smart_import_path(import)) %>
+  </div>
+<% end %>
+
 <%= styled_form_with model: @import,
                      url: import_configuration_path(@import),
                      scope: :import,

@@ -13,7 +13,9 @@ class Vehicles::RoadtripImportsController < Vehicles::BaseController
   end
 
   def create
-    content = params[:confirm].present? ? confirmed_content : uploaded_content
+    # Fulas Bank: the file can also come already read (base64), from a file
+    # dropped anywhere in the app (see SmartImportsController).
+    content = params[:content].present? ? confirmed_content : uploaded_content
     return render_upload_error(:missing_file) if content.blank?
 
     @import = Vehicle::RoadtripImport.new(@vehicle, content)

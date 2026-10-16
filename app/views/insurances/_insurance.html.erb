@@ -34,6 +34,9 @@
       <%= render DS::Pill.new(label: t("insurances.inactive"), tone: :neutral, marker: false, size: :sm) %>
     <% end %>
     <% if insurance.custom_payments? %>
+      <% if insurance.active? && (overdue = insurance.overdue_instalments(today)).any? %>
+        <%= render DS::Pill.new(label: t("insurances.payments.overdue_count", count: overdue.size), tone: :error, icon: "alert-triangle", marker: false, size: :sm) %>
+      <% end %>
       <span class="privacy-sensitive"><%= insurance_installments_label(insurance, today: today) %></span>
     <% elsif insurance.premium && insurance.payment_frequency != "annual" %>
       <span class="privacy-sensitive"><%= insurance_premium_label(insurance) %></span>

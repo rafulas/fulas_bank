@@ -53,6 +53,14 @@ class Import::XlsxConverter
     end
   end
 
+  # Fulas Bank: the text of the title rows above the table (account holder,
+  # IBAN, period), where a bank names the account the statement is for.
+  def preamble_text
+    rows = sheet_rows.reject { |row| row.all?(&:blank?) }
+    index = detect_header_index(rows) || 0
+    rows.first(index).flatten.compact.join(" | ")
+  end
+
   private
     attr_reader :bytes
 

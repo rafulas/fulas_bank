@@ -49,4 +49,29 @@ class Trades::BankLinksControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_nil @trade_entry.trade.reload.bank_entry
   end
+
+  test "confirms a proposal, and rejects another for good" do
+    @trade_entry.trade.update!(bank_entry: @charge, bank_entry_suggested: true)
+
+    patch confirm_trade_bank_link_path(@trade_entry)
+    assert_not @trade_entry.trade.reload.bank_entry_suggested?
+    assert_equal @charge, @trade_entry.trade.bank_entry
+
+    @trade_entry.trade.update!(bank_entry_suggested: true)
+    delete reject_trade_bank_link_path(@trade_entry)
+
+    assert_nil @trade_entry.trade.reload.bank_entry
+    assert AssetLinkRejection.exists?(entry_id: @charge.id, account_id: @trade_entry.account_id)
+    assert_equal 0, TradeLinker.new(@trade_entry.account.family).run!
+  end
+
+  test "confirms every proposal from Inversiones" do
+    @trade_entry.trade.update!(bank_entry: @charge, bank_entry_suggested: true)
+
+    get investments_overview_path
+    assert_select "#suggested_trades"
+
+    post confirm_bank_links_trades_path
+    assert_not @trade_entry.trade.reload.bank_entry_suggested?
+  end
 end

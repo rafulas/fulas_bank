@@ -1,0 +1,33 @@
+<%# locals: (trades:) %>
+<%# Fulas Bank: the bank movements the app proposed for buys and sales of
+    accounts without brokerage cash (TradeLinker), to confirm or turn down. %>
+<%= render DS::Card.new(id: "suggested_trades", class: "gap-3") do %>
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="space-y-1">
+      <h3 class="text-sm font-medium text-primary"><%= t(".title", count: trades.size) %></h3>
+      <p class="text-xs text-secondary"><%= t(".hint") %></p>
+    </div>
+    <%= render DS::Button.new(text: t(".confirm_all"), icon: "check-check", variant: :primary, size: :sm, href: confirm_bank_links_trades_path, method: :post) %>
+  </div>
+
+  <ul class="divide-y divide-subdued">
+    <% trades.each do |trade| %>
+      <% trade_entry = trade.entry %>
+      <% bank_entry = trade.bank_entry %>
+      <li id="<%= dom_id(trade, :suggestion) %>" class="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
+        <div class="min-w-0 space-y-1">
+          <%= link_to trade_entry.name, trade_path(trade_entry), data: { turbo_frame: :drawer }, class: "text-primary hover:underline" %>
+          <p class="text-xs text-secondary">
+            <%= format_date(trade_entry.date) %> · <span class="privacy-sensitive"><%= format_money(trade_entry.amount_money.abs) %></span>
+            → <%= bank_entry.account.name %>: <%= bank_entry.name %> · <%= format_date(bank_entry.date) %> ·
+            <span class="privacy-sensitive"><%= format_money(bank_entry.amount_money.abs) %></span>
+          </p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <%= render DS::Button.new(icon: "check", variant: :icon, href: confirm_trade_bank_link_path(trade_entry), method: :patch, aria: { label: t("trades.bank_link.confirm") }) %>
+          <%= render DS::Button.new(icon: "x", variant: :icon, href: reject_trade_bank_link_path(trade_entry), method: :delete, aria: { label: t("trades.bank_link.reject") }) %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

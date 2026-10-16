@@ -472,11 +472,14 @@ class Forecast
     # ---- 6. Insurance instalments ----
 
     def insurance_flows
-      family.insurances.active.where(payment_frequency: Insurance::CUSTOM_FREQUENCY).flat_map do |insurance|
+      family.insurances.active.where(payment_frequency: Insurance::CUSTOM_FREQUENCY).includes(:insurance_payments).flat_map do |insurance|
         account = insurance_account(insurance)
         next [] unless account
 
-        insurance.installment_charges_between(window).map do |date, amount, number, count|
+        # An instalment already paid (charged early) is not expected again.
+        paid = insurance.insurance_payments.select(&:paid?).map(&:due_on)
+
+        insurance.installment_charges_between(window).reject { |date, *| paid.include?(date) }.map do |date, amount, number, count|
           Flow.new(date: date, account: account, amount: to_account_currency(amount, account), source: :insurance,
                    key: ForecastAdjustment.insurance_key(insurance, date),
                    name: I18n.t("forecasts.insurance_line", name: insurance.name, number: number, count: count))

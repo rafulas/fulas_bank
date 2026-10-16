@@ -181,6 +181,13 @@
       <% end %>
     <% end %>
 
+    <%# Fulas Bank: the insurance instalment this charge pays. %>
+    <% if (insurance_payment = InsurancePayment.includes(:insurance).find_by(entry_id: @entry.id)) %>
+      <% dialog.with_section(title: t("insurances.payments.section"), open: true) do %>
+        <%= render "transactions/insurance_payment", entry: @entry, payment: insurance_payment %>
+      <% end %>
+    <% end %>
+
     <%# Fulas Bank: the card statement it goes in, and paying it in instalments. %>
     <% if @entry.account.accountable_type == "CreditCard" && !@entry.transaction.transfer? %>
       <% dialog.with_section(title: t(".card_statement"), open: true) do %>

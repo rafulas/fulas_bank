@@ -287,8 +287,8 @@ es:
         include_checkbox: Incluir %{name}
         assign_category_select: Asignar categoría a %{name}
     list:
-      drag_drop_title: Suelta el CSV para importar
-      drag_drop_subtitle: Sube transacciones directamente
+      drag_drop_title: Suelta el archivo para importar
+      drag_drop_subtitle: "Extracto del banco (Excel o CSV), Bilance o RoadTrip: la app sabe a qué cuenta va"
       transaction: transacción
       transactions: transacciones
     toggle_recurring_section: Alternar próximas transacciones recurrentes

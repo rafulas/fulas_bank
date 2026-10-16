@@ -1,0 +1,19 @@
+<%# Fulas Bank: a RoadTrip export whose vehicle could not be told apart. %>
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title"), subtitle: t(".subtitle")) %>
+  <% dialog.with_body do %>
+    <div class="space-y-2">
+      <% @vehicles.each do |account| %>
+        <%= render DS::Button.new(
+              text: [ account.name, account.vehicle.license_plate ].compact_blank.join(" · "),
+              icon: "car-front",
+              variant: :outline,
+              full_width: true,
+              href: vehicle_roadtrip_import_path(account, content: @content),
+              method: :post,
+              frame: :_top
+            ) %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

@@ -23,6 +23,8 @@ class Family::Syncer
     family.auto_match_transfers!
     CreditCard::Reconciler.run_quietly(family)
     AssetLinker.run_quietly(family)
+    TradeLinker.run_quietly(family)
+    InsuranceLinker.run_quietly(family)
 
     Rails.logger.info("Applying rules for family #{family.id}")
     family.rules.where(active: true).each do |rule|

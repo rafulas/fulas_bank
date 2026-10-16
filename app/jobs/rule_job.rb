@@ -36,6 +36,8 @@ class RuleJob < ApplicationJob
       # A rule may have just given charges a category such as "Combustible":
       # propose them for the vehicle or the property right away.
       AssetLinker.run_quietly(rule.family)
+      TradeLinker.run_quietly(rule.family)
+      InsuranceLinker.run_quietly(rule.family)
 
       if result.is_a?(Hash) && result[:async]
         # Async actions were executed

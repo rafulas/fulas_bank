@@ -1,0 +1,27 @@
+<%# locals: (entry:, payment:) %>
+<%# Fulas Bank: the insurance instalment this charge pays (see
+    InsurancePayment). %>
+<% insurance = payment.insurance %>
+<% due = payment.due_on.iso8601 %>
+<div class="px-3 py-2 space-y-3">
+  <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-primary bg-container">
+    <div class="flex items-start gap-3 min-w-0">
+      <%= icon insurance.icon, size: "md" %>
+      <div class="min-w-0 space-y-1">
+        <p class="text-sm font-medium text-primary truncate"><%= insurance.name %></p>
+        <p class="text-xs text-secondary"><%= t("insurances.payments.due_on", date: l(payment.due_on, format: "%d/%m/%Y")) %></p>
+      </div>
+    </div>
+    <%= render DS::Link.new(text: t("insurances.payments.view"), variant: :ghost, size: :sm, href: edit_insurance_path(insurance), frame: :modal) %>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2">
+    <% if payment.suggested? %>
+      <%= render DS::Pill.new(label: t("insurances.payments.statuses.suggested"), tone: :warning, marker: false, size: :sm) %>
+      <%= render DS::Button.new(text: t("insurances.payments.confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_insurance_payment_path(insurance, due), method: :patch, frame: :_top) %>
+      <%= render DS::Button.new(text: t("insurances.payments.reject"), icon: "x", variant: :outline, size: :sm, href: reject_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+    <% else %>
+      <%= render DS::Button.new(text: t("insurances.payments.unlink"), icon: "unlink", variant: :outline, size: :sm, href: clear_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,60 @@
+<%# locals: (insurance:, today: Date.current) %>
+<%# Fulas Bank: the instalments of the last year and the next one, with the
+    bank charge that paid each (see InsurancePayment). %>
+<% instalments = insurance.recent_instalments(today) %>
+
+<% if instalments.any? %>
+  <%= render DS::Card.new(id: dom_id(insurance, :payments), class: "gap-3") do %>
+    <div class="space-y-1">
+      <h3 class="text-sm font-medium text-primary"><%= t("insurances.payments.title") %></h3>
+      <p class="text-xs text-secondary"><%= t("insurances.payments.hint") %></p>
+    </div>
+
+    <ul class="divide-y divide-subdued">
+      <% instalments.each do |instalment| %>
+        <% due = instalment.date.iso8601 %>
+        <% status = instalment.status(today) %>
+        <li class="py-2 space-y-2 text-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-primary"><%= t("insurances.payments.instalment", number: instalment.number, count: instalment.count, date: l(instalment.date, format: "%d/%m/%Y")) %></p>
+              <% if (charge = instalment.payment&.entry) %>
+                <p class="text-xs text-secondary truncate">
+                  <%= link_to charge.name, transaction_path(charge), data: { turbo_frame: :drawer }, class: "underline" %>
+                  · <%= charge.account.name %> · <%= l(charge.date, format: "%d/%m/%Y") %>
+                </p>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="privacy-sensitive whitespace-nowrap"><%= format_money(instalment.amount) %></span>
+              <%= render DS::Pill.new(label: t("insurances.payments.statuses.#{status}"), tone: insurance_payment_tone(status), marker: false, size: :sm) %>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <% case status %>
+            <% when :suggested %>
+              <%= render DS::Button.new(text: t("insurances.payments.confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_insurance_payment_path(insurance, due), method: :patch, frame: :_top) %>
+              <%= render DS::Button.new(text: t("insurances.payments.reject"), icon: "x", variant: :outline, size: :sm, href: reject_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+            <% when :paid %>
+              <%= render DS::Button.new(text: t("insurances.payments.clear"), icon: "undo-2", variant: :ghost, size: :sm, href: clear_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+            <% else %>
+              <% insurance.payment_candidates(instalment.date, instalment.amount).each do |candidate| %>
+                <%= render DS::Button.new(
+                      text: t("insurances.payments.link_to", date: l(candidate.date, format: "%d/%m"), amount: format_money(candidate.amount_money)),
+                      icon: "link",
+                      variant: :outline,
+                      size: :sm,
+                      href: link_insurance_payment_path(insurance, due, entry_id: candidate.id),
+                      method: :post,
+                      frame: :_top
+                    ) %>
+              <% end %>
+              <%= render DS::Button.new(text: t("insurances.payments.mark_paid"), icon: "check", variant: :ghost, size: :sm, href: mark_paid_insurance_payment_path(insurance, due), method: :post, frame: :_top) %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

@@ -290,8 +290,8 @@ en:
         include_checkbox: "Include %{name}"
         assign_category_select: "Assign category for %{name}"
     list:
-      drag_drop_title: Drop CSV to import
-      drag_drop_subtitle: Upload transactions directly
+      drag_drop_title: Drop the file to import
+      drag_drop_subtitle: "Bank statement (Excel or CSV), Bilance or RoadTrip: the app knows which account it goes to"
       transaction: transaction
       transactions: transactions
     toggle_recurring_section: Toggle upcoming recurring transactions

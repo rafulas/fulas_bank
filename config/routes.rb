@@ -540,11 +540,17 @@ Rails.application.routes.draw do
       patch :update_price
     end
   end
+  # Fulas Bank: import any file and let the app tell what it is and where it goes.
+  resources :smart_imports, only: %i[create edit update], path: "importar"
   resources :trades, only: %i[show new create update destroy] do
     member do
       post :unlock
     end
-    resource :bank_link, only: %i[create destroy], module: :trades
+    resource :bank_link, only: %i[create destroy], module: :trades do
+      patch :confirm
+      delete :reject
+    end
+    post :confirm_bank_links, on: :collection, to: "trades/bank_links#confirm_all"
   end
   resources :valuations, only: %i[show new create update destroy] do
     post :confirm_create, on: :collection
@@ -783,6 +789,16 @@ Rails.application.routes.draw do
   # Fulas Bank: the insurance policies, tied to the vehicle or home they cover.
   resources :insurances, except: :show, path: "seguros" do
     resources :documents, only: %i[show destroy], controller: "insurances/documents"
+    # Fulas Bank: how each instalment was paid, by its due day (YYYY-MM-DD).
+    resources :payments, only: [], controller: "insurances/payments", param: :due_on, constraints: { due_on: /\d{4}-\d{2}-\d{2}/ } do
+      member do
+        post :link
+        patch :confirm
+        delete :reject
+        post :mark_paid
+        delete :clear
+      end
+    end
   end
   resources :investment_funds, only: %i[new create edit update destroy], path: "inversiones/fondos"
   resource :investment_fund_prices, only: %i[edit update], path: "inversiones/valores-liquidativos", controller: "investment_funds/prices"

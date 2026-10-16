@@ -18,15 +18,23 @@
       <%= render DS::Link.new(text: t(".view"), variant: :ghost, size: :sm, href: transaction_path(bank_entry), frame: :drawer) %>
     </div>
 
-    <%= render DS::Button.new(
-          text: t(".unlink"),
-          icon: "unlink",
-          variant: :outline,
-          size: :sm,
-          href: trade_bank_link_path(entry),
-          method: :delete,
-          frame: :_top
-        ) %>
+    <% if trade.bank_entry_suggested? %>
+      <div class="flex flex-wrap items-center gap-2">
+        <%= render DS::Pill.new(label: t(".suggested"), tone: :warning, marker: false, size: :sm) %>
+        <%= render DS::Button.new(text: t(".confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_trade_bank_link_path(entry), method: :patch, frame: :_top) %>
+        <%= render DS::Button.new(text: t(".reject"), icon: "x", variant: :outline, size: :sm, href: reject_trade_bank_link_path(entry), method: :delete, frame: :_top) %>
+      </div>
+    <% else %>
+      <%= render DS::Button.new(
+            text: t(".unlink"),
+            icon: "unlink",
+            variant: :outline,
+            size: :sm,
+            href: trade_bank_link_path(entry),
+            method: :delete,
+            frame: :_top
+          ) %>
+    <% end %>
   <% else %>
     <p class="text-sm text-secondary"><%= t(trade.buy? ? ".hint_buy" : ".hint_sell") %></p>
 
