@@ -32,4 +32,41 @@ class SubscriptionCostsControllerTest < ActionDispatch::IntegrationTest
 
     assert series.reload.typed_subscription?
   end
+
+  test "cancels a subscription and takes it up again" do
+    series = recurring_transactions(:netflix_subscription)
+    series.update_columns(bill_type: "subscription")
+
+    patch cancel_subscription_cost_url(series)
+    series.reload
+    assert series.paused?
+    assert_equal Date.current, series.cancelled_on
+
+    get subscription_costs_url
+    assert_select "form[action=?]", resume_subscription_cost_path(series)
+
+    patch resume_subscription_cost_url(series)
+    series.reload
+    assert series.active?
+    assert_nil series.cancelled_on
+  end
+
+  test "insurance is not offered as a subscription" do
+    insurance = recurring_transactions(:netflix_subscription)
+    insurance.update_columns(bill_type: "bill", merchant_id: nil, name: "MAPFRE SEGURO COCHE", status: "active")
+
+    get subscription_costs_url
+
+    assert_no_match "MAPFRE SEGURO COCHE", response.body
+  end
+
+  test "only subscriptions can be cancelled from here" do
+    bill = recurring_transactions(:netflix_subscription)
+    bill.update_columns(bill_type: "bill")
+
+    patch cancel_subscription_cost_url(bill)
+
+    assert_response :not_found
+    assert bill.reload.active?
+  end
 end

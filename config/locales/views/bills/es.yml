@@ -242,9 +242,9 @@ es:
       col_actions: Acciones
       monthly_equivalent: "%{amount}/mes"
       types:
-        bill: Recibo
+        bill: Factura o seguro
         subscription: Suscripción
-        installment: Pago a plazos
+        installment: Préstamo o pago a plazos
         income: Ingreso
         transfer: Transferencia
         other: Otro

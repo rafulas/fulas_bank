@@ -7,6 +7,18 @@ class RecurringTransaction
   #
   # Category is inherited from the most common one across the cluster's
   # entries.
+  #
+  # Fulas Bank: a subscription is only what can be cancelled and taken up
+  # again at will (Netflix, Apple, the gym). Insurance, the mortgage, a loan,
+  # utilities or taxes must be paid, so they are never subscriptions, however
+  # flat and small the card charge. That is decided by the series' name, in
+  # Spanish too (accents ignored), and by its category in the Fulas Bank tree:
+  #   1. a loan (name or category)              -> installment
+  #   2. an obligation (category, or wording
+  #      that doesn't name a known service)     -> bill
+  #   3. a subscription service (name or cat.)  -> subscription
+  #   4. a flat modest card charge, no signal   -> subscription
+  #   5. anything else                          -> bill
   class Classifier
     # Services that are subscriptions essentially always.
     SUBSCRIPTION_KEYWORDS = %w[
@@ -18,6 +30,9 @@ class RecurringTransaction
       bitwarden nordvpn expressvpn sirius pandora tidal deezer duolingo
       headspace calm grammarly peloton planet\ fitness la\ fitness
       grok x.ai xai
+      apple amazon\ prime prime\ video google\ play dazn filmin skyshowtime
+      atresplayer movistar\ plus storytel gimnasio gym basic\ fit basic-fit
+      mcfit altafit vivagym viva\ gym holmes\ place anytime\ fitness
     ].freeze
 
     # Wording that marks classic push-payment obligations: utilities,
@@ -27,6 +42,28 @@ class RecurringTransaction
       mortgage rent lease loan hoa property tax comcast xfinity spectrum
       cox centurylink frontier at&t verizon t-mobile tmobile mint\ mobile
       wireless phone internet interest finance\ charge
+      seguro* mapfre mutua* axa allianz generali zurich reale santalucia
+      linea\ directa pelayo caser ocaso verti sanitas adeslas asisa dkv
+      alquiler comunidad ibi ivtm impuesto* tasa* hacienda aeat ayuntamiento
+      iberdrola endesa naturgy holaluz totalenergies electricidad luz agua*
+      canal\ de\ isabel movistar vodafone orange yoigo jazztel digi masmovil
+      pepephone simyo lowi telefon* fibra colegio guarderia
+    ].freeze
+
+    # Fulas Bank: a loan or a mortgage -- a fixed run of payments, then done.
+    LOAN_KEYWORDS = %w[hipoteca* prestamo* financiacion leasing renting].freeze
+
+    # Fulas Bank category names (accents dropped, lower case) that say what a
+    # series is. A subcategory counts, and so does its main category.
+    LOAN_CATEGORIES = [ "prestamos e intereses", "leasing" ].freeze
+    OBLIGATION_CATEGORIES = [
+      "gastos financieros", "seguros", "seguro del vehiculo", "seguro de hogar",
+      "alquiler e hipoteca", "comunidad", "energia y suministros", "seguridad",
+      "impuestos", "telefono", "educacion y colegio", "pension de alimentos y compensatoria"
+    ].freeze
+    SUBSCRIPTION_CATEGORIES = [
+      "servicios digitales", "tv, peliculas, musica y streaming", "gimnasio",
+      "libros, audiolibros y noticias"
     ].freeze
 
     # Buy-now-pay-later and financing: a fixed run of payments, then done.
@@ -45,17 +82,49 @@ class RecurringTransaction
       new(name: name, entries: entries, account: account).classify
     end
 
+    # True when a series is something that must be paid (a loan, insurance,
+    # a utility...), going by its name and category. Used to keep those off
+    # the subscriptions page.
+    def self.obligatory?(series)
+      new(name: series.display_name, entries: [], category: series.category).obligatory?
+    end
+
+    # The kind a subscription should have been given instead, or nil when it
+    # is a subscription after all.
+    def self.kind_for_subscription(series)
+      classifier = new(name: series.display_name, entries: [], category: series.category)
+      if classifier.loan?
+        "installment"
+      elsif classifier.obligatory?
+        "bill"
+      end
+    end
+
+    # Fulas Bank: moves the family's subscriptions that are really loans or
+    # obligations (insurance, the mortgage...) to their proper kind. Their
+    # autopay and everything else stay as they are. Returns how many moved.
+    def self.refile_obligations!(family)
+      family.recurring_transactions.typed_subscription.includes(:merchant, category: :parent).to_a.count do |series|
+        kind = kind_for_subscription(series)
+        next false unless kind
+
+        series.update_columns(bill_type: kind, updated_at: Time.current)
+        true
+      end
+    end
+
     attr_reader :name, :entries, :account
 
-    def initialize(name:, entries:, account: nil)
-      @name = name.to_s.downcase
+    def initialize(name:, entries:, account: nil, category: nil)
+      @name = ActiveSupport::Inflector.transliterate(name.to_s).downcase
       @entries = entries
       @account = account
+      @category = category
     end
 
     def classify
       kind =
-        if matches?(INSTALLMENT_KEYWORDS)
+        if loan?
           "installment"
         elsif subscription?
           "subscription"
@@ -72,14 +141,44 @@ class RecurringTransaction
       )
     end
 
+    def loan?
+      matches?(INSTALLMENT_KEYWORDS) || matches?(LOAN_KEYWORDS) || category_in?(LOAN_CATEGORIES)
+    end
+
+    # A named service (Movistar Plus, a gym paid by direct debit) is still a
+    # subscription even if its wording looks like a bill.
+    def obligatory?
+      return true if loan? || category_in?(OBLIGATION_CATEGORIES)
+
+      (matches?(BILL_KEYWORDS) || matches?(ACH_MARKERS)) && !matches?(SUBSCRIPTION_KEYWORDS)
+    end
+
     private
       def subscription?
-        return false if matches?(BILL_KEYWORDS) || matches?(ACH_MARKERS)
-        return true if matches?(SUBSCRIPTION_KEYWORDS)
+        return false if obligatory?
+        return true if matches?(SUBSCRIPTION_KEYWORDS) || category_in?(SUBSCRIPTION_CATEGORIES)
 
         # No name signal: an identical-to-the-cent modest charge on a credit
         # card is the shape of a card-on-file service.
         flat_amounts? && modest_amount? && credit_card_account?
+      end
+
+      # The series' category, given or the most common one of its entries.
+      def category
+        return @category if defined?(@category) && @category
+
+        @category = Category.includes(:parent).find_by(id: modal_category_id) if modal_category_id
+      end
+
+      # The category or its main category is one of `names`. Only the
+      # category decides, so a subcategory under "Gastos financieros" counts
+      # as financial even if renamed.
+      def category_in?(names)
+        return false unless category
+
+        [ category, category.parent ].compact.any? do |cat|
+          names.include?(ActiveSupport::Inflector.transliterate(cat.name.to_s).downcase)
+        end
       end
 
       # Whole words only. A substring test let "max" claim Maxwell Plumbing
@@ -103,7 +202,7 @@ class RecurringTransaction
       end
 
       def modest_amount?
-        entries.first.amount.abs <= SUBSCRIPTION_AMOUNT_CEILING
+        entries.any? && entries.first.amount.abs <= SUBSCRIPTION_AMOUNT_CEILING
       end
 
       def credit_card_account?
@@ -111,7 +210,7 @@ class RecurringTransaction
       end
 
       def modal_category_id
-        entries.filter_map { |entry| entry.entryable.try(:category_id) }
+        @modal_category_id ||= entries.filter_map { |entry| entry.entryable.try(:category_id) }
                .tally
                .max_by { |_category_id, count| count }
                &.first

@@ -120,6 +120,7 @@ es:
       account_label: Pagado desde
       account_blank: Cualquier cuenta
       bill_type_label: Tipo
+      bill_type_hint: "Suscripción es lo que puedes cancelar cuando quieras (Netflix, Apple, el gimnasio). Factura o seguro es lo que tienes que pagar (seguro del coche, luz, comunidad). Préstamo: cuotas que terminan (hipoteca, préstamo)."
       installment_count_label: Número de pagos
       installment_count_hint: El plan termina tras este número de pagos y muestra su progreso hasta entonces.
       renews_on_label: Se renueva

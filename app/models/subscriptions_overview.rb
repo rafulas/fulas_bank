@@ -6,6 +6,12 @@
 # Prices are each series' monthly equivalent (a yearly 59,88 € counts as
 # 4,99 € a month), at today's prices: no inflation or price rises ahead.
 # The "could drop" marks are the user's own, kept in their preferences.
+#
+# Only what can be cancelled is a subscription here: insurance, loans or
+# utilities never are, nor are they offered as candidates (see
+# RecurringTransaction::Classifier.obligatory?). Cancelling one pauses its
+# series, so it leaves the totals, the Forecast and Planes; taking it up
+# again makes it active once more.
 class SubscriptionsOverview
   COULD_DROP_PREFERENCE = "subscriptions_could_drop".freeze
   YEARS = 5
@@ -53,10 +59,28 @@ class SubscriptionsOverview
   end
 
   # Active recurring payments not marked as subscriptions, which may be one.
+  # What must be paid anyway (insurance, a loan, the power bill) is left out.
   def other_candidates
     family.recurring_transactions.accessible_by(user).active
           .where(bill_type: %w[bill other]).where(destination_account_id: nil).where("amount > 0")
-          .includes(:merchant).order(:name).limit(20).to_a
+          .includes(:merchant, category: :parent).order(:name).to_a
+          .reject { |series| RecurringTransaction::Classifier.obligatory?(series) }
+          .first(20)
+  end
+
+  # Subscriptions cancelled (paused) or retired, newest first, to take up again.
+  def cancelled
+    @cancelled ||= family.recurring_transactions.accessible_by(user).typed_subscription
+                         .where(status: %w[paused inactive]).includes(:merchant)
+                         .order(Arel.sql("cancelled_on DESC NULLS LAST"), :name).to_a
+  end
+
+  def self.cancel!(series)
+    series.update!(status: "paused", cancelled_on: Date.current)
+  end
+
+  def self.resume!(series)
+    series.update!(status: "active", cancelled_on: nil)
   end
 
   def self.toggle_could_drop!(user, series_id, value)

@@ -256,9 +256,9 @@ en:
       col_actions: Actions
       monthly_equivalent: "%{amount}/mo"
       types:
-        bill: Bill
+        bill: Bill or insurance
         subscription: Subscription
-        installment: Installment plan
+        installment: Loan or installment plan
         income: Income
         transfer: Transfer
         other: Other

@@ -23,11 +23,23 @@ en:
         one: "Is it a subscription? 1 more recurring payment"
         other: "Is any a subscription? %{count} more recurring payments"
       mark: It is a subscription
+      cancel: Cancel
+      cancel_confirm_title: "Cancel %{name}?"
+      cancel_confirm_body: It stops counting from today in the total, the Forecast and Plans. You can take it up again whenever you like.
+      cancelled:
+        one: 1 cancelled subscription
+        other: "%{count} cancelled subscriptions"
+      cancelled_on: "cancelled on %{date}"
+      resume: Take up again
       add: Add subscription
       all_recurring: See all recurring payments
       link_hint: "Each charge goes with its subscription by shop and amount, so two from Apple (Music at 10.99 and iCloud at 2.99) are two subscriptions. If one goes with the wrong one, change it in its detail."
     mark:
       success: "%{name} is now a subscription."
+    cancel:
+      success: "%{name} cancelled. It no longer counts in the Forecast."
+    resume:
+      success: "%{name} is active again."
   transactions:
     show:
       subscription: Subscription

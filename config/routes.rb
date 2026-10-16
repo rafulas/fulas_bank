@@ -743,6 +743,8 @@ Rails.application.routes.draw do
     member do
       patch :could_drop
       patch :mark
+      patch :cancel
+      patch :resume
     end
   end
   resources :credit_cards, only: %i[new create edit update] do

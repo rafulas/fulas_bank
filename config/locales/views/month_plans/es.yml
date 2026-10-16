@@ -21,8 +21,8 @@ es:
       to_pay: por pagar
       balance_after: Saldo tras recurrentes
       groups:
-        bills: Facturas y servicios
-        loans: Préstamos y arrendamientos
+        bills: Facturas y seguros
+        loans: Préstamos e hipoteca
         subscriptions: Suscripciones
         income: Ingresos
         other: Otros
