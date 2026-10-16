@@ -2,6 +2,7 @@
 es:
   forecasts:
     variable_line: Gastos varios %{month}
+    insurance_line: "%{name} (plazo %{number} de %{count})"
     debt_plan_line: "Cuota %{loan} (plan de deuda)"
     card_statement_line: "%{card}: extracto de %{month}"
     card_fee_line: "Comisión financiación: %{name}"
@@ -67,6 +68,7 @@ es:
         variable: Gastos varios
         debt_plan: Plan de deuda
         card: Tarjeta
+        insurance: Seguro
   forecast_items:
     form:
       name: Concepto

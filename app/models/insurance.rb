@@ -44,12 +44,16 @@ class Insurance < ApplicationRecord
 
   belongs_to :family
   belongs_to :account, optional: true
+  # Fulas Bank: where the instalments are charged (a current account or a
+  # card); the Forecast expects them there, or in its main account.
+  belongs_to :payment_account, class_name: "Account", optional: true
   has_many_attached :documents
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }
   validates :payment_frequency, inclusion: { in: PAYMENT_FREQUENCIES }
   validate :installments_are_valid, if: :custom_payments?
+  validate :payment_account_is_the_familys
   validates :premium, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validate :account_is_an_insurable_asset
   validate :documents_are_acceptable, if: -> { documents.attached? }
@@ -131,6 +135,29 @@ class Insurance < ApplicationRecord
     Money.new(annual.amount / 12, currency) if annual
   end
 
+  # Every charge of the custom instalments between two days, for the
+  # Forecast: each instalment on its day, and again a year later, and so on,
+  # as the policy renews. Charges before the instalment's own first day do
+  # not exist. Each is [date, Money, number, count], number counting from 1.
+  def installment_charges_between(range)
+    return [] unless custom_payments?
+
+    schedule = installment_schedule
+    schedule.each_with_index.flat_map do |(first_date, amount), index|
+      years = [ range.first.year - first_date.year - 1, 0 ].max
+      charges = []
+      date = first_date.advance(years: years)
+
+      while date <= range.last
+        charges << [ date, amount, index + 1, schedule.size ] if range.cover?(date)
+        years += 1
+        date = first_date.advance(years: years)
+      end
+
+      charges
+    end
+  end
+
   # The next instalment to be charged, as [Date, Money], for a policy paid in
   # custom instalments. The instalments repeat every year on the same days,
   # as the policy renews, so a date already past counts again a year on.
@@ -189,6 +216,13 @@ class Insurance < ApplicationRecord
       elsif installment_schedule.size != rows.size || installment_schedule.any? { |_, amount| amount.amount.negative? }
         errors.add(:installments, :invalid)
       end
+    end
+
+    def payment_account_is_the_familys
+      return if payment_account.nil?
+      return if payment_account.family_id == family_id && %w[Depository CreditCard].include?(payment_account.accountable_type)
+
+      errors.add(:payment_account, :invalid)
     end
 
     def documents_are_acceptable

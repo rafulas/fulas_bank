@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1599,6 +1599,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_170000) do
     t.string "kind", default: "other", null: false
     t.string "name", null: false
     t.text "notes"
+    t.uuid "payment_account_id"
     t.string "payment_frequency", default: "annual", null: false
     t.string "policy_number"
     t.decimal "premium", precision: 19, scale: 4
@@ -1607,6 +1608,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_170000) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_insurances_on_account_id"
     t.index ["family_id"], name: "index_insurances_on_family_id"
+    t.index ["payment_account_id"], name: "index_insurances_on_payment_account_id"
     t.check_constraint "premium IS NULL OR premium >= 0::numeric", name: "chk_insurances_premium_not_negative"
   end
 
@@ -3274,6 +3276,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_170000) do
   add_foreign_key "indexa_capital_items", "families"
   add_foreign_key "insights", "families"
   add_foreign_key "insurances", "accounts", on_delete: :nullify
+  add_foreign_key "insurances", "accounts", column: "payment_account_id", on_delete: :nullify
   add_foreign_key "insurances", "families", on_delete: :cascade
   add_foreign_key "investment_fund_prices", "investment_funds", on_delete: :cascade
   add_foreign_key "investment_funds", "accounts", on_delete: :cascade

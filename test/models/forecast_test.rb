@@ -20,6 +20,47 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal 1_000 - 40 * flows.size, forecast.balances_on(Date.current + 400)[@account].amount
   end
 
+  test "expects the instalments of an insurance paid in custom instalments every year, in its account" do
+    today = Date.new(2026, 10, 1)
+    other = create_account("Otra cuenta", Depository.new, balance: 500)
+    insurance = @family.insurances.create!(
+      name: "Seguro Cupra", kind: "car", payment_frequency: "custom", payment_account: other,
+      installments: [
+        { "date" => "2026-09-01", "amount" => "150" },
+        { "date" => "2026-10-16", "amount" => "150" },
+        { "date" => "2026-11-30", "amount" => "150" }
+      ]
+    )
+
+    forecast = Forecast.new(@family, accounts: [ @account, other ], through: Date.new(2027, 12, 31), include_variable: false, today: today)
+    lines = forecast.flows.select { |flow| flow.source == :insurance }
+
+    assert_equal [ Date.new(2026, 10, 16), Date.new(2026, 11, 30), Date.new(2027, 9, 1), Date.new(2027, 10, 16), Date.new(2027, 11, 30) ], lines.map(&:date)
+    assert lines.all? { |flow| flow.account == other && flow.amount == 150 }
+    assert_includes lines.first.name, "Seguro Cupra"
+    assert_equal 500 - 150 * 5, forecast.balances_on(Date.new(2027, 12, 31))[other].amount
+
+    # A change to one year's instalment, from the table, stays on that line.
+    @family.forecast_adjustments.create!(key: ForecastAdjustment.insurance_key(insurance, Date.new(2027, 9, 1)), amount: 160)
+    changed = Forecast.new(@family, accounts: [ @account, other ], through: Date.new(2027, 12, 31), include_variable: false, today: today)
+                      .flows.find { |flow| flow.date == Date.new(2027, 9, 1) && flow.source == :insurance }
+    assert_equal 160, changed.amount
+  end
+
+  test "an insurance with no account set is expected in the main account, and only while in force" do
+    insurance = @family.insurances.create!(
+      name: "Seguro moto", kind: "motorcycle", payment_frequency: "custom",
+      installments: [ { "date" => (Date.current + 5).iso8601, "amount" => "90" } ]
+    )
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 30, include_variable: false)
+    assert_equal [ @account ], forecast.flows.select { |flow| flow.source == :insurance }.map(&:account)
+
+    insurance.update!(active: false)
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.current + 30, include_variable: false)
+    assert_empty forecast.flows.select { |flow| flow.source == :insurance }
+  end
+
   test "warns of the first day the account drops below the cushion, and its lowest point" do
     @family.forecast_items.create!(account: @account, name: "Seguro coche", amount: 300, nature: "outflow", date: Date.current + 10)
     @family.forecast_items.create!(account: @account, name: "Viaje", amount: 500, nature: "outflow", date: Date.current + 20)

@@ -19,8 +19,11 @@
 #      and the last one if it has not been charged yet) on its payment day,
 #      and the fees and instalments of its purchases paid in instalments
 #      (CardFinancing), in the account it is paid from.
+#   6. The instalments of the insurance policies paid in custom instalments
+#      (Insurance#installment_charges_between), every year on the same days,
+#      in the account they are charged to (a card's go to the main account).
 #
-# The user can change the date, amount or name of a line of 1 and 3, or leave
+# The user can change the date, amount or name of a line of 1, 3 and 6, or leave
 # it out, from the table; those changes are ForecastAdjustments, applied here
 # by the line's key. A line left out is still listed (so it can be brought
 # back) but does not count.
@@ -101,7 +104,7 @@ class Forecast
   # (with `skipped`), which do not count in any balance. On the same day, the
   # month's variable spending goes last.
   def flows
-    @flows ||= (adjusted(recurring_flows + variable_flows) + planned_flows + debt_plan_flows + card_flows)
+    @flows ||= (adjusted(recurring_flows + variable_flows + insurance_flows) + planned_flows + debt_plan_flows + card_flows)
                  .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
   end
 
@@ -464,6 +467,36 @@ class Forecast
           Flow.new(date: charge.date, account: account, amount: charge.amount.round(2), name: name, source: :card, card: card)
         end
       end
+    end
+
+    # ---- 6. Insurance instalments ----
+
+    def insurance_flows
+      family.insurances.active.where(payment_frequency: Insurance::CUSTOM_FREQUENCY).flat_map do |insurance|
+        account = insurance_account(insurance)
+        next [] unless account
+
+        insurance.installment_charges_between(window).map do |date, amount, number, count|
+          Flow.new(date: date, account: account, amount: to_account_currency(amount, account), source: :insurance,
+                   key: ForecastAdjustment.insurance_key(insurance, date),
+                   name: I18n.t("forecasts.insurance_line", name: insurance.name, number: number, count: count))
+        end
+      end
+    end
+
+    # The account it is charged to, if the forecast shows it; a card's
+    # charges are paid from the main account in the end, as is a policy with
+    # no account set.
+    def insurance_account(insurance)
+      accounts_by_id[insurance.payment_account_id] || main_account
+    end
+
+    def to_account_currency(money, account)
+      return money.amount if money.currency.iso_code == account.currency
+
+      money.exchange_to(account.currency).amount
+    rescue Money::ConversionError
+      money.amount
     end
 
     # ---- The user's changes to the lines above ----
