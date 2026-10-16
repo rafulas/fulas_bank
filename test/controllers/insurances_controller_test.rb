@@ -103,4 +103,28 @@ class InsurancesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "##{ActionView::RecordIdentifier.dom_id(accounts(:property), :insurances)}", text: /Seguro hogar/
   end
+
+  test "saves a policy paid in custom instalments and lists them" do
+    post insurances_url, params: { insurance: {
+      name: "Seguro Cupra", kind: "car", payment_frequency: "custom", start_date: "2026-09-01",
+      installments: [
+        { date: "2026-09-01", amount: "150" },
+        { date: "2026-10-16", amount: "150" },
+        { date: "2026-11-30", amount: "150" },
+        { date: "", amount: "" }
+      ]
+    } }
+
+    insurance = @family.insurances.find_by!(name: "Seguro Cupra")
+    assert insurance.custom_payments?
+    assert_equal 3, insurance.installments.size
+    assert_equal BigDecimal("450"), insurance.annual_cost.amount
+
+    get insurances_url
+    assert_select "##{ActionView::RecordIdentifier.dom_id(insurance)}", text: /3 /
+
+    get edit_insurance_url(insurance)
+    assert_response :success
+    assert_select "input[name='insurance[installments][][date]'][value='2026-10-16']"
+  end
 end

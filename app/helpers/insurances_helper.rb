@@ -4,7 +4,18 @@ module InsurancesHelper
   end
 
   def insurance_frequency_options
-    Insurance::FREQUENCIES.keys.map { |frequency| [ t("insurances.frequencies.#{frequency}"), frequency ] }
+    Insurance::PAYMENT_FREQUENCIES.map { |frequency| [ t("insurances.frequencies.#{frequency}"), frequency ] }
+  end
+
+  # Fulas Bank: "3 plazos · próximo 01/12/2026: 150,00 €", for a policy paid
+  # in custom instalments.
+  def insurance_installments_label(insurance, today: Date.current)
+    count = insurance.installment_schedule.size
+    label = t("insurances.installments_count", count: count)
+    next_date, next_amount = insurance.next_installment(today)
+    return label unless next_date
+
+    "#{label} · #{t("insurances.next_installment", date: l(next_date, format: "%d/%m/%Y"), amount: format_money(next_amount))}"
   end
 
   # "Cupra Ateca (vehículo)", "Casa (vivienda)".

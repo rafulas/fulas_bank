@@ -10,11 +10,29 @@ en:
       one: Renews tomorrow
       other: "Renews in %{count} days"
     renews_on: "Renews on %{date}"
+    installments_count:
+      one: 1 instalment
+      other: "%{count} instalments"
+    next_installment: "next on %{date}: %{amount}"
+    installments:
+      title: Instalments
+      hint: "Each payment with its date and amount. To fill them at once: how many, every how many days and how much; they start on the start date."
+      count: Instalments
+      every_days: Every (days)
+      each_amount: Amount of each
+      fill: Create instalments
+      fill_error: Enter the start date, the number of instalments (up to 24) and every how many days.
+      date: Date
+      amount: Amount
+      remove: Remove instalment
+      add: Add instalment
+      repeat_hint: They repeat every year on the same dates.
     premium_per:
       annual: "%{amount} a year"
       semiannual: "%{amount} every six months"
       quarterly: "%{amount} a quarter"
       monthly: "%{amount} a month"
+      custom: "%{amount} per instalment"
     kinds:
       car: Car
       motorcycle: Motorbike
@@ -32,6 +50,7 @@ en:
       semiannual: Every six months
       quarterly: Quarterly
       monthly: Monthly
+      custom: Custom (instalments)
     asset_types:
       vehicle: vehicle
       property: home

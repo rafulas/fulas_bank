@@ -14,12 +14,17 @@ es:
         payment_frequency: Frecuencia de pago
         renewal_date: Fecha de renovación
         documents: Documentos
+        installments: Plazos
     errors:
       models:
         insurance:
           attributes:
             account:
               wrong_type: "no encaja con un seguro de %{kind}"
+            installments:
+              blank: "hacen falta: añade al menos uno con su fecha e importe"
+              too_many: "no pueden ser más de %{max}"
+              invalid: "necesitan una fecha y un importe que no sea negativo"
             documents:
               too_many: "no pueden ser más de %{max} archivos"
               too_large: "«%{filename}» supera los %{max_mb} MB"

@@ -34,6 +34,9 @@
           </div>
           <div class="flex flex-col items-end gap-1 shrink-0">
             <span class="text-primary privacy-sensitive whitespace-nowrap"><%= insurance.annual_cost ? t("insurances.asset_card.per_year", amount: format_money(insurance.annual_cost)) : "—" %></span>
+            <% if insurance.custom_payments? %>
+              <span class="text-xs text-secondary privacy-sensitive"><%= insurance_installments_label(insurance) %></span>
+            <% end %>
             <%= insurance_renewal_pill(insurance) %>
           </div>
         </li>

@@ -18,6 +18,13 @@ class Insurance < ApplicationRecord
   # How many times a year the premium is paid.
   FREQUENCIES = { "annual" => 1, "semiannual" => 2, "quarterly" => 4, "monthly" => 12 }.freeze
 
+  # Fulas Bank: or paid in instalments the user sets, each with its day and
+  # amount (see #installments). Some insurers split the yearly premium in
+  # three payments 45 days apart, which no fixed frequency describes.
+  CUSTOM_FREQUENCY = "custom".freeze
+  PAYMENT_FREQUENCIES = (FREQUENCIES.keys + [ CUSTOM_FREQUENCY ]).freeze
+  MAX_INSTALLMENTS = 24
+
   # A renewal this close is flagged, so there is time to compare prices.
   RENEWAL_NOTICE = 30.days
 
@@ -41,7 +48,8 @@ class Insurance < ApplicationRecord
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }
-  validates :payment_frequency, inclusion: { in: FREQUENCIES.keys }
+  validates :payment_frequency, inclusion: { in: PAYMENT_FREQUENCIES }
+  validate :installments_are_valid, if: :custom_payments?
   validates :premium, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validate :account_is_an_insurable_asset
   validate :documents_are_acceptable, if: -> { documents.attached? }
@@ -68,16 +76,72 @@ class Insurance < ApplicationRecord
   end
 
   def payments_per_year
+    return installments.size if custom_payments?
+
     FREQUENCIES.fetch(payment_frequency, 1)
   end
 
-  # What the policy costs in a year, whatever the payment frequency.
+  def custom_payments?
+    payment_frequency == CUSTOM_FREQUENCY
+  end
+
+  # The instalments of a policy paid in custom instalments, soonest first:
+  # [{ "date" => "2026-09-01", "amount" => "150.0" }, ...]. Rows of the form
+  # left blank are dropped; amounts may be typed with a decimal comma.
+  def installments=(rows)
+    rows = rows.values if rows.respond_to?(:values) && !rows.is_a?(Array)
+    list = Array(rows).filter_map do |row|
+      row = row.to_h.stringify_keys
+      date = row["date"].to_s.strip
+      amount = row["amount"].to_s.strip.tr(",", ".")
+      next if date.blank? && amount.blank?
+
+      { "date" => date, "amount" => amount }
+    end
+
+    super(list.sort_by { |row| row["date"] })
+  end
+
+  # Each instalment as [Date, Money], soonest first; unreadable rows left out.
+  def installment_schedule
+    Array(installments).filter_map do |row|
+      date = Date.iso8601(row["date"].to_s)
+      amount = BigDecimal(row["amount"].to_s)
+      [ date, Money.new(amount, currency) ]
+    rescue ArgumentError, TypeError, Date::Error
+      nil
+    end
+  end
+
+  # What the policy costs in a year, whatever the payment frequency. Paid in
+  # custom instalments, it is what they add up to.
   def annual_cost
-    Money.new(premium.to_d * payments_per_year, currency) if premium
+    if custom_payments?
+      schedule = installment_schedule
+      return if schedule.empty?
+
+      Money.new(schedule.sum { |_, amount| amount.amount }, currency)
+    elsif premium
+      Money.new(premium.to_d * payments_per_year, currency)
+    end
   end
 
   def monthly_cost
-    Money.new(premium.to_d * payments_per_year / 12, currency) if premium
+    annual = annual_cost
+    Money.new(annual.amount / 12, currency) if annual
+  end
+
+  # The next instalment to be charged, as [Date, Money], for a policy paid in
+  # custom instalments. The instalments repeat every year on the same days,
+  # as the policy renews, so a date already past counts again a year on.
+  def next_installment(today = Date.current)
+    return unless custom_payments?
+
+    installment_schedule.map do |date, amount|
+      upcoming = date
+      upcoming = upcoming.advance(years: 1) while upcoming < today
+      [ upcoming, amount ]
+    end.min_by(&:first)
   end
 
   # Policies renew every year on the same day: the next renewal is the
@@ -111,6 +175,19 @@ class Insurance < ApplicationRecord
         errors.add(:account, :invalid)
       elsif (expected = ASSET_TYPES[kind]) && account.accountable_type != expected
         errors.add(:account, :wrong_type, kind: I18n.t("insurances.kinds.#{kind}").downcase)
+      end
+    end
+
+    # A policy paid in custom instalments needs at least one, each with a day
+    # and an amount that is not negative.
+    def installments_are_valid
+      rows = Array(installments)
+      if rows.empty?
+        errors.add(:installments, :blank)
+      elsif rows.size > MAX_INSTALLMENTS
+        errors.add(:installments, :too_many, max: MAX_INSTALLMENTS)
+      elsif installment_schedule.size != rows.size || installment_schedule.any? { |_, amount| amount.amount.negative? }
+        errors.add(:installments, :invalid)
       end
     end
 

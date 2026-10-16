@@ -80,4 +80,48 @@ class InsuranceTest < ActiveSupport::TestCase
     assert_equal "home", Insurance.kind_for(accounts(:property))
     assert_equal "other", Insurance.kind_for(nil)
   end
+
+  test "a premium paid in custom instalments costs what they add up to" do
+    insurance = @family.insurances.new(
+      name: "Coche", kind: "car", payment_frequency: "custom",
+      installments: [
+        { "date" => "2026-12-01", "amount" => "150" },
+        { "date" => "2026-09-01", "amount" => "150,50" },
+        { "date" => "", "amount" => "" },
+        { "date" => "2026-10-16", "amount" => "150" }
+      ]
+    )
+
+    assert insurance.valid?
+    assert_equal %w[2026-09-01 2026-10-16 2026-12-01], insurance.installments.map { |row| row["date"] }
+    assert_equal 3, insurance.payments_per_year
+    assert_equal BigDecimal("450.5"), insurance.annual_cost.amount
+    assert_in_delta 37.54, insurance.monthly_cost.amount.to_f, 0.01
+  end
+
+  test "the next instalment repeats the instalment days every year" do
+    insurance = @family.insurances.new(
+      name: "Moto", kind: "motorcycle", payment_frequency: "custom",
+      installments: [ { "date" => "2025-09-01", "amount" => "100" }, { "date" => "2025-10-16", "amount" => "90" } ]
+    )
+
+    date, amount = insurance.next_installment(Date.new(2026, 10, 1))
+    assert_equal Date.new(2026, 10, 16), date
+    assert_equal BigDecimal("90"), amount.amount
+
+    assert_equal Date.new(2027, 9, 1), insurance.next_installment(Date.new(2026, 10, 17)).first
+  end
+
+  test "custom instalments need at least one, with a date and an amount" do
+    insurance = @family.insurances.new(name: "Coche", kind: "car", payment_frequency: "custom")
+    assert_not insurance.valid?
+    assert insurance.errors.added?(:installments, :blank)
+
+    insurance.installments = [ { "date" => "2026-09-01", "amount" => "" } ]
+    assert_not insurance.valid?
+    assert insurance.errors.added?(:installments, :invalid)
+
+    insurance.installments = [ { "date" => "2026-09-01", "amount" => "-5" } ]
+    assert_not insurance.valid?
+  end
 end
