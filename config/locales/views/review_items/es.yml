@@ -1,0 +1,21 @@
+---
+es:
+  review_items:
+    index:
+      button:
+        zero: Necesita revisión, nada pendiente
+        one: Necesita revisión, 1 aviso
+        other: "Necesita revisión, %{count} avisos"
+      title: Necesita revisión
+      empty: Todo en orden. No hay nada que revisar.
+      seen: Visto
+      kinds:
+        duplicate: Posible cargo duplicado
+        price_increase: Ha subido de precio
+        overdue: Recibo vencido
+        due_soon: Pagar a mano pronto
+      details:
+        duplicate: "%{amount} cobrado dos veces, el último el %{date}"
+        price_increase: "De %{previous} a %{amount} desde el %{date}"
+        overdue: "%{amount}, tocaba el %{date}"
+        due_soon: "%{amount} el %{date}"

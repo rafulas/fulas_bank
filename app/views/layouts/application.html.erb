@@ -6,6 +6,8 @@
   summary: { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) },
   # The budgets live in Planes (its "Añadir o cambiar presupuesto" link).
   month_plan: { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) || page_active?(budgets_path) },
+  # Fulas Bank: every recurring movement, in tabs (desktop menu only).
+  recurring: { name: t(".nav.recurring"), path: recurring_transactions_path, icon: "refresh-cw", icon_custom: false, active: page_active?(recurring_transactions_path) },
   forecast: { name: t(".nav.forecast"), path: forecast_path, icon: "trending-up", icon_custom: false, active: page_active?(forecast_path) },
   subscriptions: { name: t(".nav.subscriptions"), path: subscription_costs_path, icon: "repeat", icon_custom: false, active: page_active?(subscription_costs_path) },
   loans: { name: t(".nav.loans_overview"), path: loans_overview_path, icon: "landmark", icon_custom: false, active: page_active?(loans_overview_path) },
@@ -21,7 +23,7 @@
   ]
 else
   [
-    *nav.values,
+    *nav.except(:recurring).values,
     bills_nav_item,
     { name: t(".nav.assistant"), path: chats_path, icon: "icon-assistant", icon_custom: true, active: page_active?(chats_path), mobile_only: true }
   ].compact
@@ -35,7 +37,7 @@ else
   [
     { title: nil, items: [ nav[:home] ] },
     { title: t(".nav_groups.movements"), items: [ nav[:transactions], nav[:summary] ] },
-    { title: t(".nav_groups.planning"), items: [ nav[:month_plan], nav[:forecast], nav[:subscriptions], bills_nav_item ].compact },
+    { title: t(".nav_groups.planning"), items: [ nav[:month_plan], nav[:recurring], nav[:forecast], nav[:subscriptions], bills_nav_item ].compact },
     { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances] ] },
     { title: t(".nav_groups.analysis"), items: [ nav[:reports] ] }
   ]
@@ -163,6 +165,9 @@ end %>
               <%= icon("eye-off", size: "sm", data: { privacy_mode_target: "iconOff" }) %>
               <%= icon("eye", size: "sm", class: "hidden", data: { privacy_mode_target: "iconOn" }) %>
             </button>
+
+            <%# Fulas Bank: «Necesita revisión», loaded on its own. %>
+            <%= turbo_frame_tag "review_bell", src: review_items_path, loading: :lazy %>
 
             <%= icon("message-square", as_button: true, title: t("layouts.application.nav.assistant"), aria: { label: t("layouts.application.nav.assistant") }, data: { action: "app-layout#toggleRightSidebar" }) %>
 

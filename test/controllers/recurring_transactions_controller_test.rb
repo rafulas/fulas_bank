@@ -1049,6 +1049,18 @@ class RecurringTransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to recurring_transactions_url
   end
 
+  test "index lists the recurring movements in tabs with their monthly totals" do
+    get recurring_transactions_url
+    assert_response :success
+    assert_select "h1", text: I18n.t("recurring_transactions.index.title")
+    assert_select "#recurring-rows", text: /Netflix/
+
+    get recurring_transactions_url(tab: "income")
+    assert_response :success
+    assert_select "a[aria-current='true']", text: /#{I18n.t("recurring_transactions.index.tabs.income")}/
+    assert_select "#recurring-rows", text: /Netflix/, count: 0
+  end
+
   # Sharing is per account: a read-only share may SEE the series everywhere the
   # app lists it, and must not be able to change or remove it. Mirrors
   # RecurringOccurrencesController#ensure_series_writable.

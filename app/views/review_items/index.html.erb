@@ -1,0 +1,48 @@
+<%# Fulas Bank: the «Necesita revisión» bell and its list. %>
+<%= turbo_frame_tag "review_bell" do %>
+  <% count = @review.count %>
+  <%= render DS::Popover.new(variant: :button, placement: "bottom-end", max_width: "24rem", no_padding: true) do |popover| %>
+    <% popover.with_button(
+          class: "relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary focus-ring",
+          aria: { label: t(".button", count: count) },
+          data: { testid: "review-bell" }) do %>
+      <%= icon("bell", size: "sm", color: "current") %>
+      <% if count.positive? %>
+        <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-destructive text-inverse text-xs font-semibold leading-4 text-center"><%= count > 9 ? "9+" : count %></span>
+      <% end %>
+    <% end %>
+
+    <% popover.with_custom_content do %>
+      <div class="w-80 max-w-full">
+        <p class="px-4 pt-3 pb-2 font-display text-sm font-semibold text-primary"><%= t(".title") %></p>
+        <% if @review.any? %>
+          <ul class="max-h-96 overflow-y-auto divide-y divide-divider border-t border-divider">
+            <% @review.items.each do |item| %>
+              <li class="flex items-start gap-3 px-4 py-3">
+                <%= icon({ duplicate: "copy", price_increase: "trending-up", overdue: "alert-circle", due_soon: "clock" }.fetch(item.kind), size: "sm",
+                      class: "mt-0.5", color: item.kind == :overdue ? "destructive" : "warning") %>
+                <div class="min-w-0 flex-1 space-y-0.5">
+                  <p class="text-xs font-semibold uppercase tracking-wider text-secondary"><%= t(".kinds.#{item.kind}") %></p>
+                  <p class="truncate text-sm font-medium text-primary"><%= item.title %></p>
+                  <p class="text-xs text-secondary privacy-sensitive">
+                    <% date = l(item.date, format: t("month_plans.show.long_date")) %>
+                    <% if item.previous_amount %>
+                      <%= t(".details.price_increase", previous: format_money(item.previous_amount), amount: format_money(item.amount), date: date) %>
+                    <% else %>
+                      <%= t(".details.#{item.kind}", amount: format_money(item.amount), date: date) %>
+                    <% end %>
+                  </p>
+                </div>
+                <%= button_to t(".seen"), seen_review_items_path(key: item.key),
+                      class: "shrink-0 text-xs font-medium text-link hover:underline",
+                      form: { data: { turbo_frame: "_top" } } %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="px-4 pb-4 text-sm text-secondary"><%= t(".empty") %></p>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

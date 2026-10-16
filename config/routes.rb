@@ -561,6 +561,10 @@ Rails.application.routes.draw do
 
   # Fulas Bank: "not a duplicate" on Inicio's possible double charges.
   resources :duplicate_charge_dismissals, only: :create
+  # Fulas Bank: the «Necesita revisión» bell.
+  resources :review_items, only: :index do
+    post :seen, on: :collection
+  end
 
   resources :transactions, only: %i[index new create show update destroy] do
     resource :split, only: %i[new create edit update destroy]

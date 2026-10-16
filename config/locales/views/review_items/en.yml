@@ -1,0 +1,21 @@
+---
+en:
+  review_items:
+    index:
+      button:
+        zero: Needs review, nothing pending
+        one: Needs review, 1 item
+        other: "Needs review, %{count} items"
+      title: Needs review
+      empty: All good. Nothing to review.
+      seen: Seen
+      kinds:
+        duplicate: Possible duplicate charge
+        price_increase: Price went up
+        overdue: Overdue bill
+        due_soon: Pay by hand soon
+      details:
+        duplicate: "%{amount} charged twice, the last on %{date}"
+        price_increase: "From %{previous} to %{amount} since %{date}"
+        overdue: "%{amount}, due on %{date}"
+        due_soon: "%{amount} on %{date}"
