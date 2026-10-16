@@ -16,10 +16,10 @@
     <%# What the plan achieves %>
     <div class="@container">
       <div class="grid grid-cols-2 @2xl:grid-cols-5 gap-2">
-        <%= summary_card title: t(".debt_today") do %>
+        <%= summary_card title: t(".debt_today"), tone: :negative do %>
           <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_balance, currency, precision: 0) %></span>
         <% end %>
-        <%= summary_card title: t(".debt_free") do %>
+        <%= summary_card title: t(".debt_free"), tone: :brand do %>
           <span class="first-letter:uppercase"><%= schedule.payoff_date ? l(schedule.payoff_date, format: "%B %Y") : "—" %></span>
         <% end %>
         <%# Fulas Bank: the first loan cleared, as Bilance's calculator shows. %>
@@ -34,7 +34,7 @@
         <%= summary_card title: t(".interest") do %>
           <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money(schedule.total_interest, currency, precision: 0) %></span>
         <% end %>
-        <%= summary_card title: t(".savings") do %>
+        <%= summary_card title: t(".savings"), tone: :positive do %>
           <% saved = @baseline.total_interest - schedule.total_interest %>
           <% months_saved = @baseline.months.size - schedule.months.size %>
           <span class="whitespace-nowrap privacy-sensitive"><%= debt_plan_money([ saved, 0 ].max, currency, precision: 0) %></span>

@@ -1,7 +1,9 @@
 module AccountsHelper
-  def summary_card(title:, &block)
+  # Fulas Bank: `tone` adds FlowVista's coloured band on top of the card and
+  # tints the figure: :brand, :positive, :negative or :warning (band only).
+  def summary_card(title:, tone: nil, &block)
     content = capture(&block)
-    render "accounts/summary_card", title: title, content: content
+    render "accounts/summary_card", title: title, content: content, tone: tone
   end
 
   def sync_path_for(account)

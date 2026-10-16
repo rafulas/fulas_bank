@@ -9,26 +9,23 @@
 <% end %>
 
 <div class="max-w-2xl space-y-4 pb-6">
-  <div class="rounded-xl bg-container shadow-border-xs p-5 space-y-4">
-    <div>
-      <p class="text-sm text-secondary"><%= t(".yearly") %></p>
-      <p class="text-3xl font-medium text-primary privacy-sensitive"><%= format_money(overview.yearly) %></p>
+  <%# Fulas Bank: the totals as figure cards, as in FlowVista. %>
+  <div class="space-y-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <%= summary_card title: t(".monthly"), tone: :brand do %>
+        <span class="whitespace-nowrap"><%= format_money(overview.monthly) %></span>
+      <% end %>
+      <%= summary_card title: t(".yearly") do %>
+        <span class="whitespace-nowrap"><%= format_money(overview.yearly) %></span>
+      <% end %>
+      <%= summary_card title: t(".five_years") do %>
+        <span class="whitespace-nowrap"><%= format_money(overview.five_years, precision: 0) %></span>
+      <% end %>
+      <%= summary_card title: t(".could_save"), tone: (overview.could_save_yearly.positive? ? :positive : nil) do %>
+        <span class="whitespace-nowrap"><%= t(".per_year", amount: format_money(overview.could_save_yearly)) %></span>
+      <% end %>
     </div>
-    <div class="grid grid-cols-3 gap-3 text-sm">
-      <div>
-        <p class="text-secondary"><%= t(".monthly") %></p>
-        <p class="font-medium text-primary privacy-sensitive"><%= format_money(overview.monthly) %></p>
-      </div>
-      <div>
-        <p class="text-secondary"><%= t(".five_years") %></p>
-        <p class="font-medium text-primary privacy-sensitive"><%= format_money(overview.five_years, precision: 0) %></p>
-      </div>
-      <div>
-        <p class="text-secondary"><%= t(".could_save") %></p>
-        <p class="font-medium privacy-sensitive <%= overview.could_save_yearly.positive? ? "text-success" : "text-primary" %>"><%= t(".per_year", amount: format_money(overview.could_save_yearly)) %></p>
-      </div>
-    </div>
-    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+    <p class="px-1 text-xs text-secondary"><%= t(".hint") %></p>
   </div>
 
   <div class="flex items-center justify-between px-1 text-xs text-secondary">
@@ -47,7 +44,7 @@
         <%= render "subscription_costs/logo", series: series %>
         <div class="min-w-0 grow">
           <%= link_to series.display_name, edit_recurring_transaction_path(series), class: "block truncate text-sm font-medium text-primary hover:underline", data: { turbo_frame: :modal } %>
-          <p class="text-xs text-secondary privacy-sensitive">
+          <p class="text-xs text-secondary privacy-sensitive font-amount font-bold">
             <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
             <% if row.last_paid_on %>
               · <%= t(".last_paid", date: l(row.last_paid_on, format: "%-d %b")) %>
@@ -86,7 +83,7 @@
             <%= render "subscription_costs/logo", series: series %>
             <div class="min-w-0 grow">
               <p class="truncate text-sm text-secondary"><%= series.display_name %></p>
-              <p class="text-xs text-secondary privacy-sensitive">
+              <p class="text-xs text-secondary privacy-sensitive font-amount font-bold">
                 <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
                 <% if series.cancelled_on %>
                   · <%= t(".cancelled_on", date: l(series.cancelled_on, format: "%-d %b %Y")) %>
@@ -110,7 +107,7 @@
             <%= render "subscription_costs/logo", series: series %>
             <div class="min-w-0 grow">
               <p class="truncate text-sm text-primary"><%= series.display_name %></p>
-              <p class="text-xs text-secondary privacy-sensitive"><%= format_money(series.amount_money) %> · <%= frequency_label(series) %></p>
+              <p class="text-xs text-secondary privacy-sensitive font-amount font-bold"><%= format_money(series.amount_money) %> · <%= frequency_label(series) %></p>
             </div>
             <%= render DS::Button.new(text: t(".mark"), variant: :outline, size: :sm, href: mark_subscription_cost_path(series), method: :patch) %>
           </div>

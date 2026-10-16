@@ -36,6 +36,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#main ~ [data-app-layout-target='leftSidebar'][data-sidebar-position='end']"
   end
 
+  test "dashboard opens with the free cash card for the period" do
+    get root_path
+    assert_response :ok
+
+    assert_select "#free-cash-title", text: /#{I18n.t("pages.dashboard.free_cash.title")}/
+    assert_select "section[aria-labelledby='free-cash-title'] dd", count: 2
+  end
+
   test "inactive user's existing session is revoked" do
     session_record = @user.sessions.order(:created_at).last
     @user.update_column(:active, false)

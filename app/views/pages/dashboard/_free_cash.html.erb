@@ -1,0 +1,41 @@
+<%# locals: (income:, expense:, period:) %>
+<%# Fulas Bank: FlowVista's headline card — what is left of the period's
+    income after its expenses, with the two totals and how much is spent. %>
+<% free = income - expense %>
+<% ratio = income.amount.positive? ? (expense.amount / income.amount) : nil %>
+
+<section class="mb-6 rounded-xl bg-container shadow-border-xs border-t-4 border-t-brand px-6 py-5 space-y-4" aria-labelledby="free-cash-title">
+  <div class="flex flex-wrap items-start justify-between gap-6">
+    <div class="space-y-1.5">
+      <h2 id="free-cash-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.free_cash.title") %> · <%= period.label %></h2>
+      <p class="<%= class_names("font-amount text-4xl lg:text-5xl font-bold leading-none privacy-sensitive", free.negative? ? "text-destructive" : "text-brand") %>"><%= format_money(free) %></p>
+      <p class="text-sm text-secondary privacy-sensitive"><%= t("pages.dashboard.free_cash.of_income", amount: format_money(income)) %></p>
+    </div>
+
+    <dl class="min-w-64 space-y-2">
+      <div class="flex items-center justify-between gap-6 pb-2 border-b border-divider">
+        <dt class="flex items-center gap-2 text-sm font-medium text-primary"><span class="w-2 h-2 rounded-sm bg-success" aria-hidden="true"></span><%= t("pages.dashboard.free_cash.income") %></dt>
+        <dd class="font-amount text-lg font-bold text-success privacy-sensitive"><%= format_money(income) %></dd>
+      </div>
+      <div class="flex items-center justify-between gap-6">
+        <dt class="flex items-center gap-2 text-sm font-medium text-primary"><span class="w-2 h-2 rounded-sm bg-destructive" aria-hidden="true"></span><%= t("pages.dashboard.free_cash.expense") %></dt>
+        <dd class="font-amount text-lg font-bold text-destructive privacy-sensitive"><%= format_money(expense) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <% if ratio %>
+    <% percent = number_to_percentage(ratio * 100, precision: 1) %>
+    <div class="h-2 rounded-full bg-surface-inset overflow-hidden" role="img" aria-label="<%= t("pages.dashboard.free_cash.spent", percent: percent) %>">
+      <div class="<%= class_names("h-full rounded-full", ratio > 1 ? "bg-destructive" : "bg-success") %>" style="width: <%= [ ratio * 100, 100 ].min.round(1) %>%"></div>
+    </div>
+    <div class="flex flex-wrap justify-between gap-2 text-sm text-secondary">
+      <span><%= t("pages.dashboard.free_cash.spent", percent: percent) %></span>
+      <% if ratio < 1 %>
+        <span class="font-medium text-success"><%= t("pages.dashboard.free_cash.saving", percent: number_to_percentage((1 - ratio) * 100, precision: 1)) %></span>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t("pages.dashboard.free_cash.no_income") %></p>
+  <% end %>
+</section>

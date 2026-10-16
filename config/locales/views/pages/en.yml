@@ -38,6 +38,14 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      free_cash:
+        title: Free cash this period
+        of_income: "of your %{amount} income"
+        income: Income
+        expense: Expenses
+        spent: "Spent %{percent} of income"
+        saving: "Saved: %{percent}"
+        no_income: No income in this period yet
       welcome: "Welcome back, %{name}"
       subtitle: "Here's what's happening with your finances"
       new: "New"
