@@ -25,7 +25,9 @@
   if (!(window as any).__sureChrome) {
     (window as any).__sureChrome = true;
     const style = document.createElement("style");
-    style.textContent = 'nav[class~="w-[84px]"]{padding-top:44px !important;box-sizing:border-box}';
+    // The menu marks itself with data-app-menu (and lowers itself once it
+    // sees __sureChrome); the old w-[84px] selector covers older servers.
+    style.textContent = 'nav[data-app-menu],nav[class~="w-[84px]"]{padding-top:44px !important;box-sizing:border-box}';
     (document.head || document.documentElement).appendChild(style);
 
     const DRAG_H = 34;
