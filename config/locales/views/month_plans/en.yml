@@ -33,6 +33,25 @@ en:
       add_recurring: Add recurring
       all_recurring: See all recurring
       future: Later
+      view_aria: How to show recurring payments
+      views:
+        calendar: Calendar
+        timeline: Timeline
+    timeline:
+      today: Today
+      empty: No recurring payments this month.
+      legend:
+        paid: Paid
+        pending: Pending
+        overdue: Overdue
+    payment_line:
+      autopay: Direct debit
+      by_hand: By hand
+      states:
+        paid: Paid
+        today: Today
+        overdue: Overdue
+        expected: Pending
     budgets:
       edit:
         title: "Budget from %{month}"

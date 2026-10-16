@@ -33,6 +33,25 @@ es:
       add_recurring: Añadir recurrente
       all_recurring: Ver todos los recurrentes
       future: Futuro
+      view_aria: Cómo ver los recurrentes
+      views:
+        calendar: Calendario
+        timeline: Línea de tiempo
+    timeline:
+      today: Hoy
+      empty: Este mes no hay pagos recurrentes.
+      legend:
+        paid: Pagado
+        pending: Pendiente
+        overdue: Vencido
+    payment_line:
+      autopay: Domiciliado
+      by_hand: A mano
+      states:
+        paid: Pagado
+        today: Hoy
+        overdue: Vencido
+        expected: Pendiente
     budgets:
       edit:
         title: "Presupuesto desde %{month}"

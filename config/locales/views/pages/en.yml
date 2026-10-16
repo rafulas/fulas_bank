@@ -45,7 +45,46 @@ en:
         expense: Expenses
         spent: "Spent %{percent} of income"
         saving: "Saved: %{percent}"
+        saving_vs_target: "You save %{percent} · guideline %{target}"
         no_income: No income in this period yet
+        days_left_label: Left
+        days:
+          one: 1 day
+          other: "%{count} days"
+        period_over: Period closed
+        daily_average_label: Average spending
+        per_day: "%{amount}/day"
+        per_day_left_label: You can spend
+        change_label: Against the period before
+        no_change: Same
+      cash_cushion:
+        title: Cash cushion
+        months:
+          one: "%{months} month of spending"
+          other: "%{months} months of spending"
+        detail: "%{cash} in accounts for a typical %{monthly} a month"
+        levels:
+          low: "Below the usual advice (%{min}-%{max} months)"
+          ok: "Within the usual advice (%{min}-%{max} months)"
+          high: "Over %{max} months: some of it could be invested"
+        no_data: Not enough spending yet to work it out
+      savings_flow:
+        title: Saved and invested this period
+        share: "%{percent} of your income"
+        detail: "%{saved} sent to savings and investments · %{withdrawn} taken out"
+        no_accounts: Add an investment or savings account to see how much you set aside
+      next_payments:
+        title: Next payments
+        see_all: See timeline
+        none: No recurring payments pending
+      duplicates:
+        title:
+          one: One possible duplicate charge
+          other: "%{count} possible duplicate charges"
+        hint: Same amount and merchant, on the same day or the next. Check whether you were charged twice.
+        and: "and"
+        twice: "%{amount} × 2"
+        dismiss: Not a duplicate
       welcome: "Welcome back, %{name}"
       subtitle: "Here's what's happening with your finances"
       new: "New"

@@ -4,6 +4,8 @@ class MonthPlansController < ApplicationController
     # A month without a budget of its own takes the latest one before it.
     MonthBudget.new(Current.family, user: Current.user, month: selected_month).ensure!
     @plan = MonthPlan.new(Current.family, user: Current.user, month: selected_month)
+    # Fulas Bank: the recurring payments as a calendar or as a timeline.
+    @view = params[:view] == "timeline" ? "timeline" : "calendar"
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("month_plans.show.title"), nil ] ]
   end
 

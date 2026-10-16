@@ -41,7 +41,25 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
 
     assert_select "#free-cash-title", text: /#{I18n.t("pages.dashboard.free_cash.title")}/
-    assert_select "section[aria-labelledby='free-cash-title'] dd", count: 2
+    assert_select "section[aria-labelledby='free-cash-title'] dd", count: 6
+    assert_select "#cash-cushion-title"
+    assert_select "#savings-flow-title"
+    assert_select "#next-payments-title"
+  end
+
+  test "dashboard flags a possible double charge, and forgets it once dismissed" do
+    account = accounts(:depository)
+    first = create_transaction(account: account, name: "Farmacia Centro", amount: 12.45, date: Date.current)
+    second = create_transaction(account: account, name: "Farmacia Centro", amount: 12.45, date: Date.current)
+
+    get root_path
+    assert_select "#duplicate-charges", text: /Farmacia Centro/
+
+    post duplicate_charge_dismissals_path(key: [ first.id, second.id ].sort.join(":"))
+    assert_redirected_to root_path
+
+    get root_path
+    assert_select "#duplicate-charges", text: /Farmacia Centro/, count: 0
   end
 
   test "inactive user's existing session is revoked" do

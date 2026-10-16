@@ -1,0 +1,85 @@
+<%# locals: (cash_cushion:, savings_flow:, next_payments:, duplicate_charges:) %>
+<%# Fulas Bank: the row under «Libre en este periodo», after FlowVista — the
+    cash cushion, what went to savings and investments, the next payments
+    and any charge that looks taken twice. %>
+<% currency = cash_cushion.currency %>
+
+<% if duplicate_charges.any? %>
+  <div class="mb-6" id="duplicate-charges">
+    <%= render DS::Alert.new(variant: :warning, title: t("pages.dashboard.duplicates.title", count: duplicate_charges.pairs.size)) do %>
+      <p class="text-secondary"><%= t("pages.dashboard.duplicates.hint") %></p>
+      <ul class="divide-y divide-divider">
+        <% duplicate_charges.pairs.first(5).each do |pair| %>
+          <li class="flex flex-wrap items-center justify-between gap-3 py-2">
+            <div class="min-w-0">
+              <p class="font-medium text-primary truncate"><%= pair.name %></p>
+              <p class="text-xs text-secondary">
+                <%= pair.account.name %> ·
+                <%= link_to l(pair.first.date, format: t("month_plans.show.long_date")), entry_path(pair.first), data: { turbo_frame: "drawer", turbo_prefetch: false }, class: "underline" %>
+                <%= t("pages.dashboard.duplicates.and") %>
+                <%= link_to l(pair.second.date, format: t("month_plans.show.long_date")), entry_path(pair.second), data: { turbo_frame: "drawer", turbo_prefetch: false }, class: "underline" %>
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-amount font-bold privacy-sensitive whitespace-nowrap"><%= t("pages.dashboard.duplicates.twice", amount: format_money(pair.amount)) %></span>
+              <%= render DS::Button.new(text: t("pages.dashboard.duplicates.dismiss"), variant: :outline, size: :sm,
+                    href: duplicate_charge_dismissals_path(key: pair.key)) %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="mb-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+  <%# Cash cushion %>
+  <section class="@container min-w-0 rounded-xl bg-container shadow-border-xs px-5 py-4 space-y-2" aria-labelledby="cash-cushion-title">
+    <h2 id="cash-cushion-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.cash_cushion.title") %></h2>
+    <% if (months = cash_cushion.months) %>
+      <p class="<%= class_names("font-amount text-2xl font-bold whitespace-nowrap", { low: "text-destructive", ok: "text-brand", high: "text-primary" }[cash_cushion.level]) %>">
+        <%= t("pages.dashboard.cash_cushion.months", count: months, months: number_with_precision(months, precision: 1, strip_insignificant_zeros: true)) %>
+      </p>
+      <p class="text-sm text-secondary privacy-sensitive">
+        <%= t("pages.dashboard.cash_cushion.detail", cash: format_money(cash_cushion.cash, precision: 0), monthly: format_money(cash_cushion.monthly_expense, precision: 0)) %>
+      </p>
+      <p class="text-xs text-secondary"><%= t("pages.dashboard.cash_cushion.levels.#{cash_cushion.level}", min: CashCushion::RECOMMENDED_MONTHS.min, max: CashCushion::RECOMMENDED_MONTHS.max) %></p>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t("pages.dashboard.cash_cushion.no_data") %></p>
+    <% end %>
+  </section>
+
+  <%# Saved and invested %>
+  <section class="@container min-w-0 rounded-xl bg-container shadow-border-xs px-5 py-4 space-y-2" aria-labelledby="savings-flow-title">
+    <h2 id="savings-flow-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.savings_flow.title") %></h2>
+    <% if savings_flow.any_saving_accounts? %>
+      <% net = savings_flow.net %>
+      <p class="<%= class_names("font-amount text-2xl font-bold privacy-sensitive whitespace-nowrap", net.negative? ? "text-destructive" : "text-brand") %>"><%= format_money(net) %></p>
+      <% if (share = savings_flow.share_of_income) %>
+        <p class="text-sm text-secondary"><%= t("pages.dashboard.savings_flow.share", percent: number_to_percentage(share, precision: 1)) %></p>
+      <% end %>
+      <p class="text-xs text-secondary privacy-sensitive">
+        <%= t("pages.dashboard.savings_flow.detail", saved: format_money(savings_flow.saved, precision: 0), withdrawn: format_money(savings_flow.withdrawn, precision: 0)) %>
+      </p>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t("pages.dashboard.savings_flow.no_accounts") %></p>
+    <% end %>
+  </section>
+
+  <%# Next payments %>
+  <section class="min-w-0 md:col-span-2 xl:col-span-1 rounded-xl bg-container shadow-border-xs overflow-hidden" aria-labelledby="next-payments-title">
+    <div class="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+      <h2 id="next-payments-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.next_payments.title") %></h2>
+      <%= link_to t("pages.dashboard.next_payments.see_all"), month_plan_path(view: "timeline"), class: "text-xs font-medium text-link hover:underline" %>
+    </div>
+    <% if next_payments.any? %>
+      <div class="divide-y divide-divider">
+        <% next_payments.each do |payment| %>
+          <%= render "month_plans/payment_line", payment: payment, currency: currency %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="px-5 pb-4 text-sm text-secondary"><%= t("pages.dashboard.next_payments.none") %></p>
+    <% end %>
+  </section>
+</div>

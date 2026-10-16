@@ -52,7 +52,11 @@ class PagesController < ApplicationController
 
     @cashflow_sankey_data = build_cashflow_sankey_data(net_totals, income_totals, expense_totals, family_currency)
     # Fulas Bank: FlowVista's "free cash" card at the top of Inicio.
-    @free_cash = { income: Money.new(income_totals.total, family_currency), expense: Money.new(expense_totals.total, family_currency) }
+    @free_cash = build_free_cash(income_statement, income_totals, expense_totals, family_currency)
+    @cash_cushion = CashCushion.new(Current.family, user: Current.user)
+    @savings_flow = SavingsFlow.new(Current.family, user: Current.user, period: @period, income: @free_cash.income)
+    @next_payments = MonthPlan.next_payments(Current.family, user: Current.user)
+    @duplicate_charges = DuplicateCharges.new(Current.family, user: Current.user)
     @outflows_data = build_outflows_donut_data(net_totals)
     # Preview-gated: skip the query outright rather than loading rows the
     # section won't be built from.
@@ -123,6 +127,20 @@ class PagesController < ApplicationController
   end
 
   private
+    # Fulas Bank: the free cash card, with the spending by the same day of the
+    # period before to compare with.
+    def build_free_cash(income_statement, income_totals, expense_totals, currency)
+      comparison = FreeCash.comparison_period(@period)
+      previous_expense = comparison && Money.new(income_statement.expense_totals(period: comparison).total, currency)
+
+      FreeCash.new(
+        income: Money.new(income_totals.total, currency),
+        expense: Money.new(expense_totals.total, currency),
+        period: @period,
+        previous_expense: previous_expense
+      )
+    end
+
     def preferences_params
       prefs = params.require(:preferences)
       {}.tap do |permitted|

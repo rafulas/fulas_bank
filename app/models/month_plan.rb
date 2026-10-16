@@ -65,6 +65,36 @@ class MonthPlan
 
   Upcoming = Data.define(:series, :date, :amount)
 
+  # Fulas Bank: a payment still to make (or income still to come), for
+  # Inicio's "next payments" and the timeline.
+  NextPayment = Data.define(:series, :date, :amount, :state) do
+    def income?
+      series.typed_income? || series.amount.to_d.negative?
+    end
+
+    def name
+      series.display_name
+    end
+  end
+
+  # The next `limit` recurring movements not yet settled: overdue ones from
+  # this month first, then this month's and the next month's, then the
+  # series whose next date comes later.
+  def self.next_payments(family, user:, today: Date.current, limit: 5)
+    this_month = new(family, user: user, month: today, today: today)
+    next_month = new(family, user: user, month: today.next_month, today: today)
+
+    pending = (this_month.payments + next_month.payments).reject(&:paid).map do |payment|
+      NextPayment.new(series: payment.series, date: payment.date, amount: payment.amount, state: payment.state)
+    end
+    seen = pending.map { |payment| payment.series.id }.to_set
+    later = next_month.upcoming.reject { |item| seen.include?(item.series.id) }.map do |item|
+      NextPayment.new(series: item.series, date: item.date, amount: item.amount, state: :expected)
+    end
+
+    (pending.sort_by(&:date) + later).first(limit)
+  end
+
   attr_reader :family, :user, :month, :today
 
   def initialize(family, user:, month: Date.current, today: Date.current)

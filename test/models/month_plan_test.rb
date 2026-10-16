@@ -58,6 +58,24 @@ class MonthPlanTest < ActiveSupport::TestCase
     assert_empty plan.budget_rows
   end
 
+  test "next payments: the unpaid ones in date order, overdue first" do
+    gym = series("Gimnasio", 40, day: 5, bill_type: "bill")
+    rent = series("Alquiler", 900, day: 1, bill_type: "bill")
+    netflix = series("Netflix", 15, day: 20, bill_type: "subscription")
+
+    occurrence(gym, Date.new(2026, 10, 5))
+    occurrence(rent, Date.new(2026, 10, 1)).tap do |paid|
+      paid.allocations.create!(allocated_amount: 900, currency: "USD", source: "user_created")
+      paid.close!("paid", source: "user")
+    end
+    occurrence(netflix, Date.new(2026, 10, 20))
+
+    upcoming = MonthPlan.next_payments(@family, user: @user, today: @today, limit: 2)
+
+    assert_equal %w[Gimnasio Netflix], upcoming.map(&:name)
+    assert_equal [ :overdue, :expected ], upcoming.map(&:state)
+  end
+
   private
     def plan
       MonthPlan.new(@family, user: @user, month: @today, today: @today)
