@@ -2,7 +2,12 @@ import { Controller } from "@hotwired/stimulus";
 
 // Connects to data-controller="dialog"
 export default class extends Controller {
-  static targets = ["leftSidebar", "rightSidebar", "mobileSidebar"];
+  static targets = [
+    "leftSidebar",
+    "rightSidebar",
+    "mobileSidebar",
+    "accountsToggle",
+  ];
   static values = { userId: String };
   static classes = [
     "expandedSidebar",
@@ -22,7 +27,14 @@ export default class extends Controller {
   toggleLeftSidebar() {
     const isOpen = this.leftSidebarTarget.classList.contains("w-full");
     this.#updateUserPreference("show_sidebar", !isOpen);
-    this.#toggleSidebarWidth(this.leftSidebarTarget, isOpen, "left");
+    this.#toggleSidebarWidth(
+      this.leftSidebarTarget,
+      isOpen,
+      this.#edgeOf(this.leftSidebarTarget, "left"),
+    );
+    if (this.hasAccountsToggleTarget) {
+      this.accountsToggleTarget.setAttribute("aria-pressed", String(!isOpen));
+    }
   }
 
   toggleRightSidebar() {
@@ -41,9 +53,21 @@ export default class extends Controller {
     this.#toggleSidebarWidth(this.rightSidebarTarget, false, "right");
   }
 
+  // Fulas Bank: the accounts panel sits right of the content
+  // (data-sidebar-position="end"), so its border is on its left side.
+  #edgeOf(el, fallback) {
+    return el.dataset.sidebarPosition === "end" ? "right" : fallback;
+  }
+
   #toggleSidebarWidth(el, isCurrentlyOpen, side) {
-    const expandedClasses = side === "left" ? [...this.expandedSidebarClasses, "border-r"] : [...this.expandedSidebarClasses, "border-l"];
-    const collapsedClasses = side === "left" ? [...this.collapsedSidebarClasses, "border-r-0"] : [...this.collapsedSidebarClasses, "border-l-0"];
+    const expandedClasses =
+      side === "left"
+        ? [...this.expandedSidebarClasses, "border-r"]
+        : [...this.expandedSidebarClasses, "border-l"];
+    const collapsedClasses =
+      side === "left"
+        ? [...this.collapsedSidebarClasses, "border-r-0"]
+        : [...this.collapsedSidebarClasses, "border-l-0"];
 
     if (isCurrentlyOpen) {
       el.classList.remove(...expandedClasses);

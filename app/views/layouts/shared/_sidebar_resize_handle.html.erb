@@ -1,12 +1,16 @@
-<%# locals: (side:) %>
+<%# locals: (side:, edge: nil) %>
 <%#
   Draggable divider for a resizable sidebar.
   `side` is "left" (accounts) or "right" (assistant). Drives sidebar_resize_controller.
+  `edge` is the sidebar edge the handle sits on ("start" or "end"); by default
+  the one facing the content. Fulas Bank puts the accounts panel on the right,
+  so it passes "start".
 %>
 <% suffix = side.capitalize %>
-<% edge = side == "left" ? "right-0 translate-x-1/2" : "left-0 -translate-x-1/2" %>
+<% edge ||= side == "left" ? "end" : "start" %>
+<% edge_classes = edge == "end" ? "right-0 translate-x-1/2" : "left-0 -translate-x-1/2" %>
 <%= tag.div(
-  class: class_names("group absolute inset-y-0 z-20 hidden w-2 cursor-col-resize lg:block", edge),
+  class: class_names("group absolute inset-y-0 z-20 hidden w-2 cursor-col-resize lg:block", edge_classes),
   role: "separator",
   tabindex: "0",
   aria: { orientation: "vertical", label: t("layouts.application.resize_#{side}_sidebar") },

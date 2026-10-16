@@ -21,6 +21,21 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#netWorthChart[data-time-series-chart-selectable-value='true'][draggable='false']"
   end
 
+  test "desktop menu groups its entries and the accounts panel sits right of the content" do
+    get root_path
+    assert_response :ok
+
+    assert_select "nav[aria-label=?]", I18n.t("layouts.application.main_menu") do
+      %w[movements planning wealth analysis].each do |group|
+        assert_select "p", text: I18n.t("layouts.application.nav_groups.#{group}")
+      end
+      assert_select "a[href=?]", transactions_path, text: I18n.t("layouts.application.nav.transactions")
+    end
+
+    assert_select "button[data-action='app-layout#toggleLeftSidebar'][aria-pressed]", text: I18n.t("layouts.application.accounts_panel")
+    assert_select "#main ~ [data-app-layout-target='leftSidebar'][data-sidebar-position='end']"
+  end
+
   test "inactive user's existing session is revoked" do
     session_record = @user.sessions.order(:created_at).last
     @user.update_column(:active, false)

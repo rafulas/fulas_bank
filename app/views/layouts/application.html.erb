@@ -1,5 +1,19 @@
 <% intro_mode = Current.user&.ui_layout_intro? %>
 <% home_path = intro_mode ? chats_path : root_path %>
+<% nav = {
+  home: { name: t(".nav.home"), path: root_path, icon: "pie-chart", icon_custom: false, active: page_active?(root_path) },
+  transactions: { name: t(".nav.transactions"), path: transactions_path, icon: "credit-card", icon_custom: false, active: page_active?(transactions_path) },
+  summary: { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) },
+  # The budgets live in Planes (its "Añadir o cambiar presupuesto" link).
+  month_plan: { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) || page_active?(budgets_path) },
+  forecast: { name: t(".nav.forecast"), path: forecast_path, icon: "trending-up", icon_custom: false, active: page_active?(forecast_path) },
+  subscriptions: { name: t(".nav.subscriptions"), path: subscription_costs_path, icon: "repeat", icon_custom: false, active: page_active?(subscription_costs_path) },
+  loans: { name: t(".nav.loans_overview"), path: loans_overview_path, icon: "landmark", icon_custom: false, active: page_active?(loans_overview_path) },
+  investments: { name: t(".nav.investments_overview"), path: investments_overview_path, icon: "line-chart", icon_custom: false, active: page_active?(investments_overview_path) },
+  roadtrip: { name: t(".nav.roadtrip"), path: roadtrip_path, icon: "car", icon_custom: false, active: page_active?(roadtrip_path) },
+  insurances: { name: t(".nav.insurances"), path: insurances_path, icon: "shield", icon_custom: false, active: page_active?(insurances_path) },
+  reports: { name: t(".nav.reports"), path: reports_path, icon: "chart-bar", icon_custom: false, active: page_active?(reports_path) }
+} %>
 <% mobile_nav_items = if intro_mode
   [
     { name: t(".nav.home"), path: chats_path, icon: "home", icon_custom: false, active: page_active?(chats_path) },
@@ -7,25 +21,25 @@
   ]
 else
   [
-    { name: t(".nav.home"), path: root_path, icon: "pie-chart", icon_custom: false, active: page_active?(root_path) },
-    # Fulas Bank: what happened, what is coming, what I have, comparing. The
-    # budgets live in Planes (its "Añadir o cambiar presupuesto" link).
-    { name: t(".nav.transactions"), path: transactions_path, icon: "credit-card", icon_custom: false, active: page_active?(transactions_path) },
-    { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) },
-    { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) || page_active?(budgets_path) },
-    { name: t(".nav.forecast"), path: forecast_path, icon: "trending-up", icon_custom: false, active: page_active?(forecast_path) },
-    { name: t(".nav.subscriptions"), path: subscription_costs_path, icon: "repeat", icon_custom: false, active: page_active?(subscription_costs_path) },
-    { name: t(".nav.loans_overview"), path: loans_overview_path, icon: "landmark", icon_custom: false, active: page_active?(loans_overview_path) },
-    { name: t(".nav.investments_overview"), path: investments_overview_path, icon: "line-chart", icon_custom: false, active: page_active?(investments_overview_path) },
-    { name: t(".nav.roadtrip"), path: roadtrip_path, icon: "car", icon_custom: false, active: page_active?(roadtrip_path) },
-    { name: t(".nav.insurances"), path: insurances_path, icon: "shield", icon_custom: false, active: page_active?(insurances_path) },
-    { name: t(".nav.reports"), path: reports_path, icon: "chart-bar", icon_custom: false, active: page_active?(reports_path) },
+    *nav.values,
     bills_nav_item,
     { name: t(".nav.assistant"), path: chats_path, icon: "icon-assistant", icon_custom: true, active: page_active?(chats_path), mobile_only: true }
   ].compact
 end %>
 
-<% desktop_nav_items = mobile_nav_items.reject { |item| item[:mobile_only] } %>
+<%# Fulas Bank: the desktop menu groups its entries by question, as in
+    FlowVista: what happened, what is coming, what I have, comparing. %>
+<% desktop_nav_groups = if intro_mode
+  [ { title: nil, items: mobile_nav_items } ]
+else
+  [
+    { title: nil, items: [ nav[:home] ] },
+    { title: t(".nav_groups.movements"), items: [ nav[:transactions], nav[:summary] ] },
+    { title: t(".nav_groups.planning"), items: [ nav[:month_plan], nav[:forecast], nav[:subscriptions], bills_nav_item ].compact },
+    { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances] ] },
+    { title: t(".nav_groups.analysis"), items: [ nav[:reports] ] }
+  ]
+end %>
 <% expanded_sidebar_class = "w-full" %>
 <% collapsed_sidebar_class = "w-0 overflow-hidden" %>
 
@@ -86,38 +100,97 @@ end %>
     </nav>
 
     <%# DESKTOP - Left navbar %>
-    <div class="hidden lg:block border-r border-divider">
-      <nav class="h-full flex flex-col shrink-0 w-[84px] py-4">
-        <div class="pl-2 mb-3">
-          <%= link_to home_path, class: "block" do %>
-            <%= image_tag "logomark-color.svg", class: "w-9 h-9 mx-auto" %>
+    <div class="hidden lg:block border-r border-divider" data-sidebar-resize-target="navbar">
+      <nav class="h-full flex flex-col shrink-0 w-48 py-4 px-2 overflow-y-auto" aria-label="<%= t("layouts.application.main_menu") %>">
+        <%= link_to home_path, class: "flex items-center gap-3 px-2 mb-6 rounded-lg focus-ring" do %>
+          <%= image_tag "logomark-color.svg", class: "w-9 h-9 shrink-0", alt: "" %>
+          <span class="text-lg font-semibold text-primary truncate"><%= product_name %></span>
+        <% end %>
+
+        <div class="space-y-5">
+          <% desktop_nav_groups.each do |group| %>
+            <div>
+              <% if group[:title] %>
+                <p class="px-3 pb-1.5 text-xs font-medium uppercase tracking-wide text-secondary"><%= group[:title] %></p>
+              <% end %>
+              <ul class="space-y-0.5">
+                <% group[:items].each do |nav_item| %>
+                  <li>
+                    <%= render "layouts/shared/sidebar_nav_item", **nav_item %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
           <% end %>
         </div>
 
-        <ul class="space-y-0.5">
-          <% desktop_nav_items.reject { |item| item[:mobile_only] }.each do |nav_item| %>
-            <li>
-              <%= render "layouts/shared/nav_item", **nav_item %>
-            </li>
-          <% end %>
-        </ul>
-
-        <div class="pl-2 mt-auto mx-auto flex flex-col gap-2">
+        <div class="mt-auto pt-3 border-t border-divider flex items-center gap-3 px-2">
           <%# Fulas Bank: no link to Sure's Discord community here. %>
           <%= render "users/user_menu", user: Current.user, intro_mode: intro_mode %>
+          <span class="text-sm font-medium text-primary truncate"><%= Current.user.display_name %></span>
         </div>
       </nav>
     </div>
 
-    <%# DESKTOP - Left sidebar %>
+    <%# SHARED - Main content %>
+    <%= tag.main id: "main", class: class_names("grow overflow-y-auto px-3 lg:px-10 w-full mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"), data: { app_layout_target: "content", viewport_target: "content", notification_tray_target: "main" } do %>
+      <% unless intro_mode %>
+        <div class="hidden lg:flex gap-2 items-center justify-between mb-6 sticky top-0 z-10 -mx-3 lg:-mx-10 px-3 lg:px-10 py-4 bg-surface border-b border-tertiary">
+          <div class="flex items-center gap-2">
+            <% if content_for?(:breadcrumbs) %>
+              <%= yield :breadcrumbs %>
+            <% else %>
+              <%= render "layouts/shared/breadcrumbs", breadcrumbs: breadcrumbs %>
+            <% end %>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <%= render "layouts/shared/insights_button" %>
+
+            <button type="button"
+                    class="inline-flex items-center justify-center w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg text-secondary hover:text-primary hover:bg-container-inset-hover transition-colors focus-ring"
+                    data-action="click->privacy-mode#toggle"
+                    data-privacy-mode-target="toggle"
+                    title="<%= t("layouts.application.privacy_mode") %>"
+                    aria-label="<%= t("layouts.application.privacy_mode") %>"
+                    aria-pressed="false">
+              <%= icon("eye-off", size: "sm", data: { privacy_mode_target: "iconOff" }) %>
+              <%= icon("eye", size: "sm", class: "hidden", data: { privacy_mode_target: "iconOn" }) %>
+            </button>
+
+            <%= icon("message-square", as_button: true, title: t("layouts.application.nav.assistant"), aria: { label: t("layouts.application.nav.assistant") }, data: { action: "app-layout#toggleRightSidebar" }) %>
+
+            <%= render DS::Button.new(
+                  variant: "outline",
+                  size: "sm",
+                  text: t("layouts.application.accounts_panel"),
+                  icon: "panel-right",
+                  aria: { pressed: Current.user.show_sidebar?.to_s },
+                  data: { action: "app-layout#toggleLeftSidebar", app_layout_target: "accountsToggle" }
+                ) %>
+          </div>
+        </div>
+      <% end %>
+
+      <%= yield :system_alerts %>
+
+      <% if content_for?(:page_header) %>
+        <%= yield :page_header %>
+      <% end %>
+
+      <%= yield %>
+    <% end %>
+
+    <%# DESKTOP - Accounts panel. Fulas Bank: it sits to the right of the content and
+        opens or closes from the "Cuentas" button in the top bar (Current.user.show_sidebar?). %>
     <%= tag.div class: class_names(
         "hidden lg:block relative py-4 shrink-0 transition-all duration-300 border-divider",
-        Current.user.show_sidebar? ? [expanded_sidebar_class, "border-r"] : [collapsed_sidebar_class, "border-r-0"],
+        Current.user.show_sidebar? ? [expanded_sidebar_class, "border-l"] : [collapsed_sidebar_class, "border-l-0"],
        ),
        style: "max-width: var(--left-sidebar-width, 320px)",
        inert: !Current.user.show_sidebar?,
-       data: { app_layout_target: "leftSidebar", sidebar_resize_target: "leftSidebar" } do %>
-      <%= render "layouts/shared/sidebar_resize_handle", side: "left" %>
+       data: { app_layout_target: "leftSidebar", sidebar_resize_target: "leftSidebar", sidebar_position: "end" } do %>
+      <%= render "layouts/shared/sidebar_resize_handle", side: "left", edge: "start" %>
       <div id="sidebar-scroll" data-controller="preserve-scroll" class="px-4 h-full flex flex-col overflow-y-auto">
         <% if content_for?(:sidebar) %>
           <%= yield :sidebar %>
@@ -149,48 +222,6 @@ end %>
           <% end %>
         <% end %>
       </div>
-    <% end %>
-
-    <%# SHARED - Main content %>
-    <%= tag.main id: "main", class: class_names("grow overflow-y-auto px-3 lg:px-10 w-full mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"), data: { app_layout_target: "content", viewport_target: "content", notification_tray_target: "main" } do %>
-      <% unless intro_mode %>
-        <div class="hidden lg:flex gap-2 items-center justify-between mb-6 sticky top-0 z-10 -mx-3 lg:-mx-10 px-3 lg:px-10 py-4 bg-surface border-b border-tertiary">
-          <div class="flex items-center gap-2">
-            <%= icon("panel-left", as_button: true, data: { action: "app-layout#toggleLeftSidebar" }) %>
-
-            <% if content_for?(:breadcrumbs) %>
-              <%= yield :breadcrumbs %>
-            <% else %>
-              <%= render "layouts/shared/breadcrumbs", breadcrumbs: breadcrumbs %>
-            <% end %>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <%= render "layouts/shared/insights_button" %>
-
-            <button type="button"
-                    class="inline-flex items-center justify-center w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-lg text-secondary hover:text-primary hover:bg-container-inset-hover transition-colors focus-ring"
-                    data-action="click->privacy-mode#toggle"
-                    data-privacy-mode-target="toggle"
-                    title="<%= t("layouts.application.privacy_mode") %>"
-                    aria-label="<%= t("layouts.application.privacy_mode") %>"
-                    aria-pressed="false">
-              <%= icon("eye-off", size: "sm", data: { privacy_mode_target: "iconOff" }) %>
-              <%= icon("eye", size: "sm", class: "hidden", data: { privacy_mode_target: "iconOn" }) %>
-            </button>
-
-            <%= icon("panel-right", as_button: true, data: { action: "app-layout#toggleRightSidebar" }) %>
-          </div>
-        </div>
-      <% end %>
-
-      <%= yield :system_alerts %>
-
-      <% if content_for?(:page_header) %>
-        <%= yield :page_header %>
-      <% end %>
-
-      <%= yield %>
     <% end %>
 
     <%# DESKTOP - Right sidebar %>

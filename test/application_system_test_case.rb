@@ -2,7 +2,9 @@ require "test_helper"
 require "socket"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
-  DEFAULT_VIEWPORT_WIDTH = 1400
+  # Fulas Bank: 1400 + the ~110px the labelled menu column added, so pages keep
+  # the content width they were written for. Stays under Tailwind's 2xl (1536).
+  DEFAULT_VIEWPORT_WIDTH = 1520
   DEFAULT_VIEWPORT_HEIGHT = 1400
 
   setup do
@@ -24,7 +26,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   if ENV["SELENIUM_REMOTE_URL"].present?
     Capybara.register_driver :selenium_remote_chrome do |app|
       options = Selenium::WebDriver::Chrome::Options.new
-      options.add_argument("--window-size=1400,1400")
+      options.add_argument("--window-size=1520,1400")
 
       Capybara::Selenium::Driver.new(
         app,
@@ -34,7 +36,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       )
     end
 
-    driven_by :selenium_remote_chrome, screen_size: [ 1400, 1400 ]
+    driven_by :selenium_remote_chrome, screen_size: [ 1520, 1400 ]
   else
     requested_browser = ENV["E2E_BROWSER"].presence&.to_sym
     local_browser = case requested_browser
@@ -49,13 +51,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       options = case local_browser
       when :firefox
         Selenium::WebDriver::Firefox::Options.new.tap do |firefox_options|
-          firefox_options.add_argument("--width=1400")
+          firefox_options.add_argument("--width=1520")
           firefox_options.add_argument("--height=1400")
           firefox_options.add_argument("-headless") if headless
         end
       else
         Selenium::WebDriver::Chrome::Options.new.tap do |chrome_options|
-          chrome_options.add_argument("--window-size=1400,1400")
+          chrome_options.add_argument("--window-size=1520,1400")
           chrome_options.add_argument("--headless=new") if headless
           chrome_options.add_argument("--no-sandbox")
           chrome_options.add_argument("--disable-dev-shm-usage")
@@ -69,7 +71,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
       )
     end
 
-    driven_by :selenium_local_chrome, screen_size: [ 1400, 1400 ]
+    driven_by :selenium_local_chrome, screen_size: [ 1520, 1400 ]
   end
 
   def teardown

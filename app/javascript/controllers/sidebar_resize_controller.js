@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import {
   SIDEBAR_ABS_MAX,
   SIDEBAR_DEFAULTS,
+  SIDEBAR_NAVBAR_WIDTH,
   clampSidebarWidth,
 } from "utils/sidebar_resize";
 
@@ -14,7 +15,7 @@ import {
 //
 // Connects to data-controller="sidebar-resize"
 export default class extends Controller {
-  static targets = ["leftSidebar", "rightSidebar"];
+  static targets = ["leftSidebar", "rightSidebar", "navbar"];
 
   static STORAGE_KEYS = {
     left: "sure.sidebarWidth.left",
@@ -85,9 +86,11 @@ export default class extends Controller {
 
     const { side, sidebar } = this.#drag;
     const rect = sidebar.getBoundingClientRect();
-    // Left handle sits on the sidebar's right edge; right handle on its left.
-    const raw =
-      side === "left" ? event.clientX - rect.left : rect.right - event.clientX;
+    // A sidebar anchored at the start grows from its right edge; one anchored
+    // at the end (the assistant, and Fulas Bank's accounts panel) from its left.
+    const raw = this.#anchoredAtEnd(side)
+      ? rect.right - event.clientX
+      : event.clientX - rect.left;
 
     this.#setWidth(side, this.#clamp(side, raw));
   }
@@ -109,7 +112,7 @@ export default class extends Controller {
     // A left sidebar grows as its right edge moves right; a right sidebar grows
     // as its left edge moves left. Mirror the arrow direction per side so the
     // key matches the visual edge movement.
-    const dir = side === "left" ? 1 : -1;
+    const dir = this.#anchoredAtEnd(side) ? -1 : 1;
     const step = this.constructor.KEY_STEP;
     let next;
     if (event.key === "ArrowRight") {
@@ -158,6 +161,7 @@ export default class extends Controller {
     return clampSidebarWidth(rawWidth, {
       viewportWidth: window.innerWidth || 1280,
       otherWidth,
+      navbarWidth: this.#navbarWidth(),
       absMax: SIDEBAR_ABS_MAX[side],
     });
   }
@@ -187,6 +191,20 @@ export default class extends Controller {
       return this.hasLeftSidebarTarget ? this.leftSidebarTarget : null;
     }
     return this.hasRightSidebarTarget ? this.rightSidebarTarget : null;
+  }
+
+  // Whether the sidebar sits on the right of the content. The assistant always
+  // does; any other sidebar opts in with data-sidebar-position="end".
+  #anchoredAtEnd(side) {
+    if (side === "right") return true;
+    return this.#sidebar(side)?.dataset.sidebarPosition === "end";
+  }
+
+  // Rendered width of the menu column; the constant is only a fallback.
+  #navbarWidth() {
+    if (!this.hasNavbarTarget) return SIDEBAR_NAVBAR_WIDTH;
+    const width = Math.round(this.navbarTarget.getBoundingClientRect().width);
+    return width > 0 ? width : SIDEBAR_NAVBAR_WIDTH;
   }
 
   #teardownListeners() {

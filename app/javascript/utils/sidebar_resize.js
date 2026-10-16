@@ -4,7 +4,8 @@
 // isolation. Must be kept in sync with
 // test/javascript/utils/sidebar_resize_test.mjs.
 
-// Width of the always-visible icon navbar to the left of the sidebars.
+// Width of the always-visible menu column to the left of the sidebars. The
+// resize controller measures the real column; this is the fallback default.
 export const SIDEBAR_NAVBAR_WIDTH = 84;
 // Smallest a sidebar may shrink to while still being usable.
 export const SIDEBAR_MIN_WIDTH = 240;

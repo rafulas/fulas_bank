@@ -1,7 +1,7 @@
 require "application_system_test_case"
 
 class AccountActivityTest < ApplicationSystemTestCase
-  DEFAULT_VIEWPORT_WIDTH = 1400
+  DEFAULT_VIEWPORT_WIDTH = 1520
   DEFAULT_VIEWPORT_HEIGHT = 1400
 
   setup do

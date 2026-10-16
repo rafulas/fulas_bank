@@ -2,6 +2,13 @@
 en:
   layouts:
     application:
+      accounts_panel: Accounts
+      main_menu: Main menu
+      nav_groups:
+        analysis: Analysis
+        movements: Activity
+        planning: Planning
+        wealth: Wealth
       insights: Insights
       privacy_mode: Toggle privacy mode
       resize_left_sidebar: Resize the accounts sidebar

@@ -2,6 +2,13 @@
 es:
   layouts:
     application:
+      accounts_panel: Cuentas
+      main_menu: Menú principal
+      nav_groups:
+        analysis: Análisis
+        movements: Movimientos
+        planning: Planificación
+        wealth: Patrimonio
       insights: Análisis
       privacy_mode: Alternar modo de privacidad
       resize_left_sidebar: Redimensionar la barra lateral de cuentas
