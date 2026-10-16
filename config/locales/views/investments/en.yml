@@ -8,6 +8,8 @@ en:
       balance_hint: "Optional. Leave it empty to record purchases one by one (for example, 100 BBVA shares on 01/03/2019 at 3.40): the value will come from them."
       none: None
       subtype_prompt: Select investment type
+      brokerage_cash: Holds its own cash (brokerage account)
+      brokerage_cash_hint: "Turn it off if you buy and sell from your bank accounts or receive shares with your pay. The account will be worth only its shares or funds, and each buy or sale can be linked to its bank movement."
     new:
       title: Enter account balance
     show:

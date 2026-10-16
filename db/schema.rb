@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1636,6 +1636,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   end
 
   create_table "investments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "brokerage_cash", default: true, null: false
     t.datetime "created_at", null: false
     t.jsonb "locked_attributes", default: {}
     t.string "subtype"
@@ -2512,6 +2513,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.datetime "created_at", null: false
     t.string "currency", default: "USD", null: false
     t.date "date", null: false
+    t.boolean "manual", default: false, null: false
     t.decimal "price", precision: 19, scale: 4, null: false
     t.boolean "provisional", default: false, null: false
     t.uuid "security_id"
@@ -2864,6 +2866,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   end
 
   create_table "trades", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "bank_entry_id"
     t.datetime "created_at", null: false
     t.string "currency"
     t.jsonb "extra", default: {}, null: false
@@ -2874,6 +2877,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.decimal "qty", precision: 34, scale: 18
     t.uuid "security_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["bank_entry_id"], name: "index_trades_on_bank_entry_id", unique: true
     t.index ["extra"], name: "index_trades_on_extra", using: :gin
     t.index ["investment_activity_label"], name: "index_trades_on_investment_activity_label"
     t.index ["security_id"], name: "index_trades_on_security_id"
@@ -3347,6 +3351,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   add_foreign_key "tool_calls", "messages"
   add_foreign_key "trade_republic_accounts", "trade_republic_items"
   add_foreign_key "trade_republic_items", "families"
+  add_foreign_key "trades", "entries", column: "bank_entry_id", on_delete: :nullify
   add_foreign_key "trades", "securities"
   add_foreign_key "trading212_accounts", "trading212_items"
   add_foreign_key "trading212_items", "families"

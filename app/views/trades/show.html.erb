@@ -75,6 +75,11 @@
         <% end %>
       </div>
     <% end %>
+    <% if trade.bank_linkable? %>
+      <% dialog.with_section(title: t(".bank_link"), open: true) do %>
+        <%= render "trades/bank_link", entry: @entry, trade: trade, candidates: @bank_entry_candidates || [] %>
+      <% end %>
+    <% end %>
     <% dialog.with_section(title: t(".additional")) do %>
       <div class="pb-4">
         <%= styled_form_with model: @entry,

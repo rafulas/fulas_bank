@@ -1,16 +1,6 @@
 <% unless @provider_error %>
   <%= turbo_stream.replace dom_id(@holding, :current_market_price) do %>
-    <dd id="<%= dom_id(@holding, :current_market_price) %>" class="text-primary">
-      <% begin %>
-        <%= @holding.security.current_price ? format_money(@holding.security.current_price) : t("holdings.show.unknown") %>
-        <% rescue ActiveRecord::RecordInvalid %>
-        <%= t("holdings.show.unknown") %>
-        <% rescue StandardError => e %>
-        <% logger.error "Error fetching current price for security #{@holding.security.id}: #{e.message}" %>
-        <% logger.error e.backtrace.first(5).join("\n") %>
-        <%= t("holdings.show.unknown") %>
-      <% end %>
-    </dd>
+    <%= render "holdings/current_price", holding: @holding, price_record: current_price_record_for(@holding.security) %>
   <% end %>
   <%= turbo_stream.replace dom_id(@holding, :market_value) do %>
     <div id="<%= dom_id(@holding, :market_value) %>" class="flex items-center justify-between text-sm">

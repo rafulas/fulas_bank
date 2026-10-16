@@ -73,7 +73,9 @@ class InvestmentsOverview::AnnualReturn
     def flows_for(account)
       @flows_for ||= {}
       @flows_for[account.id] ||= begin
-        moves = money_movements(account)
+        # Fulas Bank: an account without brokerage cash has no money
+        # movements of its own: its buys and sales are the money in and out.
+        moves = account.brokerage_cash? ? money_movements(account) : []
         moves = purchases(account) if moves.empty?
         list = opening(account, moves) + moves
         list << [ today, convert(account.balance.to_d, account) ] if list.any?

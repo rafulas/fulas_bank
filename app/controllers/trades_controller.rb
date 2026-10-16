@@ -3,6 +3,19 @@ class TradesController < ApplicationController
 
   before_action :set_entry_for_unlock, only: :unlock
 
+  # Fulas Bank: also offers the bank movements a buy or sale could be linked
+  # to, in an account without brokerage cash (see Trade::BankLink).
+  def show
+    trade = @entry.trade
+    @bank_entry_candidates = if trade.bank_linkable? && trade.bank_entry.nil?
+      trade.bank_entry_candidates(
+        scope: Current.family.entries.joins(:account).merge(Account.accessible_by(Current.user))
+      )
+    else
+      []
+    end
+  end
+
   # Defaults to a buy trade
   def new
     @account = accessible_accounts.find_by(id: params[:account_id])

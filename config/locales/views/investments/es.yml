@@ -8,6 +8,8 @@ es:
       balance_hint: "Opcional. Déjalo vacío si vas a apuntar las compras una a una (por ejemplo, 100 acciones de BBVA el 01/03/2019 a 3,40 €): el valor saldrá de ellas."
       none: Ninguno
       subtype_prompt: Selecciona el tipo de inversión
+      brokerage_cash: Tiene efectivo propio (cuenta de corretaje)
+      brokerage_cash_hint: "Apágalo si compras y vendes desde tus cuentas del banco o recibes las acciones con la nómina. La cuenta valdrá solo lo que valgan sus acciones o fondos, y cada compra o venta se puede vincular a su movimiento del banco."
     new:
       title: Introduce el saldo de la cuenta
     show:

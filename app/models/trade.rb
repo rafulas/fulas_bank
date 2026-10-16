@@ -1,5 +1,5 @@
 class Trade < ApplicationRecord
-  include Entryable, Monetizable
+  include Entryable, Monetizable, BankLink
 
   monetize :price
   monetize :fee

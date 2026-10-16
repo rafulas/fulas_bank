@@ -1,0 +1,60 @@
+<%# locals: (entry:, trade:, candidates:) %>
+<%# Fulas Bank: the bank movement that paid for this buy, or received the
+    money of this sale (see Trade::BankLink). %>
+
+<div class="px-3 py-2 space-y-3">
+  <% if (bank_entry = trade.bank_entry) %>
+    <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-primary bg-container">
+      <div class="flex items-start gap-3 min-w-0">
+        <%= icon "landmark", size: "md" %>
+        <div class="min-w-0 space-y-1">
+          <p class="text-sm font-medium text-primary truncate"><%= bank_entry.name %></p>
+          <p class="text-xs text-secondary">
+            <%= bank_entry.account.name %> · <%= format_date(bank_entry.date) %> ·
+            <span class="privacy-sensitive"><%= format_money(-bank_entry.amount_money) %></span>
+          </p>
+        </div>
+      </div>
+      <%= render DS::Link.new(text: t(".view"), variant: :ghost, size: :sm, href: transaction_path(bank_entry), frame: :drawer) %>
+    </div>
+
+    <%= render DS::Button.new(
+          text: t(".unlink"),
+          icon: "unlink",
+          variant: :outline,
+          size: :sm,
+          href: trade_bank_link_path(entry),
+          method: :delete,
+          frame: :_top
+        ) %>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t(trade.buy? ? ".hint_buy" : ".hint_sell") %></p>
+
+    <% if candidates.any? %>
+      <ul class="space-y-2">
+        <% candidates.each do |candidate| %>
+          <li class="flex items-center justify-between gap-3 p-3 rounded-lg border border-secondary">
+            <div class="min-w-0 space-y-1">
+              <p class="text-sm text-primary truncate"><%= candidate.name %></p>
+              <p class="text-xs text-secondary">
+                <%= candidate.account.name %> · <%= format_date(candidate.date) %> ·
+                <span class="privacy-sensitive"><%= format_money(-candidate.amount_money) %></span>
+              </p>
+            </div>
+            <%= render DS::Button.new(
+                  text: t(".link"),
+                  icon: "link",
+                  variant: :outline,
+                  size: :sm,
+                  href: trade_bank_link_path(entry, bank_entry_id: candidate.id),
+                  method: :post,
+                  frame: :_top
+                ) %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".no_candidates", days: Trade::BankLink::MATCH_WINDOW.in_days.to_i) %></p>
+    <% end %>
+  <% end %>
+</div>

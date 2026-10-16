@@ -5,5 +5,13 @@
     <%= investment_form.select :subtype,
                        Investment.subtypes_for_select(current: account.accountable.subtype),
                        { label: t("investments.form.subtype"), include_blank: t("investments.form.none") } %>
+    <%# Fulas Bank: brokerage cash is optional. %>
+    <div class="flex items-center justify-between gap-4 pt-2">
+      <div class="text-sm space-y-1">
+        <%= investment_form.label :brokerage_cash, t("investments.form.brokerage_cash"), class: "text-primary font-medium" %>
+        <p class="text-secondary text-xs"><%= t("investments.form.brokerage_cash_hint") %></p>
+      </div>
+      <%= investment_form.toggle :brokerage_cash %>
+    </div>
   <% end %>
 <% end %>

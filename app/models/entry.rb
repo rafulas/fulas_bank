@@ -24,6 +24,9 @@ class Entry < ApplicationRecord
   has_many :recurring_allocations, dependent: nil, inverse_of: :entry
   # Fulas Bank: a card purchase paid in instalments (the database nullifies it).
   has_one :card_financing, dependent: nil
+  # Fulas Bank: the buy or sale of shares this bank movement paid for (see
+  # Trade::BankLink). The database clears the link if the movement goes.
+  has_one :linked_trade, class_name: "Trade", foreign_key: :bank_entry_id, inverse_of: :bank_entry, dependent: nil
 
   delegated_type :entryable, types: Entryable::TYPES, dependent: :destroy
   accepts_nested_attributes_for :entryable

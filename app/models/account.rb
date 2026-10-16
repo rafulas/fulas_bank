@@ -677,6 +677,16 @@ class Account < ApplicationRecord
   # "Cash" = "Liquid"
   # "Non-cash" = "Illiquid"
   # "Investment" = A mix of both, including brokerage cash (liquid) and holdings (illiquid)
+  # Fulas Bank: whether the account holds cash of its own. Every account does
+  # except an investment account set to work without brokerage cash: its
+  # buys and sales are paid from (or into) bank accounts outside it, so it is
+  # worth just its positions.
+  def brokerage_cash?
+    return true unless accountable_type == "Investment"
+
+    accountable.nil? || accountable.brokerage_cash?
+  end
+
   def balance_type
     case accountable_type
     when "Depository", "CreditCard"

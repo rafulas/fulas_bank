@@ -41,7 +41,7 @@ class InvestmentsOverview
 
   def rows
     @rows ||= accounts.map do |account|
-      net_in = contributions[account.id] || holdings_cost(account)
+      net_in = account.brokerage_cash? ? (contributions[account.id] || holdings_cost(account)) : trades_net_in(account)
       Row.new(
         account: account,
         value: Money.new(account.balance.to_d, account.currency),
@@ -108,6 +108,18 @@ class InvestmentsOverview
                                .group(:account_id)
                                .sum(:amount)
                                .transform_values { |amount| -amount.to_d }
+    end
+
+    # Fulas Bank: for an account without brokerage cash, the money put in is
+    # what its buys cost minus what its sales brought (a buy's entry amount is
+    # positive, a sale's negative). Selling with a gain therefore lowers what
+    # is "put in", and the gain shows in the return. nil without trades.
+    def trades_net_in(account)
+      amounts = account.entries.where(entryable_type: "Trade", excluded: false)
+                       .joins("INNER JOIN trades ON trades.id = entries.entryable_id")
+                       .where.not(trades: { qty: 0 })
+                       .pluck(:amount)
+      amounts.sum(&:to_d) if amounts.any?
     end
 
     # What the current positions cost, for an account recorded only with

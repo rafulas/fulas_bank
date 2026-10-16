@@ -174,6 +174,13 @@
       <% end %>
     <% end %>
 
+    <%# Fulas Bank: the buy or sale of shares this movement paid for. %>
+    <% if (linked_trade = @entry.linked_trade) %>
+      <% dialog.with_section(title: t(".linked_trade"), open: true) do %>
+        <%= render "transactions/linked_trade", entry: @entry, trade: linked_trade, can_edit: can_edit_entry? %>
+      <% end %>
+    <% end %>
+
     <%# Fulas Bank: the card statement it goes in, and paying it in instalments. %>
     <% if @entry.account.accountable_type == "CreditCard" && !@entry.transaction.transfer? %>
       <% dialog.with_section(title: t(".card_statement"), open: true) do %>

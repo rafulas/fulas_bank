@@ -148,4 +148,54 @@ class HoldingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to account_path(@holding.account, tab: "holdings")
     assert_equal "Yahoo Finance rate limit exceeded", flash[:alert]
   end
+
+  test "update_price stores a manual price for today and recalculates the account" do
+    Account.any_instance.expects(:sync_later).once
+
+    patch update_price_holding_path(@holding), params: { holding: { price: "18,60" } }
+
+    assert_redirected_to account_path(@holding.account, tab: "holdings")
+    assert_equal I18n.t("holdings.update_price.success"), flash[:notice]
+
+    price = @holding.security.prices.find_by(date: Date.current, currency: @holding.currency)
+    assert_equal BigDecimal("18.6"), price.price
+    assert price.manual
+  end
+
+  test "update_price stores the price for a past day" do
+    patch update_price_holding_path(@holding), params: { holding: { price: "20", price_date: 3.days.ago.to_date.iso8601 } }
+
+    assert @holding.security.prices.find_by(date: 3.days.ago.to_date, manual: true)
+  end
+
+  test "update_price rejects a price that is not positive or a future date" do
+    patch update_price_holding_path(@holding), params: { holding: { price: "0" } }
+    assert_equal I18n.t("holdings.update_price.error"), flash[:alert]
+
+    patch update_price_holding_path(@holding), params: { holding: { price: "10", price_date: 2.days.from_now.to_date.iso8601 } }
+    assert_equal I18n.t("holdings.update_price.error"), flash[:alert]
+
+    assert_not @holding.security.prices.where(manual: true).exists?
+  end
+
+  test "sync_prices asks the provider again for an offline security and brings it back online" do
+    @holding.security.update!(offline: true)
+    Security.any_instance.expects(:try_bring_online!).with(currency: @holding.currency).returns(true)
+    Account.any_instance.expects(:sync_later).once
+
+    post sync_prices_holding_path(@holding)
+
+    assert_redirected_to account_path(@holding.account, tab: "holdings")
+    assert_equal I18n.t("holdings.sync_prices.back_online"), flash[:notice]
+  end
+
+  test "an offline security shows the find price button and the manual price form" do
+    @holding.security.update!(offline: true)
+
+    get holding_path(@holding)
+
+    assert_response :success
+    assert_select "form[action=?]", update_price_holding_path(@holding)
+    assert_select "button", text: I18n.t("holdings.show.find_price_button")
+  end
 end
