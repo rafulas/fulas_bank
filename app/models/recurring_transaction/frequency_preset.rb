@@ -74,6 +74,16 @@ class RecurringTransaction
         true
       end
 
+      # Fulas Bank: "1st" in English, but just "1" in Spanish ("el día 1"):
+      # Rails only ships English ordinals, and for any other locale
+      # Integer#ordinalize printed "Translation missing:
+      # es.number.nth.ordinalized" in the middle of the frequency.
+      def ordinal(day)
+        return day.to_s unless I18n.exists?("number.nth.ordinalized")
+
+        day.to_i.ordinalize
+      end
+
       # Human-readable cadence, e.g. "Every 2 weeks on Friday".
       def label(recurring)
         found = detect(recurring)
@@ -252,7 +262,7 @@ class RecurringTransaction
         def day_phrase(day)
           return I18n.t("recurring_transactions.frequency.last_day") if day == RecurrenceRule::LAST
 
-          day.ordinalize
+          ordinal(day)
         end
 
         def weekday_name(weekday)

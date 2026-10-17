@@ -3,8 +3,9 @@
 # how far over (or under) its budget, and the savings rate.
 #
 # It follows the list's filters: `scope` is the list's own search (accounts,
-# categories, dates...), cut here to the calendar month. Transfers and
-# excluded movements do not count as spending or income.
+# categories, dates...), cut here to the calendar month. It counts what the
+# Resumen counts (Transaction.counts_as_flow_sql): transfers, excluded
+# movements and "Excluido" or "Traspasos" are not spending or income.
 class Transaction::MonthSummary
   attr_reader :family, :month, :scope, :user
 
@@ -53,8 +54,8 @@ class Transaction::MonthSummary
   private
     def totals
       @totals ||= begin
-        row = scope.where(entries: { date: month..month.end_of_month, excluded: false })
-                   .merge(Transaction.counted_by_kind)
+        row = scope.where(entries: { date: month..month.end_of_month })
+                   .where(Transaction.counts_as_flow_sql)
                    .joins(ActiveRecord::Base.sanitize_sql_array([
                      "LEFT JOIN exchange_rates month_rates ON (month_rates.date = entries.date AND month_rates.from_currency = entries.currency AND month_rates.to_currency = ?)",
                      family.currency

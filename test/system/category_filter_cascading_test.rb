@@ -17,10 +17,9 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
   end
 
   test "checking a parent category checks all its subcategories" do
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
       check(@parent.name)
 
       assert find_field(@child_one.name).checked?
@@ -29,10 +28,9 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
   end
 
   test "unchecking one subcategory unchecks the parent and excludes only that subcategory from the filter" do
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
       check(@parent.name)
       uncheck(@child_one.name)
 
@@ -49,10 +47,9 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
   end
 
   test "re-checking all subcategories re-checks the parent" do
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
       check(@parent.name)
       uncheck(@child_one.name)
       check(@child_one.name)
@@ -72,10 +69,9 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     assert_selector "#" + dom_id(@child_one_transaction)
     assert_selector "#" + dom_id(@child_two_transaction)
 
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
 
       assert find_field(@parent.name).checked?
       assert find_field(@child_one.name).checked?

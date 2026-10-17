@@ -33,7 +33,7 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_selector "h1", text: "Transactions"
 
     within "form#transactions-search" do
-      fill_in "Search transactions ...", with: @transaction.name
+      fill_in "q_search", with: @transaction.name
       find("#q_search").send_keys(:tab) # Trigger blur to submit form
     end
 
@@ -44,12 +44,17 @@ class TransactionsTest < ApplicationSystemTestCase
     end
   end
 
+  # Fulas Bank: account, category, dates and type have their own buttons in
+  # the filter bar; the rest is under "More filters".
   test "can open filters and apply one or more" do
-    find("#transaction-filters-button").click
-
-    within "#transaction-filters-menu" do
+    find("#transaction-account-button").click
+    within "#transaction-account-menu" do
       check(@transaction.account.name)
-      click_button "Category"
+      click_button "Apply"
+    end
+
+    find("#transaction-category-button").click
+    within "#transaction-category-menu" do
       check(@transaction.transaction.category.name)
       click_button "Apply"
     end
@@ -63,10 +68,9 @@ class TransactionsTest < ApplicationSystemTestCase
   end
 
   test "can filter uncategorized transactions" do
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
       check("Uncategorized")
       click_button "Apply"
     end
@@ -74,10 +78,9 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_selector "#" + dom_id(@uncategorized_transaction), count: 1
     assert_no_selector("#" + dom_id(@transaction))
 
-    find("#transaction-filters-button").click
+    find("#transaction-category-button").click
 
-    within "#transaction-filters-menu" do
-      click_button "Category"
+    within "#transaction-category-menu" do
       check(@transaction.transaction.category.name)
       click_button "Apply"
     end
@@ -86,30 +89,44 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_selector "#" + dom_id(@uncategorized_transaction), count: 1
   end
 
-  test "all filters work and empty state shows if no match" do
-    find("#transaction-filters-button").click
+  test "the period and type buttons filter the list" do
+    find("#transaction-period-button").click
+    within "#transaction-period-menu" do
+      fill_in "q_start_date", with: 2.days.ago.to_date
+      fill_in "q_end_date", with: Date.current
+      click_button "Apply"
+    end
 
+    assert_selector "#" + dom_id(@transaction), count: 1
+    assert_no_text "seven"
+
+    within "[aria-label='Type']" do
+      click_link "Income"
+    end
+    assert_text "No entries found"
+
+    within "[aria-label='Type']" do
+      click_link "All"
+    end
+    assert_selector "#" + dom_id(@transaction), count: 1
+  end
+
+  test "all filters work and empty state shows if no match" do
     account = @transaction.account
     category = @transaction.transaction.category
     merchant = @transaction.transaction.merchant
 
+    visit transactions_url(q: {
+      accounts: [ account.name ], categories: [ category.name ], types: [ "income" ],
+      start_date: 10.days.ago.to_date, end_date: 1.day.ago.to_date
+    })
+
+    find("#transaction-filters-button").click
+
     within "#transaction-filters-menu" do
-      click_button "Account"
-      check(account.name)
-
-      click_button "Date"
-      fill_in "q_start_date", with: 10.days.ago.to_date
-      fill_in "q_end_date", with: 1.day.ago.to_date
-
-      click_button "Type"
-      check("Income")
-
       click_button "Amount"
       select "Less than"
       fill_in "q_amount", with: 200
-
-      click_button "Category"
-      check(category.name)
 
       click_button "Merchant"
       check(merchant.name)

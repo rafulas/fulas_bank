@@ -38,17 +38,71 @@ module TransactionsHelper
     end
   end
 
+  # Fulas Bank: the quick periods of the filter bar, FlowVista style.
+  TRANSACTION_PERIODS = %w[this_month last_month last_3_months this_year last_year].freeze
+  TRANSACTION_TYPES = %w[expense income transfer].freeze
+
+  # [first day, last day] of a quick period.
+  def transaction_period_range(key, today = Date.current)
+    case key
+    when "this_month" then [ today.beginning_of_month, today.end_of_month ]
+    when "last_month" then [ today.prev_month.beginning_of_month, today.prev_month.end_of_month ]
+    when "last_3_months" then [ (today << 3) + 1, today ]
+    when "this_year" then [ today.beginning_of_year, today.end_of_year ]
+    when "last_year" then [ today.prev_year.beginning_of_year, today.prev_year.end_of_year ]
+    end
+  end
+
+  # The quick period the current dates are, "all" without dates, or
+  # "custom" for any other range.
+  def active_transaction_period(q, today = Date.current)
+    return "all" if q[:start_date].blank? && q[:end_date].blank?
+
+    TRANSACTION_PERIODS.find do |key|
+      first, last = transaction_period_range(key, today)
+      q[:start_date].to_s == first.iso8601 && q[:end_date].to_s == last.iso8601
+    end || "custom"
+  end
+
+  # The list with the current filters and some of them changed (nil or []
+  # removes one), for the links of the filter bar.
+  def transactions_filter_path(q, **changes)
+    filters = q.to_h.stringify_keys.merge(changes.stringify_keys).compact_blank
+    transactions_path(q: filters.presence, per_page: params[:per_page].presence)
+  end
+
+  # "Este mes" or "01/10/2026 – 31/10/2026", for the period button.
+  def transaction_period_label(q)
+    key = active_transaction_period(q)
+    return t("transactions.searches.bar.periods.#{key}") unless key == "custom"
+
+    [ q[:start_date], q[:end_date] ].map { |date| date.present? ? l(Date.iso8601(date), format: "%d/%m/%Y") : "…" }.join(" – ")
+  rescue Date::Error
+    t("transactions.searches.bar.periods.custom")
+  end
+
+  # "01/10/2026" for a date filter's badge; anything else as it came.
+  def transaction_filter_date(value)
+    l(Date.iso8601(value.to_s), format: "%d/%m/%Y")
+  rescue Date::Error
+    value
+  end
+
+  # "Cuenta" or "Cuenta · 2", for a filter button with choices made.
+  def transaction_filter_label(label, values)
+    count = Array(values).size
+    count.zero? ? label : "#{label} · #{count}"
+  end
+
   # @return [Array<Hash>] the filters offered above the transaction list, each
   #   with the key its partial is named for, a translated label and an icon
   def transaction_search_filters
     [
-      { key: "account_filter", label: t("transactions.search.filters.account"), icon: "layers" },
-      { key: "date_filter", label: t("transactions.search.filters.date"), icon: "calendar" },
-      { key: "type_filter", label: t("transactions.search.filters.type"), icon: "tag" },
-      { key: "status_filter", label: t("transactions.search.filters.status"), icon: "clock" },
+      # Fulas Bank: dates, account, category and type have their own buttons
+      # in the filter bar (see transactions/searches/_form).
       { key: "amount_filter", label: t("transactions.search.filters.amount"), icon: "hash" },
-      { key: "category_filter", label: t("transactions.search.filters.category"), icon: "shapes" },
       { key: "tag_filter", label: t("transactions.search.filters.tag"), icon: "tags" },
+      { key: "status_filter", label: t("transactions.search.filters.status"), icon: "clock" },
       { key: "merchant_filter", label: t("transactions.search.filters.merchant"), icon: "store" },
       { key: "ai_filter", label: t("transactions.search.filters.ai"), icon: "sparkles" }
     ]

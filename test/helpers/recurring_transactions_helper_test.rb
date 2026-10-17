@@ -11,6 +11,13 @@ class RecurringTransactionsHelperTest < ActionView::TestCase
     I18n.with_locale(:ca) do
       assert_equal "1r", frequency_day_options.first.first
     end
+
+    # Fulas Bank: Spanish says "el día 1", not "Translation missing".
+    I18n.with_locale(:es) do
+      assert_equal "1", frequency_day_options.first.first
+      series = recurring_transactions(:netflix_subscription)
+      assert_no_match(/missing/i, RecurringTransaction::FrequencyPreset.label(series))
+    end
   end
 
   test "the two custom options follow the named presets, together" do

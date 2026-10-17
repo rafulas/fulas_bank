@@ -368,9 +368,9 @@ es:
         badge:
           expense: Gasto
           income: Ingreso
-          on_or_after: en o después de %{date}
-          on_or_before: en o antes de %{date}
-          transfer: Transferencia
+          on_or_after: desde el %{date}
+          on_or_before: hasta el %{date}
+          transfer: Traspasos
           confirmed: Confirmada
           pending: Pendiente
           ai_current: IA
@@ -405,8 +405,30 @@ es:
         less_than: menor que
       form:
         toggle_selection_checkboxes: Alternar todas las casillas
-        search_placeholder: Buscar transacciones ...
+        search_placeholder: Buscar por concepto, comercio, categoría o importe
         filter: Filtrar
+        more_filters: Más filtros
+        apply: Aplicar
+        cancel: Cancelar
+        clear_filters: Limpiar
+      bar:
+        remove: Quitar este filtro
+        custom_range: Entre dos fechas
+        from: Desde
+        to: Hasta
+        periods:
+          all: Todas las fechas
+          this_month: Este mes
+          last_month: Mes pasado
+          last_3_months: Últimos 3 meses
+          this_year: Este año
+          last_year: Año pasado
+          custom: Entre fechas
+        types:
+          all: Todo
+          expense: Gastos
+          income: Ingresos
+          transfer: Traspasos
     attachments:
       cannot_exceed: No se pueden superar los %{count} adjuntos por transacción
       uploaded_one: Adjunto subido correctamente

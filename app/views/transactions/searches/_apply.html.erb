@@ -1,0 +1,13 @@
+<%# locals: (key:) %>
+<%# Fulas Bank: the foot of a filter panel: remove this filter, or apply it. %>
+<div class="flex items-center justify-between gap-2 p-3 border-t border-secondary bg-container">
+  <div>
+    <% if @q[key].present? %>
+      <%= render DS::Link.new(text: t("transactions.searches.bar.remove"), variant: "ghost", size: :sm, href: transactions_filter_path(@q, key => nil)) %>
+    <% end %>
+  </div>
+  <div class="flex gap-2">
+    <%= render DS::Button.new(text: t("transactions.searches.form.cancel"), type: "button", variant: "ghost", size: :sm, data: { action: "DS--popover#close" }) %>
+    <%= render DS::Button.new(text: t("transactions.searches.form.apply"), type: :submit, size: :sm) %>
+  </div>
+</div>

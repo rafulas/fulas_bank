@@ -45,7 +45,7 @@ class Transaction::Search
       query = apply_merchant_filter(query, merchants)
       query = apply_tag_filter(query, tags)
       query = apply_ai_status_filter(query, ai_status)
-      query = EntrySearch.apply_search_filter(query, search)
+      query = apply_text_search(query, search)
       query = EntrySearch.apply_date_filters(query, start_date, end_date)
       query = EntrySearch.apply_amount_filter(query, amount, amount_operator)
       query = EntrySearch.apply_accounts_filter(query, accounts, account_ids)
@@ -57,13 +57,15 @@ class Transaction::Search
   # Compute totals for the specific search, excluding tax-advantaged accounts
   def totals
     @totals ||= begin
+      # v4: Fulas Bank, income and spending by the Resumen's rule.
       # v3: bumped because the Uncategorized filter's exclusion set changed
       # (see #2592) -- without a version bump, a totals entry cached under
       # the old logic would keep being served (same cache_key_base) after
       # deploy, disagreeing with the (uncached) transactions_scope list
       # until entries_cache_version next changes for that family.
-      Rails.cache.fetch("transaction_search_totals/v3/#{cache_key_base}") do
+      Rails.cache.fetch("transaction_search_totals/v4/#{cache_key_base}") do
         scope = transactions_scope
+        counted = Transaction.counts_as_flow_sql
 
         # Exclude tax-advantaged accounts from totals calculation
         tax_advantaged_ids = family.tax_advantaged_account_ids
@@ -71,22 +73,12 @@ class Transaction::Search
 
         result = scope
                   .select(
-                    ActiveRecord::Base.sanitize_sql_array([
-                      "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND transactions.kind NOT IN (?) THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as expense_total",
-                      Transaction::TRANSFER_KINDS
-                    ]),
-                    ActiveRecord::Base.sanitize_sql_array([
-                      "COALESCE(SUM(CASE WHEN entries.amount < 0 AND transactions.kind NOT IN (?) THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as income_total",
-                      Transaction::TRANSFER_KINDS
-                    ]),
-                    ActiveRecord::Base.sanitize_sql_array([
-                      "COALESCE(SUM(CASE WHEN entries.amount < 0 AND transactions.kind IN (?) THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_inflow_total",
-                      Transaction::TRANSFER_KINDS
-                    ]),
-                    ActiveRecord::Base.sanitize_sql_array([
-                      "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND transactions.kind IN (?) THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_outflow_total",
-                      Transaction::TRANSFER_KINDS
-                    ]),
+                    # Fulas Bank: income and spending by the Resumen's rule
+                    # (see #apply_type_filter); the rest is "transfers".
+                    "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as expense_total",
+                    "COALESCE(SUM(CASE WHEN entries.amount < 0 AND #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as income_total",
+                    "COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_inflow_total",
+                    "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND NOT #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_outflow_total",
                     "COUNT(entries.id) as transactions_count"
                   )
                   .joins(
@@ -177,27 +169,66 @@ class Transaction::Search
       query
     end
 
-    # Filter transactions by type (expense, income, or transfer)
+    # Filter transactions by type: expense, income, or transfer.
+    #
+    # Fulas Bank: by the same rule as the Resumen and the month summaries in
+    # the list (Transaction.counts_as_flow_sql), so what the filter shows
+    # adds up to what those pages say. A mortgage instalment or a
+    # contribution to a fund is spending, the money of selling shares is
+    # income; "Traspasos" holds what counts as neither: moving money between
+    # your own accounts, paying the card off, and what is in "Excluido" or
+    # "Traspasos" or excluded by hand.
     def apply_type_filter(query, types)
       return query unless types.present?
-      return query if types.sort == [ "expense", "income", "transfer" ]
 
-      case types.sort
-      when [ "transfer" ]
-        query.where(kind: Transaction::TRANSFER_KINDS)
-      when [ "expense" ]
-        query.where("entries.amount >= 0").where.not(kind: Transaction::TRANSFER_KINDS)
-      when [ "income" ]
-        query.where("entries.amount < 0").where.not(kind: Transaction::TRANSFER_KINDS)
-      when [ "expense", "transfer" ]
-        query.where("entries.amount >= 0 OR transactions.kind IN (?)", Transaction::TRANSFER_KINDS)
-      when [ "income", "transfer" ]
-        query.where("entries.amount < 0 OR transactions.kind IN (?)", Transaction::TRANSFER_KINDS)
-      when [ "expense", "income" ]
-        query.where.not(kind: Transaction::TRANSFER_KINDS)
-      else
-        query
+      wanted = types.map(&:to_s) & %w[expense income transfer]
+      return query if wanted.empty? || wanted.sort == %w[expense income transfer]
+
+      counted = Transaction.counts_as_flow_sql
+      conditions = wanted.map do |type|
+        case type
+        when "expense" then "(#{counted} AND entries.amount >= 0)"
+        when "income" then "(#{counted} AND entries.amount < 0)"
+        when "transfer" then "(NOT #{counted})"
+        end
       end
+
+      query.where(conditions.join(" OR "))
+    end
+
+    # Fulas Bank: the search box finds a word in the description or the
+    # notes, as before, and also in the shop's name ("Mercadona" finds
+    # "COMPRA TARJ. 1234 MERCADONA" once the shop is recognised) and the
+    # category's ("gimnasio"); a number finds movements of that amount,
+    # written the Spanish way or not ("55", "55,90", "1.234,56").
+    def apply_text_search(query, text)
+      text = text.to_s.strip
+      return query if text.blank?
+
+      like = "%#{ActiveRecord::Base.sanitize_sql_like(text)}%"
+      sql = "entries.name ILIKE :like OR entries.notes ILIKE :like " \
+            "OR transactions.merchant_id IN (SELECT id FROM merchants WHERE name ILIKE :like) " \
+            "OR transactions.category_id IN (SELECT id FROM categories WHERE family_id = :family_id AND name ILIKE :like)"
+      binds = { like: like, family_id: family.id }
+
+      if (amount = searched_amount(text))
+        sql += " OR ABS(ABS(entries.amount) - :amount) < 0.005"
+        binds[:amount] = amount
+      end
+
+      query.where(sql, binds)
+    end
+
+    # "1.234,56" or "1234.56" or "55" as a number; nil for anything else.
+    def searched_amount(text)
+      cleaned = text.delete(" €")
+      return unless cleaned.match?(/\A\d{1,3}(\.\d{3})*(,\d{1,2})?\z|\A\d+([.,]\d{1,2})?\z/)
+
+      normalized = cleaned.include?(",") ? cleaned.delete(".").tr(",", ".") : cleaned
+      normalized = cleaned.delete(".") if cleaned.match?(/\A\d{1,3}(\.\d{3})+\z/)
+      BigDecimal(normalized)
+    rescue ArgumentError
+      nil
     end
 
     # Filter transactions by merchant name
