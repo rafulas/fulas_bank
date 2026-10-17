@@ -53,6 +53,11 @@ class TransactionsTest < ApplicationSystemTestCase
       click_button "Apply"
     end
 
+    # Wait for the page with the account filter before opening the next one.
+    within "#transaction-search-filters" do
+      assert_text @transaction.account.name
+    end
+
     find("#transaction-category-button").click
     within "#transaction-category-menu" do
       check(@transaction.transaction.category.name)
@@ -77,6 +82,9 @@ class TransactionsTest < ApplicationSystemTestCase
 
     assert_selector "#" + dom_id(@uncategorized_transaction), count: 1
     assert_no_selector("#" + dom_id(@transaction))
+    within "#transaction-search-filters" do
+      assert_text "Uncategorized"
+    end
 
     find("#transaction-category-button").click
 
