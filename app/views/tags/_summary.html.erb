@@ -1,7 +1,7 @@
 <%# locals: (transaction:, variant: :desktop, editable: true) %>
 <% tags = transaction.tags.sort_by { |tag| [ tag.name.downcase, tag.id ] } %>
 
-<%# Several tags render both as full pills and as the compact summary;
+<%# Several tags render both in full and as the compact summary;
     the tag-fit controller shows the pills whenever they all fit the
     available width and falls back to the summary otherwise. %>
 <span id="<%= dom_id(transaction, "tag_summary_#{variant}") %>" class="inline-flex min-w-0 max-w-full" <%= "data-tag-empty" if tags.empty? %>>
@@ -21,9 +21,9 @@
   <% else %>
     <span class="inline-flex min-w-0 max-w-full" data-controller="tag-fit">
       <span data-tag-fit-target="full" hidden>
-        <%= tag.span class: ["inline-flex items-center gap-1", { "rounded-full focus-ring": !editable }] do %>
+        <%= tag.span class: ["inline-flex items-center gap-3", { "rounded-full focus-ring": !editable }] do %>
           <% tags.each do |tag| %>
-            <%= render DS::Pill.new(label: tag.name, custom_color: tag.color, marker: false, size: :md, title: "") %>
+            <%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot, size: :sm, truncate: false, title: "") %>
           <% end %>
         <% end %>
       </span>

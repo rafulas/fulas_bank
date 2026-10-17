@@ -13,11 +13,6 @@
     <%= view_helpers.icon("check") %>
   </span>
   <span data-tag-select-badge>
-    <%= render DS::Pill.new(
-          label: tag.name,
-          marker: false,
-          size: :md,
-          custom_color: tag.color
-        ) %>
+    <%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot, truncate: false) %>
   </span>
 </button>

@@ -1,0 +1,56 @@
+<%# locals: (select:, item:, general: false) %>
+<%# One option of DS::Select. `general:` marks a main category offered again
+    inside its own group of the category tree ("Transporte (general)"). %>
+<% is_selected = item[:value] == select.selected_value %>
+<% is_child = select.child?(item) && !select.tree? %>
+
+<%# Options use tabindex="-1" always — keyboard focus is managed
+    programmatically so listbox items never appear in the Tab
+    sequence and skip past the trigger to the next form field. %>
+<div class="filterable-item text-primary text-sm cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-container-inset-hover <%= "bg-container-inset" if is_selected %>"
+      role="option"
+      tabindex="-1"
+      aria-selected="<%= is_selected %>"
+      data-select-target="option"
+      data-action="click->select#select"
+      data-value="<%= item[:value] %>"
+      data-filter-name="<%= item[:label] %>">
+
+  <span class="check-icon <%= "hidden" unless is_selected %>">
+    <%= icon("check") %>
+  </span>
+
+  <% if is_child %>
+    <%= icon("corner-down-right", size: "sm") %>
+  <% end %>
+
+  <% case select.variant %>
+  <% when :simple %>
+    <%= item[:label] %>
+
+  <% when :logo %>
+    <% unless item[:value].nil? %>
+      <% if select.logo_for(item) %>
+        <%= image_tag select.logo_for(item),
+              class: "w-6 h-6 rounded-full border border-secondary",
+              loading: "lazy" %>
+      <% else %>
+        <%= render DS::FilledIcon.new(
+              variant: :text,
+              text: item[:label],
+              size: "sm",
+              rounded: true
+            ) %>
+      <% end %>
+    <% end %>
+    <%= item[:label] %>
+
+  <% when :badge %>
+    <% label = general ? t("categories.tree.general", name: item[:label]) : item[:label] %>
+    <% if select.icon_for(item) %>
+      <%= render DS::ColorLabel.new(label: label, color: select.color_for(item), icon: select.icon_for(item)) %>
+    <% else %>
+      <%= render DS::ColorLabel.new(label: label, color: select.color_for(item), mark: :dot) %>
+    <% end %>
+  <% end %>
+</div>

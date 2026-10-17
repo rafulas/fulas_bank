@@ -1083,7 +1083,7 @@ end
 
     assert_response :success
 
-    assert_select "[data-controller='category-select']" do
+    assert_select "[data-controller~='category-select']" do
       assert_select "input[type='search'][placeholder=?]", "Kategorien suchen"
       assert_select "[data-category-select-create-label-value=?]", "„__CATEGORY_NAME__“ erstellen"
       assert_select "[data-category-select-create-error-message-value=?]", "Kategorie konnte nicht erstellt werden"
@@ -1096,7 +1096,7 @@ end
     end
   end
 
-  test "new groups subcategories immediately after their parent in the category select" do
+  test "new shows only main categories in the category select, each opening its subcategories" do
     get new_transaction_url
     assert_response :success
 
@@ -1105,19 +1105,18 @@ end
     assert_not_nil trigger, "expected the category select trigger button to render"
 
     wrapper = trigger.ancestors(".relative").first
-    category_values = wrapper.css("[data-value]").map { |node| node["data-value"] }
+    group = wrapper.css("[data-category-tree-target='group']").find do |node|
+      node.at_css("[data-category-tree-target='header']").text.include?(categories(:food_and_drink).name)
+    end
+    assert_not_nil group, "expected the parent category to be a group header"
 
-    parent_index = category_values.index(categories(:food_and_drink).id)
-    child_index = category_values.index(categories(:subcategory).id)
+    children = group.at_css("[data-category-tree-target='children']")
+    assert children.key?("hidden"), "subcategories start folded"
 
-    assert_not_nil parent_index
-    assert_not_nil child_index
-    assert_equal parent_index + 1, child_index
-
-    child_option = wrapper.at_css("[data-category-id='#{categories(:subcategory).id}']")
-    assert_not_nil child_option, "expected the subcategory option to render"
-    assert child_option.at_css("[data-testid='category-select-subcategory-indicator']"),
-           "expected the subcategory option to show the hierarchy indicator used in Settings"
+    category_values = children.css("[data-value]").map { |node| node["data-value"] }
+    assert_equal categories(:food_and_drink).id, category_values.first, "the parent itself can still be chosen"
+    assert_includes category_values, categories(:subcategory).id
+    assert_includes children.text, I18n.t("categories.tree.general", name: categories(:food_and_drink).name)
   end
 
   test "new renders a search box for account selection" do

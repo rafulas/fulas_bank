@@ -3,7 +3,7 @@
   selected_category = categories.find { |c| c.id == selected_id }
 %>
 
-<div class="category-select-container relative flex-1 md:flex-initial md:w-auto md:min-w-44 md:max-w-72" data-controller="select list-filter form-dropdown category-badge-select" data-action="dropdown:select->form-dropdown#onSelect dropdown:select->category-badge-select#updateButton">
+<div class="category-select-container relative flex-1 md:flex-initial md:w-auto md:min-w-44 md:max-w-72" data-controller="select list-filter form-dropdown category-badge-select category-tree" data-action="dropdown:select->form-dropdown#onSelect dropdown:select->category-badge-select#updateButton">
   <label class="text-xs font-medium text-secondary uppercase tracking-wide block mb-1"><%= t("splits.new.category_label") %></label>
   <input type="hidden"
          name="<%= name %>"
@@ -17,19 +17,15 @@
           aria-haspopup="listbox"
           aria-expanded="false">
     <% if selected_category %>
-      <%# Same DS::Pill shape as the canonical categories/badge partial; rendered
-          directly (without its div wrapper) because a button only allows
-          phrasing content. category-badge-select clones the option's pill into
-          this button on selection, so both must stay the same markup. %>
-      <%= render DS::Pill.new(
+      <%# Same DS::ColorLabel as the canonical categories/badge partial;
+          rendered directly (without its div wrapper) because a button only
+          allows phrasing content. category-badge-select clones the option's
+          label into this button on selection, so both must stay the same
+          markup. %>
+      <%= render DS::ColorLabel.new(
             label: selected_category.display_name,
-            custom_color: selected_category.color,
-            icon: selected_category.lucide_icon.presence,
-            icon_size: "sm",
-            marker: false,
-            size: :md,
-            truncate: true,
-            title: selected_category.display_name) %>
+            color: selected_category.color,
+            icon: selected_category.lucide_icon) %>
     <% else %>
       <%= t("splits.new.uncategorized") %>
     <% end %>
@@ -41,7 +37,7 @@
         placeholder: t("helpers.select.search_placeholder"),
         data: {
           list_filter_target: "input",
-          action: "list-filter#filter"
+          action: "list-filter#filter input->category-tree#search"
         }
       ) %>
     </div>
@@ -61,24 +57,11 @@
         <%= t("splits.new.uncategorized") %>
       </div>
 
-      <% categories.each do |category| %>
-        <% is_child = category.parent_id.present? %>
-        <% is_selected = category.id == selected_id %>
-        <div class="filterable-item text-sm cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-container-inset-hover <%= "bg-container-inset" if is_selected %>"
-             role="option"
-             tabindex="0"
-             aria-selected="<%= is_selected %>"
-             data-action="click->select#select"
-             data-value="<%= category.id %>"
-             data-filter-name="<%= category.display_name %>">
-          <span class="check-icon <%= "hidden" unless is_selected %>">
-            <%= icon("check") %>
-          </span>
-          <% if is_child %>
-            <%= icon("corner-down-right", size: "sm") %>
-          <% end %>
-          <%= render partial: "categories/badge", locals: { category: category } %>
-        </div>
+      <%# Fulas Bank: only the main categories; one with subcategories opens
+          them when tapped. %>
+      <% Category::Group.for(categories).each do |group| %>
+        <% expanded = group.subcategories.any? && [ group.category, *group.subcategories ].any? { |category| category.id == selected_id } %>
+        <%= render "categories/tree_group", group: group, expanded: expanded, option_partial: "splits/category_option", option_locals: { selected_id: selected_id } %>
       <% end %>
     </div>
   </div>

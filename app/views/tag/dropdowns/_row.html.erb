@@ -10,5 +10,5 @@
         id: "#{dom_id(entry, :tag_checkbox)}_#{tag.id}",
         autofocus: autofocus,
         class: "checkbox checkbox--light shrink-0" %>
-  <%= render DS::Pill.new(label: tag.name, marker: false, size: :md, custom_color: tag.color, truncate: true) %>
+  <%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot) %>
 <% end %>

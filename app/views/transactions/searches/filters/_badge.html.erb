@@ -53,6 +53,14 @@
     <div class="flex items-center gap-2">
       <p><%= Category.uncategorized_name %></p>
     </div>
+  <% elsif param_key == "tags" && (filter_tag = Current.family.tags.find_by(name: param_value)) %>
+    <div class="flex items-center gap-2 px-1">
+      <%= render DS::ColorLabel.new(label: filter_tag.name, color: filter_tag.color, mark: :dot, truncate: false) %>
+    </div>
+  <% elsif param_key == "categories" && (filter_category = Current.family.categories.find_by(name: param_value)) %>
+    <div class="flex items-center gap-2">
+      <%= render DS::ColorLabel.new(label: filter_category.display_name, color: filter_category.color, icon: filter_category.lucide_icon, size: :sm, truncate: false) %>
+    </div>
   <% elsif param_key == "ai_status" %>
     <div class="flex items-center gap-2 px-1">
       <%= icon(param_value == "current" ? "sparkles" : "history", size: "sm") %>

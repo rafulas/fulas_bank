@@ -23,9 +23,9 @@
             <%= [ l(entry.date, format: :long), category&.name ].compact.join(" · ") %>
           </p>
           <% if transaction.tags.any? %>
-            <div class="flex flex-wrap gap-1 mt-1">
+            <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
               <% transaction.tags.each do |tag| %>
-                <%= render DS::Pill.new(label: tag.name, custom_color: tag.color, size: :sm, truncate: true) %>
+                <%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot, size: :sm) %>
               <% end %>
             </div>
           <% end %>

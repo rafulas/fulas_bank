@@ -1,0 +1,19 @@
+<%# locals: (category:) %>
+
+<%# The category as plain text on a transaction row (Fulas Bank): its square
+    is already at the row's left, so here only the name and, for a
+    subcategory, its group in small. With no category, a dashed
+    "Choose category" that calls for attention. %>
+<% if category.nil? || category.uncategorized? %>
+  <span class="inline-flex min-w-0 items-center gap-1 rounded-md border border-dashed border-secondary px-2 py-0.5 text-xs text-secondary hover:text-primary">
+    <%= icon("plus", size: "xs", color: "current") %>
+    <span class="truncate" data-testid="category-name"><%= t("categories.row_label.choose") %></span>
+  </span>
+<% else %>
+  <%= render DS::ColorLabel.new(
+        label: category.display_name,
+        color: category.color,
+        mark: :none,
+        detail: (category.parent&.display_name if category.subcategory?),
+        label_testid: "category-name") %>
+<% end %>

@@ -45,6 +45,11 @@ es:
       sources_label: Categorías a fusionar
       sources_hint: Las categorías seleccionadas se eliminarán después de que sus transacciones y líneas de presupuesto se muevan al destino. No selecciones el destino como origen.
       submit: Fusionar seleccionadas
+    row_label:
+      choose: Elegir categoría
+    tree:
+      expand: "Ver subcategorías de %{name}"
+      general: "%{name} (general)"
     menu:
       loading: Cargando...
     new:

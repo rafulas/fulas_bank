@@ -1,10 +1,4 @@
 <%# locals: (tag:) %>
 <% tag ||= null_category %>
-<span class="border text-sm font-medium px-3 py-1 rounded-full inline-flex items-center gap-2"
-      style="
-        background-color: color-mix(in oklab, <%= tag.color %> 10%, transparent);
-        border-color: color-mix(in oklab, <%= tag.color %> 10%, transparent);
-        color: <%= tag.color %>;">
-  <span class="size-1.5 rounded-full" style="background-color: <%= tag.color %>;"></span>
-  <%= tag.name %>
-</span>
+<%# Fulas Bank: a small dot of the tag's color and its name as plain text. %>
+<%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot, truncate: false) %>

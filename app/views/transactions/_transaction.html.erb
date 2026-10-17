@@ -53,19 +53,18 @@
                 <%= image_tag Setting.transform_brand_fetch_url(transaction_security_logo_url),
                     class: "w-8 h-8 rounded-full border border-secondary",
                     loading: "lazy" %>
-              <% elsif transaction.merchant&.logo_url.present? %>
-                <%= image_tag Setting.transform_brand_fetch_url(transaction.merchant.logo_url),
-                    class: "w-8 h-8 rounded-full border border-secondary",
-                    loading: "lazy" %>
               <% else %>
-                <div class="hidden lg:flex">
-                  <%= render DS::FilledIcon.new(
-                    variant: :text,
-                    text: entry.name,
-                    size: "md",
-                    rounded: true
-                  ) %>
-                </div>
+                <%# Fulas Bank: the category's icon on its color, so the kind
+                    of movement reads at a glance (empty and dashed when it
+                    has no category yet). %>
+                <% row_category = transaction.category || Category.uncategorized %>
+                <%= render DS::ColorLabel.new(
+                      label: row_category.display_name,
+                      color: row_category.color,
+                      icon: row_category.lucide_icon,
+                      dashed: transaction.category.nil?,
+                      size: :lg,
+                      show_label: false) %>
               <% end %>
             </div>
 

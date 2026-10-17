@@ -99,7 +99,7 @@
         <div class="bg-container shadow-border-xs rounded-xl p-4 space-y-3">
           <p class="text-sm font-medium text-secondary"><%= t(".assign_category") %></p>
 
-          <div data-controller="list-filter" class="space-y-3">
+          <div data-controller="list-filter category-tree" class="space-y-3">
             <%# Search field %>
             <div class="relative flex items-center bg-container border border-primary rounded-lg">
               <%= icon("search", class: "absolute left-3 text-secondary") %>
@@ -110,10 +110,11 @@
                      class="w-full pl-9 pr-3 py-2 text-sm bg-transparent border-none rounded-lg focus:outline-none focus:ring-0 placeholder:text-secondary"
                      data-list-filter-target="input"
                      data-categorize-target="filter"
-                     data-action="input->list-filter#filter">
+                     data-action="input->list-filter#filter input->category-tree#search">
             </div>
 
-            <%# Category pills — submit the form directly %>
+            <%# Category pills — submit the form directly. Fulas Bank: only the
+                main categories; one with subcategories opens them below. %>
             <div data-list-filter-target="list" data-categorize-target="list"
                  data-action="click->categorize#clearFilter"
                  class="flex flex-wrap gap-2">
@@ -121,21 +122,27 @@
                 <%= t(".no_categories") %>
               </p>
               <% Category::Group.for(@categories).each do |group| %>
-                <% [ group.category, *group.subcategories ].each do |category| %>
-                  <% category_label = category.parent_id.present? ? category.display_name_with_parent : category.display_name %>
-                  <button type="submit"
-                          name="category_id"
-                          value="<%= category.id %>"
-                          class="filterable-item flex items-center gap-1 text-sm font-medium rounded-full px-2.5 py-1 border cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-1"
-                          style="background-color: color-mix(in oklab, <%= category.color %> 10%, transparent);
-                                 border-color: color-mix(in oklab, <%= category.color %> 20%, transparent);
-                                 color: <%= category.color %>;"
-                          data-filter-name="<%= category_label %>">
-                    <% if category.lucide_icon.present? %>
-                      <%= icon(category.lucide_icon, size: "sm", color: "current") %>
-                    <% end %>
-                    <%= category_label %>
-                  </button>
+                <% if group.subcategories.empty? %>
+                  <%= render "transactions/categorizes/category_pill", category: group.category %>
+                <% else %>
+                  <div class="contents" data-category-tree-target="group" data-expanded="false">
+                    <button type="button"
+                            class="group/tree inline-flex items-center gap-2 rounded-full border border-secondary bg-container px-2.5 py-1 hover:bg-container-inset-hover"
+                            aria-expanded="false"
+                            title="<%= t("categories.tree.expand", name: group.category.display_name) %>"
+                            data-category-tree-target="header"
+                            data-action="category-tree#toggle">
+                      <%= render DS::ColorLabel.new(label: group.category.display_name, color: group.category.color, icon: group.category.lucide_icon, size: :sm, truncate: false) %>
+                      <%= icon("chevron-right", size: "sm", class: "transition-transform group-aria-expanded/tree:rotate-90") %>
+                    </button>
+                    <div class="w-full flex flex-wrap gap-2 rounded-lg bg-container-inset p-2"
+                         data-category-tree-target="children" hidden>
+                      <%= render "transactions/categorizes/category_pill", category: group.category, general: true %>
+                      <% group.subcategories.each do |subcategory| %>
+                        <%= render "transactions/categorizes/category_pill", category: subcategory %>
+                      <% end %>
+                    </div>
+                  </div>
                 <% end %>
               <% end %>
             </div>
