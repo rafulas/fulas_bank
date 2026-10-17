@@ -1,0 +1,31 @@
+<%# Fulas Bank: "Editar tabla" of the Forecast: which accounts have their own
+    column, and where each one adds up: cash (current and savings accounts),
+    savings and investments, or not in the totals. %>
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= styled_form_with url: columns_forecast_path, method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+      <p class="text-sm text-secondary"><%= t(".hint") %></p>
+
+      <ul class="divide-y divide-subdued">
+        <% ([ @forecast.main_account ].compact + (@forecast.accounts - [ @forecast.main_account ])).each do |account| %>
+          <li class="flex flex-wrap items-center justify-between gap-3 py-2">
+            <label class="flex items-center gap-2 min-w-0 text-sm text-primary cursor-pointer">
+              <%= check_box_tag "shown[]", account.id, @hidden_columns.exclude?(account.id), id: dom_id(account, :forecast_column), class: "checkbox checkbox--light" %>
+              <span class="truncate"><%= account.name %></span>
+              <% if account == @forecast.main_account %>
+                <%= render DS::Pill.new(label: t(".main"), tone: :warning, marker: false, size: :sm) %>
+              <% end %>
+            </label>
+            <%= select_tag "groups[#{account.id}]",
+                  options_for_select(Forecast::GROUPS.map { |group| [ t(".groups.#{group}"), group ] }, @forecast.group_for(account)),
+                  class: "form-field__input w-auto text-sm", aria: { label: t(".group_label", account: account.name) } %>
+          </li>
+        <% end %>
+      </ul>
+
+      <p class="text-xs text-secondary"><%= t(".main_hint") %></p>
+      <%= form.submit t(".save") %>
+    <% end %>
+  <% end %>
+<% end %>

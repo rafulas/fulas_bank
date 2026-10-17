@@ -1,6 +1,19 @@
 ---
 es:
   forecasts:
+    edit_columns:
+      title: Editar tabla
+      hint: Marca las cuentas que quieres ver como columna y elige dónde suma cada una en el saldo total.
+      main: Principal
+      main_hint: "La cuenta principal (la que eliges arriba en el Forecast) va siempre la primera: es donde se apuntan la mayoría de movimientos."
+      group_label: "Dónde suma %{account}"
+      groups:
+        cash: Saldo efectivo
+        investment: Ahorro / inversión
+        none: No sumar al total
+      save: Guardar
+    update_columns:
+      success: Tabla actualizada.
     variable_line: Gastos varios %{month}
     insurance_line: "%{name} (plazo %{number} de %{count})"
     debt_plan_line: "Cuota %{loan} (plan de deuda)"
@@ -43,6 +56,9 @@ es:
       accounts_title: Por cuenta
     table:
       expand: Ampliar
+      edit_columns: Editar tabla
+      cash: Saldo efectivo
+      investment: Ahorro / inversión
       title: Tabla de previsión
       hint: "Cada línea con el saldo que quedará después. Recurrente: viene de tus recibos, nóminas y suscripciones (los fijos y recurrentes). Gastos varios: lo que sueles gastar en lo variable ese mes (media de los tres últimos meses iguales y los seis últimos meses, sin el mayor ni el menor). Con «Editar» cambias la fecha, el importe o el nombre de una línea, o la quitas."
       add: Añadir línea

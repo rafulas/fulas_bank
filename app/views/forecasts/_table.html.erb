@@ -1,10 +1,13 @@
-<%# locals: (forecast:, account:, expanded: false) %>
+<%# locals: (forecast:, account:, expanded: false, hidden: []) %>
 <%# The forecast table: one dense table whose header stays in view while it
     scrolls, with a row opening each month (its result and the balance it
     ends on) followed by that month's lines. %>
 
 <% rows = forecast.ledger(account: account) %>
-<% balance_accounts = account ? [] : (forecast.accounts.size > 1 ? forecast.accounts : []) %>
+<%# Fulas Bank: as in the user's spreadsheet, the total, then the cash and the
+    savings and investments it is made of, then each account (the main one,
+    where most movements go, first), without those hidden in "Editar tabla". %>
+<% balance_accounts = account ? [] : ([ forecast.main_account ].compact + (forecast.accounts - [ forecast.main_account ])).reject { |each| hidden.include?(each.id) } %>
 <% table_rows = forecast_table_rows(forecast, rows) %>
 
 <%= render DS::Card.new(class: class_names("gap-3", "shadow-none p-0" => expanded)) do %>
@@ -15,6 +18,7 @@
         <p class="text-xs text-secondary"><%= t(".hint") %></p>
       </div>
       <div class="flex items-center gap-2">
+        <%= render DS::Link.new(text: t(".edit_columns"), icon: "columns-3", variant: :outline, size: :sm, href: columns_forecast_path, frame: :modal) %>
         <%= render DS::Link.new(text: t(".expand"), icon: "maximize-2", variant: :outline, size: :sm,
               href: table_forecast_path(request.query_parameters.slice("period", "until", "account_id", "variable")), frame: :modal) %>
         <%= render DS::Link.new(text: t(".add"), icon: "plus", size: :sm, href: new_forecast_item_path, frame: :modal) %>
@@ -69,8 +73,16 @@
       <% table.with_column(account ? account.name : t(".total"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") do |row| %>
         <%= account ? format_money(Money.new(row.balances[account.id], account.currency)) : format_money(row.total) %>
       <% end %>
+      <% unless account %>
+        <% table.with_column(t(".cash"), numeric: true, class: "privacy-sensitive font-medium text-primary bg-info/5") do |row| %>
+          <%= format_money(forecast.group_totals(row.balances)["cash"]) %>
+        <% end %>
+        <% table.with_column(t(".investment"), numeric: true, class: "privacy-sensitive font-medium text-primary bg-info/5") do |row| %>
+          <%= format_money(forecast.group_totals(row.balances)["investment"]) %>
+        <% end %>
+      <% end %>
       <% balance_accounts.each do |balance_account| %>
-        <% table.with_column(balance_account.name, numeric: true, class: "privacy-sensitive text-secondary") do |row| %>
+        <% table.with_column(balance_account.name, numeric: true, class: class_names("privacy-sensitive", balance_account == forecast.main_account ? "text-primary bg-warning/10" : "text-secondary")) do |row| %>
           <%= format_money(Money.new(row.balances[balance_account.id], balance_account.currency)) %>
         <% end %>
       <% end %>

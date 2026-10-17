@@ -1,0 +1,78 @@
+<%# Fulas Bank: "Añadir a recurrente", as in Bilance (see RecurringAssignment).
+    Step 1 lists "Crear nuevo recurrente" and the series; choosing a series
+    adds the movements to it at once. Step 2, for a new one: its name and how
+    often it repeats. From the list, the selected movements are added by the
+    selection bar (bulk-select) when the form is sent; from a movement's
+    detail, its id travels in the form. %>
+<% dialog_options = @standalone ? {} : { variant: "drawer", frame: "bulk_transaction_edit_drawer" } %>
+<% submit_data = @standalone ? {} : { bulk_select_scope_param: "recurring_assignment", action: "bulk-select#submitBulkRequest" } %>
+
+<%= render DS::Dialog.new(**dialog_options) do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+
+  <% dialog.with_body do %>
+    <%= styled_form_with url: transactions_recurring_assignment_path, scope: :recurring_assignment,
+          data: { turbo_frame: "_top", controller: "recurring-picker" } do |form| %>
+      <%= form.hidden_field :series_id, data: { recurring_picker_target: "series" } %>
+      <% @entry_ids.each do |id| %>
+        <%= hidden_field_tag "recurring_assignment[entry_ids][]", id %>
+      <% end %>
+      <%# In the list it is a plain button: bulk-select adds the ids and sends
+          the form itself, so a submit button would send it twice. %>
+      <%= tag.button type: (@standalone ? "submit" : "button"), class: "hidden", data: submit_data.merge(recurring_picker_target: "submit") %>
+
+      <div data-recurring-picker-target="list" class="space-y-1">
+        <button type="button" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-container-hover text-left"
+                data-action="recurring-picker#pick" data-recurring-picker-id-param="<%= RecurringAssignment::NEW %>">
+          <%= icon "plus", size: "md" %>
+          <span class="text-sm font-medium text-primary"><%= t(".new") %></span>
+        </button>
+
+        <div class="border-t border-secondary my-1"></div>
+
+        <% if @series.any? %>
+          <ul class="space-y-1">
+            <% @series.each do |series| %>
+              <li>
+                <button type="button" class="w-full flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-container-hover text-left"
+                        data-action="recurring-picker#pick" data-recurring-picker-id-param="<%= series.id %>">
+                  <span class="flex items-center gap-3 min-w-0">
+                    <% if series.category %>
+                      <%= render DS::FilledIcon.new(icon: series.category.lucide_icon, hex_color: series.category.color, size: "md") %>
+                    <% else %>
+                      <%= render DS::FilledIcon.new(icon: "repeat", variant: :surface, size: "md") %>
+                    <% end %>
+                    <span class="text-sm text-primary truncate"><%= series.display_name %></span>
+                  </span>
+                  <span class="text-xs text-secondary privacy-sensitive whitespace-nowrap"><%= format_money(series.amount_money.abs) %></span>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-sm text-secondary p-3"><%= t(".empty") %></p>
+        <% end %>
+      </div>
+
+      <div data-recurring-picker-target="newStep" class="hidden space-y-4">
+        <button type="button" class="flex items-center gap-1 text-sm text-secondary hover:text-primary" data-action="recurring-picker#back">
+          <%= icon "chevron-left", size: "sm" %><%= t(".back") %>
+        </button>
+
+        <%= form.text_field :name, label: t(".name"), value: @default_name, placeholder: t(".name_placeholder") %>
+
+        <fieldset class="space-y-1">
+          <legend class="text-sm font-medium text-primary mb-2"><%= t(".frequency") %></legend>
+          <% RecurringAssignment::FREQUENCIES.each_key do |key| %>
+            <label class="flex items-center justify-center py-2 rounded-lg text-sm text-primary cursor-pointer hover:bg-container-hover has-[:checked]:bg-surface-inset has-[:checked]:font-medium">
+              <%= form.radio_button :frequency, key, checked: key == RecurringAssignment::DEFAULT_FREQUENCY, class: "sr-only" %>
+              <%= t("transactions.recurring_assignments.frequencies.#{key}") %>
+            </label>
+          <% end %>
+        </fieldset>
+
+        <%= render DS::Button.new(text: t(".create"), full_width: true, data: { action: "recurring-picker#submitNew" }) %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

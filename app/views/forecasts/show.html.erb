@@ -116,6 +116,6 @@
       <% end %>
     <% end %>
 
-    <%= render "forecasts/table", forecast: forecast, account: selected %>
+    <%= render "forecasts/table", forecast: forecast, account: selected, hidden: @hidden_columns || [] %>
   <% end %>
 </div>

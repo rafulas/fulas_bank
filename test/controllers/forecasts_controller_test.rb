@@ -120,4 +120,26 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     get forecast_url
     assert_select "select[name='main_account_id'] option[selected][value='#{other.id}']"
   end
+
+  test "edits the table: hides an account's column and changes where it adds up" do
+    checking = accounts(:depository)
+    brokerage = accounts(:investment)
+
+    get columns_forecast_url
+    assert_response :success
+    assert_select "select[name='groups[#{checking.id}]']"
+
+    patch columns_forecast_url, params: { shown: [ checking.id ], groups: { checking.id => "cash", brokerage.id => "none" } }
+    assert_redirected_to forecast_url
+
+    preferences = @user.reload.preferences
+    assert_includes preferences[Forecast::HIDDEN_COLUMNS_PREFERENCE], brokerage.id
+    assert_not_includes preferences[Forecast::HIDDEN_COLUMNS_PREFERENCE], checking.id
+    assert_equal "none", preferences[Forecast::COLUMN_GROUPS_PREFERENCE][brokerage.id]
+
+    get table_forecast_url
+    assert_response :success
+    assert_select "th", text: I18n.t("forecasts.table.cash", locale: @user.locale.presence || I18n.default_locale)
+    assert_select "th", text: brokerage.name, count: 0
+  end
 end

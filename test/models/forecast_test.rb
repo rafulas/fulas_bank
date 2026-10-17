@@ -61,6 +61,19 @@ class ForecastTest < ActiveSupport::TestCase
     assert_empty forecast.flows.select { |flow| flow.source == :insurance }
   end
 
+  test "splits the total into cash and savings, and leaves out the accounts set apart" do
+    savings = create_account("Fondo", Investment.new, balance: 3_000)
+    apart = create_account("Cuenta Rafa", Depository.new, balance: 200)
+
+    forecast = Forecast.new(@family, accounts: [ @account, savings, apart ], through: Date.current + 10, include_variable: false,
+                            column_groups: { apart.id => "none" })
+
+    totals = forecast.group_totals({ @account.id => 1_000, savings.id => 3_000, apart.id => 200 })
+    assert_equal 1_000, totals["cash"].amount
+    assert_equal 3_000, totals["investment"].amount
+    assert_equal 4_000, forecast.total_on(Date.current + 10).amount
+  end
+
   test "warns of the first day the account drops below the cushion, and its lowest point" do
     @family.forecast_items.create!(account: @account, name: "Seguro coche", amount: 300, nature: "outflow", date: Date.current + 10)
     @family.forecast_items.create!(account: @account, name: "Viaje", amount: 500, nature: "outflow", date: Date.current + 20)
