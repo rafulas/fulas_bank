@@ -135,6 +135,16 @@ class Transaction < ApplicationRecord
     where("transactions.kind NOT IN (?) OR transactions.id IN (#{INVESTMENT_WITHDRAWAL_IDS_SQL})", excluded_kinds)
   }
 
+  # Fulas Bank: SQL condition for "this movement counts as income or
+  # expense", the same rule the Resumen and each month's summary in the list
+  # use: not excluded by hand, a kind that counts (see counts_by_kind_sql)
+  # and not in "Excluido" or "Traspasos". Assumes the entries and
+  # transactions tables under their own names.
+  def self.counts_as_flow_sql
+    "(entries.excluded = FALSE AND #{counts_by_kind_sql} AND " \
+      "(transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})))"
+  end
+
   # Fulas Bank: whether this transaction counts as income or expense by its
   # kind (see ANALYTICS_EXCLUDED_KINDS). A transfer leg that does is shown
   # with its category, which can be changed.

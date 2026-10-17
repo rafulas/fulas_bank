@@ -4,10 +4,11 @@
     <div class="flex items-center gap-2">
       <%= icon "calendar" %>
       <p>
+        <% shown_date = transaction_filter_date(param_value) %>
         <% if param_key == "start_date" %>
-          <%= t(".on_or_after", date: param_value) %>
+          <%= t(".on_or_after", date: shown_date) %>
         <% else %>
-          <%= t(".on_or_before", date: param_value) %>
+          <%= t(".on_or_before", date: shown_date) %>
         <% end %>
       </p>
     </div>

@@ -408,8 +408,30 @@ en:
         less_than: less than
       form:
         toggle_selection_checkboxes: Toggle all checkboxes
-        search_placeholder: "Search transactions ..."
+        search_placeholder: "Search by description, merchant, category or amount"
         filter: "Filter"
+        more_filters: More filters
+        apply: Apply
+        cancel: Cancel
+        clear_filters: Clear
+      bar:
+        remove: Remove this filter
+        custom_range: Between two dates
+        from: From
+        to: To
+        periods:
+          all: All dates
+          this_month: This month
+          last_month: Last month
+          last_3_months: Last 3 months
+          this_year: This year
+          last_year: Last year
+          custom: Between dates
+        types:
+          all: All
+          expense: Expenses
+          income: Income
+          transfer: Transfers
     attachments:
       cannot_exceed: "Cannot exceed %{count} attachments per transaction"
       uploaded_one: "Attachment uploaded successfully"

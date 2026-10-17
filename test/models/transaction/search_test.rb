@@ -46,23 +46,24 @@ class Transaction::SearchTest < ActiveSupport::TestCase
       kind: "one_time"
     )
 
-    # Test transfer type filter (includes loan_payment)
+    # Fulas Bank: "transfer" is what counts as neither income nor expense in
+    # the Resumen (moving money, paying the card); a loan payment is spending.
     transfer_results = Transaction::Search.new(@family, filters: { types: [ "transfer" ] }).transactions_scope
     transfer_ids = transfer_results.pluck(:id)
 
     assert_includes transfer_ids, transfer_entry.entryable.id
     assert_includes transfer_ids, payment_entry.entryable.id
-    assert_includes transfer_ids, loan_payment_entry.entryable.id
+    assert_not_includes transfer_ids, loan_payment_entry.entryable.id
     assert_not_includes transfer_ids, one_time_entry.entryable.id
     assert_not_includes transfer_ids, standard_entry.entryable.id
 
-    # Test expense type filter (excludes transfer kinds but includes one_time)
+    # Test expense type filter (includes one_time and, in Fulas Bank, loan payments)
     expense_results = Transaction::Search.new(@family, filters: { types: [ "expense" ] }).transactions_scope
     expense_ids = expense_results.pluck(:id)
 
     assert_includes expense_ids, standard_entry.entryable.id
     assert_includes expense_ids, one_time_entry.entryable.id
-    assert_not_includes expense_ids, loan_payment_entry.entryable.id
+    assert_includes expense_ids, loan_payment_entry.entryable.id
     assert_not_includes expense_ids, transfer_entry.entryable.id
     assert_not_includes expense_ids, payment_entry.entryable.id
 
@@ -88,7 +89,7 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     assert_includes non_transfer_ids, standard_entry.entryable.id
     assert_includes non_transfer_ids, income_entry.entryable.id
     assert_includes non_transfer_ids, one_time_entry.entryable.id
-    assert_not_includes non_transfer_ids, loan_payment_entry.entryable.id
+    assert_includes non_transfer_ids, loan_payment_entry.entryable.id
     assert_not_includes non_transfer_ids, transfer_entry.entryable.id
     assert_not_includes non_transfer_ids, payment_entry.entryable.id
   end
@@ -298,12 +299,12 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     assert_not_includes result_ids, transaction2.entryable.id
 
     # Test that the relation builds from family.transactions correctly
-    assert_equal @family.transactions.joins(entry: :account).where(
-      "entries.amount >= 0 AND NOT (transactions.kind IN (?))", Transaction::TRANSFER_KINDS
-    ).count, results.count
+    assert_equal @family.transactions.joins(entry: :account)
+                        .where("entries.amount >= 0").where(Transaction.counts_as_flow_sql).count, results.count
   end
 
-  test "transfer filter includes investment_contribution transactions" do
+  # Fulas Bank: a contribution to an investment is spending, as in the Resumen.
+  test "transfer filter leaves out investment_contribution transactions" do
     investment_contribution = create_transaction(
       account: @checking_account,
       amount: 500,
@@ -319,11 +320,11 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     search = Transaction::Search.new(@family, filters: { types: [ "transfer" ] })
     result_ids = search.transactions_scope.pluck(:id)
 
-    assert_includes result_ids, investment_contribution.entryable.id
+    assert_not_includes result_ids, investment_contribution.entryable.id
     assert_includes result_ids, funds_movement.entryable.id
   end
 
-  test "expense filter excludes investment_contribution transactions" do
+  test "expense filter includes investment_contribution transactions" do
     investment_contribution = create_transaction(
       account: @checking_account,
       amount: 500,
@@ -339,7 +340,7 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     search = Transaction::Search.new(@family, filters: { types: [ "expense" ] })
     result_ids = search.transactions_scope.pluck(:id)
 
-    assert_not_includes result_ids, investment_contribution.entryable.id
+    assert_includes result_ids, investment_contribution.entryable.id
     assert_includes result_ids, standard_expense.entryable.id
   end
 
@@ -1119,5 +1120,35 @@ class Transaction::SearchTest < ActiveSupport::TestCase
 
     assert_equal [ tx.id ], history_ids
     assert_empty current_ids
+  end
+
+  test "Fulas Bank: excluded movements and the Excluido and Traspasos categories are transfers, not spending" do
+    excluded_category = @family.categories.create!(name: "Excluido test", color: "#999999", lucide_icon: "ban", special: "excluded")
+    in_excluded = create_transaction(account: @checking_account, amount: 70, category: excluded_category)
+    hidden = create_transaction(account: @checking_account, amount: 30)
+    hidden.update!(excluded: true)
+    spending = create_transaction(account: @checking_account, amount: 10)
+
+    expense_ids = Transaction::Search.new(@family, filters: { types: [ "expense" ] }).transactions_scope.pluck(:id)
+    assert_equal [ spending.entryable.id ], expense_ids
+
+    totals = Transaction::Search.new(@family, filters: {}).totals
+    assert_equal Money.new(10, "USD"), totals.expense_money
+    assert_equal Money.new(100, "USD"), totals.transfer_outflow_money
+  end
+
+  test "Fulas Bank: the search box finds the shop, the category and the amount" do
+    groceries = create_transaction(account: @checking_account, name: "COMPRA TARJ 1234", amount: 55.9,
+                                   merchant: merchants(:amazon), category: categories(:food_and_drink))
+    other = create_transaction(account: @checking_account, name: "OTRA", amount: 12)
+
+    by_merchant = Transaction::Search.new(@family, filters: { search: merchants(:amazon).name.downcase }).transactions_scope.pluck(:id)
+    by_category = Transaction::Search.new(@family, filters: { search: categories(:food_and_drink).name }).transactions_scope.pluck(:id)
+    by_amount = Transaction::Search.new(@family, filters: { search: "55,90" }).transactions_scope.pluck(:id)
+
+    [ by_merchant, by_category, by_amount ].each do |ids|
+      assert_includes ids, groceries.entryable.id
+      assert_not_includes ids, other.entryable.id
+    end
   end
 end

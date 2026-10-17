@@ -28,7 +28,7 @@ module ApplicationHelper
       end
       "#{n}#{suffix}"
     else
-      number.to_i.ordinalize
+      RecurringTransaction::FrequencyPreset.ordinal(number)
     end
   end
 
