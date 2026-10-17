@@ -2,6 +2,7 @@
 es:
   layouts:
     application:
+      back: Volver
       accounts_panel: Cuentas
       main_menu: Menú principal
       nav_groups:

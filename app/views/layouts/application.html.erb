@@ -77,6 +77,7 @@ end %>
       <% if intro_mode %>
       <% else %>
         <div class="flex items-center gap-1">
+          <%= render "layouts/shared/back_button", breadcrumbs: breadcrumbs %>
           <%= icon("panel-left", as_button: true, data: { action: "app-layout#openMobileSidebar"}) %>
           <%= render "layouts/shared/insights_button" %>
         </div>
@@ -145,6 +146,7 @@ end %>
       <% unless intro_mode %>
         <div class="hidden lg:flex gap-2 items-center justify-between mb-6 sticky top-0 z-10 -mx-3 lg:-mx-10 px-3 lg:px-10 py-4 bg-surface border-b border-tertiary">
           <div class="flex items-center gap-2">
+            <%= render "layouts/shared/back_button", breadcrumbs: breadcrumbs %>
             <% if content_for?(:breadcrumbs) %>
               <%= yield :breadcrumbs %>
             <% else %>

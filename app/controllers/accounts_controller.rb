@@ -85,6 +85,7 @@ class AccountsController < ApplicationController
   end
 
   def show
+    @breadcrumbs = account_breadcrumbs(@account)
     @chart_view = params[:chart_view] || "balance"
     @tab = params[:tab]
     # One reference date for everything on the page that is date-sensitive:
@@ -343,6 +344,19 @@ class AccountsController < ApplicationController
     # nil is what the component already takes as "no chart", and the account
     # page then renders exactly as it did before the chart existed. Reported,
     # because a loan silently losing its chart is a bug someone has to see.
+    # Fulas Bank: the trail leads back to the page the account is listed on
+    # (a vehicle to RoadTrip, a loan to Préstamos…), which is also where the
+    # back button goes when there is no previous page to return to.
+    def account_breadcrumbs(account)
+      parent = case account.accountable_type
+      when "Vehicle" then [ t("layouts.application.nav.roadtrip"), roadtrip_path ]
+      when "Loan" then [ t("layouts.application.nav.loans_overview"), loans_overview_path ]
+      when "Investment" then [ t("layouts.application.nav.investments_overview"), investments_overview_path ]
+      end
+
+      [ [ t("breadcrumbs.home"), root_path ], parent, [ account.name, nil ] ].compact
+    end
+
     def loan_payoff_chart(account, as_of:, period:, projection: nil)
       return nil unless account.accountable.is_a?(Loan)
 

@@ -1,0 +1,11 @@
+<%# locals: (breadcrumbs:) %>
+<%# Fulas Bank: «Volver», for the Mac app, which has no browser back button.
+    It goes back in this session's history; on a page opened fresh it goes
+    up to the trail's previous page instead (RoadTrip from a vehicle). %>
+<% fallback = breadcrumbs[0..-2].reverse.find { |_name, path| path.present? }&.last || root_path %>
+<% unless current_page?(root_path) %>
+  <%= icon("arrow-left", as_button: true,
+        title: t("layouts.application.back"),
+        aria: { label: t("layouts.application.back") },
+        data: { controller: "history-back", history_back_fallback_value: fallback, action: "history-back#go" }) %>
+<% end %>
