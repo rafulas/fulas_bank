@@ -72,7 +72,6 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     find("#transaction-category-button").click
 
     within "#transaction-category-menu" do
-
       assert find_field(@parent.name).checked?
       assert find_field(@child_one.name).checked?
       assert find_field(@child_two.name).checked?
