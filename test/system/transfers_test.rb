@@ -10,7 +10,10 @@ class TransfersTest < ApplicationSystemTestCase
     transfer_date = Date.current
 
     click_on "New transaction"
-    click_on "Transfer"
+    # Fulas Bank: the list's filter bar has a "Transfers" button too.
+    within "turbo-frame#modal" do
+      click_on "Transfer"
+    end
     assert_text "New transfer"
 
     # Select accounts using DS::Select
@@ -47,7 +50,10 @@ class TransfersTest < ApplicationSystemTestCase
     transfer_date = Date.current
 
     click_on "New transaction"
-    click_on "Transfer"
+    # Fulas Bank: the list's filter bar has a "Transfers" button too.
+    within "turbo-frame#modal" do
+      click_on "Transfer"
+    end
     assert_text "New transfer"
 
     # Initially, exchange rate field should be hidden

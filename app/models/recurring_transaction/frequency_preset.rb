@@ -77,9 +77,10 @@ class RecurringTransaction
       # Fulas Bank: "1st" in English, but just "1" in Spanish ("el día 1"):
       # Rails only ships English ordinals, and for any other locale
       # Integer#ordinalize printed "Translation missing:
-      # es.number.nth.ordinalized" in the middle of the frequency.
+      # es.number.nth.ordinalized" in the middle of the frequency (or, with
+      # fallbacks on, an English "1st").
       def ordinal(day)
-        return day.to_s unless I18n.exists?("number.nth.ordinalized")
+        return day.to_s unless I18n.locale.to_s.start_with?("en")
 
         day.to_i.ordinalize
       end
