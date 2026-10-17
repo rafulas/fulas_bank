@@ -36,6 +36,22 @@ class FreeCashTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 9, 15), comparison.end_date
   end
 
+  test "this month counts the days left to its end, and compares with the same days of last month" do
+    period = Period.new(key: "current_month", start_date: Date.new(2026, 10, 1), end_date: @today)
+
+    assert_equal 16, build(income: 2_000, expense: 800, period: period).days_left
+
+    comparison = FreeCash.comparison_period(period, today: @today)
+    assert_equal Date.new(2026, 9, 1), comparison.start_date
+    assert_equal Date.new(2026, 9, 16), comparison.end_date
+  end
+
+  test "a month that starts on payday ends the day before the next payday" do
+    period = Period.new(key: "current_month", start_date: Date.new(2026, 9, 19), end_date: @today)
+
+    assert_equal 3, build(income: 2_000, expense: 800, period: period).days_left
+  end
+
   test "a closed period has no days left nor a daily allowance" do
     free_cash = build(income: 2_000, expense: 800, today: Date.new(2026, 11, 5))
 
@@ -45,11 +61,11 @@ class FreeCashTest < ActiveSupport::TestCase
   end
 
   private
-    def build(income:, expense:, previous: nil, today: @today)
+    def build(income:, expense:, previous: nil, today: @today, period: @period)
       FreeCash.new(
         income: Money.new(income, "EUR"),
         expense: Money.new(expense, "EUR"),
-        period: @period,
+        period: period,
         previous_expense: previous && Money.new(previous, "EUR"),
         today: today
       )

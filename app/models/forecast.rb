@@ -442,11 +442,14 @@ class Forecast
     # whose last day is in the window. This month's line is what is left of
     # the estimate after what has already been spent.
     # One line a month, in the main account, with the variable spending of
-    # all the accounts and cards together.
+    # all the accounts and cards together. Fulas Bank: an account left out of
+    # the totals ("none" in Editar tabla) is left out here too: a pass-through
+    # account, like the one where the payslip deductions come in and go out,
+    # has spending whose income is not counted, which would inflate the line.
     def variable_flows
       return [] unless include_variable && main_account
 
-      estimate = Forecast::VariableEstimate.new(family, accounts: accounts + card_accounts, today: today)
+      estimate = Forecast::VariableEstimate.new(family, accounts: counted_accounts + card_accounts, today: today)
 
       months.filter_map do |month|
         date = month.end_of_month

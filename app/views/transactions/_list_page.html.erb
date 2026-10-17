@@ -1,9 +1,11 @@
-<%# locals: (transactions:, pagy:, after_month:) %>
+<%# locals: (transactions:, pagy:, after_month:, after_date: nil) %>
 <%# Fulas Bank: a block of movements, grouped by month (each month starts with
     its summary) and day. At the end, the frame that brings the next block
     when the list is scrolled down to it or its button is pressed.
     `after_month` is the month the previous block ended in, so a month split
-    between two blocks does not get its summary twice. %>
+    between two blocks does not get its summary twice. A day is never split
+    (see TransactionsController#complete_last_day): `after_date` is the last
+    day of the previous block, already shown in full. %>
 
 <% entries = transactions.map(&:entry) %>
 <% entries.group_by { |entry| entry.date.beginning_of_month }.each do |month, month_entries| %>
@@ -31,12 +33,16 @@
   </div>
 <% end %>
 
-<% if pagy.next && entries.any? %>
+<%# A block can be empty when a long day took all of it: the list goes on. %>
+<% last_date = entries.last&.date || after_date %>
+<% if pagy.next && last_date %>
   <%= turbo_frame_tag "transactions_page_#{pagy.next}",
         class: "block",
         data: {
           controller: "infinite-scroll",
-          infinite_scroll_url_value: transactions_path(q: @q, per_page: pagy.limit, page: pagy.next, after_month: entries.last.date.beginning_of_month.iso8601)
+          infinite_scroll_url_value: transactions_path(q: @q, per_page: pagy.limit, page: pagy.next,
+                                                       after_month: (entries.any? ? last_date.beginning_of_month : after_month).iso8601,
+                                                       after_date: last_date.iso8601)
         } do %>
     <div class="flex justify-center py-2">
       <%= render DS::Button.new(text: t("transactions.list.load_more"), variant: :outline, size: :sm, icon: "chevrons-down", data: { action: "infinite-scroll#load" }) %>

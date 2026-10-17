@@ -171,8 +171,7 @@ module ApplicationHelper
 
   def totals_by_currency(collection:, money_method:, separator: " | ", negate: false)
     collection.group_by(&:currency)
-              .transform_values { |item| calculate_total(item, money_method, negate) }
-              .map { |_currency, money| format_money(money) }
+              .map { |currency, items| format_money(calculate_total(items, money_method, negate, currency)) }
               .join(separator)
   end
 
@@ -287,7 +286,9 @@ module ApplicationHelper
       normalized.downcase
     end
 
-    def calculate_total(item, money_method, negate)
+    # Fulas Bank: starts from zero in the group's currency, so a day with
+    # only transfers shows "0,00 €" and not a bare 0 formatted as dollars.
+    def calculate_total(item, money_method, negate, currency = nil)
       # Filter out transfer-type transactions from entries
       # Only Entry objects have entryable transactions, Account objects don't
       items = item.reject do |i|
@@ -295,7 +296,7 @@ module ApplicationHelper
         i.entryable.is_a?(Transaction) &&
         i.entryable.transfer?
       end
-      total = items.sum(&money_method)
+      total = currency ? items.sum(Money.new(0, currency), &money_method) : items.sum(&money_method)
       negate ? -total : total
     end
 end

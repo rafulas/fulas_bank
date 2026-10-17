@@ -151,7 +151,7 @@ es:
       new_asset: Nuevo activo
       new_debt: Nueva deuda
       new_account: Nueva cuenta
-      new_account_group: Nuevo %{account_group}
+      new_account_group: Añadir %{account_group}
       expand_all: Desplegar todo
       collapse_all: Contraer todo
     types:

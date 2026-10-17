@@ -240,6 +240,21 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal [ BigDecimal("400"), BigDecimal("400") ], lines.map(&:amount)
   end
 
+  test "an account left out of the totals is left out of the variable spending too" do
+    today = Date.new(2026, 10, 14)
+    payslip = create_account("Cuenta Fake Nómina", Depository.new, balance: 0)
+    create_transaction(account: @account, name: "Súper", amount: 300, date: Date.new(2026, 9, 10))
+    # Deductions come in and go out of the pass-through account.
+    create_transaction(account: payslip, name: "IRPF", amount: 900, date: Date.new(2026, 9, 19))
+
+    forecast = Forecast.new(@family, accounts: [ @account, payslip ], main_account: @account,
+                            through: Date.new(2026, 11, 30), today: today,
+                            column_groups: { payslip.id => "none" })
+    lines = forecast.flows.select { |flow| flow.source == :variable }
+
+    assert_equal [ BigDecimal("300"), BigDecimal("300") ], lines.map(&:amount)
+  end
+
   test "the main account defaults to the first current account" do
     savings = create_account("Forecast savings", Depository.new, balance: 500)
     forecast = Forecast.new(@family, accounts: [ @account, savings ], through: Date.current + 31)
