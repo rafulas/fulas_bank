@@ -52,8 +52,8 @@ class Transactions::TagSummaryViewTest < ActionView::TestCase
     compact = summary.at_css("[data-tag-fit-target=compact] [aria-describedby]")
     tooltip = summary.at_css("[role=tooltip]")
 
-    assert_includes compact.text, tags.first.name
-    assert_not_includes compact.text, tags.second.name
+    assert_equal tags.first.name, compact.at_css("span.truncate").text.strip
+    assert_equal 1, compact.css("span.truncate").size, "only the first tag is spelled out"
     assert_equal "+2", compact.at_css("[data-tag-more]").text.strip
     assert_equal tags.map(&:name), tooltip.css("[data-tag-summary-tooltip] li span.truncate").map { |node| node.text.strip }
   end
