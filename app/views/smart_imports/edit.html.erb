@@ -1,0 +1,20 @@
+<%# Fulas Bank: which account a dropped statement is for. %>
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title"), subtitle: t(".subtitle")) %>
+  <% dialog.with_body do %>
+    <div class="space-y-2">
+      <% @accounts.each do |account| %>
+        <%= render DS::Button.new(
+              text: account.name,
+              icon: account.accountable_type == "CreditCard" ? "credit-card" : "landmark",
+              variant: account.id == @import.account_id ? :primary : :outline,
+              full_width: true,
+              href: smart_import_path(@import, account_id: account.id),
+              method: :patch,
+              frame: :_top
+            ) %>
+      <% end %>
+    </div>
+    <p class="mt-3 text-xs text-secondary"><%= t(".hint") %></p>
+  <% end %>
+<% end %>

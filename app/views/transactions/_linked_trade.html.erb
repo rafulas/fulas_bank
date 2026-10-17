@@ -18,7 +18,13 @@
     <%= render DS::Link.new(text: t(".view"), variant: :ghost, size: :sm, href: trade_path(trade_entry), frame: :drawer) %>
   </div>
 
-  <% if can_edit %>
+  <% if trade.bank_entry_suggested? %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= render DS::Pill.new(label: t("trades.bank_link.suggested"), tone: :warning, marker: false, size: :sm) %>
+      <%= render DS::Button.new(text: t("trades.bank_link.confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_trade_bank_link_path(trade_entry), method: :patch, frame: :_top) %>
+      <%= render DS::Button.new(text: t("trades.bank_link.reject"), icon: "x", variant: :outline, size: :sm, href: reject_trade_bank_link_path(trade_entry), method: :delete, frame: :_top) %>
+    </div>
+  <% elsif can_edit %>
     <%= render DS::Button.new(
           text: t(".unlink"),
           icon: "unlink",

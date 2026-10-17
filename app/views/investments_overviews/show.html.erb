@@ -55,6 +55,10 @@
       <p class="mt-2 text-xs text-secondary"><%= t(".annual_return_hint") %></p>
     </div>
 
+    <% if overview.suggested_trades.any? %>
+      <%= render "investments_overviews/suggested_trades", trades: overview.suggested_trades %>
+    <% end %>
+
     <% if overview.by_kind.size > 1 %>
       <% total = overview.total_value.amount %>
       <div class="rounded-xl bg-container shadow-border-xs p-4 space-y-2">

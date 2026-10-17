@@ -14,6 +14,33 @@ es:
       one: 1 plazo
       other: "%{count} plazos"
     next_installment: "próximo el %{date}: %{amount}"
+    payments:
+      title: Cobros de los plazos
+      hint: El último año y el próximo plazo. La app busca sola el cargo de cada plazo en tus movimientos; confírmalo, elige otro o márcalo como pagado.
+      section: Plazo de seguro
+      instalment: "Plazo %{number} de %{count} · %{date}"
+      due_on: "Plazo del %{date}"
+      view: Ver
+      confirm: Confirmar
+      reject: Rechazar
+      unlink: Desvincular
+      clear: Deshacer
+      mark_paid: Marcar pagado
+      link_to: "Es el cargo del %{date} (%{amount})"
+      overdue_count:
+        one: 1 plazo sin cobrar
+        other: "%{count} plazos sin cobrar"
+      statuses:
+        paid: Pagado
+        suggested: Cargo propuesto
+        overdue: Sin cargo
+        upcoming: Pendiente
+      flash:
+        link: Plazo vinculado a su cargo.
+        confirm: Cargo confirmado.
+        reject: Cargo rechazado. No se volverá a proponer para este plazo.
+        mark_paid: Plazo marcado como pagado.
+        clear: El plazo vuelve a estar sin pagar.
     installments:
       title: Plazos
       hint: "Cada cobro con su fecha e importe. Para rellenarlos de golpe: cuántos plazos, cada cuántos días y de cuánto; empiezan en la fecha de alta."

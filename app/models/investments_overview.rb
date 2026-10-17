@@ -77,6 +77,16 @@ class InvestmentsOverview
     @annual_return ||= InvestmentsOverview::AnnualReturn.new(accounts, currency: currency)
   end
 
+  # Fulas Bank: the buys and sales whose bank movement the app proposed
+  # (TradeLinker) and the user has not confirmed yet, newest first.
+  def suggested_trades
+    @suggested_trades ||= Trade.joins(:entry)
+                               .where(entries: { account_id: accounts.map(&:id) }, bank_entry_suggested: true)
+                               .includes(entry: :account, bank_entry: :account)
+                               .order("entries.date DESC")
+                               .to_a
+  end
+
   # The funds held by participaciones in these accounts (InvestmentFund).
   def funds
     @funds ||= family.investment_funds.where(account_id: accounts.select { |account| account.accountable_type == "Investment" }.map(&:id))

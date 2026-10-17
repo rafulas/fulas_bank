@@ -122,6 +122,8 @@ class ImportsController < ApplicationController
       # Stream reading is not fully applicable here as we store the raw string in the DB,
       # but we have validated size beforehand to prevent memory exhaustion from massive files.
       content = file.read
+      # Fulas Bank: the IBAN on the statement, for the account to learn it.
+      import.update!(statement_reference: Import::StatementReference.from(content))
       if spreadsheet || Import::XlsxConverter.xlsx?(content)
         begin
           content = Import::XlsxConverter.new(content).to_csv

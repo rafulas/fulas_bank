@@ -73,6 +73,13 @@ class Vehicle::RoadtripImport
 
   attr_reader :vehicle
 
+  # Fulas Bank: whether a file is a RoadTrip export, by its first line, so a
+  # file dropped anywhere goes to the vehicle (see SmartImportsController).
+  def self.roadtrip?(content)
+    first_line = content.to_s.dup.force_encoding(Encoding::UTF_8).scrub("").delete_prefix("\uFEFF").lines.first.to_s
+    first_line.strip.upcase.start_with?(SIGNATURE)
+  end
+
   def initialize(vehicle, content)
     @vehicle = vehicle
     @content = content.to_s

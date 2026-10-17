@@ -7,6 +7,9 @@ es:
       view: Ver
       unlink: Desvincular
       link: Vincular
+      suggested: Propuesto por la app
+      confirm: Confirmar
+      reject: Rechazar
       hint_buy: "¿De qué movimiento del banco salió el dinero de esta compra? Por ejemplo, el cargo en tu cuenta o el descuento de la nómina."
       hint_sell: "¿A qué movimiento del banco llegó el dinero de esta venta?"
       no_candidates: No hay movimientos del banco parecidos %{days} días antes o después. Importa antes el extracto de esa fecha.
@@ -16,6 +19,21 @@ es:
         error: No se ha podido vincular ese movimiento.
       destroy:
         success: Operación desvinculada del movimiento del banco.
+      confirm:
+        success: Vínculo confirmado.
+      reject:
+        success: Propuesta rechazada. Ese movimiento no se volverá a proponer para esta cuenta.
+      confirm_all:
+        success:
+          one: 1 vínculo confirmado.
+          other: "%{count} vínculos confirmados."
+  investments_overviews:
+    suggested_trades:
+      title:
+        one: 1 operación con su movimiento propuesto
+        other: "%{count} operaciones con su movimiento propuesto"
+      hint: La app ha encontrado el movimiento del banco de estas compras y ventas. Confírmalos o recházalos.
+      confirm_all: Confirmar todos
   transactions:
     show:
       linked_trade: Operación de inversión

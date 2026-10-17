@@ -1,0 +1,33 @@
+---
+en:
+  imports:
+    new:
+      smart_title: Import any file
+      smart_description: "Bank statement (Excel or CSV), Bilance or RoadTrip: the app knows what it is and which account it goes to. You can also drop it on Transactions."
+  smart_imports:
+    account_line: "Account: %{account}"
+    change_account: Change account
+    create:
+      missing_file: Choose a file to import.
+      file_too_large: "The file is too large (%{max_size} MB at most)."
+      unknown_file: I do not recognise this file. Import statements as Excel or CSV, or Bilance and RoadTrip exports.
+      invalid_spreadsheet: The spreadsheet could not be read. Save it as .xlsx or CSV and try again.
+      invalid_roadtrip: The file looks like a RoadTrip export, but it has no refuels or maintenance.
+      no_vehicle: It is a RoadTrip export, but you have no vehicle. Create the vehicle's account first.
+      roadtrip_detected: "RoadTrip export for %{vehicle}."
+      bilance_detected: "Bilance export: each movement goes to the account it names."
+      statement: Statement
+      choose_account: "%{bank} detected. Which account is it for?"
+      account_detected:
+        reference: "%{bank} for %{account}, by its IBAN. If it is another account, change it in the next step."
+        balance: "%{bank} for %{account}, as its balance matches. If it is another account, change it in the next step."
+        only_one: "%{bank} for %{account}, your only current account."
+    edit:
+      title: Which account is the statement for?
+      subtitle: Next time the app will know on its own, by the statement's IBAN.
+      hint: Only the current accounts and cards you can change are listed.
+    update:
+      success: "Statement for %{account}."
+    choose_vehicle:
+      title: Which vehicle is it for?
+      subtitle: The RoadTrip export has no plate matching your vehicles.

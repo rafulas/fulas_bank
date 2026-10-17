@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -118,6 +118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
     t.uuid "owner_id"
     t.uuid "plaid_account_id"
     t.uuid "simplefin_account_id"
+    t.string "statement_reference"
     t.string "status", default: "active"
     t.string "subtype"
     t.datetime "updated_at", null: false
@@ -1490,6 +1491,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
     t.integer "sequence"
     t.string "signage_convention", default: "inflows_positive"
     t.integer "skipped_future_rows_count", default: 0, null: false
+    t.string "statement_reference"
     t.string "status"
     t.jsonb "summary", default: {}, null: false
     t.string "tags_col_label"
@@ -1584,6 +1586,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
     t.index ["family_id", "status"], name: "index_insights_on_family_id_and_status"
     t.check_constraint "priority::text = ANY (ARRAY['high'::character varying::text, 'medium'::character varying::text, 'low'::character varying::text])", name: "chk_insights_priority"
     t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'read'::character varying::text, 'dismissed'::character varying::text, 'expired'::character varying::text])", name: "chk_insights_status"
+  end
+
+  create_table "insurance_payments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "due_on", null: false
+    t.uuid "entry_id"
+    t.uuid "insurance_id", null: false
+    t.boolean "paid_manually", default: false, null: false
+    t.jsonb "rejected_entry_ids", default: [], null: false
+    t.boolean "suggested", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["entry_id"], name: "index_insurance_payments_on_entry_id", unique: true
+    t.index ["insurance_id", "due_on"], name: "index_insurance_payments_on_insurance_id_and_due_on", unique: true
+    t.index ["insurance_id"], name: "index_insurance_payments_on_insurance_id"
   end
 
   create_table "insurances", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -2870,6 +2886,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
 
   create_table "trades", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "bank_entry_id"
+    t.boolean "bank_entry_suggested", default: false, null: false
     t.datetime "created_at", null: false
     t.string "currency"
     t.jsonb "extra", default: {}, null: false
@@ -3275,6 +3292,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_190000) do
   add_foreign_key "indexa_capital_accounts", "indexa_capital_items"
   add_foreign_key "indexa_capital_items", "families"
   add_foreign_key "insights", "families"
+  add_foreign_key "insurance_payments", "entries", on_delete: :nullify
+  add_foreign_key "insurance_payments", "insurances", on_delete: :cascade
   add_foreign_key "insurances", "accounts", on_delete: :nullify
   add_foreign_key "insurances", "accounts", column: "payment_account_id", on_delete: :nullify
   add_foreign_key "insurances", "families", on_delete: :cascade

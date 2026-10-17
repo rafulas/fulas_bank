@@ -29,6 +29,23 @@
       </div>
     <% end %>
 
+    <%# Fulas Bank: any file, and the app tells what it is and where it goes. %>
+    <% if params[:type].nil? && has_accounts %>
+      <%= styled_form_with url: smart_imports_path, multipart: true, class: "mb-4", data: { turbo: false, controller: "auto-submit-form" } do |form| %>
+        <label class="flex items-center justify-between gap-3 p-4 rounded-xl border border-dashed border-secondary cursor-pointer hover:bg-container-hover">
+          <div class="flex items-center gap-3">
+            <%= render DS::FilledIcon.new(icon: "upload", variant: :surface, size: "md") %>
+            <div class="text-left space-y-0.5">
+              <span class="text-sm font-medium text-primary block"><%= t(".smart_title") %></span>
+              <span class="text-xs text-secondary block"><%= t(".smart_description") %></span>
+            </div>
+          </div>
+          <%= icon("chevron-right") %>
+          <%= form.file_field :file, class: "hidden", accept: ".csv,.xlsx", data: { auto_submit_form_target: "auto" } %>
+        </label>
+      <% end %>
+    <% end %>
+
     <%
       financial_tool_types = %w[MintImport ActualImport YnabImport QifImport SureImport DocumentImport PdfImport]
       import_type = params[:type].presence || @pending_import&.type

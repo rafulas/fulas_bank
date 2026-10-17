@@ -7,6 +7,9 @@ en:
       view: View
       unlink: Unlink
       link: Link
+      suggested: Proposed by the app
+      confirm: Confirm
+      reject: Reject
       hint_buy: Which bank movement paid for this buy? For example, the charge on your account or the deduction from your payslip.
       hint_sell: Which bank movement received the money of this sale?
       no_candidates: There are no similar bank movements %{days} days either side. Import the statement for that date first.
@@ -16,6 +19,21 @@ en:
         error: That movement could not be linked.
       destroy:
         success: Trade unlinked from the bank movement.
+      confirm:
+        success: Link confirmed.
+      reject:
+        success: Proposal rejected. That movement will not be proposed again for this account.
+      confirm_all:
+        success:
+          one: 1 link confirmed.
+          other: "%{count} links confirmed."
+  investments_overviews:
+    suggested_trades:
+      title:
+        one: 1 trade with its movement proposed
+        other: "%{count} trades with their movement proposed"
+      hint: The app found the bank movement of these buys and sales. Confirm or reject them.
+      confirm_all: Confirm all
   transactions:
     show:
       linked_trade: Investment trade

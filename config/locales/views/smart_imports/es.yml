@@ -1,0 +1,33 @@
+---
+es:
+  imports:
+    new:
+      smart_title: Importar cualquier archivo
+      smart_description: "Extracto del banco (Excel o CSV), Bilance o RoadTrip: la app sabe qué es y a qué cuenta va. También puedes soltarlo en Transacciones."
+  smart_imports:
+    account_line: "Cuenta: %{account}"
+    change_account: Cambiar cuenta
+    create:
+      missing_file: Elige un archivo para importar.
+      file_too_large: "El archivo es demasiado grande (máximo %{max_size} MB)."
+      unknown_file: No reconozco este archivo. Importa extractos en Excel o CSV, exportaciones de Bilance o de RoadTrip.
+      invalid_spreadsheet: No he podido leer la hoja de cálculo. Guárdala como .xlsx o CSV y vuelve a probar.
+      invalid_roadtrip: El archivo parece de RoadTrip, pero no tiene repostajes ni mantenimientos.
+      no_vehicle: Es una exportación de RoadTrip, pero no tienes ningún vehículo. Crea antes la cuenta del vehículo.
+      roadtrip_detected: "Exportación de RoadTrip para %{vehicle}."
+      bilance_detected: "Exportación de Bilance: cada movimiento irá a la cuenta que indica."
+      statement: Extracto
+      choose_account: "%{bank} detectado. ¿De qué cuenta es?"
+      account_detected:
+        reference: "%{bank} de %{account}, por su IBAN. Si no es esa cuenta, cámbiala en el siguiente paso."
+        balance: "%{bank} de %{account}, porque su saldo encaja. Si no es esa cuenta, cámbiala en el siguiente paso."
+        only_one: "%{bank} de %{account}, tu única cuenta corriente."
+    edit:
+      title: ¿De qué cuenta es el extracto?
+      subtitle: La próxima vez la app lo sabrá sola por el IBAN del extracto.
+      hint: Solo salen las cuentas corrientes y tarjetas que puedes cambiar.
+    update:
+      success: "Extracto de %{account}."
+    choose_vehicle:
+      title: ¿De qué vehículo es?
+      subtitle: La exportación de RoadTrip no trae una matrícula que coincida con tus vehículos.

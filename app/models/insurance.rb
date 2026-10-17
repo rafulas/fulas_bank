@@ -48,6 +48,8 @@ class Insurance < ApplicationRecord
   # card); the Forecast expects them there, or in its main account.
   belongs_to :payment_account, class_name: "Account", optional: true
   has_many_attached :documents
+  # Fulas Bank: how each instalment was paid (see InsurancePayment).
+  has_many :insurance_payments, dependent: :delete_all
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }
@@ -156,6 +158,52 @@ class Insurance < ApplicationRecord
 
       charges
     end
+  end
+
+  # One instalment on its day, with how it was paid (nil: not yet).
+  Instalment = Data.define(:date, :amount, :number, :count, :payment) do
+    def paid?
+      payment&.paid? || false
+    end
+
+    def suggested?
+      payment.present? && payment.suggested? && payment.entry_id.present?
+    end
+
+    # :paid, :suggested (a charge proposed by the app), :overdue (its day
+    # passed a few days ago with no charge) or :upcoming.
+    def status(today = Date.current)
+      return :paid if paid?
+      return :suggested if suggested?
+
+      date < today - InsuranceLinker::MATCH_DAYS ? :overdue : :upcoming
+    end
+  end
+
+  # The instalments of the last year and the next one to come: what the
+  # policy's page shows, to see which have been charged.
+  def recent_instalments(today = Date.current)
+    return [] unless custom_payments?
+
+    past = installment_charges_between((today - 1.year + 1.day)..today)
+    upcoming = installment_charges_between((today + 1)..(today + 1.year)).min_by(&:first)
+    payments = insurance_payments.index_by(&:due_on)
+
+    (past + [ upcoming ].compact).sort_by(&:first).map do |date, amount, number, count|
+      Instalment.new(date: date, amount: amount, number: number, count: count, payment: payments[date])
+    end
+  end
+
+  # Instalments whose day has passed with no charge for them.
+  def overdue_instalments(today = Date.current)
+    recent_instalments(today).select { |instalment| instalment.status(today) == :overdue }
+  end
+
+  # The bank charges that could have paid an instalment, for the user to
+  # choose: outgoing, around its day, not paying another instalment, the
+  # closest amount first.
+  def payment_candidates(date, amount, limit: 3)
+    InsuranceLinker.new(family).candidates(self, date, amount.amount, window: 15.days, tolerance: nil).first(limit)
   end
 
   # The next instalment to be charged, as [Date, Money], for a policy paid in

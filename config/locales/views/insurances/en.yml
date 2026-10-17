@@ -14,6 +14,33 @@ en:
       one: 1 instalment
       other: "%{count} instalments"
     next_installment: "next on %{date}: %{amount}"
+    payments:
+      title: Instalment charges
+      hint: The last year and the next instalment. The app looks for the charge of each one in your movements; confirm it, choose another or mark it paid.
+      section: Insurance instalment
+      instalment: "Instalment %{number} of %{count} · %{date}"
+      due_on: "Instalment of %{date}"
+      view: View
+      confirm: Confirm
+      reject: Reject
+      unlink: Unlink
+      clear: Undo
+      mark_paid: Mark paid
+      link_to: "It is the charge of %{date} (%{amount})"
+      overdue_count:
+        one: 1 instalment not charged
+        other: "%{count} instalments not charged"
+      statuses:
+        paid: Paid
+        suggested: Charge proposed
+        overdue: No charge
+        upcoming: Upcoming
+      flash:
+        link: Instalment linked to its charge.
+        confirm: Charge confirmed.
+        reject: Charge rejected. It will not be proposed again for this instalment.
+        mark_paid: Instalment marked paid.
+        clear: The instalment is unpaid again.
     installments:
       title: Instalments
       hint: "Each payment with its date and amount. To fill them at once: how many, every how many days and how much; they start on the start date."

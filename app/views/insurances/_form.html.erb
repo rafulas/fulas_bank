@@ -63,6 +63,10 @@
   <%= form.submit t(".submit") %>
 <% end %>
 
+<% if insurance.persisted? && insurance.custom_payments? %>
+  <%= render "insurances/payments", insurance: insurance %>
+<% end %>
+
 <% if insurance.persisted? %>
   <%= render "insurances/documents", insurance: insurance %>
 
