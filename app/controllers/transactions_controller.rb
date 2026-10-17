@@ -31,7 +31,7 @@ class TransactionsController < ApplicationController
                        .reverse_chronological
                        .includes(
                          { entry: [ :account, { recurring_allocations: { recurring_occurrence: :recurring_transaction } } ] },
-                         :category, :merchant, :tags,
+                         { category: :parent }, :merchant, :tags,
                          # Union of #2643 counterpart UI + Skylight category-menu N+1:
                          # - outflow rows need inflow_transaction (to_account) for both
                          #   counterpart display and Transfer#categorizable?/#payment?

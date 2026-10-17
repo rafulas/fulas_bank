@@ -23,6 +23,13 @@
 #      (Insurance#installment_charges_between), every year on the same days,
 #      in the account they are charged to (a card's go to the main account).
 #
+# Fulas Bank: statements are imported by hand, days or weeks late. A payment
+# of 1 or 6 whose day has passed but is later than the last movement imported
+# for its account has not reached the balance yet, so it is still expected:
+# it goes on tomorrow, named with the day it was due ("vencía el 19/10"). One
+# on or before that last movement is taken as charged (OVERDUE_LOOKBACK caps
+# how far back this looks).
+#
 # The user can change the date, amount or name of a line of 1, 3 and 6, or leave
 # it out, from the table; those changes are ForecastAdjustments, applied here
 # by the line's key. A line left out is still listed (so it can be brought
@@ -53,6 +60,9 @@ class Forecast
   # An account can also be left out of the totals ("none"): it still has its
   # own column.
   GROUPS = %w[cash investment none].freeze
+
+  # Fulas Bank: how far back a payment not imported yet is still expected.
+  OVERDUE_LOOKBACK = 45.days
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
@@ -327,6 +337,31 @@ class Forecast
       (today + 1)..through
     end
 
+    # Fulas Bank: the day a payment due on `date` is expected, or nil when it
+    # is not: its own day inside the window, or tomorrow when it is overdue
+    # but later than the last movement imported for `account_id` (so it has
+    # not reached the balance yet). See the class comment.
+    def expected_date(date, account_id)
+      return date if window.cover?(date)
+      return nil if date > through || date < today - OVERDUE_LOOKBACK
+
+      last_imported = last_entry_dates[account_id]
+      return nil if last_imported.nil? || date <= last_imported
+
+      window.first
+    end
+
+    # { account_id => date of its newest movement up to today }.
+    def last_entry_dates
+      @last_entry_dates ||= family.entries.where(date: ..today).group(:account_id).maximum(:date)
+    end
+
+    def overdue_name(name, due_on, expected_on)
+      return name if due_on == expected_on
+
+      I18n.t("forecasts.overdue_line", name: name, date: I18n.l(due_on, format: "%d/%m"))
+    end
+
     # ---- 1. Recurring movements ----
 
     def recurring_flows
@@ -350,16 +385,20 @@ class Forecast
       stored = series.recurring_occurrences.to_a
       covered_until = stored.map(&:original_due_on).max || today
 
-      scheduled = stored.select { |occurrence| occurrence.status == "scheduled" && window.cover?(occurrence.effective_due_on) }
-                        .map { |occurrence| [ occurrence.effective_due_on, occurrence.remaining_amount, occurrence.original_due_on ] }
+      scheduled = stored.select { |occurrence| occurrence.status == "scheduled" }
+                        .filter_map do |occurrence|
+                          on = expected_date(occurrence.effective_due_on, series.account_id)
+                          [ on, occurrence.remaining_amount, occurrence.original_due_on, occurrence.effective_due_on ] if on
+                        end
                         .reject { |_, amount, _| amount.to_d.zero? }
 
       projected = series.schedule.occurrence_pairs_between(covered_until + 1, through)
                         .select { |pair| pair.original_due_on > covered_until && window.cover?(pair.due_on) }
-                        .map { |pair| [ pair.due_on, projected_amount(series), pair.original_due_on ] }
+                        .map { |pair| [ pair.due_on, projected_amount(series), pair.original_due_on, pair.due_on ] }
 
-      (scheduled + projected).flat_map do |date, amount, original_date|
-        series_flows(series, date, amount.to_d.abs, ForecastAdjustment.recurring_key(series, original_date))
+      (scheduled + projected).flat_map do |date, amount, original_date, due_on|
+        series_flows(series, date, amount.to_d.abs, ForecastAdjustment.recurring_key(series, original_date),
+                     name: overdue_name(series.display_name, due_on, date))
       end
     end
 
@@ -371,9 +410,8 @@ class Forecast
     # A bill takes money out of its account and a salary brings it in; a
     # recurring transfer does both, out of one account and into the other.
     # Both sides share the key, so a change applies to the whole transfer.
-    def series_flows(series, date, amount, key)
+    def series_flows(series, date, amount, key, name: series.display_name)
       outflow = series.amount.to_d.positive? || series.destination_account_id.present?
-      name = series.display_name
       # A charge on a card is paid from the main account in the end.
       source_account = card_ids.include?(series.account_id) ? main_account : accounts_by_id[series.account_id]
       list = []
@@ -516,10 +554,14 @@ class Forecast
         # An instalment already paid (charged early) is not expected again.
         paid = insurance.insurance_payments.select(&:paid?).map(&:due_on)
 
-        insurance.installment_charges_between(window).reject { |date, *| paid.include?(date) }.map do |date, amount, number, count|
-          Flow.new(date: date, account: account, amount: to_account_currency(amount, account), source: :insurance,
-                   key: ForecastAdjustment.insurance_key(insurance, date),
-                   name: I18n.t("forecasts.insurance_line", name: insurance.name, number: number, count: count))
+        charges = insurance.installment_charges_between((today - OVERDUE_LOOKBACK)..through)
+        charges.reject { |date, *| paid.include?(date) }.filter_map do |date, amount, number, count|
+          on = expected_date(date, insurance.payment_account_id || account.id)
+          next unless on
+
+          name = I18n.t("forecasts.insurance_line", name: insurance.name, number: number, count: count)
+          Flow.new(date: on, account: account, amount: to_account_currency(amount, account), source: :insurance,
+                   key: ForecastAdjustment.insurance_key(insurance, date), name: overdue_name(name, date, on))
         end
       end
     end

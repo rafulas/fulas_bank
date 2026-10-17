@@ -7,7 +7,8 @@
             <%= image_tag "logomark.svg", class: "w-16 mb-6" %>
           </div>
           <div class="space-y-2">
-            <% if controller_name.in?(%w[sessions registrations]) && action_name.in?(%w[new create]) %>
+            <%# Fulas Bank: no "Crear cuenta" tab when sign-up is closed. %>
+            <% if controller_name.in?(%w[sessions registrations]) && action_name.in?(%w[new create]) && Setting.onboarding_state != "closed" %>
               <%# Determine the active tab from the controller, not current_page?:
                   a failed POST re-renders :new from #create, where the request
                   path is the form target (not /sessions/new), so current_page?

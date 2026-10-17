@@ -15,6 +15,7 @@ en:
     update_columns:
       success: Table updated.
     variable_line: Variable spending %{month}
+    overdue_line: "%{name} (due on %{date})"
     insurance_line: "%{name} (instalment %{number} of %{count})"
     debt_plan_line: "%{loan} payment (debt plan)"
     card_statement_line: "%{card}: %{month} statement"
