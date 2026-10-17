@@ -1,5 +1,5 @@
 <%= turbo_frame_tag "category_dropdown" do %>
-  <div class="flex flex-col relative" data-controller="list-filter">
+  <div class="flex flex-col relative" data-controller="list-filter category-tree">
     <div class="grow p-1.5">
       <div class="relative flex items-center bg-container border border-secondary rounded-lg">
         <input
@@ -12,7 +12,7 @@
           aria-autocomplete="list"
           class="bg-container placeholder:text-sm placeholder:text-secondary font-normal h-10 relative pl-10 w-full border-none rounded-lg focus:outline-hidden focus:ring-0"
           data-list-filter-target="input"
-          data-action="list-filter#filter keydown->list-filter#handleKeydown">
+          data-action="list-filter#filter input->category-tree#search keydown->list-filter#handleKeydown">
           <%= icon("search", class: "absolute inset-0 ml-2 transform top-1/2 -translate-y-1/2") %>
         </div>
       </div>
@@ -30,12 +30,11 @@
           </div>
         <% end %>
         <% if @categories.any? %>
+          <%# Fulas Bank: only the main categories; one with subcategories
+              opens them when tapped. %>
           <% Category::Group.for(@categories).each do |group| %>
-            <%= render "category/dropdowns/row", category: group.category %>
-
-            <% group.subcategories.each do |category| %>
-              <%= render "category/dropdowns/row", category: category %>
-            <% end %>
+            <% expanded = @selected_category.present? && (group.subcategories.include?(@selected_category) || group.category == @selected_category) %>
+            <%= render "categories/tree_group", group: group, expanded: expanded, option_partial: "category/dropdowns/row" %>
           <% end %>
         <% else %>
           <div class="flex justify-center items-center py-12">

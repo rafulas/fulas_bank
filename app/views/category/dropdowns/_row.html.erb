@@ -1,8 +1,9 @@
-<%# locals: (category:, id_prefix: "category_option") %>
+<%# locals: (category:, id_prefix: "category_option", general: false) %>
 <% is_selected = category.id === @selected_category&.id %>
+<% id_prefix = "#{id_prefix}_general" if general %>
 
 <%= content_tag :div,
-      id: dom_id(category, local_assigns.fetch(:id_prefix, "category_option")),
+      id: dom_id(category, id_prefix),
       role: "option",
       aria_selected: is_selected.to_s,
       class: ["filterable-item flex justify-between items-center border-none rounded-lg px-2 py-1 group w-full hover:bg-container-inset-hover",
@@ -24,11 +25,7 @@
       <% if is_selected %><%= icon("check") %><% end %>
     </span>
 
-    <% if category.parent_id.present? %>
-      <%= icon("corner-down-right", size: "sm") %>
-    <% end %>
-
-    <%= render partial: "categories/badge", locals: { category: category } %>
+    <%= render "categories/badge", category: category, general: general, with_parent: id_prefix.start_with?("recent") %>
   <% end %>
 
   <%= render DS::Menu.new(variant: :icon_sm) do |menu| %>

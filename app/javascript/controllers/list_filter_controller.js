@@ -180,6 +180,8 @@ export default class extends Controller {
   get visibleItems() {
     return Array.from(
       this.listTarget.querySelectorAll(".filterable-item"),
-    ).filter((item) => item.style.display !== "none");
+    ).filter(
+      (item) => item.style.display !== "none" && !item.closest("[hidden]"),
+    );
   }
 }

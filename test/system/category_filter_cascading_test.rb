@@ -20,6 +20,7 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     find("#transaction-category-button").click
 
     within "#transaction-category-menu" do
+      open_subcategories
       check(@parent.name)
 
       assert find_field(@child_one.name).checked?
@@ -31,6 +32,7 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     find("#transaction-category-button").click
 
     within "#transaction-category-menu" do
+      open_subcategories
       check(@parent.name)
       uncheck(@child_one.name)
 
@@ -50,6 +52,7 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     find("#transaction-category-button").click
 
     within "#transaction-category-menu" do
+      open_subcategories
       check(@parent.name)
       uncheck(@child_one.name)
       check(@child_one.name)
@@ -72,6 +75,7 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     find("#transaction-category-button").click
 
     within "#transaction-category-menu" do
+      open_subcategories
       assert find_field(@parent.name).checked?
       assert find_field(@child_one.name).checked?
       assert find_field(@child_two.name).checked?
@@ -83,7 +87,24 @@ class CategoryFilterCascadingTest < ApplicationSystemTestCase
     assert_selector "#" + dom_id(@child_two_transaction)
   end
 
+  test "only main categories show until one is opened" do
+    find("#transaction-category-button").click
+
+    within "#transaction-category-menu" do
+      assert_field @parent.name
+      assert_no_field @child_one.name
+
+      open_subcategories
+
+      assert_field @child_one.name
+    end
+  end
+
   private
+    def open_subcategories
+      find("button[title='#{I18n.t("categories.tree.expand", name: @parent.name)}']").click
+    end
+
 
     def create_transaction(name, date, amount, category:)
       accounts(:depository).entries.create! \

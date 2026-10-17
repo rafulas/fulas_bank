@@ -1,0 +1,34 @@
+<%# locals: (form:, category:, subcategory_count: nil, expanded: false) %>
+<% tree_header = subcategory_count.present? %>
+<% data = { filter_name: category.display_name } %>
+<% data[:category_tree_target] = "header" if tree_header %>
+<%= tag.div class: "filterable-item flex items-center gap-2 p-2", data: data do %>
+  <%= form.check_box :categories,
+                     {
+                       multiple: true,
+                       checked: @q[:categories]&.include?(category.filter_value),
+                       class: "checkbox checkbox--light",
+                       data: {
+                         category_filter_target: "checkbox",
+                         action: "change->category-filter#toggle",
+                         category_id: category.id,
+                         parent_id: category.parent_id
+                       }
+                     },
+                     category.filter_value,
+                     nil %>
+  <%= form.label :categories, value: category.filter_value, class: "min-w-0 flex-1 text-sm text-primary cursor-pointer flex items-center gap-1" do %>
+    <%= render "categories/badge", category: category %>
+  <% end %>
+  <% if tree_header %>
+    <button type="button"
+            class="group/tree flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-secondary hover:bg-container-inset-hover"
+            aria-expanded="<%= expanded %>"
+            title="<%= t("categories.tree.expand", name: category.display_name) %>"
+            data-action="category-tree#toggle">
+      <%= subcategory_count %>
+      <%= icon("chevron-right", size: "sm", color: "current", class: "transition-transform group-aria-expanded/tree:rotate-90") %>
+      <span class="sr-only"><%= t("categories.tree.expand", name: category.display_name) %></span>
+    </button>
+  <% end %>
+<% end %>

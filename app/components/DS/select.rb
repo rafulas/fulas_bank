@@ -69,6 +69,29 @@ module DS
       obj&.respond_to?(:parent_id) && obj.parent_id.present?
     end
 
+    # Fulas Bank: a category list (badge variant with subcategories) shows
+    # only the main categories; each opens its subcategories when tapped.
+    def tree?
+      variant == :badge && items.any? { |item| child?(item) }
+    end
+
+    # The items with no category (the blank one), shown before the tree.
+    def loose_items
+      items.reject { |item| item[:object].is_a?(Category) }
+    end
+
+    def category_groups
+      Category::Group.for(items.map { |item| item[:object] }.grep(Category))
+    end
+
+    def item_for(category)
+      items.find { |item| item[:object] == category }
+    end
+
+    def expanded?(group)
+      group.subcategories.any? && [ group.category, *group.subcategories ].any? { |category| item_for(category)&.dig(:value) == selected_value }
+    end
+
     private
 
       def normalize_menu_placement(value)

@@ -1,4 +1,5 @@
-<%# locals: (category:, selected:, view_helpers:) %>
+<%# locals: (category:, view_helpers:, selected: nil, selected_id: nil, general: false) %>
+<% selected = category.id.to_s == selected_id.to_s if selected.nil? %>
 
 <button type="button"
         role="option"
@@ -15,18 +16,9 @@
     <%= view_helpers.icon("check") %>
   </span>
 
-  <% if category.parent_id.present? %>
-    <span class="ml-2 shrink-0"
-          data-testid="category-select-subcategory-indicator"
-          style="color: <%= category.color %>">
-      <%= view_helpers.icon("corner-down-right", size: "sm", color: "current") %>
-    </span>
-  <% end %>
-
-  <span data-category-select-badge>
+  <span class="min-w-0" data-category-select-badge>
     <%= view_helpers.render partial: "categories/badge",
                             formats: [ :html ],
-                            locals: { category: category } %>
-
+                            locals: { category: category, general: general } %>
   </span>
 </button>

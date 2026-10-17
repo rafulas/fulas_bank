@@ -20,17 +20,18 @@ class Transactions::TagSummaryViewTest < ActionView::TestCase
 
     assert_equal I18n.t("tags.summary.add"), summary.at_css("[role=tooltip]").text.strip
     assert_empty summary.css("[title]")
-    assert_select summary, "[data-tag-initial]", count: 0
+    assert_select summary, "[data-tag-more]", count: 0
   end
 
-  test "single tag renders as a full pill" do
+  test "single tag renders as a colored dot and its name" do
     tag = create_tags(1).first
     @transaction.update!(tag_ids: [ tag.id ])
 
     summary = render_summary
 
     assert_includes summary.at_css("[aria-describedby]").text, tag.name
-    assert_select summary, "[aria-describedby] [data-tag-initial]", count: 0
+    assert summary.at_css("[aria-describedby] span.rounded-full[style*='#{tag.color}']"), "expected the tag's color dot"
+    assert_select summary, "[aria-describedby] [data-tag-more]", count: 0
   end
 
   test "single tag shows its full name on hover" do
@@ -43,16 +44,17 @@ class Transactions::TagSummaryViewTest < ActionView::TestCase
     assert_empty summary.css("[aria-describedby] [title]").map { |node| node["title"] }.reject(&:blank?)
   end
 
-  test "two or three tags render as letter badges with every tag in the tooltip" do
+  test "several tags show the first one and a count, with every tag in the tooltip" do
     tags = create_tags(3)
     @transaction.update!(tag_ids: tags.map(&:id))
 
     summary = render_summary
+    compact = summary.at_css("[data-tag-fit-target=compact] [aria-describedby]")
     tooltip = summary.at_css("[role=tooltip]")
 
-    assert_equal 3, summary.css("[aria-describedby] [data-tag-initial]").size
-    assert_equal tags.map { |tag| tag.name.first }, summary.css("[aria-describedby] [data-tag-initial]").map { |node| node.text.strip }
-    assert_not_includes summary.at_css("[aria-describedby]").text, "+"
+    assert_equal tags.first.name, compact.at_css("span.truncate").text.strip
+    assert_equal 1, compact.css("span.truncate").size, "only the first tag is spelled out"
+    assert_equal "+2", compact.at_css("[data-tag-more]").text.strip
     assert_equal tags.map(&:name), tooltip.css("[data-tag-summary-tooltip] li span.truncate").map { |node| node.text.strip }
   end
 
@@ -63,18 +65,17 @@ class Transactions::TagSummaryViewTest < ActionView::TestCase
     fit = render_summary.at_css("[data-controller=tag-fit]")
 
     assert_equal tags.map(&:name), fit.css("[data-tag-fit-target=full] > span > span").map { |node| node.text.strip }
-    assert fit.at_css("[data-tag-fit-target=full]").key?("hidden"), "full pills start hidden until measured"
+    assert fit.at_css("[data-tag-fit-target=full]").key?("hidden"), "the full list starts hidden until measured"
     assert_not fit.at_css("[data-tag-fit-target=compact]").key?("hidden")
   end
 
-  test "more than three tags render two letter badges and an overflow count" do
+  test "many tags still show only the first one and the overflow count" do
     tags = create_tags(5)
     @transaction.update!(tag_ids: tags.map(&:id))
 
     summary = render_summary
 
-    assert_equal 2, summary.css("[aria-describedby] [data-tag-initial]").size
-    assert_includes summary.at_css("[aria-describedby]").text, "+3"
+    assert_equal "+4", summary.at_css("[data-tag-fit-target=compact] [data-tag-more]").text.strip
     assert_equal 5, summary.css("[data-tag-summary-tooltip] li").size
   end
 

@@ -183,11 +183,11 @@ class TransactionsTest < ApplicationSystemTestCase
 
     find("##{option_id}").ancestor("form").find("[data-tag-dropdown-save]").click
 
-    assert_selector "##{summary_id} [data-tag-fit-target=compact] [data-tag-initial]", count: 2, visible: :all
+    assert_selector "##{summary_id} [data-tag-fit-target=compact] [data-tag-more]", text: "+1", visible: :all
     assert_equal [ tags(:one).id, tags(:two).id ].sort, transaction.reload.tag_ids.sort
   end
 
-  test "tags show as full pills when they fit and collapse when the column shrinks" do
+  test "every tag shows when they fit and they collapse to the first one and a count when the column shrinks" do
     transaction = @transaction.entryable
     short_tags = %w[Ab Cd].map { |name| @user.family.tags.create!(name: name, color: Tag::COLORS.first) }
     transaction.update!(tag_ids: short_tags.map(&:id))
@@ -201,7 +201,7 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_no_selector "#{summary} [data-tag-fit-target=compact]"
 
     page.execute_script("#{cell}.style.width = '48px'")
-    assert_selector "#{summary} [data-tag-fit-target=compact] [data-tag-initial]", count: 2
+    assert_selector "#{summary} [data-tag-fit-target=compact] [data-tag-more]", text: "+1"
     assert_no_selector "#{summary} [data-tag-fit-target=full]"
 
     page.execute_script("#{cell}.style.width = '400px'")

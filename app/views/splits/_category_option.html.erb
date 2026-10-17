@@ -1,0 +1,14 @@
+<%# locals: (category:, selected_id:, general: false) %>
+<% is_selected = category.id == selected_id %>
+<div class="filterable-item text-sm cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-container-inset-hover <%= "bg-container-inset" if is_selected %>"
+     role="option"
+     tabindex="0"
+     aria-selected="<%= is_selected %>"
+     data-action="click->select#select"
+     data-value="<%= category.id %>"
+     data-filter-name="<%= category.display_name %>">
+  <span class="check-icon <%= "hidden" unless is_selected %>">
+    <%= icon("check") %>
+  </span>
+  <%= render "categories/badge", category: category, general: general %>
+</div>

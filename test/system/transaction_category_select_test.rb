@@ -9,9 +9,9 @@ class TransactionCategorySelectTest < ApplicationSystemTestCase
     visit new_transaction_url
 
     assert_difference "Category.count", +1 do
-      find("[data-controller='category-select'] button").click
+      find("[data-controller~='category-select'] button").click
 
-      within "[data-controller='category-select']" do
+      within "[data-controller~='category-select']" do
         fill_in "Search categories", with: "Inline Test Category"
 
         assert_text 'Create "Inline Test Category"'
@@ -41,9 +41,9 @@ class TransactionCategorySelectTest < ApplicationSystemTestCase
     JS
 
     within "turbo-frame#drawer", visible: :all do
-      assert_selector "[data-controller='category-select']"
+      assert_selector "[data-controller~='category-select']"
 
-      within "[data-controller='category-select']" do
+      within "[data-controller~='category-select']" do
         find("button", match: :first).click
         find("button[data-category-id='']").click
       end
@@ -51,7 +51,7 @@ class TransactionCategorySelectTest < ApplicationSystemTestCase
 
     assert_selector(
       "##{ActionView::RecordIdentifier.dom_id(entry)}",
-      text: "Uncategorized"
+      text: I18n.t("categories.row_label.choose")
     )
 
     assert_nil transaction.reload.category_id

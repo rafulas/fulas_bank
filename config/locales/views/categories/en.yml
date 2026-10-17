@@ -45,6 +45,11 @@ en:
       sources_label: Categories to merge
       sources_hint: Selected categories will be deleted after their transactions and budget lines move to the target. Do not select the target as a source.
       submit: Merge selected
+    row_label:
+      choose: Choose category
+    tree:
+      expand: "Show subcategories of %{name}"
+      general: "%{name} (general)"
     menu:
       loading: Loading...
     new:

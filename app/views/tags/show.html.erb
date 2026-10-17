@@ -19,7 +19,7 @@
       ) %>
     </div>
 
-    <%= render DS::Pill.new(label: @tag.name, marker: false, size: :md, custom_color: @tag.color) %>
+    <%= render DS::ColorLabel.new(label: @tag.name, color: @tag.color, mark: :dot, truncate: false) %>
     <p class="text-2xl lg:text-3xl font-semibold text-primary privacy-sensitive" data-tag-total>
       <%= format_money(Money.new(@report.total, currency)) %>
     </p>

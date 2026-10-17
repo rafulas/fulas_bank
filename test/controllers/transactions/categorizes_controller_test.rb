@@ -43,7 +43,7 @@ class Transactions::CategorizesControllerTest < ActionDispatch::IntegrationTest
     assert_equal parent_index + 1, child_index
   end
 
-  test "show groups subcategories immediately after their parent in the category pills" do
+  test "show folds subcategories under their parent in the category pills" do
     create_transaction(account: @account, name: "Starbucks")
     get transactions_categorize_url
 
@@ -60,7 +60,9 @@ class Transactions::CategorizesControllerTest < ActionDispatch::IntegrationTest
     assert_equal parent_index + 1, child_index
 
     child_pill = doc.css("button[name='category_id'][value='#{categories(:subcategory).id}']").first
-    assert_includes child_pill.text, categories(:subcategory).display_name_with_parent
+    assert_includes child_pill.text, categories(:subcategory).display_name
+    assert_equal categories(:subcategory).display_name_with_parent, child_pill["data-filter-name"], "searching the parent's name finds its subcategories"
+    assert child_pill.ancestors("[data-category-tree-target='children']").first.key?("hidden"), "subcategories start folded"
   end
 
   test "show renders full dates so multi-year lists are unambiguous" do

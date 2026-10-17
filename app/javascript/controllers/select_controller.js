@@ -298,10 +298,11 @@ export default class extends Controller {
   }
 
   // Options the user can currently see — list-filter hides non-matches
-  // by setting `style.display = "none"`. Inline check keeps it cheap.
+  // by setting `style.display = "none"`, and a category picker keeps the
+  // subcategories of a closed group inside a `[hidden]` container.
   visibleOptions() {
     const options = this.hasOptionTarget ? this.optionTargets : []
-    return options.filter(opt => opt.style.display !== "none")
+    return options.filter(opt => opt.style.display !== "none" && !opt.closest("[hidden]"))
   }
 
   // After list-filter#filter runs, a keyboard-focused option may be hidden.
