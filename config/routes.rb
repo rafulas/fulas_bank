@@ -554,6 +554,8 @@ Rails.application.routes.draw do
   namespace :transactions do
     resource :bulk_deletion, only: :create
     resource :bulk_update, only: %i[new create]
+    # Fulas Bank: "Añadir a recurrente", for one movement or a selection.
+    resource :recurring_assignment, only: %i[new create]
     resource :panel_accounts, only: %i[edit update]
     resource :categorize, only: %i[show create] do
       patch :assign_entry, on: :collection
@@ -766,6 +768,9 @@ Rails.application.routes.draw do
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show do
     get :table
+    # Fulas Bank: which accounts the table shows and how they add up.
+    get :columns, to: "forecasts#edit_columns"
+    patch :columns, to: "forecasts#update_columns"
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do

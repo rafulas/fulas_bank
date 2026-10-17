@@ -8,13 +8,35 @@ class ForecastsController < ApplicationController
   PERIODS = { "1m" => 1, "3m" => 3, "6m" => 6, "1y" => 12, "2y" => 24, "5y" => 60 }.freeze
   DEFAULT_PERIOD = "5y"
 
-  before_action :build_forecast
+  before_action :build_forecast, except: :update_columns
 
   def show
   end
 
   # The table on its own, in a wide dialog, to see every column at once.
   def table
+  end
+
+  # Fulas Bank: "Editar tabla": the accounts shown as columns and the group
+  # each one adds up in (cash, savings and investments, or none).
+  def edit_columns
+  end
+
+  def update_columns
+    accounts = forecast_accounts
+    shown = Array(params[:shown]).map(&:to_s)
+    # Every account gets a value, so a group set before is always replaced.
+    groups = accounts.to_h do |account|
+      chosen = params.dig(:groups, account.id).to_s
+      [ account.id, Forecast::GROUPS.include?(chosen) ? chosen : Forecast.default_group(account) ]
+    end
+
+    Current.user.update_dashboard_preferences(
+      Forecast::HIDDEN_COLUMNS_PREFERENCE => accounts.map(&:id).reject { |id| shown.include?(id) },
+      Forecast::COLUMN_GROUPS_PREFERENCE => groups
+    )
+
+    redirect_back_or_to forecast_path, notice: t(".success")
   end
 
   private
@@ -29,7 +51,9 @@ class ForecastsController < ApplicationController
 
       @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
                                main_account: @main_account, card_accounts: card_accounts,
-                               debt_plan: Current.family.debt_plan&.forecast_feed(Current.user))
+                               debt_plan: Current.family.debt_plan&.forecast_feed(Current.user),
+                               column_groups: Current.user.preferences&.dig(Forecast::COLUMN_GROUPS_PREFERENCE) || {})
+      @hidden_columns = Array(Current.user.preferences&.dig(Forecast::HIDDEN_COLUMNS_PREFERENCE))
     end
 
     def forecast_accounts

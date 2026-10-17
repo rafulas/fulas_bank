@@ -47,6 +47,7 @@ es:
     selection_bar:
       duplicate: Duplicar
       edit: Editar
+      add_to_recurring: Añadir a recurrente
       selected: seleccionadas
     form:
       details: Detalles
@@ -95,6 +96,7 @@ es:
       create_bill: Crear un recibo
       mark_recurring_subtitle: Haz seguimiento de esta transacción como recurrente. La variación del importe se calcula automáticamente a partir de transacciones similares de los últimos 6 meses.
       mark_recurring_title: Transacción recurrente
+      add_to_recurring: Añadir a recurrente
       applied_to_title: Recibos que ha pagado
       applied_to_detail: "%{amount} para el recibo que vence el %{date}"
       applied_to_unreviewed: Pendiente de revisar

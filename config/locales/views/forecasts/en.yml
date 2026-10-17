@@ -1,6 +1,19 @@
 ---
 en:
   forecasts:
+    edit_columns:
+      title: Edit table
+      hint: Tick the accounts you want as a column and choose where each one adds up in the total balance.
+      main: Main
+      main_hint: The main account (the one chosen above in the Forecast) always comes first, as most movements go there.
+      group_label: "Where %{account} adds up"
+      groups:
+        cash: Cash balance
+        investment: Savings / investments
+        none: Not in the total
+      save: Save
+    update_columns:
+      success: Table updated.
     variable_line: Variable spending %{month}
     insurance_line: "%{name} (instalment %{number} of %{count})"
     debt_plan_line: "%{loan} payment (debt plan)"
@@ -43,6 +56,9 @@ en:
       accounts_title: By account
     table:
       expand: Expand
+      edit_columns: Edit table
+      cash: Cash balance
+      investment: Savings / investments
       title: Forecast table
       hint: "Each line with the balance left after it. Recurring: from your bills, salaries and subscriptions (the fixed and recurring ones). Variable spending: what you usually spend on variable things that month (average of the last three same months and the last six months, without the highest and lowest). Use Edit to change a line's date, amount or name, or to leave it out."
       add: Add line

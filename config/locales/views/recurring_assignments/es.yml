@@ -1,0 +1,34 @@
+---
+es:
+  transactions:
+    recurring_assignments:
+      frequencies:
+        weekly: Semanalmente
+        every_2_weeks: Cada 2 semanas
+        every_3_weeks: Cada 3 semanas
+        every_4_weeks: Cada 4 semanas
+        every_5_weeks: Cada 5 semanas
+        every_6_weeks: Cada 6 semanas
+        monthly: Mensualmente
+        every_2_months: Cada 2 meses
+        every_3_months: Cada 3 meses
+        every_6_months: Cada 6 meses
+        yearly: Anualmente
+      new:
+        title: Añadir a recurrente
+        new: Crear nuevo recurrente
+        empty: Aún no tienes recurrentes. Crea el primero.
+        back: Volver a la lista
+        name: Nombre
+        name_placeholder: Nómina Rafa BBVA
+        frequency: Selecciona frecuencia
+        create: Crear y añadir
+      create:
+        success:
+          one: "1 movimiento añadido a «%{name}»."
+          other: "%{count} movimientos añadidos a «%{name}»."
+        skipped:
+          one: "1 no se pudo añadir: no hay un pago de ese recurrente cerca de su fecha."
+          other: "%{count} no se pudieron añadir: no hay un pago de ese recurrente cerca de su fecha."
+        nothing: No se ha añadido ningún movimiento. Los traspasos no pueden ser pagos de un recurrente.
+        failed: No se ha podido añadir. Inténtalo de nuevo.

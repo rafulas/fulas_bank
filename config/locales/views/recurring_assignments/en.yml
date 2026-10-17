@@ -1,0 +1,34 @@
+---
+en:
+  transactions:
+    recurring_assignments:
+      frequencies:
+        weekly: Weekly
+        every_2_weeks: Every 2 weeks
+        every_3_weeks: Every 3 weeks
+        every_4_weeks: Every 4 weeks
+        every_5_weeks: Every 5 weeks
+        every_6_weeks: Every 6 weeks
+        monthly: Monthly
+        every_2_months: Every 2 months
+        every_3_months: Every 3 months
+        every_6_months: Every 6 months
+        yearly: Yearly
+      new:
+        title: Add to recurring
+        new: Create new recurring
+        empty: You have no recurring series yet. Create the first one.
+        back: Back to the list
+        name: Name
+        name_placeholder: Salary
+        frequency: Choose frequency
+        create: Create and add
+      create:
+        success:
+          one: "1 movement added to %{name}."
+          other: "%{count} movements added to %{name}."
+        skipped:
+          one: "1 could not be added: that series has no payment near its date."
+          other: "%{count} could not be added: that series has no payment near its date."
+        nothing: No movement was added. Transfers cannot be payments of a recurring series.
+        failed: It could not be added. Please try again.

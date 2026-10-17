@@ -6,7 +6,15 @@
       <%= @mark_recurring_subtitle %>
     </p>
   </div>
-  <div class="flex items-center gap-2">
+  <div class="flex flex-wrap items-center justify-end gap-2">
+    <%# Fulas Bank: to a series of the list, or a new one with its frequency. %>
+    <%= render DS::Link.new(
+      text: t("transactions.show.add_to_recurring"),
+      variant: "outline",
+      icon: "list-plus",
+      href: new_transactions_recurring_assignment_path(entry_ids: [ entry.id ]),
+      frame: :modal
+    ) %>
     <%= render DS::Button.new(
       text: t("transactions.show.mark_recurring"),
       variant: "outline",

@@ -43,6 +43,16 @@ class Forecast
   MAIN_ACCOUNT_PREFERENCE = "forecast_main_account_id".freeze
   # Fulas Bank: the least the main account should ever have ("colchón").
   CUSHION_PREFERENCE = "forecast_cushion".freeze
+  # Fulas Bank: the table's columns, set from "Editar tabla": the accounts
+  # hidden, and the group each account adds up in.
+  HIDDEN_COLUMNS_PREFERENCE = "forecast_hidden_columns".freeze
+  COLUMN_GROUPS_PREFERENCE = "forecast_column_groups".freeze
+
+  # Fulas Bank: like the user's spreadsheet, the total is the cash (current
+  # and savings accounts) plus the savings and investments (funds, shares).
+  # An account can also be left out of the totals ("none"): it still has its
+  # own column.
+  GROUPS = %w[cash investment none].freeze
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
@@ -76,12 +86,12 @@ class Forecast
     end
   end
 
-  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan
+  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups
 
   # `main_account` is where the monthly variable spending and the card
   # charges are expected (by default the first current account);
   # `card_accounts` are the cards whose spending ends up there.
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil)
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {})
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
     @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
@@ -90,6 +100,33 @@ class Forecast
     @include_variable = include_variable
     @today = today
     @debt_plan = debt_plan
+    @column_groups = (column_groups || {}).to_h.transform_keys(&:to_s)
+  end
+
+  # Fulas Bank: "cash", "investment" or "none" (see GROUPS): what the user
+  # chose in "Editar tabla", or by the kind of account.
+  def group_for(account)
+    chosen = column_groups[account.id.to_s]
+    return chosen if GROUPS.include?(chosen)
+
+    self.class.default_group(account)
+  end
+
+  def self.default_group(account)
+    account.accountable_type == "Depository" ? "cash" : "investment"
+  end
+
+  # The accounts that add up in the totals.
+  def counted_accounts
+    @counted_accounts ||= accounts.reject { |account| group_for(account) == "none" }
+  end
+
+  # { "cash" => Money, "investment" => Money } for a row's balances, in the
+  # family's currency.
+  def group_totals(balances)
+    %w[cash investment].index_with do |group|
+      money(accounts.select { |account| group_for(account) == group }.sum { |account| net_worth_amount(account, balances[account.id]) })
+    end
   end
 
   def self.default_main_account(accounts)
@@ -127,7 +164,7 @@ class Forecast
         end
       end
 
-      total = accounts.sum { |each_account| net_worth_amount(each_account, balances[each_account.id]) } + unassigned
+      total = counted_accounts.sum { |each_account| net_worth_amount(each_account, balances[each_account.id]) } + unassigned
       LedgerRow.new(flow: flow, balances: balances.dup, total: money(total))
     end
 
@@ -156,11 +193,11 @@ class Forecast
     accounts.index_with { |account| Money.new(balance_of(account, date), account.currency) }
   end
 
-  # All the accounts together, in the family's currency: what is in the
+  # The accounts that add up (see #group_for), in the family's currency: what is in the
   # current accounts minus what is owed on the cards.
   def total_on(date)
     date = date.clamp(today, through)
-    money(accounts.sum { |account| net_worth_amount(account, balance_of(account, date)) } + unassigned_until(date))
+    money(counted_accounts.sum { |account| net_worth_amount(account, balance_of(account, date)) } + unassigned_until(date))
   end
 
   # The lowest expected total and when, to warn before money runs short. It
