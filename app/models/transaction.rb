@@ -143,7 +143,9 @@ class Transaction < ApplicationRecord
   # Fulas Bank: money in to a category that is not income (a refund), which
   # counts as less spending rather than as income (Category::REFUND_IDS_SQL).
   def self.refund_sql(table: "transactions", amount: "entries.amount")
-    "(#{amount} < 0 AND #{table}.category_id IN (#{Category::REFUND_IDS_SQL}))"
+    # The IS NOT NULL keeps an uncategorized inflow false rather than NULL,
+    # so "NOT refund" still holds for it.
+    "(#{amount} < 0 AND #{table}.category_id IS NOT NULL AND #{table}.category_id IN (#{Category::REFUND_IDS_SQL}))"
   end
 
   def self.counts_as_flow_sql
