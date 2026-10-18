@@ -225,7 +225,7 @@ class MonthPlan
   # Where spending should be today if the budget were spent evenly, and how
   # far above (positive) or below it the month goes.
   def budget_pace_expected
-    money(budget_rows.sum(&:budgeted).to_d * elapsed_share)
+    money((budget_rows.sum(&:budgeted).to_d * elapsed_share).round(2))
   end
 
   def budget_pace_gap
