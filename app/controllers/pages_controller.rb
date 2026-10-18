@@ -76,7 +76,8 @@ class PagesController < ApplicationController
 
     @dashboard_sections = build_dashboard_sections
 
-    @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.dashboard"), nil ] ]
+    # Fulas Bank: Inicio is the top page, no trail to show ("Inicio › Panel").
+    @breadcrumbs = []
   end
 
   def intro

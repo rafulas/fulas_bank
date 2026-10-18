@@ -9,16 +9,17 @@
   <span class="<%= class_names("w-2.5 h-2.5 shrink-0 rounded-full", dot) %>" title="<%= t("month_plans.payment_line.states.#{payment.state}") %>">
     <span class="sr-only"><%= t("month_plans.payment_line.states.#{payment.state}") %></span>
   </span>
-  <%= render DS::FilledIcon.new(variant: :solid, icon: series.category&.lucide_icon || "repeat", hex_color: series.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
+  <%= render DS::ColorLabel.new(label: series.category&.display_name || payment.name, color: series.category&.color || Category::UNCATEGORIZED_COLOR,
+                                icon: series.category&.lucide_icon || "repeat", dashed: series.category.nil?, size: :md, show_label: false) %>
   <div class="min-w-0 flex-1">
-    <p class="truncate text-sm font-medium text-primary"><%= payment.name %></p>
+    <p class="truncate text-sm font-medium text-primary"><%= RecurringTransaction.readable_name(payment.name) %></p>
     <p class="text-xs <%= payment.state == :overdue ? "text-destructive" : "text-secondary" %>"><%= month_plan_payment_date(payment) %></p>
   </div>
   <% if show_mode && payment.state != :paid && !payment.income? %>
     <%= render DS::Pill.new(label: series.autopay? ? t("month_plans.payment_line.autopay") : t("month_plans.payment_line.by_hand"),
           tone: series.autopay? ? :neutral : :warning, marker: false) %>
   <% end %>
-  <span class="<%= class_names("font-amount text-sm font-bold privacy-sensitive whitespace-nowrap", payment.income? ? "text-success" : "text-primary") %>">
+  <span class="<%= class_names("font-amount text-sm font-semibold privacy-sensitive whitespace-nowrap", payment.income? ? "text-success" : "text-primary") %>">
     <%= payment.income? ? "+" : "−" %><%= format_money(Money.new(payment.amount, currency)) %>
   </span>
 </div>

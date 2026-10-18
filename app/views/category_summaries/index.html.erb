@@ -27,9 +27,9 @@
   <p class="px-1 text-xs text-secondary"><%= t(".category") %></p>
 
   <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
-    <% @summary.rows.each_with_index do |row, index| %>
+    <% @summary.visible_rows.each_with_index do |row, index| %>
       <%= render "shared/ruler" unless index.zero? %>
-      <%= render "category_summaries/row", row: row, href: category_summary_root_path(row, @period) %>
+      <%= render "category_summaries/row", row: row, href: category_summary_root_path(row, @period), summary: @summary %>
     <% end %>
   </div>
 

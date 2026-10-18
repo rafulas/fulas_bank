@@ -8,6 +8,7 @@ en:
       load_more: Show more transactions
       per_page: Transactions per block
     panel:
+      analysis: "Analysis: previous weeks and 90-day balance"
       accounts_title: Balances
       choose_accounts: Choose accounts
       week_range: "Spending: %{from} – %{to}"

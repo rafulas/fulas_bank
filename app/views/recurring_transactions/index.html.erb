@@ -76,7 +76,7 @@
               <p class="text-sm text-primary"><%= row.next_date ? l(row.next_date, format: t("month_plans.show.long_date")) : "—" %></p>
             </div>
             <div class="w-32 shrink-0 text-right">
-              <p class="<%= class_names("font-amount text-sm font-bold privacy-sensitive whitespace-nowrap", row.income? ? "text-success" : "text-primary") %>">
+              <p class="<%= class_names("font-amount text-sm font-semibold privacy-sensitive whitespace-nowrap", row.income? ? "text-success" : "text-primary") %>">
                 <%= row.income? ? "+" : "−" %><%= format_money(row.amount) %>
               </p>
               <% if (change = row.price_change) %>

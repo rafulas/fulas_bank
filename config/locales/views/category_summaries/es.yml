@@ -4,6 +4,9 @@ es:
     transactions_count:
       one: 1 transacción
       other: "%{count} transacciones"
+    transfers_moved:
+      one: "%{amount} · 1 movimiento"
+      other: "%{amount} · %{count} movimientos"
     index:
       savings_rate: Tasa de ahorro
       total_month: Total de %{month}

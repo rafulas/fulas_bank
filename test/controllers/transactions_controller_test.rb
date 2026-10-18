@@ -462,7 +462,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
       create_transaction(account: account)
     end
 
-    get transactions_url(per_page: 10)
+    get transactions_url(q: { types: %w[expense income transfer] }, per_page: 10)
 
     assert_dom "#total-transactions", count: 1, text: family.entries.transactions.size.to_s
 
@@ -796,10 +796,13 @@ end
     )
 
     Transaction::Search.expects(:new).with(family, filters: {}, accessible_account_ids: [ account.id ]).returns(search)
-    search.expects(:totals).once.returns(totals)
+    # Fulas Bank: without filters the panel shows and the totals of the
+    # whole history are not worked out.
+    search.expects(:totals).never
 
     get transactions_url
     assert_response :success
+    assert_select "#total-transactions", count: 0
   end
 
   test "calls Transaction::Search totals method with filtered search parameters" do

@@ -23,8 +23,11 @@ module CategorySummariesHelper
     end
   end
 
-  def category_summary_value(row)
-    if row.transfers?
+  def category_summary_value(row, summary = nil)
+    if row.transfers? && summary
+      # Fulas Bank: what was moved between accounts, and in how many movements.
+      t("category_summaries.transfers_moved", amount: format_money(Money.new(summary.transfer_volume, Current.family.currency)), count: row.count)
+    elsif row.transfers?
       t("category_summaries.transactions_count", count: row.count)
     else
       format_money(Money.new(row.total, Current.family.currency))
