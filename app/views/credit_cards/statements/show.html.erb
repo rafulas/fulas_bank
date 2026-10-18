@@ -1,0 +1,80 @@
+<%# Fulas Bank: one statement of a credit card (see CreditCards::StatementsController). %>
+<% today = @cycle.today %>
+<% currency = @account.currency %>
+<%= render DS::Dialog.new(width: "lg") do |dialog| %>
+  <% dialog.with_header(title: t(".title", from: l(@statement.opens_on, format: "%-d/%m"), to: l(@statement.closes_on, format: "%-d/%m/%y")),
+                        subtitle: @account.name) %>
+  <% dialog.with_body do %>
+    <div class="space-y-4">
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".purchases") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(@statement.purchases_money) %></dd>
+        </div>
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".financed") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= @statement.financed.positive? ? format_money(-@statement.financed_money) : "—" %></dd>
+        </div>
+        <div class="rounded-lg bg-info/10 p-3">
+          <dt class="text-xs text-secondary"><%= t(".charge") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(@statement.amount_money) %></dd>
+        </div>
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= @statement.charged?(today) ? t(".charged_on") : t(".to_charge_on") %></dt>
+          <dd class="font-medium text-primary"><%= l(@statement.charged_on, format: "%d/%m/%y") %></dd>
+        </div>
+      </dl>
+
+      <% if @bank_entry %>
+        <p class="text-sm text-secondary privacy-sensitive">
+          <%= t(".bank_charge", name: @bank_entry.name, date: l(@bank_entry.date, format: "%d/%m/%y"), amount: format_money(@bank_entry.amount_money)) %>
+          <%= link_to t(".open"), entry_path(@bank_entry), class: "text-link underline", data: { turbo_frame: "drawer" } %>
+        </p>
+      <% elsif @statement.open?(today) %>
+        <p class="text-sm text-secondary"><%= t(".still_open") %></p>
+      <% end %>
+
+      <section class="space-y-2">
+        <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".movements", count: @statement.entries.size) %></h3>
+        <% if @statement.entries.any? %>
+          <%= render DS::Table.new(rows: @statement.entries, dense: true, label: t(".movements", count: @statement.entries.size)) do |table| %>
+            <% table.with_column(t(".date"), class: "whitespace-nowrap text-secondary") { |entry| l(entry.date, format: "%d/%m/%y") } %>
+            <% table.with_column(t(".name")) do |entry| %>
+              <div class="flex items-center gap-1.5 min-w-0 max-w-72">
+                <%= link_to entry.name, entry_path(entry), class: "truncate text-primary hover:underline", title: entry.name, data: { turbo_frame: "drawer" } %>
+                <% if entry.entryable.next_card_statement %>
+                  <%= render DS::Pill.new(label: t(".moved"), tone: :neutral, marker: false, size: :sm) %>
+                <% end %>
+                <% if @financings.any? { |financing| financing.entry_id == entry.id } %>
+                  <%= render DS::Pill.new(label: t(".financed_pill"), tone: :warning, marker: false, size: :sm) %>
+                <% end %>
+              </div>
+            <% end %>
+            <% table.with_column(t(".category"), class: "text-secondary whitespace-nowrap") { |entry| entry.entryable.category&.name || "—" } %>
+            <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") do |entry| %>
+              <span class="<%= entry.amount.negative? ? "text-success" : "text-primary" %>"><%= format_money(-entry.amount_money) %></span>
+            <% end %>
+          <% end %>
+        <% else %>
+          <p class="text-sm text-secondary"><%= t(".no_movements") %></p>
+        <% end %>
+      </section>
+
+      <% if @financings.any? %>
+        <section class="space-y-2">
+          <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".financed_title") %></h3>
+          <ul class="divide-y divide-primary text-sm">
+            <% @financings.each do |financing| %>
+              <li class="flex items-center justify-between gap-3 py-2">
+                <%= link_to financing.name, credit_card_financing_path(@account, financing), class: "truncate text-primary hover:underline", data: { turbo_frame: "modal" } %>
+                <span class="privacy-sensitive text-secondary whitespace-nowrap"><%= format_money(-financing.financed_amount_money) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <p class="text-xs text-secondary"><%= t(".hint") %></p>
+    </div>
+  <% end %>
+<% end %>

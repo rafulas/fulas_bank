@@ -85,7 +85,30 @@ class CreditCard::Reconciler
     Status.new(state: state, entry: entry, expected: expected, charged: charged)
   end
 
+  # Fulas Bank: the payment account's «Operación financiada» charge near
+  # `date`, filed (split, or linked to the card) or not. One charge pays every
+  # financed purchase due that day, with their fees.
+  def financed_charge_on(date)
+    return unless payment_account
+
+    payment_account.entries.where(entryable_type: "Transaction", date: window(date), parent_entry_id: nil)
+                   .where("entries.amount > 0").order(:date).to_a
+                   .find { |entry| named?(entry, FINANCED_WORDS) || split_into_installments?(entry) }
+  end
+
+  # The bank's charge of a statement (see #status_for), filed or not.
+  def statement_charge_for(statement)
+    return unless active?
+
+    filed_statement_charge(statement) || statement_charge(statement)
+  end
+
   private
+    def split_into_installments?(entry)
+      name = I18n.t("credit_cards.reconciler.installments_name")
+      entry.child_entries.any? { |child| child.name == name }
+    end
+
     def statements
       month = cycle.statement_month_for(today)
       cycle.statements_between(month << MONTHS_BACK, month).select { |statement| statement.charged_on <= today + DAYS_AFTER }

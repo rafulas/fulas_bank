@@ -36,7 +36,11 @@
     </div>
     <%= render DS::Table.new(rows: cycle.recent, dense: true, label: t(".statements")) do |table| %>
       <% table.with_column(t(".period")) do |statement| %>
-        <span class="text-primary"><%= l(statement.opens_on, format: "%-d/%m") %> – <%= l(statement.closes_on, format: "%-d/%m/%y") %></span>
+        <%# Fulas Bank: opens the statement's movements. %>
+        <%= link_to credit_card_statement_path(account, statement.month.strftime("%Y-%m")), class: "text-primary underline decoration-dotted underline-offset-2 hover:decoration-solid",
+              title: t(".see_movements"), data: { turbo_frame: "modal" } do %>
+          <%= l(statement.opens_on, format: "%-d/%m") %> – <%= l(statement.closes_on, format: "%-d/%m/%y") %>
+        <% end %>
         <% if statement.open?(today) %>
           <span class="block text-xs text-secondary"><%= t(".in_progress") %></span>
         <% end %>
@@ -76,7 +80,9 @@
           <li class="py-3 space-y-1 text-sm">
             <div class="flex items-center justify-between gap-3">
               <span class="min-w-0">
-                <span class="block truncate text-primary font-medium"><%= financing.name %></span>
+                <%# Fulas Bank: opens its fee and instalments, and the bank's charges. %>
+                <%= link_to financing.name, credit_card_financing_path(account, financing), class: "block truncate text-primary font-medium hover:underline",
+                      title: t(".see_charges"), data: { turbo_frame: "modal" } %>
                 <span class="block text-xs text-secondary"><%= l(financing.purchase_date, format: "%d/%m/%Y") %> · <%= format_money(financing.financed_amount_money) %></span>
               </span>
               <% if financing.entry %>
@@ -103,6 +109,7 @@
                 · <%= t(".finished") %>
               <% end %>
             </p>
+            <%= link_to t(".see_charges"), credit_card_financing_path(account, financing), class: "text-xs text-link hover:underline", data: { turbo_frame: "modal" } %>
             <% if financing.mismatch? %>
               <p class="text-xs text-warning"><%= t(".mismatch") %></p>
             <% end %>

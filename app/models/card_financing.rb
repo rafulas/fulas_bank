@@ -53,6 +53,19 @@ class CardFinancing < ApplicationRecord
     list
   end
 
+  # Fulas Bank: each charge with whether its day has passed and the bank's
+  # «Operación financiada» charge that day, if imported (see
+  # CreditCard::Reconciler#financed_charge_on). That bank charge may also pay
+  # other financed purchases due the same day.
+  ChargeLine = Data.define(:charge, :paid, :bank_entry)
+
+  def charge_lines(today: Date.current, cycle: cycle_for, reconciler: CreditCard::Reconciler.new(account, today: today))
+    charges(cycle).map do |charge|
+      paid = charge.date <= today
+      ChargeLine.new(charge: charge, paid: paid, bank_entry: paid ? reconciler.financed_charge_on(charge.date) : nil)
+    end
+  end
+
   def total_to_pay
     installment_amount.to_d * installments_count + fee_amount.to_d
   end
