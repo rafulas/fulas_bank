@@ -13,13 +13,13 @@ class CategorySummariesControllerTest < ActionDispatch::IntegrationTest
     hogar = @family.categories.find_by!(name: "Hogar")
     create_transaction(account: accounts(:depository), amount: 40, category: hogar)
     create_transaction(account: accounts(:depository), amount: 15, category: @family.categories.find_by!(name: "Excluido"))
+    empty = @family.categories.create!(name: "Sin movimientos", color: "#6471eb", lucide_icon: "shapes")
 
     get category_summaries_url
 
     assert_response :success
     assert_select "a[href=?]", category_summary_path(hogar, period: @controller.instance_variable_get(:@period).key)
     assert_select "p", text: "Excluido"
-    empty = @family.categories.roots.where.not(name: [ "Hogar", "Excluido", "Traspasos" ]).first
     assert_select "a[href=?]", category_summary_path(empty, period: @controller.instance_variable_get(:@period).key), count: 0
   end
 
