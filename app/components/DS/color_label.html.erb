@@ -6,7 +6,10 @@
       <%= helpers.icon(icon || "shapes", size: icon_size, color: "current") %>
     </span>
   <% end %>
-  <% if show_label %>
+  <% if show_label && tinted %>
+    <%= tag.span class: tint_classes, style: tint_style, data: (label_testid ? { testid: label_testid } : nil) do %><%= label %><% end %>
+    <% if detail %><span class="min-w-0 truncate text-secondary text-xs">· <%= detail %></span><% end %>
+  <% elsif show_label %>
     <%= tag.span class: ("min-w-0 truncate" if truncate), data: (label_testid ? { testid: label_testid } : nil) do %><%= label %><% if detail %><span class="text-secondary text-xs"> · <%= detail %></span><% end %><% end %>
   <% else %>
     <span class="sr-only"><%= full_title %></span>
