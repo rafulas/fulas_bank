@@ -768,14 +768,15 @@ end
     assert_response :success
     page_1_entry_ids = rendered_entry_ids
 
-    get transactions_url(page: 2, per_page: 10)
+    # Fulas Bank: a day is never split between blocks, so the first block
+    # takes the whole day, in order, and the next one (told that day) skips it.
+    get transactions_url(page: 2, per_page: 10, after_date: "2026-05-05", after_month: "2026-05-01"),
+        headers: { "Turbo-Frame" => "transactions_page_2" }
     assert_response :success
     page_2_entry_ids = rendered_entry_ids
 
-    assert_equal expected_entry_ids.first(10), page_1_entry_ids
-    assert_equal expected_entry_ids.drop(10), page_2_entry_ids
-    assert_empty page_1_entry_ids & page_2_entry_ids
-    assert_equal expected_entry_ids, page_1_entry_ids + page_2_entry_ids
+    assert_equal expected_entry_ids, page_1_entry_ids
+    assert_empty page_2_entry_ids
   end
 
   test "calls Transaction::Search totals method with correct search parameters" do

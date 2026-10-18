@@ -47,6 +47,41 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal 160, changed.amount
   end
 
+  test "an instalment already due but later than the last import is still expected, tomorrow" do
+    today = Date.new(2026, 10, 20)
+    create_transaction(account: @account, name: "Último movimiento importado", date: Date.new(2026, 10, 5), amount: 10)
+    @family.insurances.create!(
+      name: "Seguro Cupra", kind: "car", payment_frequency: "custom", payment_account: @account,
+      installments: [
+        { "date" => "2026-10-02", "amount" => "150" },
+        { "date" => "2026-10-16", "amount" => "150" },
+        { "date" => "2026-11-30", "amount" => "150" }
+      ]
+    )
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
+    lines = forecast.flows.select { |flow| flow.source == :insurance }
+
+    # 2 October is before the last movement imported: taken as charged.
+    # 16 October is after it: not imported yet, so it still has to go out.
+    assert_equal [ today + 1, Date.new(2026, 11, 30) ], lines.map(&:date)
+    assert_includes lines.first.name, I18n.l(Date.new(2026, 10, 16), format: "%d/%m")
+    assert_equal lines.first.name, I18n.t("forecasts.overdue_line", name: I18n.t("forecasts.insurance_line", name: "Seguro Cupra", number: 2, count: 3), date: "16/10")
+  end
+
+  test "nothing overdue is expected for an account with nothing imported" do
+    today = Date.new(2026, 10, 20)
+    other = create_account("Sin movimientos", Depository.new, balance: 500)
+    @family.insurances.create!(
+      name: "Seguro hogar", kind: "home", payment_frequency: "custom", payment_account: other,
+      installments: [ { "date" => "2026-10-16", "amount" => "80" } ]
+    )
+
+    forecast = Forecast.new(@family, accounts: [ other ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
+
+    assert_empty forecast.flows.select { |flow| flow.source == :insurance }
+  end
+
   test "an insurance with no account set is expected in the main account, and only while in force" do
     insurance = @family.insurances.create!(
       name: "Seguro moto", kind: "motorcycle", payment_frequency: "custom",
@@ -203,6 +238,21 @@ class ForecastTest < ActiveSupport::TestCase
 
     assert_equal [ savings, savings ], lines.map(&:account)
     assert_equal [ BigDecimal("400"), BigDecimal("400") ], lines.map(&:amount)
+  end
+
+  test "an account left out of the totals is left out of the variable spending too" do
+    today = Date.new(2026, 10, 14)
+    payslip = create_account("Cuenta Fake Nómina", Depository.new, balance: 0)
+    create_transaction(account: @account, name: "Súper", amount: 300, date: Date.new(2026, 9, 10))
+    # Deductions come in and go out of the pass-through account.
+    create_transaction(account: payslip, name: "IRPF", amount: 900, date: Date.new(2026, 9, 19))
+
+    forecast = Forecast.new(@family, accounts: [ @account, payslip ], main_account: @account,
+                            through: Date.new(2026, 11, 30), today: today,
+                            column_groups: { payslip.id => "none" })
+    lines = forecast.flows.select { |flow| flow.source == :variable }
+
+    assert_equal [ BigDecimal("300"), BigDecimal("300") ], lines.map(&:amount)
   end
 
   test "the main account defaults to the first current account" do

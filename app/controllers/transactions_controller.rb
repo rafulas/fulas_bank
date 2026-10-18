@@ -31,7 +31,7 @@ class TransactionsController < ApplicationController
                        .reverse_chronological
                        .includes(
                          { entry: [ :account, { recurring_allocations: { recurring_occurrence: :recurring_transaction } } ] },
-                         :category, :merchant, :tags,
+                         { category: :parent }, :merchant, :tags,
                          # Union of #2643 counterpart UI + Skylight category-menu N+1:
                          # - outflow rows need inflow_transaction (to_account) for both
                          #   counterpart display and Transfer#categorizable?/#payment?
@@ -52,6 +52,7 @@ class TransactionsController < ApplicationController
                        )
 
     @pagy, @transactions = pagy(base_scope, limit: safe_per_page(stored_params["per_page"]))
+    @transactions = complete_last_day(base_scope, @transactions)
     Transaction::ActivitySecurityPreloader.new(@transactions).preload
 
     # Preload split parent data
@@ -739,6 +740,26 @@ class TransactionsController < ApplicationController
 
     def next_page_request?
       request.headers["Turbo-Frame"].to_s.start_with?("transactions_page_")
+    end
+
+    # Fulas Bank: a day is never split between two blocks of the list (it
+    # would show twice, each time with part of its movements and total). A
+    # block takes the rest of its last day's movements, and the next block
+    # (told that day as `after_date`) leaves them out.
+    def complete_last_day(scope, page)
+      page = page.to_a
+      @after_date = parse_date(params[:after_date]) if next_page_request?
+      page = page.reject { |transaction| transaction.entry.date == @after_date } if @after_date
+      return page unless @pagy.next && page.any?
+
+      last_date = page.last.entry.date
+      page + scope.where(entries: { date: last_date }).where.not(id: page.map(&:id)).to_a
+    end
+
+    def parse_date(value)
+      Date.iso8601(value.to_s)
+    rescue Date::Error
+      nil
     end
 
     def parse_month(value)

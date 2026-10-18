@@ -40,6 +40,10 @@ x-rails-env: &rails_env
   # Share and fund prices from Yahoo Finance: free, no key, covers the
   # Madrid stock exchange. Another can still be chosen in Ajustes.
   SECURITIES_PROVIDER: ${SECURITIES_PROVIDER:-yahoo_finance}
+  # Nobody else can create an account: the app is reached from the home wifi
+  # or Tailscale, and only its owners use it. Ajustes › Autohospedaje can
+  # still open it (or require an invitation) when it is needed.
+  ONBOARDING_STATE: ${ONBOARDING_STATE:-closed}
 
 services:
   web:

@@ -15,6 +15,7 @@ es:
     update_columns:
       success: Tabla actualizada.
     variable_line: Gastos varios %{month}
+    overdue_line: "%{name} (vencía el %{date})"
     insurance_line: "%{name} (plazo %{number} de %{count})"
     debt_plan_line: "Cuota %{loan} (plan de deuda)"
     card_statement_line: "%{card}: extracto de %{month}"

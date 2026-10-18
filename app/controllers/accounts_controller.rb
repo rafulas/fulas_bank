@@ -164,7 +164,7 @@ class AccountsController < ApplicationController
       split_parent_ids = @entries.filter_map(&:parent_entry_id).uniq
       if split_parent_ids.any?
         Entry.where(id: split_parent_ids)
-             .includes(:account, entryable: [ :category, :merchant ])
+             .includes(:account, entryable: [ { category: :parent }, :merchant ])
              .index_by(&:id)
       else
         {}
