@@ -254,8 +254,10 @@ class RecurringTransaction::IdentifierTest < ActiveSupport::TestCase
       status: "active", manual: true, bill_type: "subscription", last_occurrence_date: dates.last, next_expected_date: dates.last.next_month
     )
     entries.each do |entry|
-      occurrence = club.recurring_occurrences.create!(family: @family, currency: "USD", due_on: entry.date, original_due_on: entry.date,
-                                                      expected_amount: 9.99, status: "paid", closed_at: Time.current, closed_source: "user")
+      # The series may already have opened the occurrence for the latest date.
+      occurrence = club.recurring_occurrences.find_or_initialize_by(original_due_on: entry.date)
+      occurrence.update!(family: @family, currency: "USD", due_on: entry.date, expected_amount: 9.99,
+                         status: "paid", closed_at: Time.current, closed_source: "user")
       RecurringAllocation.create!(recurring_occurrence: occurrence, entry: entry, allocated_amount: 9.99, currency: "USD",
                                   source: "user_confirmed", paid_on: entry.date)
     end
