@@ -118,13 +118,19 @@ class RecurringTransaction < ApplicationRecord
   # What the user calls this bill, which is a different question from what it
   # matches on: a typed name wins over the detected merchant, while the matcher
   # keeps reading the merchant directly.
-  # Fulas Bank: a bank's name in capitals ("FUNDACION HUERFANOS DEL CUERPO
-  # NACIONAL DE POLICIA") reads as "Fundacion Huerfanos del Cuerpo Nacional
-  # de Policia"; a name the user typed is kept as it is.
-  LOWERCASE_WORDS = %w[de del la las los el y e o u en a al con por para sa sl sau].freeze
-
   def display_name
-    self.class.readable_name(name.presence || merchant&.name)
+    name.presence || merchant&.name
+  end
+
+  # Fulas Bank: for the lists (Suscripciones, Planes, Inicio), a bank's name
+  # in capitals ("FUNDACION HUERFANOS DEL CUERPO NACIONAL DE POLICIA") reads
+  # as "Fundacion Huerfanos del Cuerpo Nacional de Policia". Forms and the
+  # matcher keep the name as it is.
+  LOWERCASE_WORDS = %w[de del la las los el y e o u en a al con por para].freeze
+  UPPERCASE_WORDS = %w[sa sl sau slu llc inc ltd].freeze
+
+  def list_name
+    self.class.readable_name(display_name)
   end
 
   def self.readable_name(text)
@@ -133,7 +139,7 @@ class RecurringTransaction < ApplicationRecord
     words = text.downcase.split(/(\s+)/)
     words.each_with_index.map do |word, index|
       next word if word.blank?
-      next word.upcase if %w[sa sl sau slu].include?(word.delete("."))
+      next word.upcase if UPPERCASE_WORDS.include?(word.delete("."))
       next word if index.positive? && LOWERCASE_WORDS.include?(word)
 
       word.sub(/\p{L}/) { |letter| letter.upcase }

@@ -12,7 +12,7 @@
   <%= render DS::ColorLabel.new(label: series.category&.display_name || payment.name, color: series.category&.color || Category::UNCATEGORIZED_COLOR,
                                 icon: series.category&.lucide_icon || "repeat", dashed: series.category.nil?, size: :md, show_label: false) %>
   <div class="min-w-0 flex-1">
-    <p class="truncate text-sm font-medium text-primary"><%= payment.name %></p>
+    <p class="truncate text-sm font-medium text-primary"><%= RecurringTransaction.readable_name(payment.name) %></p>
     <p class="text-xs <%= payment.state == :overdue ? "text-destructive" : "text-secondary" %>"><%= month_plan_payment_date(payment) %></p>
   </div>
   <% if show_mode && payment.state != :paid && !payment.income? %>

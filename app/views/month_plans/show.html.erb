@@ -166,7 +166,7 @@
           <div class="<%= class_names("flex items-center gap-3 px-4 py-2", "border-t border-divider" => index.positive?) %>">
             <%= render DS::FilledIcon.new(variant: :solid, icon: upcoming.series.category&.lucide_icon || "repeat", hex_color: upcoming.series.category&.color || Category::UNCATEGORIZED_COLOR, size: "sm", rounded: true) %>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm text-primary"><%= upcoming.series.display_name %></p>
+              <p class="truncate text-sm text-primary"><%= upcoming.series.list_name %></p>
               <p class="text-xs text-secondary"><%= t(".expected_on", date: l(upcoming.date, format: t(".long_date"))) %></p>
             </div>
             <span class="text-sm text-primary privacy-sensitive"><%= upcoming.series.amount.negative? ? "+" : "−" %><%= format_money(Money.new(upcoming.amount, currency)) %></span>
