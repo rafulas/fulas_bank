@@ -203,12 +203,15 @@ class Loan < ApplicationRecord
 
   # Each linked payment's anchor, again, from the current schedule. A
   # payment whose month the schedule no longer covers keeps its anchor.
+  # Looks the account up afresh: reading `account` here would cache a
+  # missing has_one while the loan is saved before its account (see #reload).
   private def sync_installment
-    return unless account&.persisted?
+    loan_account = Account.find_by(accountable_type: "Loan", accountable_id: id)
+    return unless loan_account
 
-    Loan::InstallmentSync.new(account.family).sync_account(account)
+    Loan::InstallmentSync.new(loan_account.family).sync_account(loan_account)
   rescue ActiveRecord::RecordInvalid => error
-    Rails.logger.warn("Loan instalment not synced for account #{account.id}: #{error.message}")
+    Rails.logger.warn("Loan instalment not synced for account #{loan_account&.id}: #{error.message}")
   end
 
   private def reanchor_linked_payments
