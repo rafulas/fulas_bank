@@ -54,6 +54,7 @@ class Transaction::MonthSummary
   private
     def totals
       @totals ||= begin
+        refund = Transaction.refund_sql
         row = scope.where(entries: { date: month..month.end_of_month })
                    .where(Transaction.counts_as_flow_sql)
                    .joins(ActiveRecord::Base.sanitize_sql_array([
@@ -62,16 +63,12 @@ class Transaction::MonthSummary
                    ]))
                    .pick(
                      # A refund lowers spending instead of counting as income.
-                     Arel.sql("COALESCE(SUM(CASE WHEN entries.amount >= 0 OR #{refund_sql} THEN entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)"),
-                     Arel.sql("COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{refund_sql} THEN -entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)")
+                     Arel.sql("COALESCE(SUM(CASE WHEN entries.amount >= 0 OR #{refund} THEN entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)"),
+                     Arel.sql("COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{refund} THEN -entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)")
                    )
 
         { expense: row[0].to_d, income: row[1].to_d }
       end
-    end
-
-    def refund_sql
-      Transaction.refund_sql(family)
     end
 
     # The household budget of the period the month starts in, or the user's

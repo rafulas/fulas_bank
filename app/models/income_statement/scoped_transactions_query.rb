@@ -15,9 +15,9 @@ module IncomeStatement::ScopedTransactionsQuery
     # classify as income.
     def classification_sql(t)
       # Fulas Bank: a refund (money in to a category that is not income) is
-      # less spending, not income (Category.refund_ids_sql).
+      # less spending, not income (Category::REFUND_IDS_SQL).
       "CASE WHEN #{t}.kind IN ('investment_contribution', 'loan_payment') THEN 'expense' " \
-        "WHEN #{Transaction.refund_sql(@family, table: t, amount: 'ae.amount')} THEN 'expense' " \
+        "WHEN #{Transaction.refund_sql(table: t, amount: 'ae.amount')} THEN 'expense' " \
         "WHEN ae.amount < 0 THEN 'income' ELSE 'expense' END"
     end
 

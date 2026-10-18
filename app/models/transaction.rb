@@ -141,9 +141,11 @@ class Transaction < ApplicationRecord
   # and not in "Excluido" or "Traspasos". Assumes the entries and
   # transactions tables under their own names.
   # Fulas Bank: money in to a category that is not income (a refund), which
-  # counts as less spending rather than as income (Category.refund_ids_sql).
-  def self.refund_sql(family, table: "transactions", amount: "entries.amount")
-    "(#{amount} < 0 AND #{table}.category_id IN (#{Category.refund_ids_sql(family)}))"
+  # counts as less spending rather than as income (Category::REFUND_IDS_SQL).
+  def self.refund_sql(table: "transactions", amount: "entries.amount")
+    # The IS NOT NULL keeps an uncategorized inflow false rather than NULL,
+    # so "NOT refund" still holds for it.
+    "(#{amount} < 0 AND #{table}.category_id IS NOT NULL AND #{table}.category_id IN (#{Category::REFUND_IDS_SQL}))"
   end
 
   def self.counts_as_flow_sql

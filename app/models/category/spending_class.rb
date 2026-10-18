@@ -4,7 +4,7 @@
 #
 # "income" marks the categories whose money in is income ("Ingresos"). Money
 # in to any other category is a refund, which lowers that category's spending
-# everywhere (Category.refund_ids_sql); a family with no "income" category
+# everywhere (Category::REFUND_IDS_SQL); a family with no "income" category
 # keeps counting all money in as income.
 #
 # It is stored on each category (`categories.spending_class`). A subcategory
