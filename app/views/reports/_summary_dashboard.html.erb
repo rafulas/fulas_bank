@@ -15,7 +15,7 @@
     </div>
 
     <div class="space-y-2">
-      <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
+      <p class="font-amount text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_income].format %>
       </p>
 
@@ -24,12 +24,12 @@
           <% if metrics[:income_change] >= 0 %>
             <%= icon("arrow-up", size: "sm") %>
             <span class="text-sm font-medium text-success">
-              +<%= metrics[:income_change] %>%
+              +<%= format_percent(metrics[:income_change]) %>
             </span>
           <% else %>
             <%= icon("arrow-down", size: "sm") %>
             <span class="text-sm font-medium text-destructive">
-              <%= metrics[:income_change] %>%
+              <%= format_percent(metrics[:income_change]) %>
             </span>
           <% end %>
           <span class="text-sm text-subdued whitespace-nowrap">
@@ -52,7 +52,7 @@
     </div>
 
     <div class="space-y-2">
-      <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
+      <p class="font-amount text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
         <%= metrics[:current_expenses].format %>
       </p>
 
@@ -61,12 +61,12 @@
           <% if metrics[:expense_change] >= 0 %>
             <%= icon("arrow-up", class: "w-4 h-4 text-destructive") %>
             <span class="text-sm font-medium text-destructive">
-              +<%= metrics[:expense_change] %>%
+              +<%= format_percent(metrics[:expense_change]) %>
             </span>
           <% else %>
             <%= icon("arrow-down", class: "w-4 h-4 text-success") %>
             <span class="text-sm font-medium text-success">
-              <%= metrics[:expense_change] %>%
+              <%= format_percent(metrics[:expense_change]) %>
             </span>
           <% end %>
           <span class="text-sm text-subdued whitespace-nowrap">
@@ -89,7 +89,7 @@
     </div>
 
     <div class="space-y-2">
-      <p class="font-amount text-xl font-bold whitespace-nowrap privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
+      <p class="font-amount text-xl font-semibold whitespace-nowrap privacy-sensitive <%= metrics[:net_savings] >= 0 ? "text-success" : "text-destructive" %>">
         <%= metrics[:net_savings].format %>
       </p>
 
@@ -112,8 +112,8 @@
 
     <div class="space-y-2">
       <% if metrics[:budget_percent] %>
-        <p class="font-amount text-xl font-bold whitespace-nowrap text-primary privacy-sensitive">
-          <%= metrics[:budget_percent] %>%
+        <p class="font-amount text-xl font-semibold whitespace-nowrap text-primary privacy-sensitive">
+          <%= format_percent(metrics[:budget_percent]) %>
         </p>
 
         <div class="space-y-1.5">

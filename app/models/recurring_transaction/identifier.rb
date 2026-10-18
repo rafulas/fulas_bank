@@ -119,6 +119,16 @@ class RecurringTransaction
         identity = [ pattern[:merchant_id] ? [ :merchant, pattern[:merchant_id] ] : [ :name, pattern[:name] ],
                      pattern[:currency], pattern[:account_id], nil ]
         candidates = existing_by_identity[identity] || []
+
+        # Fulas Bank: movements that already pay another series (one named by
+        # hand, or on another account) are not a new bill. A suggestion left
+        # from before for them goes away.
+        if paid_by_other_series?(pattern, candidates)
+          candidates.select(&:suggested?).each(&:destroy!)
+          existing_by_identity[identity] = candidates.reject(&:destroyed?)
+          next
+        end
+
         claimed = nearest_within_tolerance(candidates, pattern[:expected_amount_avg])
 
         if claimed
@@ -195,6 +205,19 @@ class RecurringTransaction
       # Identity as the unique indexes see it, minus dedup_scope: several
       # series can legitimately share this key (subscription tiers), which is
       # exactly why claiming goes through amount-nearness rather than lookup.
+      # Most of the pattern's movements pay a series other than the
+      # suggestions for this same identity.
+      def paid_by_other_series?(pattern, candidates)
+        entry_ids = pattern[:entries].map(&:id)
+        suggested_ids = candidates.select(&:suggested?).map(&:id)
+
+        paid = RecurringAllocation.joins(:recurring_occurrence)
+                                  .where(entry_id: entry_ids)
+                                  .where.not(recurring_occurrences: { recurring_transaction_id: suggested_ids })
+                                  .distinct.count(:entry_id)
+        paid * 2 > entry_ids.size
+      end
+
       def identity_key(recurring)
         identifier = recurring.merchant_id.present? ? [ :merchant, recurring.merchant_id ] : [ :name, recurring.name ]
         [ identifier, recurring.currency, recurring.account_id, recurring.destination_account_id ]

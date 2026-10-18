@@ -107,6 +107,18 @@ class PropertiesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the value tab moves the day the house starts counting" do
+    @account.update!(status: "active")
+    bought = 3.years.ago.to_date
+
+    patch update_balances_property_path(@account), params: {
+      account: { balance: @account.balance, opening_balance_date: bought.iso8601 }
+    }
+
+    assert_response :success
+    assert_equal bought, @account.reload.opening_anchor_date
+  end
+
   test "updates address tab" do
     patch update_address_property_path(@account), params: {
       property: {

@@ -40,6 +40,9 @@ en:
       no_accounts: No accounts yet
     form:
       balance: "Balance on date:"
+      since_label: Counts since
+      since_hint: "The day it starts counting in your net worth: when you bought the house or the car, or signed the loan. Adding it late then does not look like a jump this month."
+      since_error: "That date must be before the account's first movement."
       opening_balance_date_label: Current balance date
       opening_balance_date_hint: Usually today. If you later import earlier transactions, the balance for those days is worked out from this one.
       name_label: Account name

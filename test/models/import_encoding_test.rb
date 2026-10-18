@@ -77,6 +77,19 @@ class ImportEncodingTest < ActiveSupport::TestCase
     assert import.raw_file_str.valid_encoding?, "Converted string should be valid UTF-8"
   end
 
+  test "a Spanish family's file that is not UTF-8 is read as Windows-1252" do
+    @family.update_columns(locale: "es", country: "ES")
+    csv_content = "Date,Amount,Name\n2026-10-02,-47.30,Mapfre Espa\xF1a SA\n2026-10-03,-3.20,Caf\xE9 \x80\n".b
+
+    import = @family.imports.create!(type: "TransactionImport", account: @account, date_format: "%Y-%m-%d",
+                                     date_col_label: "Date", amount_col_label: "Amount", name_col_label: "Name",
+                                     signage_convention: "inflows_negative", amount_type_strategy: "signed_amount")
+    import.update!(raw_file_str: csv_content)
+
+    assert_includes import.raw_file_str, "Mapfre España SA"
+    assert_includes import.raw_file_str, "Café €"
+  end
+
   test "handles UTF-8 files without modification" do
     # Test that valid UTF-8 files are not modified
     file_path = Rails.root.join("test/fixtures/files/imports/transactions.csv")

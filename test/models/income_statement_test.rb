@@ -20,6 +20,19 @@ class IncomeStatementTest < ActiveSupport::TestCase
     create_transaction(account: @credit_card_account, amount: 400, category: @groceries_category)
   end
 
+  test "a refund in a spending category lowers its spending once the family has an income category" do
+    @income_category.update!(spending_class: "income")
+    create_transaction(account: @checking_account, amount: -150, category: @groceries_category) # refund
+
+    statement = IncomeStatement.new(@family)
+    expense = statement.expense_totals(period: Period.last_30_days)
+    income = statement.income_totals(period: Period.last_30_days)
+
+    assert_equal 750, expense.total
+    assert_equal 1000, income.total
+    assert_equal 750, expense.category_totals.find { |ct| ct.category.id == @groceries_category.id }.total
+  end
+
   test "a new statement invalidates daily series when the family currency changes" do
     statement = IncomeStatement.new(@family)
     period = Period.last_30_days

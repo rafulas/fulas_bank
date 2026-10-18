@@ -14,6 +14,14 @@
                 label: t(".market_value_label"),
                 label_tooltip: t(".market_value_tooltip"),
                 placeholder: "0" %>
+
+            <%# Fulas Bank: since when the house counts (see accounts/_form). %>
+            <% if @account.persisted? && !@account.linked? %>
+              <%= form.date_field :opening_balance_date,
+                  label: t("accounts.form.since_label"),
+                  value: @account.opening_anchor_date %>
+              <p class="text-xs text-secondary -mt-2"><%= t("accounts.form.since_hint") %></p>
+            <% end %>
           </div>
 
           <!-- Next button -->

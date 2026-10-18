@@ -237,7 +237,17 @@ export default class extends Controller {
             this._normalDataPoints[this._normalDataPoints.length - 1].date,
           ])
           .tickSize(0)
-          .tickFormat(d3.timeFormat("%b %d, %Y")),
+          // Fulas Bank: in the page's language ("17 oct 2026").
+          .tickFormat((date) =>
+            new Intl.DateTimeFormat(
+              document.documentElement.lang || undefined,
+              {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              },
+            ).format(date),
+          ),
       )
       .select(".domain")
       .remove();

@@ -27,6 +27,7 @@ en:
     show:
       under_a_year: Under a year
       annual_return: Yearly return
+      partial_totals: "Contributed, gain and return only count the accounts with known contributions; they leave out %{accounts}."
       annual_return_hint: "Return: gain over what was put in. Yearly return (IRR): what you earned per year, taking into account when each euro went in, so money put in last month does not weigh like money put in five years ago. Only shown with at least a year of history, as banks do: annualising less inflates the figure."
       refresh_prices: Refresh prices
       refreshing_prices: Refreshing…

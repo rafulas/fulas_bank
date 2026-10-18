@@ -7,6 +7,7 @@ en:
       essential: Necessary
       discretionary: Discretionary
       savings: Savings
+      income: Income
       share: "%{share} % · target %{target} %"
       bars_hint: "Top, your real split of what came in; below, your target (%{target})."
       hint: "Out of %{income} income. Savings is what is left after necessary and discretionary spending."

@@ -2,5 +2,7 @@
 <% if series.merchant&.logo_url.present? %>
   <%= image_tag Setting.transform_brand_fetch_url(series.merchant.logo_url), class: "w-9 h-9 rounded-full shrink-0", loading: "lazy", alt: "" %>
 <% else %>
-  <%= render DS::FilledIcon.new(variant: :text, text: series.display_name.to_s, size: "lg", rounded: true) %>
+  <%# Fulas Bank: its category's icon, as on the transaction rows. %>
+  <%= render DS::ColorLabel.new(label: series.list_name.to_s, color: series.category&.color || Category::UNCATEGORIZED_COLOR,
+                                icon: series.category&.lucide_icon || "repeat", dashed: series.category.nil?, size: :lg, show_label: false) %>
 <% end %>

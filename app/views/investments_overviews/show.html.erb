@@ -53,6 +53,10 @@
         <% end %>
       </div>
       <p class="mt-2 text-xs text-secondary"><%= t(".annual_return_hint") %></p>
+      <%# Fulas Bank: say which accounts the contributions and gain cover. %>
+      <% if (missing = overview.rows_without_contributions).any? && overview.total_contributed.amount.positive? %>
+        <p class="mt-1 text-xs text-secondary"><%= t(".partial_totals", accounts: missing.map { |row| row.account.name }.to_sentence) %></p>
+      <% end %>
     </div>
 
     <% if overview.suggested_trades.any? %>
@@ -67,7 +71,7 @@
           <div class="space-y-1">
             <div class="flex justify-between gap-3 text-sm">
               <span class="truncate text-primary"><%= label %></span>
-              <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-bold"><%= format_money(money, precision: 0) %></span>
+              <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-semibold"><%= format_money(money, precision: 0) %></span>
             </div>
             <% if total.positive? %>
               <div class="h-1.5 rounded-full overflow-hidden bg-surface-inset">
@@ -173,7 +177,7 @@
         <% holdings.each do |holding| %>
           <div class="flex justify-between gap-3 text-sm">
             <span class="truncate text-primary"><%= holding.name %></span>
-            <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-bold"><%= format_money(holding.amount_money) %></span>
+            <span class="shrink-0 text-primary privacy-sensitive whitespace-nowrap font-amount font-semibold"><%= format_money(holding.amount_money) %></span>
           </div>
         <% end %>
       </div>

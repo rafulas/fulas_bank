@@ -17,6 +17,7 @@ export default class extends Controller {
     nodeWidth: { type: Number, default: 15 },
     nodePadding: { type: Number, default: 20 },
     currencySymbol: { type: String, default: "$" },
+    currency: String,
     startDate: String,
     endDate: String,
   };
@@ -565,7 +566,13 @@ export default class extends Controller {
     return String(s).replace(
       /[&<>"']/g,
       (c) =>
-        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
     );
   }
 
@@ -620,8 +627,21 @@ export default class extends Controller {
     }
   }
 
+  // Fulas Bank: in the page's language and currency ("4.506,30 €").
   #formatCurrency(value) {
-    const formatted = Number.parseFloat(value).toLocaleString(undefined, {
+    const amount = Number.parseFloat(value);
+    const lang = document.documentElement.lang || undefined;
+    if (this.currencyValue) {
+      try {
+        return new Intl.NumberFormat(lang, {
+          style: "currency",
+          currency: this.currencyValue,
+        }).format(amount);
+      } catch {
+        // Unknown currency code: fall back to the symbol below.
+      }
+    }
+    const formatted = amount.toLocaleString(lang, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });

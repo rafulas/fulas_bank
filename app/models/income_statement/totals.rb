@@ -63,7 +63,7 @@ class IncomeStatement::Totals
           c.id as category_id,
           c.parent_id as parent_category_id,
           #{classification_sql("at")} as classification,
-          ABS(SUM(#{converted_amount_sql("at")})) as total,
+          #{signed_total_sql("at")} as total,
           COUNT(ae.id) as transactions_count,
           false as is_uncategorized_investment
         FROM (#{@transactions_scope.to_sql}) at
@@ -89,7 +89,7 @@ class IncomeStatement::Totals
           c.id as category_id,
           c.parent_id as parent_category_id,
           #{classification_sql("at")} as classification,
-          ABS(SUM(#{converted_amount_sql("at")})) as total,
+          #{signed_total_sql("at")} as total,
           COUNT(ae.id) as entry_count,
           false as is_uncategorized_investment
         FROM (#{@transactions_scope.to_sql}) at
@@ -108,6 +108,12 @@ class IncomeStatement::Totals
           #{include_finance_accounts_sql}
         GROUP BY c.id, c.parent_id, #{classification_sql("at")}
       SQL
+    end
+
+    # Fulas Bank: spending keeps its sign, so a category's refunds lower it
+    # (and only refunds make it negative); income is its size.
+    def signed_total_sql(t)
+      "CASE WHEN (#{classification_sql(t)}) = 'expense' THEN SUM(#{converted_amount_sql(t)}) ELSE ABS(SUM(#{converted_amount_sql(t)})) END"
     end
 
     def trades_subquery_sql

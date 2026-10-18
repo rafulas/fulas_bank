@@ -6,6 +6,8 @@ class InsurancesController < ApplicationController
   before_action :set_insurance, only: %i[edit update destroy]
 
   def index
+    # Fulas Bank: a policy not renewed is no longer in force from its end.
+    Current.family.insurances.expire_ended!
     @overview = Insurance::Overview.new(Current.family, assets: insurable_assets)
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t(".title"), nil ] ]
   end
@@ -87,7 +89,7 @@ class InsurancesController < ApplicationController
     def insurance_params
       permitted = params.require(:insurance).permit(
         :name, :kind, :insurer, :policy_number, :coverage, :assistance_phone,
-        :premium, :payment_frequency, :start_date, :renewal_date, :active, :notes,
+        :premium, :payment_frequency, :start_date, :renewal_date, :active, :notes, :renews,
         installments: %i[date amount]
       )
       if params[:insurance].key?(:payment_account_id)

@@ -44,6 +44,15 @@ class Category < ApplicationRecord
   # can see it holds no user input.
   ANALYTICS_NEUTRAL_IDS_SQL = "SELECT id FROM categories WHERE special IN ('excluded', 'transfers')".freeze
 
+  # Fulas Bank: the categories whose money in is a refund, not income: all
+  # but those marked "income" (or under one), as a subquery. A family with no
+  # "income" category has none, so every inflow stays income, as in Sure.
+  REFUND_IDS_SQL = <<~SQL.squish.freeze
+    SELECT rc.id FROM categories rc LEFT JOIN categories rp ON rp.id = rc.parent_id
+    WHERE COALESCE(rc.spending_class, rp.spending_class, '') <> 'income'
+      AND EXISTS (SELECT 1 FROM categories ic WHERE ic.family_id = rc.family_id AND ic.spending_class = 'income')
+  SQL
+
   before_save :inherit_color_from_parent
   before_destroy :prevent_special_destroy
 

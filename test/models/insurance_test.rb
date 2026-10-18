@@ -124,4 +124,37 @@ class InsuranceTest < ActiveSupport::TestCase
     insurance.installments = [ { "date" => "2026-09-01", "amount" => "-5" } ]
     assert_not insurance.valid?
   end
+
+  test "a policy paid every quarter is charged every three months from its renewal day" do
+    insurance = @family.insurances.new(name: "Coche", kind: "car", premium: 160, payment_frequency: "quarterly", renewal_date: Date.new(2026, 2, 15))
+
+    charges = insurance.periodic_charges_between(Date.new(2026, 10, 1)..Date.new(2027, 6, 30))
+    assert_equal [ Date.new(2026, 11, 15), Date.new(2027, 2, 15), Date.new(2027, 5, 15) ], charges.map(&:first)
+    assert charges.all? { |_, amount| amount.amount == 160 }
+  end
+
+  test "a policy that will not be renewed ends at its next renewal and is cancelled then" do
+    insurance = @family.insurances.create!(name: "Moto", kind: "motorcycle", premium: 300, payment_frequency: "annual",
+                                           renewal_date: 1.year.ago.to_date + 10)
+    insurance.update!(renews: "0")
+
+    assert_equal insurance.next_renewal, insurance.ends_on
+    assert_not insurance.renews?
+
+    Insurance.expire_ended!(insurance.ends_on - 1)
+    assert insurance.reload.active?
+
+    Insurance.expire_ended!(insurance.ends_on)
+    assert_not insurance.reload.active?
+
+    insurance.update!(renews: "1")
+    assert_nil insurance.ends_on
+  end
+
+  test "it cannot be set not to renew without a renewal date" do
+    insurance = @family.insurances.new(name: "Viaje", kind: "travel", premium: 40, payment_frequency: "annual", renews: "0")
+
+    assert_not insurance.valid?
+    assert insurance.errors.added?(:renewal_date, :needed_to_end)
+  end
 end

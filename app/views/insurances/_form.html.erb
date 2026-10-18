@@ -37,6 +37,19 @@
     </div>
     <p class="text-xs text-secondary"><%= t(".renewal_hint") %></p>
 
+    <%# Fulas Bank: a policy that will not be renewed ends at its renewal. %>
+    <label class="flex items-center gap-2 text-sm text-primary cursor-pointer">
+      <%= form.check_box :renews, { checked: !insurance.renews?, class: "checkbox checkbox--light" }, "0", "1" %>
+      <%= t(".no_renewal") %>
+    </label>
+    <p class="text-xs text-secondary -mt-2">
+      <% if insurance.ends_on %>
+        <%= t(".ends_on", date: format_date(insurance.ends_on)) %>
+      <% else %>
+        <%= t(".no_renewal_hint") %>
+      <% end %>
+    </p>
+
     <%= render "insurances/installments", insurance: insurance %>
     <%= form.text_field :coverage, label: t(".coverage"), placeholder: t(".coverage_placeholder") %>
     <%= form.text_area :notes, label: t(".notes"), rows: 2 %>

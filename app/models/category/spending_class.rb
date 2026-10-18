@@ -2,6 +2,11 @@
 # something that could be done without ("Prescindible") or saving
 # ("Ahorro"), for the 50/30/20 split of the Resumen (Category::SpendingSplit).
 #
+# "income" marks the categories whose money in is income ("Ingresos"). Money
+# in to any other category is a refund, which lowers that category's spending
+# everywhere (Category::REFUND_IDS_SQL); a family with no "income" category
+# keeps counting all money in as income.
+#
 # It is stored on each category (`categories.spending_class`). A subcategory
 # without one takes its main category's, so only the exceptions need it: in
 # "Comida y bebida" (necessary), "Restaurantes" and "Cañas y vinos" are set
@@ -10,7 +15,7 @@
 # PROPOSAL is what the app suggests for the default categories (by name),
 # applied when the categories are created and once to existing families.
 module Category::SpendingClass
-  CLASSES = %w[essential discretionary savings].freeze
+  CLASSES = %w[essential discretionary savings income].freeze
 
   # Main categories and the subcategories that differ from them.
   PROPOSAL = {
@@ -41,7 +46,8 @@ module Category::SpendingClass
     "Regalos (niños)" => "discretionary",
     "Aficiones y actividades" => "discretionary",
     "Inversiones" => "savings",
-    "Otros" => "discretionary"
+    "Otros" => "discretionary",
+    "Ingresos" => "income"
   }.freeze
 
   module_function

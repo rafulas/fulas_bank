@@ -43,7 +43,7 @@
       <div class="flex items-center gap-3 px-4 py-3 <%= "opacity-60" if row.could_drop %>">
         <%= render "subscription_costs/logo", series: series %>
         <div class="min-w-0 grow">
-          <%= link_to series.display_name, edit_recurring_transaction_path(series), class: "block truncate text-sm font-medium text-primary hover:underline", data: { turbo_frame: :modal } %>
+          <%= link_to series.list_name, edit_recurring_transaction_path(series), class: "block truncate text-sm font-medium text-primary hover:underline", data: { turbo_frame: :modal } %>
           <p class="text-xs text-secondary privacy-sensitive">
             <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
             <% if row.last_paid_on %>
@@ -63,11 +63,11 @@
           <p class="text-xs text-secondary privacy-sensitive"><%= t(".per_year", amount: format_money(row.monthly * 12, precision: 0)) %></p>
         </div>
         <%= render DS::Button.new(text: t(".cancel"), variant: :ghost, size: :sm, href: cancel_subscription_cost_path(series), method: :patch,
-              confirm: CustomConfirm.new(title: t(".cancel_confirm_title", name: series.display_name), body: t(".cancel_confirm_body"), btn_text: t(".cancel"))) %>
+              confirm: CustomConfirm.new(title: t(".cancel_confirm_title", name: series.list_name), body: t(".cancel_confirm_body"), btn_text: t(".cancel"))) %>
         <%= form_with url: could_drop_subscription_cost_path(series), method: :patch, data: { controller: "auto-submit-form", turbo_frame: :_top } do %>
           <%= hidden_field_tag :could_drop, "0", id: nil %>
           <%= check_box_tag :could_drop, "1", row.could_drop, id: dom_id(series, :could_drop),
-                class: "checkbox checkbox--light", aria: { label: t(".could_drop_label", name: series.display_name) },
+                class: "checkbox checkbox--light", aria: { label: t(".could_drop_label", name: series.list_name) },
                 data: { auto_submit_form_target: "auto", autosubmit_trigger_event: "change" } %>
         <% end %>
       </div>
@@ -82,7 +82,7 @@
           <div class="flex items-center gap-3 px-4 py-2.5">
             <%= render "subscription_costs/logo", series: series %>
             <div class="min-w-0 grow">
-              <p class="truncate text-sm text-secondary"><%= series.display_name %></p>
+              <p class="truncate text-sm text-secondary"><%= series.list_name %></p>
               <p class="text-xs text-secondary privacy-sensitive">
                 <%= format_money(series.amount_money) %> · <%= frequency_label(series) %>
                 <% if series.cancelled_on %>
@@ -106,7 +106,7 @@
           <div class="flex items-center gap-3 px-4 py-2.5">
             <%= render "subscription_costs/logo", series: series %>
             <div class="min-w-0 grow">
-              <p class="truncate text-sm text-primary"><%= series.display_name %></p>
+              <p class="truncate text-sm text-primary"><%= series.list_name %></p>
               <p class="text-xs text-secondary privacy-sensitive"><%= format_money(series.amount_money) %> · <%= frequency_label(series) %></p>
             </div>
             <%= render DS::Button.new(text: t(".mark"), variant: :outline, size: :sm, href: mark_subscription_cost_path(series), method: :patch) %>

@@ -84,3 +84,9 @@ refresh_maintained_goal_targets:
   class: "RefreshMaintainedGoalTargetsJob"
   queue: "scheduled"
   description: "Recomputes the floor of reserves expressed in months of expenses"
+
+expire_insurances:
+  cron: "15 3 * * *" # every day at 3:15 AM
+  class: "ExpireInsurancesJob"
+  queue: "scheduled"
+  description: "Fulas Bank: cancels the insurance policies that were not renewed once their end date comes"

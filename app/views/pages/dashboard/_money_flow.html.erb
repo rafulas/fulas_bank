@@ -25,7 +25,7 @@
 
       <%= render DS::Menu.new(variant: :button, placement: "bottom-end", max_height: "18rem") do |menu| %>
         <% menu.with_button(type: "button", class: pill_button_class, aria: { label: t(".month_picker_aria_label") }) do %>
-          <span class="capitalize"><%= I18n.l(money_flow_data[:month], format: :month_year) %></span>
+          <span><%= I18n.l(money_flow_data[:month], format: :month_year).upcase_first %></span>
           <%= icon("chevron-down", size: "sm") %>
         <% end %>
 
@@ -104,7 +104,7 @@
     </div>
 
     <div class="w-full space-y-4<%= " xl:w-2/5" unless stacked %>">
-      <p class="text-sm font-medium text-primary capitalize"><%= I18n.l(money_flow_data[:month], format: :month_year) %></p>
+      <p class="text-sm font-medium text-primary"><%= I18n.l(money_flow_data[:month], format: :month_year).upcase_first %></p>
 
       <div class="flex items-center justify-between text-sm">
         <span class="text-secondary"><%= t(".balance") %></span>

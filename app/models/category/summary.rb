@@ -38,6 +38,12 @@ class Category::Summary
     @tag = tag
   end
 
+  # Fulas Bank: the rows worth showing: those with an amount or movements
+  # (an empty "Niños" or "Otros" at 0 € says nothing).
+  def visible_rows
+    rows.reject { |row| row.total.zero? && row.count.zero? }
+  end
+
   # Root categories, the ones with an amount first (largest first), then the
   # rest in their order; Excluido always last.
   def rows
@@ -116,6 +122,13 @@ class Category::Summary
       totals_by_category.dig(nil, :count) || 0
     end
 
+    # Fulas Bank: the money moved between accounts (the side that leaves), for
+    # the Traspasos row, which has no income or spending of its own.
+    def transfer_volume(category_ids = categories.select(&:special_transfers?).map(&:id))
+      grouped_rows.select { |row| row["transfer_kind"] || category_ids.include?(row["category_id"]) }.sum { |row| row["outflow"] }
+    end
+    public :transfer_volume
+
     # Transactions in Traspasos plus matched transfers, each counted once.
     def transfer_count(category_ids)
       grouped_rows.select { |row| row["transfer_kind"] || category_ids.include?(row["category_id"]) }.sum { |row| row["count"] }
@@ -167,6 +180,7 @@ class Category::Summary
           "excluded" => boolean.cast(row["excluded"]),
           "transfer_kind" => boolean.cast(row["transfer_kind"]),
           "total" => row["total"].to_d,
+          "outflow" => row["outflow"].to_d,
           "count" => row["count"].to_i
         )
       end
@@ -187,6 +201,7 @@ class Category::Summary
           (t.kind IN (#{Transaction::ANALYTICS_EXCLUDED_KINDS.map { |kind| "'#{kind}'" }.join(", ")})
             AND t.id NOT IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})) AS transfer_kind,
           SUM(#{converted_amount_sql("t")}) AS total,
+          SUM(CASE WHEN ae.amount > 0 THEN #{converted_amount_sql("t")} ELSE 0 END) AS outflow,
           COUNT(ae.id) AS count
         FROM transactions t
         #{entries_join_sql("t")}

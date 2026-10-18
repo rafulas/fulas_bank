@@ -9,6 +9,7 @@ es:
     renews_in:
       one: Renueva mañana
       other: "Renueva en %{count} días"
+    ends_on: "No se renueva: termina el %{date}"
     renews_on: "Renueva el %{date}"
     installments_count:
       one: 1 plazo
@@ -123,6 +124,9 @@ es:
       premium: Importe de cada pago
       assistance_phone: Teléfono de asistencia
       start_date: Fecha de alta
+      no_renewal: No se renovará
+      no_renewal_hint: "Al llegar la fecha de renovación se da de baja sola y deja de contar en el Forecast."
+      ends_on: "Termina el %{date}: entonces se da de baja sola."
       renewal_date: Fecha de renovación
       renewal_hint: Se renueva cada año ese mismo día; la app avisa 30 días antes.
       coverage: Coberturas

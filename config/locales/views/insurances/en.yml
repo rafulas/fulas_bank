@@ -9,6 +9,7 @@ en:
     renews_in:
       one: Renews tomorrow
       other: "Renews in %{count} days"
+    ends_on: "Not renewed: ends on %{date}"
     renews_on: "Renews on %{date}"
     installments_count:
       one: 1 instalment
@@ -123,6 +124,9 @@ en:
       premium: Amount of each payment
       assistance_phone: Assistance phone
       start_date: Start date
+      no_renewal: Will not be renewed
+      no_renewal_hint: "On its renewal date it is cancelled on its own and leaves the Forecast."
+      ends_on: "Ends on %{date}: it is cancelled on its own then."
       renewal_date: Renewal date
       renewal_hint: It renews every year on that day; the app warns 30 days before.
       coverage: Cover

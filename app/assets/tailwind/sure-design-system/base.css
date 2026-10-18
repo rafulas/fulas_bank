@@ -1,4 +1,10 @@
 @layer base {
+  /* Fulas Bank: amounts line up digit by digit (same width for every
+     figure) in the text's typeface. */
+  .font-amount {
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Bind CSS color-scheme to Sure's data-theme attribute so the CSS
      `light-dark()` function resolves to the side that matches the active
      theme (used by DS::Pill and any future tokens that opt in). */

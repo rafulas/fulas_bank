@@ -263,11 +263,18 @@ end %>
       <% end %>
     <% end %>
 
-    <%# MOBILE - Bottom Nav %>
+    <%# MOBILE - Bottom Nav. Fulas Bank: four entries and «Más» with the rest,
+        grouped as in the desktop menu (ten entries did not fit). %>
+    <% mobile_main = intro_mode ? mobile_nav_items : [ nav[:home], nav[:transactions], nav[:month_plan], nav[:forecast] ] %>
+    <% mobile_more_groups = intro_mode ? [] : desktop_nav_groups.map { |group| group.merge(items: group[:items] - mobile_main) }.reject { |group| group[:items].empty? } %>
+    <% mobile_more_groups << { title: nil, items: [ { name: t("layouts.application.nav.assistant"), path: chats_path, icon: "icon-assistant", icon_custom: true, active: page_active?(chats_path) } ] } unless intro_mode %>
     <%= tag.nav class: "lg:hidden fixed bottom-0 left-0 right-0 bg-surface z-10 border-t border-tertiary flex justify-around pb-[env(safe-area-inset-bottom)]",
       data: { viewport_target: "bottomNav" } do %>
-      <% mobile_nav_items.each do |nav_item| %>
+      <% mobile_main.each do |nav_item| %>
         <%= render "layouts/shared/nav_item", **nav_item %>
+      <% end %>
+      <% if mobile_more_groups.any? %>
+        <%= render "layouts/shared/mobile_more", groups: mobile_more_groups %>
       <% end %>
     <% end %>
     <%# "What's new" release highlight: one centered popover per deployed

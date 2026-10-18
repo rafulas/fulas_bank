@@ -76,7 +76,8 @@ class PagesController < ApplicationController
 
     @dashboard_sections = build_dashboard_sections
 
-    @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.dashboard"), nil ] ]
+    # Fulas Bank: Inicio is the top page, no trail to show ("Inicio › Panel").
+    @breadcrumbs = []
   end
 
   def intro
@@ -212,7 +213,8 @@ class PagesController < ApplicationController
           title: "pages.dashboard.investment_summary.title",
           partial: "pages/dashboard/investment_summary",
           layout: section_layout("investment_summary"),
-          locals: { investment_statement: @investment_statement, period: @period },
+          locals: { investment_statement: @investment_statement, period: @period,
+                    investments_overview: InvestmentsOverview.new(Current.family, user: Current.user) },
           visible: @accounts.any? && @investment_statement.investment_accounts.any?,
           collapsible: true
         },
@@ -295,7 +297,7 @@ class PagesController < ApplicationController
       total_expense = net_totals.total_net_expense.to_f.round(2)
 
       # Central Cash Flow node
-      cash_flow_idx = add_node.call("cash_flow_node", "Cash Flow", total_income, 100.0, "var(--color-success)")
+      cash_flow_idx = add_node.call("cash_flow_node", t("pages.dashboard.cashflow_sankey.cash_flow"), total_income, 100.0, "var(--color-success)")
 
       # Build netted subcategory data from raw totals
       net_subcategories_by_parent = build_net_subcategories(expense_totals, income_totals)
@@ -328,11 +330,11 @@ class PagesController < ApplicationController
       net = (total_income - total_expense).round(2)
       if net.positive?
         percentage = total_income.zero? ? 0 : (net / total_income * 100).round(1)
-        idx = add_node.call("surplus_node", "Surplus", net, percentage, "var(--color-success)")
+        idx = add_node.call("surplus_node", t("pages.dashboard.cashflow_sankey.surplus"), net, percentage, "var(--color-success)")
         links << { source: cash_flow_idx, target: idx, value: net, color: "var(--color-success)", percentage: percentage }
       end
 
-      { nodes: nodes, links: links, currency_symbol: Money::Currency.new(currency).symbol }
+      { nodes: nodes, links: links, currency_symbol: Money::Currency.new(currency).symbol, currency: currency }
     end
 
     # Nets subcategory expense and income totals, grouped by parent_id.
