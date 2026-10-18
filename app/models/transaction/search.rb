@@ -67,7 +67,7 @@ class Transaction::Search
       Rails.cache.fetch("transaction_search_totals/v5/#{cache_key_base}") do
         scope = transactions_scope
         counted = Transaction.counts_as_flow_sql
-        refund = Transaction.refund_sql(family)
+        refund = Transaction.refund_sql
 
         # Exclude tax-advantaged accounts from totals calculation
         tax_advantaged_ids = family.tax_advantaged_account_ids
@@ -188,7 +188,7 @@ class Transaction::Search
       return query if wanted.empty? || wanted.sort == %w[expense income transfer]
 
       counted = Transaction.counts_as_flow_sql
-      refund = Transaction.refund_sql(family)
+      refund = Transaction.refund_sql
       conditions = wanted.map do |type|
         case type
         when "expense" then "(#{counted} AND (entries.amount >= 0 OR #{refund}))"

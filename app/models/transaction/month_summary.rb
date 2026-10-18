@@ -71,7 +71,7 @@ class Transaction::MonthSummary
     end
 
     def refund_sql
-      Transaction.refund_sql(family)
+      Transaction.refund_sql
     end
 
     # The household budget of the period the month starts in, or the user's

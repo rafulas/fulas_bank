@@ -253,7 +253,12 @@ class RecurringTransaction::IdentifierTest < ActiveSupport::TestCase
       account: account, name: "Club de regatas", amount: 9.99, currency: "USD", expected_day_of_month: dates.last.day,
       status: "active", manual: true, bill_type: "subscription", last_occurrence_date: dates.last, next_expected_date: dates.last.next_month
     )
-    entries.each { |entry| SubscriptionLink.new(entry).link!(club) }
+    entries.each do |entry|
+      occurrence = club.recurring_occurrences.create!(family: @family, currency: "USD", due_on: entry.date, original_due_on: entry.date,
+                                                      expected_amount: 9.99, status: "paid", closed_at: Time.current, closed_source: "user")
+      RecurringAllocation.create!(recurring_occurrence: occurrence, entry: entry, allocated_amount: 9.99, currency: "USD",
+                                  source: "user_confirmed", paid_on: entry.date)
+    end
 
     stale = @family.recurring_transactions.create!(
       account: account, name: "PAGO CUOTA CLUB", amount: 9.99, currency: "USD", expected_day_of_month: dates.last.day,
