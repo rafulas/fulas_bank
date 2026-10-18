@@ -8,6 +8,13 @@ class DS::ColorLabelTest < ViewComponent::TestCase
     assert_selector "[data-testid='category-name']", text: "Combustible · Transporte"
   end
 
+  test "tinted puts the label in a soft pill of its color, the detail outside" do
+    render_inline(DS::ColorLabel.new(label: "Regalos", color: "#4f7fbf", mark: :none, tinted: true, detail: "Ocio", label_testid: "category-name"))
+
+    assert_selector "[data-testid='category-name'].rounded-full[style*='#4f7fbf']", text: "Regalos"
+    assert_selector "span.text-secondary", text: "· Ocio"
+  end
+
   test "a tag shows a dot of its color" do
     render_inline(DS::ColorLabel.new(label: "Viaje Roma", color: "#6471eb", mark: :dot))
 
