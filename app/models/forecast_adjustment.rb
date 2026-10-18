@@ -8,11 +8,12 @@
 #   recurring:<series id>:<the payment's original date, YYYY-MM-DD>
 #   variable:<account id>:<the month, YYYY-MM>
 #   insurance:<insurance id>:<the instalment's date, YYYY-MM-DD>
+#   loan:<loan account id>:<the instalment's date, YYYY-MM-DD>
 # A change whose line no longer exists (the series ended, the month has
 # passed) is simply ignored.
 class ForecastAdjustment < ApplicationRecord
   UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".freeze
-  KEY_FORMAT = /\A(?:(?:recurring|insurance):#{UUID}:\d{4}-\d{2}-\d{2}|variable:#{UUID}:\d{4}-\d{2})\z/
+  KEY_FORMAT = /\A(?:(?:recurring|insurance|loan):#{UUID}:\d{4}-\d{2}-\d{2}|variable:#{UUID}:\d{4}-\d{2})\z/
 
   belongs_to :family
 
@@ -26,6 +27,10 @@ class ForecastAdjustment < ApplicationRecord
 
   def self.insurance_key(insurance, date)
     "insurance:#{insurance.id}:#{date.iso8601}"
+  end
+
+  def self.loan_key(account, date)
+    "loan:#{account.id}:#{date.iso8601}"
   end
 
   def self.variable_key(account, month)

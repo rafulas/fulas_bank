@@ -15,11 +15,14 @@ en:
         renewal_date: Renewal date
         documents: Documents
         installments: Instalments
+        ends_on: Ends on
         payment_account: Account charged
     errors:
       models:
         insurance:
           attributes:
+            renewal_date:
+              needed_to_end: "is needed to know when a policy that is not renewed ends"
             account:
               wrong_type: "does not fit a %{kind} policy"
             installments:

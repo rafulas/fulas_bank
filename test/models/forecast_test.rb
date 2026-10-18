@@ -6,6 +6,9 @@ class ForecastTest < ActiveSupport::TestCase
   setup do
     @family = families(:dylan_family)
     @account = create_account("Forecast checking", Depository.new, balance: 1_000)
+    # The fixture loan has no instalment, so only the tests that want a
+    # loan's instalments get them.
+    Loan.update_all(payment_amount: nil, term_months: nil)
   end
 
   test "adds a monthly bill for as long as asked, beyond the occurrences already scheduled" do
@@ -80,6 +83,54 @@ class ForecastTest < ActiveSupport::TestCase
     forecast = Forecast.new(@family, accounts: [ other ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
 
     assert_empty forecast.flows.select { |flow| flow.source == :insurance }
+  end
+
+  test "a policy paid every month is expected from its renewal day, unless a recurring movement pays it" do
+    today = Date.new(2026, 10, 20)
+    @family.insurances.create!(name: "Hogar", kind: "home", premium: 62, payment_frequency: "monthly",
+                               renewal_date: Date.new(2026, 3, 5), payment_account: @account)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
+    lines = forecast.flows.select { |flow| flow.source == :insurance }
+    assert_equal [ Date.new(2026, 11, 5), Date.new(2026, 12, 5), Date.new(2027, 1, 5) ], lines.map(&:date)
+    assert lines.all? { |flow| flow.amount == 62 && flow.name == "Hogar" }
+
+    create_series(@account, name: "BBVA Seguros", amount: 62)
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
+    assert_empty forecast.flows.select { |flow| flow.source == :insurance }, "the recurring movement already pays it"
+  end
+
+  test "a policy that will not be renewed is not expected after it ends" do
+    today = Date.new(2026, 10, 20)
+    insurance = @family.insurances.create!(name: "Moto", kind: "motorcycle", premium: 100, payment_frequency: "quarterly",
+                                           renewal_date: Date.new(2026, 12, 1), payment_account: @account)
+    insurance.update!(renews: "0")
+    assert_equal Date.new(2026, 12, 1), insurance.ends_on
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 12, 31), include_variable: false, today: today)
+    assert_empty forecast.flows.select { |flow| flow.source == :insurance }
+  end
+
+  test "each loan's instalment is expected every month on its day until it is paid off" do
+    today = Date.new(2026, 10, 20)
+    loan_account = create_account("Hipoteca BBVA", Loan.new(payment_amount: 1_629.63, payment_day: 1), balance: 400_000)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
+    lines = forecast.flows.select { |flow| flow.source == :loan }
+
+    assert_equal [ Date.new(2026, 11, 1), Date.new(2026, 12, 1), Date.new(2027, 1, 1) ], lines.map(&:date)
+    assert lines.all? { |flow| flow.account == @account && flow.amount == BigDecimal("1629.63") }
+    assert_includes lines.first.name, loan_account.name
+  end
+
+  test "a loan already paid by a recurring movement is not expected twice" do
+    today = Date.new(2026, 10, 20)
+    create_account("Préstamo social", Loan.new(payment_amount: 1_218.16, payment_day: 16), balance: 250_000)
+    create_series(@account, name: "Pago Préstamo social Vivienda", amount: 1_218.16)
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
+
+    assert_empty forecast.flows.select { |flow| flow.source == :loan }
   end
 
   test "an insurance with no account set is expected in the main account, and only while in force" do

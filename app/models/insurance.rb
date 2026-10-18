@@ -59,13 +59,33 @@ class Insurance < ApplicationRecord
   validates :premium, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validate :account_is_an_insurable_asset
   validate :documents_are_acceptable, if: -> { documents.attached? }
+  validate :ending_needs_a_renewal_date
 
   before_validation :inherit_currency
+  before_validation :set_end_from_renewal
   normalizes :name, :insurer, :policy_number, :coverage, :assistance_phone, with: ->(value) { value.strip.presence }
 
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
   scope :alphabetically, -> { order(:name) }
+  scope :ended, ->(today = Date.current) { active.where(ends_on: ..today) }
+
+  # Fulas Bank: the policies that will not be renewed and whose day has come
+  # are no longer in force (ExpireInsurancesJob, every day).
+  def self.expire_ended!(today = Date.current)
+    ended(today).update_all(active: false, updated_at: Time.current)
+  end
+
+  # Fulas Bank: "No se renovará" in the form. Unticked, the policy ends at
+  # its next renewal (`ends_on`); ticked again, it renews as usual.
+  def renews
+    ends_on.nil?
+  end
+  alias_method :renews?, :renews
+
+  def renews=(value)
+    @renews_requested = ActiveModel::Type::Boolean.new.cast(value)
+  end
 
   # The kind a new policy for this asset most likely is.
   def self.kind_for(account)
@@ -150,7 +170,7 @@ class Insurance < ApplicationRecord
       charges = []
       date = first_date.advance(years: years)
 
-      while date <= range.last
+      while date <= [ range.last, last_charge_day ].compact.min
         charges << [ date, amount, index + 1, schedule.size ] if range.cover?(date)
         years += 1
         date = first_date.advance(years: years)
@@ -178,6 +198,34 @@ class Insurance < ApplicationRecord
 
       date < today - InsuranceLinker::MATCH_DAYS ? :overdue : :upcoming
     end
+  end
+
+  # Fulas Bank: the charges of a policy paid every month, quarter, half year
+  # or year, as [Date, Money], in `range`: on its renewal day (or start day)
+  # and every period from there, the premium each time, none from the day it
+  # ends.
+  def periodic_charges_between(range)
+    anchor = renewal_date || start_date
+    return [] if custom_payments? || anchor.nil? || premium.blank?
+
+    step = 12 / payments_per_year
+    last = [ range.last, last_charge_day ].compact.min
+    periods = ((range.first.year * 12 + range.first.month) - (anchor.year * 12 + anchor.month)).fdiv(step).floor - 1
+
+    charges = []
+    loop do
+      date = anchor.advance(months: periods * step)
+      break if date > last
+
+      charges << [ date, Money.new(premium, currency) ] if date >= range.first
+      periods += 1
+    end
+    charges
+  end
+
+  # The last day a charge can fall on: the day before it ends, if it ends.
+  def last_charge_day
+    ends_on && ends_on - 1
   end
 
   # The instalments of the last year and the next one to come: what the
@@ -241,6 +289,16 @@ class Insurance < ApplicationRecord
   private
     def inherit_currency
       self[:currency] ||= currency
+    end
+
+    def set_end_from_renewal
+      return if @renews_requested.nil?
+
+      self.ends_on = @renews_requested ? nil : (ends_on || next_renewal)
+    end
+
+    def ending_needs_a_renewal_date
+      errors.add(:renewal_date, :needed_to_end) if @renews_requested == false && ends_on.nil?
     end
 
     def account_is_an_insurable_asset
