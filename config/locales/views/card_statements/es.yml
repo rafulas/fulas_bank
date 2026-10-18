@@ -54,7 +54,9 @@ es:
         financed_column: Financiado
         charge: A cobrar
         charge_date: Día de cobro
-        hint: "Lo que se cobra es lo gastado en el periodo menos lo financiado, que se cobra aparte con su comisión y sus cuotas. Un gasto se puede pasar al extracto siguiente desde su detalle."
+        hint: "Lo que se cobra es lo gastado en el periodo menos lo financiado, que se cobra aparte con su comisión y sus cuotas. Pulsa un periodo para ver sus movimientos. Un gasto se puede pasar al extracto siguiente desde su detalle."
+        see_movements: Ver los movimientos del extracto
+        see_charges: Ver cuotas y pagos
         financed_title: Pagos financiados
         edit: "Cambiar %{name}"
         plan:
@@ -74,6 +76,50 @@ es:
         not_found: Sin encontrar
         upcoming: Pendiente
         reconcile_hint: "Después de cada importación, la app busca en %{account} el «Adeudo mensual de tarjeta» y lo apunta como pago a la tarjeta, y divide la «Operación financiada con tarjeta» en cuotas (pago a la tarjeta) y comisiones (gasto)."
+    statements:
+      show:
+        title: "Extracto del %{from} al %{to}"
+        purchases: Gastos
+        financed: Financiado
+        charge: A cobrar
+        charged_on: Cobrado el
+        to_charge_on: Se cobrará el
+        bank_charge: "En el banco: «%{name}», %{date}, %{amount}."
+        open: Ver movimiento
+        still_open: El extracto sigue abierto; irán apareciendo los gastos que importes hasta el día de cierre.
+        movements:
+          one: 1 movimiento
+          other: "%{count} movimientos"
+        date: Fecha
+        name: Concepto
+        category: Categoría
+        amount: Importe
+        moved: Del extracto anterior
+        financed_pill: Financiado
+        no_movements: No hay movimientos en este extracto.
+        financed_title: Financiado aparte (no entra en el cobro del extracto)
+        hint: "Un gasto entra en el extracto que cierra el día que el banco lo apunta o después. Pulsa un movimiento para ver su detalle o pasarlo al extracto siguiente."
+    financings:
+      show:
+        financed: Financiado
+        total: Total a pagar
+        cost: Te cuesta
+        pending: Queda por pagar
+        purchase: Compra
+        no_purchase: "Compra del %{date} (no está vinculada a un movimiento)."
+        charges: Comisión y cuotas
+        date: Día de cobro
+        concept: Concepto
+        fee: Comisión
+        installment: "Cuota %{number} de %{count}"
+        amount: Importe
+        bank: En el banco
+        in_bank: "Cobrado el %{date} (%{amount})"
+        not_found: Sin encontrar
+        upcoming: Pendiente
+        hint: "El banco cobra en un solo cargo («Operación financiada con tarjeta») las cuotas y comisiones de todas las compras financiadas que vencen ese día, así que su importe puede ser mayor que el de esta cuota."
+        not_configured: Pon los días de cierre y de cobro de la tarjeta para ver las cuotas.
+        edit: Cambiar o quitar la financiación
     reconciliations:
       create:
         success:

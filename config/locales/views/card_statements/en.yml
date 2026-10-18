@@ -54,7 +54,9 @@ en:
         financed_column: Financed
         charge: Charged
         charge_date: Payment day
-        hint: "The charge is the period's purchases minus what was financed, which is charged apart with its fee and instalments. A purchase can be moved to the next statement from its detail."
+        hint: "The charge is the period's purchases minus what was financed, which is charged apart with its fee and instalments. Choose a period to see its movements. A purchase can be moved to the next statement from its detail."
+        see_movements: See the statement movements
+        see_charges: See instalments and payments
         financed_title: Purchases in instalments
         edit: "Change %{name}"
         plan:
@@ -74,6 +76,50 @@ en:
         not_found: Not found
         upcoming: Upcoming
         reconcile_hint: "After every import, the app looks in %{account} for the card's monthly charge and files it as a payment to the card, and splits the instalments charge into instalments (a payment to the card) and fees (spending)."
+    statements:
+      show:
+        title: "Statement from %{from} to %{to}"
+        purchases: Purchases
+        financed: Financed
+        charge: Charged
+        charged_on: Charged on
+        to_charge_on: To be charged on
+        bank_charge: "At the bank: \"%{name}\", %{date}, %{amount}."
+        open: See movement
+        still_open: The statement is still open; purchases you import up to its closing day will show here.
+        movements:
+          one: 1 movement
+          other: "%{count} movements"
+        date: Date
+        name: Description
+        category: Category
+        amount: Amount
+        moved: From the previous statement
+        financed_pill: Financed
+        no_movements: No movements in this statement.
+        financed_title: Financed apart (not in the statement's charge)
+        hint: "A purchase goes to the statement closing on or after the day the bank books it. Open a movement to see it or move it to the next statement."
+    financings:
+      show:
+        financed: Financed
+        total: Total to pay
+        cost: Costs you
+        pending: Left to pay
+        purchase: Purchase
+        no_purchase: "Purchase of %{date} (not linked to a movement)."
+        charges: Fee and instalments
+        date: Payment day
+        concept: Description
+        fee: Fee
+        installment: "Instalment %{number} of %{count}"
+        amount: Amount
+        bank: At the bank
+        in_bank: "Charged on %{date} (%{amount})"
+        not_found: Not found
+        upcoming: Upcoming
+        hint: "The bank charges the instalments and fees of every financed purchase due that day in one charge, so its amount may be larger than this instalment."
+        not_configured: Set the card's closing and payment days to see the instalments.
+        edit: Change or remove the financing
     reconciliations:
       create:
         success:

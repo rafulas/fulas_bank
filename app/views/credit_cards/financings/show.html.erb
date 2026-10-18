@@ -1,0 +1,77 @@
+<%# Fulas Bank: one purchase paid in instalments (see CreditCards::FinancingsController). %>
+<% currency = @financing.currency %>
+<%= render DS::Dialog.new(width: "lg") do |dialog| %>
+  <% dialog.with_header(title: @financing.name, subtitle: @account.name) %>
+  <% dialog.with_body do %>
+    <div class="space-y-4">
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".financed") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(@financing.financed_amount_money) %></dd>
+        </div>
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".total") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.total_to_pay, currency)) %></dd>
+        </div>
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".cost") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.cost, currency)) %></dd>
+        </div>
+        <div class="rounded-lg bg-info/10 p-3">
+          <dt class="text-xs text-secondary"><%= t(".pending") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.pending_amount(cycle: @cycle), currency)) %></dd>
+        </div>
+      </dl>
+
+      <section class="space-y-2">
+        <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".purchase") %></h3>
+        <% if (entry = @financing.entry) %>
+          <div class="flex items-center justify-between gap-3 text-sm">
+            <span class="min-w-0">
+              <%= link_to entry.name, entry_path(entry), class: "block truncate text-primary hover:underline", data: { turbo_frame: "drawer" } %>
+              <span class="block text-xs text-secondary"><%= l(entry.date, format: "%d/%m/%Y") %><%= " · #{entry.entryable.category.name}" if entry.entryable.category %></span>
+            </span>
+            <span class="privacy-sensitive text-primary whitespace-nowrap"><%= format_money(-entry.amount_money) %></span>
+          </div>
+        <% else %>
+          <p class="text-sm text-secondary"><%= t(".no_purchase", date: l(@financing.purchase_date, format: "%d/%m/%Y")) %></p>
+        <% end %>
+      </section>
+
+      <section class="space-y-2">
+        <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".charges") %></h3>
+        <% if @lines.any? %>
+          <%= render DS::Table.new(rows: @lines, dense: true, sticky_header: true, max_height: "max-h-[50vh]", label: t(".charges"),
+                row_class: ->(line) { "text-secondary" unless line.paid }) do |table| %>
+            <% table.with_column(t(".date"), class: "whitespace-nowrap") { |line| l(line.charge.date, format: "%d/%m/%y") } %>
+            <% table.with_column(t(".concept")) do |line| %>
+              <%= line.charge.kind == :fee ? t(".fee") : t(".installment", number: line.charge.number, count: @financing.installments_count) %>
+            <% end %>
+            <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |line| format_money(Money.new(-line.charge.amount, currency)) } %>
+            <% table.with_column(t(".bank")) do |line| %>
+              <% if line.bank_entry %>
+                <%= link_to entry_path(line.bank_entry), class: "inline-flex items-center gap-1 text-success hover:underline", title: line.bank_entry.name, data: { turbo_frame: "drawer" } do %>
+                  <%= icon "check", size: "sm", color: "current" %>
+                  <span class="privacy-sensitive"><%= t(".in_bank", date: l(line.bank_entry.date, format: "%d/%m"), amount: format_money(line.bank_entry.amount_money)) %></span>
+                <% end %>
+              <% elsif line.paid %>
+                <span class="text-warning"><%= t(".not_found") %></span>
+              <% else %>
+                <span class="text-secondary"><%= t(".upcoming") %></span>
+              <% end %>
+            <% end %>
+          <% end %>
+          <p class="text-xs text-secondary"><%= t(".hint") %></p>
+        <% else %>
+          <p class="text-sm text-secondary"><%= t(".not_configured") %></p>
+        <% end %>
+      </section>
+
+      <% if @financing.entry %>
+        <div class="flex justify-end">
+          <%= render DS::Link.new(text: t(".edit"), icon: "pencil", variant: :outline, size: :sm, href: edit_transaction_card_financing_path(@financing.entry), frame: :modal) %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

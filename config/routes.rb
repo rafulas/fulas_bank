@@ -770,6 +770,9 @@ Rails.application.routes.draw do
   resources :credit_cards, only: %i[new create edit update] do
     # Fulas Bank: file the card's charges in its payment account now.
     resource :reconciliation, only: :create, controller: "credit_cards/reconciliations"
+    # Fulas Bank: a statement's movements and a financed purchase's charges.
+    resources :statements, only: :show, controller: "credit_cards/statements"
+    resources :financings, only: :show, controller: "credit_cards/financings"
   end
   resources :loans, only: %i[new create edit update]
   resources :loan_payment_links, only: %i[create destroy]
