@@ -1,0 +1,15 @@
+---
+es:
+  category:
+    observations:
+      merchant: "%{amount} de tu gasto fue a %{name}"
+      saving: "De tus ingresos, a ahorro e inversión (%{amount}); la referencia habitual es un %{reference} %"
+      left_over: "Te queda de tus ingresos tras los gastos; la referencia habitual es ahorrar un %{reference} %"
+      income_source:
+        one: "De tus ingresos vino de %{name}, tu única fuente"
+        other: "De tus ingresos vino de %{name}, de %{count} fuentes"
+      category_change: "%{name} está por encima de su media de los %{months} meses anteriores"
+      daily: "Gasto medio por día en los %{days} días del periodo"
+  category_summaries:
+    observations:
+      title: Observaciones

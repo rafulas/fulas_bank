@@ -39,6 +39,9 @@
   <% if accessible_accounts.any? && @free_cash %>
     <%= render "pages/dashboard/free_cash", free_cash: @free_cash %>
     <%= render "pages/dashboard/health", cash_cushion: @cash_cushion, savings_flow: @savings_flow, next_payments: @next_payments, duplicate_charges: @duplicate_charges %>
+    <% if @observations.any? %>
+      <div class="mb-6"><%= render "category_summaries/observations", observations: @observations, limit: 3 %></div>
+    <% end %>
   <% end %>
 
   <% two_column = Current.user.dashboard_two_column? %>

@@ -217,6 +217,7 @@ class Category < ApplicationRecord
     def recently_used_for(family:, excluding: [], limit: 4)
       family.categories
             .recently_used
+            .where(active: true)
             .excluding(Array(excluding).compact)
             .limit(limit)
     end
@@ -365,6 +366,28 @@ class Category < ApplicationRecord
           [ investment_contributions_name,                       "#0d9488", "trending-up" ]
         ]
       end
+  end
+
+  # Fulas Bank: a category switched off stops being offered when classifying;
+  # its movements keep it, and every summary still counts them. A
+  # subcategory goes off with its main category.
+  def offered?
+    active? && (parent.nil? || parent.active?)
+  end
+
+  # Fulas Bank: moves the category one place up (-1) or down (+1) among its
+  # siblings, then numbers them all so the order is the one shown.
+  def move!(step)
+    siblings = family.categories.where(parent_id: parent_id).to_a.sort_by(&:display_sort_key)
+    index = siblings.index(self)
+    target = index + step.to_i.clamp(-1, 1)
+    return false if target.negative? || target >= siblings.size
+
+    siblings[index], siblings[target] = siblings[target], siblings[index]
+    transaction do
+      siblings.each_with_index { |category, position| category.update_column(:position, position + 1) }
+    end
+    true
   end
 
   # Positioned categories first, in their order; the rest after, by name.

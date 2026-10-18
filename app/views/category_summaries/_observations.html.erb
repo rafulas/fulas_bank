@@ -1,0 +1,18 @@
+<%# locals: (observations:, limit: nil) %>
+<%# Fulas Bank: FlowVista-style observations (Category::Observations) — a
+    sentence with its figure in large type on the right. %>
+<% items = limit ? observations.first(limit) : observations.all %>
+<% if items.any? %>
+  <section class="rounded-xl bg-container shadow-border-xs" aria-labelledby="observations-title">
+    <h2 id="observations-title" class="px-5 pt-4 pb-2 font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("category_summaries.observations.title") %></h2>
+    <ul class="divide-y divide-divider">
+      <% items.each do |observation| %>
+        <li class="flex items-center justify-between gap-4 px-5 py-3" data-observation="<%= observation.key %>">
+          <p class="text-sm text-primary"><%= observation.text %></p>
+          <p class="<%= class_names("font-amount text-xl font-semibold whitespace-nowrap privacy-sensitive",
+                                    { positive: "text-success", warning: "text-warning", neutral: "text-primary" }[observation.tone]) %>"><%= observation.figure %></p>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

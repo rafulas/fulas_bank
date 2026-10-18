@@ -4,8 +4,16 @@ es:
     bootstrap:
       success: Categorías predeterminadas restauradas
     category:
+      move_up: Subir
+      move_down: Bajar
+      deactivate: Desactivar
+      activate: Volver a activar
+      inactive: Desactivada
       delete: Eliminar categoría
       edit: Editar categoría
+    toggle_active:
+      deactivated: "«%{name}» desactivada: ya no se ofrece al clasificar, pero sus movimientos se mantienen."
+      activated: "«%{name}» activada de nuevo."
     create:
       success: Categoría creada con éxito
     destroy:

@@ -4,8 +4,16 @@ en:
     bootstrap:
       success: Default categories created successfully
     category:
+      move_up: Move up
+      move_down: Move down
+      deactivate: Switch off
+      activate: Switch on
+      inactive: Switched off
       delete: Delete category
       edit: Edit category
+    toggle_active:
+      deactivated: "“%{name}” switched off: no longer offered when classifying; its transactions keep it."
+      activated: "“%{name}” switched on again."
     create:
       success: Category created successfully
     destroy:

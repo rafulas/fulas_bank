@@ -3,7 +3,7 @@
 <% nav = {
   home: { name: t(".nav.home"), path: root_path, icon: "pie-chart", icon_custom: false, active: page_active?(root_path) },
   transactions: { name: t(".nav.transactions"), path: transactions_path, icon: "credit-card", icon_custom: false, active: page_active?(transactions_path) },
-  summary: { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) },
+  summary: { name: t(".nav.summary"), path: category_summaries_path, icon: "layout-grid", icon_custom: false, active: page_active?(category_summaries_path) || page_active?(reports_path) },
   # The budgets live in Planes (its "Añadir o cambiar presupuesto" link).
   month_plan: { name: t(".nav.month_plan"), path: month_plan_path, icon: "calendar-check", icon_custom: false, active: page_active?(month_plan_path) || page_active?(budgets_path) },
   # Fulas Bank: every recurring movement, in tabs (desktop menu only).
@@ -31,6 +31,7 @@ end %>
 
 <%# Fulas Bank: the desktop menu groups its entries by question, as in
     FlowVista: what happened, what is coming, what I have, comparing. %>
+<%# Fulas Bank: Informes lives inside Resumen, as its «Comparar» tab. %>
 <% desktop_nav_groups = if intro_mode
   [ { title: nil, items: mobile_nav_items } ]
 else
@@ -38,8 +39,7 @@ else
     { title: nil, items: [ nav[:home] ] },
     { title: t(".nav_groups.movements"), items: [ nav[:transactions], nav[:summary] ] },
     { title: t(".nav_groups.planning"), items: [ nav[:month_plan], nav[:recurring], nav[:forecast], nav[:subscriptions], bills_nav_item ].compact },
-    { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances] ] },
-    { title: t(".nav_groups.analysis"), items: [ nav[:reports] ] }
+    { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances] ] }
   ]
 end %>
 <% expanded_sidebar_class = "w-full" %>

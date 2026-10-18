@@ -57,6 +57,10 @@ class PagesController < ApplicationController
     @savings_flow = SavingsFlow.new(Current.family, user: Current.user, period: @period, income: @free_cash.income)
     @next_payments = MonthPlan.next_payments(Current.family, user: Current.user)
     @duplicate_charges = DuplicateCharges.new(Current.family, user: Current.user)
+    # Fulas Bank: the first observations of the period, as in the Resumen.
+    report_ids = Current.family.accounts.accessible_by(Current.user).included_in_reports.pluck(:id)
+    @observations = Category::Observations.new(Category::Analysis.new(Current.family, period: @period, account_ids: report_ids),
+                                               savings_flow: @savings_flow)
     @outflows_data = build_outflows_donut_data(net_totals)
     # Preview-gated: skip the query outright rather than loading rows the
     # section won't be built from.

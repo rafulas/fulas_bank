@@ -1,5 +1,5 @@
 class CategoriesController < ApplicationController
-  before_action :set_category, only: %i[edit update destroy]
+  before_action :set_category, only: %i[edit update destroy move toggle_active]
   before_action :set_categories, only: %i[update edit]
   before_action :set_transaction, only: :create
 
@@ -93,6 +93,18 @@ class CategoriesController < ApplicationController
 
   # Keeps the special categories (Otros, Excluido, Traspasos), which can't be
   # deleted.
+  # Fulas Bank: one place up or down among its siblings.
+  def move
+    @category.move!(params[:step].to_i)
+    redirect_back_or_to categories_path
+  end
+
+  # Fulas Bank: switch a category off (no longer offered) or back on.
+  def toggle_active
+    @category.update!(active: !@category.active?)
+    redirect_back_or_to categories_path, notice: t(@category.active? ? ".activated" : ".deactivated", name: @category.name)
+  end
+
   def destroy_all
     Current.family.categories.not_special.destroy_all
     redirect_back_or_to categories_path, notice: t(".success")

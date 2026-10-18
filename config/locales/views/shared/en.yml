@@ -4,6 +4,10 @@ en:
     self_hostable:
       redis_configured: "Redis is now configured properly! You can now setup your Sure application."
   shared:
+    analysis_tabs:
+      aria: Summary or compare
+      month: Month
+      compare: Compare
     preview: Preview
     dot_separator: "·"
     sync_toast:

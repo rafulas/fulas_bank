@@ -636,7 +636,7 @@ class Forecast
     # loan's account, or of about the same amount.
     def paid_by_recurring?(amount, destination: nil)
       recurring_in_force.any? do |series|
-        (destination && series.destination_account_id == destination.id) ||
+        (destination && (series.destination_account_id == destination.id || series.loan_account_id == destination.id)) ||
           (series.amount.to_d.abs - amount).abs <= amount * SAME_AMOUNT_TOLERANCE
       end
     end

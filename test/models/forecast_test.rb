@@ -114,6 +114,10 @@ class ForecastTest < ActiveSupport::TestCase
   test "each loan's instalment is expected every month on its day until it is paid off" do
     today = Date.new(2026, 10, 20)
     loan_account = create_account("Hipoteca BBVA", Loan.new(payment_amount: 1_629.63, payment_day: 1), balance: 400_000)
+    # Saving the loan made its recurring movement (Loan::InstallmentSync); without
+    # it, the forecast still expects the instalment from the loan itself.
+    assert @family.recurring_transactions.exists?(loan_account: loan_account)
+    @family.recurring_transactions.where(loan_account: loan_account).destroy_all
 
     forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
     lines = forecast.flows.select { |flow| flow.source == :loan }

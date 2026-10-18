@@ -26,7 +26,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
 
     assert_select "nav[aria-label=?]", I18n.t("layouts.application.main_menu") do
-      %w[movements planning wealth analysis].each do |group|
+      %w[movements planning wealth].each do |group|
         assert_select "p", text: I18n.t("layouts.application.nav_groups.#{group}")
       end
       assert_select "a[href=?]", transactions_path, text: I18n.t("layouts.application.nav.transactions")

@@ -11,6 +11,9 @@ class RecurringTransaction < ApplicationRecord
   belongs_to :family
   belongs_to :account, optional: true
   belongs_to :destination_account, optional: true, class_name: "Account"
+  # Fulas Bank: the loan whose instalment this is, kept in step by
+  # Loan::InstallmentSync.
+  belongs_to :loan_account, optional: true, class_name: "Account"
   belongs_to :merchant, optional: true
   belongs_to :category, optional: true
   belongs_to :replaced_by, optional: true, class_name: "RecurringTransaction"

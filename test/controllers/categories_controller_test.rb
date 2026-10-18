@@ -423,6 +423,36 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert Category.exists?(other.id)
   end
 
+
+  test "move puts a category one place up among its siblings" do
+    roots = @family.categories.roots.to_a.sort_by(&:display_sort_key)
+    second = roots.second
+
+    patch move_category_url(second, step: -1)
+
+    assert_redirected_to categories_url
+    assert_equal second, @family.categories.roots.to_a.sort_by(&:display_sort_key).first
+  end
+
+  test "a switched-off category keeps its movements and is not offered when classifying" do
+    category = @family.categories.create!(name: "Ocio apagable", color: "#4da568", lucide_icon: "ticket")
+    other = @family.transactions.where.not(id: @transaction.id).first
+    other.update!(category: category)
+    @transaction.update!(category: nil)
+
+    patch toggle_active_category_url(category)
+    follow_redirect! # shows the notice, which names the category
+
+    assert_not category.reload.active?
+    assert_equal category, other.reload.category
+    get category_dropdown_url(transaction_id: @transaction.id)
+    assert_response :success
+    assert_no_match "Ocio apagable", response.body
+
+    patch toggle_active_category_url(category)
+    assert category.reload.active?
+  end
+
   private
     def capture_sql_queries
       queries = []

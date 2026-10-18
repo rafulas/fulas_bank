@@ -1,0 +1,15 @@
+---
+en:
+  category:
+    observations:
+      merchant: "%{amount} of your spending went to %{name}"
+      saving: "Of your income, to savings and investments (%{amount}); the usual reference is %{reference} %"
+      left_over: "Of your income left after spending; the usual reference is to save %{reference} %"
+      income_source:
+        one: "Of your income came from %{name}, your only source"
+        other: "Of your income came from %{name}, out of %{count} sources"
+      category_change: "%{name} is above its average of the previous %{months} months"
+      daily: "Average spending per day over the period's %{days} days"
+  category_summaries:
+    observations:
+      title: Observations

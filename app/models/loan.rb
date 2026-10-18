@@ -41,6 +41,8 @@ class Loan < ApplicationRecord
   SCHEDULE_ATTRIBUTES = %w[initial_balance interest_rate rate_type term_months start_date payment_day
                            payment_amount variable_rate_schedule].freeze
   after_update_commit :reanchor_linked_payments, if: -> { (saved_changes.keys & SCHEDULE_ATTRIBUTES).any? }
+  # Fulas Bank: the instalment follows the loan (Loan::InstallmentSync).
+  after_save_commit :sync_installment
 
   # Movements this far either side of the expected instalment, in amount, are
   # offered as candidates on the loan's Payments tab.
@@ -201,6 +203,17 @@ class Loan < ApplicationRecord
 
   # Each linked payment's anchor, again, from the current schedule. A
   # payment whose month the schedule no longer covers keeps its anchor.
+  # Looks the account up afresh: reading `account` here would cache a
+  # missing has_one while the loan is saved before its account (see #reload).
+  private def sync_installment
+    loan_account = Account.find_by(accountable_type: "Loan", accountable_id: id)
+    return unless loan_account
+
+    Loan::InstallmentSync.new(loan_account.family).sync_account(loan_account)
+  rescue ActiveRecord::RecordInvalid => error
+    Rails.logger.warn("Loan instalment not synced for account #{loan_account&.id}: #{error.message}")
+  end
+
   private def reanchor_linked_payments
     payment_links.includes(:entry).each do |link|
       adjust_balance_to_schedule(link.entry.date)

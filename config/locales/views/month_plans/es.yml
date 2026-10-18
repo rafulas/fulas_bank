@@ -2,6 +2,12 @@
 es:
   month_plans:
     show:
+      pace:
+        chart_label: "Gastado %{spent}; al ritmo del presupuesto, %{expected}"
+        spent: Gastado
+        budget: Presupuesto repartido por días
+        ahead: "%{amount} por encima del ritmo (hoy tocaría %{expected})"
+        behind: "%{amount} por debajo del ritmo (hoy tocaría %{expected})"
       title: Planes
       subtitle: Presupuestos y recurrentes del mes, con lo pagado y lo que queda.
       previous: Mes anterior
