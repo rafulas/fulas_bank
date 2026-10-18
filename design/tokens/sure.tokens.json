@@ -18,9 +18,9 @@
       "$description": "Fulas Bank: page, section and card titles."
     },
     "amount": {
-      "$value": "'IBM Plex Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      "$value": "'Figtree', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       "$type": "fontFamily",
-      "$description": "Fulas Bank: money amounts and key figures."
+      "$description": "Fulas Bank: money amounts and key figures, in the text's typeface (with tabular digits, see base.css) so they read lighter."
     },
     "weight": {
       "medium": { "$value": 500, "$type": "fontWeight" },

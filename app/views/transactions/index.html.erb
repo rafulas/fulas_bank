@@ -49,7 +49,9 @@
   <%# Fulas Bank: without filters, the panel first (chosen accounts, spending
       of the last weeks, 90-day balance). %>
   <%= render "panel", panel: @panel if @panel %>
-  <%= render "summary", totals: @search.totals %>
+  <%# Fulas Bank: the totals only with a filter on (without one they add up
+      the whole history, which says little). %>
+  <%= render "summary", totals: @search.totals unless @panel %>
   <% if Current.family.recurring_transactions_disabled? %>
     <%= render "transactions/list", transactions: @transactions, projected_recurring: @projected_recurring, q: params[:q], pagy: @pagy %>
   <% else %>

@@ -4,6 +4,9 @@ en:
     transactions_count:
       one: 1 transaction
       other: "%{count} transactions"
+    transfers_moved:
+      one: "%{amount} · 1 movement"
+      other: "%{amount} · %{count} movements"
     index:
       savings_rate: Savings rate
       total_month: Total for %{month}

@@ -17,10 +17,10 @@
           <%= overview.active.size %>
         <% end %>
         <%= summary_card title: t(".annual_total"), tone: :brand do %>
-          <span class="whitespace-nowrap privacy-sensitive font-amount font-bold"><%= format_money(overview.annual_total, precision: 0) %></span>
+          <span class="whitespace-nowrap privacy-sensitive font-amount font-semibold"><%= format_money(overview.annual_total, precision: 0) %></span>
         <% end %>
         <%= summary_card title: t(".monthly_total") do %>
-          <span class="whitespace-nowrap privacy-sensitive font-amount font-bold"><%= format_money(overview.monthly_total) %></span>
+          <span class="whitespace-nowrap privacy-sensitive font-amount font-semibold"><%= format_money(overview.monthly_total) %></span>
         <% end %>
         <%= summary_card title: t(".next_renewal"), tone: :warning do %>
           <% if (next_one = overview.next_renewal) %>

@@ -8,6 +8,7 @@ es:
       load_more: Ver más movimientos
       per_page: Movimientos por bloque
     panel:
+      analysis: "Análisis: semanas anteriores y saldo de 90 días"
       accounts_title: Saldos
       choose_accounts: Elegir cuentas
       week_range: "Gastos: %{from} – %{to}"

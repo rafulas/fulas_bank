@@ -21,7 +21,7 @@
               </p>
             </div>
             <div class="flex items-center gap-3">
-              <span class="font-amount font-bold privacy-sensitive whitespace-nowrap"><%= t("pages.dashboard.duplicates.twice", amount: format_money(pair.amount)) %></span>
+              <span class="font-amount font-semibold privacy-sensitive whitespace-nowrap"><%= t("pages.dashboard.duplicates.twice", amount: format_money(pair.amount)) %></span>
               <%= render DS::Button.new(text: t("pages.dashboard.duplicates.dismiss"), variant: :outline, size: :sm,
                     href: duplicate_charge_dismissals_path(key: pair.key)) %>
             </div>
@@ -37,7 +37,7 @@
   <section class="@container min-w-0 rounded-xl bg-container shadow-border-xs px-5 py-4 space-y-2" aria-labelledby="cash-cushion-title">
     <h2 id="cash-cushion-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.cash_cushion.title") %></h2>
     <% if (months = cash_cushion.months) %>
-      <p class="<%= class_names("font-amount text-2xl font-bold whitespace-nowrap", { low: "text-destructive", ok: "text-brand", high: "text-primary" }[cash_cushion.level]) %>">
+      <p class="<%= class_names("font-amount text-2xl font-semibold whitespace-nowrap", { low: "text-destructive", ok: "text-brand", high: "text-primary" }[cash_cushion.level]) %>">
         <%= t("pages.dashboard.cash_cushion.months", count: months, months: number_with_precision(months, precision: 1, strip_insignificant_zeros: true)) %>
       </p>
       <p class="text-sm text-secondary privacy-sensitive">
@@ -54,7 +54,7 @@
     <h2 id="savings-flow-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("pages.dashboard.savings_flow.title") %></h2>
     <% if savings_flow.any_saving_accounts? %>
       <% net = savings_flow.net %>
-      <p class="<%= class_names("font-amount text-2xl font-bold privacy-sensitive whitespace-nowrap", net.negative? ? "text-destructive" : "text-brand") %>"><%= format_money(net) %></p>
+      <p class="<%= class_names("font-amount text-2xl font-semibold privacy-sensitive whitespace-nowrap", net.negative? ? "text-destructive" : "text-brand") %>"><%= format_money(net) %></p>
       <% if (share = savings_flow.share_of_income) %>
         <p class="text-sm text-secondary"><%= t("pages.dashboard.savings_flow.share", percent: number_to_percentage(share, precision: 1)) %></p>
       <% end %>

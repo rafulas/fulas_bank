@@ -1,4 +1,4 @@
-<%# locals: (row:, href:, subtitle: nil) %>
+<%# locals: (row:, href:, subtitle: nil, summary: nil) %>
 
 <%= link_to href, class: class_names("flex items-center gap-3 px-4 py-3 hover:bg-container-hover", "opacity-60" => row.excluded?), data: { turbo_frame: "_top" } do %>
   <%= render DS::FilledIcon.new(
@@ -16,5 +16,5 @@
     <% end %>
   </div>
 
-  <p class="shrink-0 font-amount text-sm font-bold text-primary privacy-sensitive whitespace-nowrap"><%= category_summary_value(row) %></p>
+  <p class="shrink-0 font-amount text-sm font-semibold text-primary privacy-sensitive whitespace-nowrap"><%= category_summary_value(row, summary) %></p>
 <% end %>

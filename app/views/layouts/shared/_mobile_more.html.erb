@@ -1,0 +1,38 @@
+<%# locals: (groups:) %>
+<%# Fulas Bank: the «Más» entry of the mobile bottom bar. A native
+    <details>, so it opens and closes without code; the panel sits above the
+    bar with the rest of the sections, grouped as in the desktop menu. %>
+<% active = groups.any? { |group| group[:items].any? { |item| item[:active] } } %>
+<details class="group/more">
+  <summary class="list-none [&::-webkit-details-marker]:hidden space-y-1 block relative pb-1 focus-ring rounded-lg cursor-pointer">
+    <div class="grow flex flex-col gap-1 items-center">
+      <%= tag.div class: class_names("w-4 h-1 rounded-bl-sm rounded-br-sm", "bg-nav-indicator" => active) %>
+      <%= tag.div class: class_names("w-8 h-8 flex items-center justify-center mx-auto rounded-lg",
+                                     active ? "bg-container shadow-xs text-primary" : "text-secondary") do %>
+        <%= icon("menu", color: active ? "current" : "default") %>
+      <% end %>
+    </div>
+    <div class="grow flex justify-center">
+      <%= tag.p t("layouts.application.nav.more"), class: class_names("font-medium text-[11px]", active ? "text-primary" : "text-secondary") %>
+    </div>
+  </summary>
+
+  <div class="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-20 max-h-[70vh] overflow-y-auto rounded-xl bg-container p-3 shadow-border-lg space-y-3">
+    <% groups.each do |group| %>
+      <div class="space-y-1">
+        <% if group[:title] %>
+          <p class="px-2 text-xs font-medium uppercase tracking-wide text-secondary"><%= group[:title] %></p>
+        <% end %>
+        <div class="grid grid-cols-2 gap-1">
+          <% group[:items].each do |item| %>
+            <%= link_to item[:path], class: class_names("flex items-center gap-2 rounded-lg px-2 py-2 text-sm",
+                                                        item[:active] ? "bg-container-inset text-primary font-medium" : "text-primary hover:bg-container-inset-hover") do %>
+              <%= icon(item[:icon], custom: item[:icon_custom], size: "sm") %>
+              <span class="truncate"><%= item[:name] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</details>
