@@ -16,6 +16,7 @@ es:
       success: Tabla actualizada.
     variable_line: Gastos varios %{month}
     overdue_line: "%{name} (vencía el %{date})"
+    loan_line: "Cuota %{name}"
     insurance_line: "%{name} (plazo %{number} de %{count})"
     debt_plan_line: "Cuota %{loan} (plan de deuda)"
     card_statement_line: "%{card}: extracto de %{month}"
@@ -86,6 +87,7 @@ es:
         debt_plan: Plan de deuda
         card: Tarjeta
         insurance: Seguro
+        loan: Préstamo
   forecast_items:
     form:
       name: Concepto

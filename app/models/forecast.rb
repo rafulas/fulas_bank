@@ -22,6 +22,14 @@
 #   6. The instalments of the insurance policies paid in custom instalments
 #      (Insurance#installment_charges_between), every year on the same days,
 #      in the account they are charged to (a card's go to the main account).
+#      Fulas Bank: a policy paid monthly, quarterly, twice or once a year
+#      too, from its renewal day, unless a recurring movement already covers
+#      it (one of about the same amount); and none after the day a policy
+#      that will not be renewed ends.
+#   7. Fulas Bank: the instalment of each loan (Préstamos), every month on
+#      its payment day in the main account until it is paid off, unless a
+#      recurring movement already pays it (towards the loan, or of about the
+#      same amount) or the debt plan feeds the forecast.
 #
 # Fulas Bank: statements are imported by hand, days or weeks late. A payment
 # of 1 or 6 whose day has passed but is later than the last movement imported
@@ -63,6 +71,10 @@ class Forecast
 
   # Fulas Bank: how far back a payment not imported yet is still expected.
   OVERDUE_LOOKBACK = 45.days
+
+  # Fulas Bank: a recurring movement this close in amount to a loan
+  # instalment or an insurance premium is taken as the one that pays it.
+  SAME_AMOUNT_TOLERANCE = BigDecimal("0.03")
 
   # Above this many days the chart gets one point a week instead of one a day.
   DAILY_POINTS_LIMIT = 731
@@ -151,7 +163,7 @@ class Forecast
   # (with `skipped`), which do not count in any balance. On the same day, the
   # month's variable spending goes last.
   def flows
-    @flows ||= (adjusted(recurring_flows + variable_flows + insurance_flows) + planned_flows + debt_plan_flows + card_flows)
+    @flows ||= (adjusted(recurring_flows + variable_flows + insurance_flows + policy_flows + loan_flows) + planned_flows + debt_plan_flows + card_flows)
                  .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
   end
 
@@ -557,7 +569,7 @@ class Forecast
         # An instalment already paid (charged early) is not expected again.
         paid = insurance.insurance_payments.select(&:paid?).map(&:due_on)
 
-        charges = insurance.installment_charges_between((today - OVERDUE_LOOKBACK)..through)
+        charges = insurance.installment_charges_between((today - OVERDUE_LOOKBACK)..[ through, insurance.last_charge_day ].compact.min)
         charges.reject { |date, *| paid.include?(date) }.filter_map do |date, amount, number, count|
           on = expected_date(date, insurance.payment_account_id || account.id)
           next unless on
@@ -567,6 +579,70 @@ class Forecast
                    key: ForecastAdjustment.insurance_key(insurance, date), name: overdue_name(name, date, on))
         end
       end
+    end
+
+    # Fulas Bank: a policy paid every month, quarter, half year or year (see
+    # Insurance#periodic_charges_between), unless a recurring movement of
+    # about the same amount already pays it.
+    def policy_flows
+      family.insurances.active.where.not(payment_frequency: Insurance::CUSTOM_FREQUENCY).where.not(premium: nil).flat_map do |insurance|
+        account = insurance_account(insurance)
+        next [] if account.nil? || paid_by_recurring?(insurance.premium.to_d)
+
+        insurance.periodic_charges_between(window).map do |date, amount|
+          Flow.new(date: date, account: account, amount: to_account_currency(amount, account), source: :insurance,
+                   key: ForecastAdjustment.insurance_key(insurance, date), name: insurance.name)
+        end
+      end
+    end
+
+    # ---- 7. Loans ----
+
+    # Fulas Bank: each loan's instalment, every month on its payment day, in
+    # the main account, until the loan is paid off. Not when the debt plan
+    # feeds the forecast (it has its own payments), nor when a recurring
+    # movement already pays it.
+    def loan_flows
+      return [] if debt_plan || main_account.nil?
+
+      family.accounts.visible.where(accountable_type: "Loan").includes(:accountable).flat_map do |loan_account|
+        loan = loan_account.accountable
+        payment = loan.monthly_payment&.amount || loan.payment_amount
+        next [] if payment.blank? || !payment.to_d.positive? || loan.finished?(as_of: today)
+        next [] if paid_by_recurring?(payment.to_d, destination: loan_account)
+
+        loan_payment_days(loan).map do |date|
+          Flow.new(date: date, account: main_account, amount: to_account_currency(Money.new(payment, loan_account.currency), main_account),
+                   source: :loan, key: ForecastAdjustment.loan_key(loan_account, date),
+                   name: I18n.t("forecasts.loan_line", name: loan_account.name))
+        end
+      end
+    end
+
+    # The loan's payment days in the window: its day of the month (or its
+    # start's), up to its last instalment when the term is known.
+    def loan_payment_days(loan)
+      day = loan.payment_day || loan.start_date&.day || 1
+      remaining = loan.remaining_months(as_of: today)
+      last = remaining ? today.advance(months: remaining) : through
+
+      months.filter_map do |month|
+        date = month.change(day: [ day, month.end_of_month.day ].min)
+        date if window.cover?(date) && date <= last
+      end
+    end
+
+    # A recurring movement in force that already pays this: towards the
+    # loan's account, or of about the same amount.
+    def paid_by_recurring?(amount, destination: nil)
+      recurring_in_force.any? do |series|
+        (destination && series.destination_account_id == destination.id) ||
+          (series.amount.to_d.abs - amount).abs <= amount * SAME_AMOUNT_TOLERANCE
+      end
+    end
+
+    def recurring_in_force
+      @recurring_in_force ||= family.recurring_transactions.where(status: "active").to_a
     end
 
     # The account it is charged to, if the forecast shows it; a card's

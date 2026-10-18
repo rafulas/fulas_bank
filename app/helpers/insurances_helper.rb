@@ -32,6 +32,11 @@ module InsurancesHelper
 
   # "Renueva el 24/10/2026", amber when it is close.
   def insurance_renewal_pill(insurance, today: Date.current)
+    # Fulas Bank: a policy that will not be renewed shows when it ends.
+    if insurance.ends_on
+      return render DS::Pill.new(label: t("insurances.ends_on", date: l(insurance.ends_on, format: "%d/%m/%Y")),
+                                 tone: :warning, icon: "calendar-x", marker: false, size: :sm)
+    end
     return unless insurance.renewal_date
 
     days = insurance.days_to_renewal(today)

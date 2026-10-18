@@ -16,6 +16,7 @@ en:
       success: Table updated.
     variable_line: Variable spending %{month}
     overdue_line: "%{name} (due on %{date})"
+    loan_line: "%{name} payment"
     insurance_line: "%{name} (instalment %{number} of %{count})"
     debt_plan_line: "%{loan} payment (debt plan)"
     card_statement_line: "%{card}: %{month} statement"
@@ -86,6 +87,7 @@ en:
         debt_plan: Debt plan
         card: Card
         insurance: Insurance
+        loan: Loan
   forecast_items:
     form:
       name: Description
