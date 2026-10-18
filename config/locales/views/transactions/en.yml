@@ -61,6 +61,7 @@ en:
       create_category: 'Create "%{name}"'
       create_category_error: Could not create category
       date: Date
+      date_future_hint: A date after today saves it as an expected movement (shown in Upcoming and in the Forecast) that does not change the balance until you import the statement.
       description: Description
       description_placeholder: Describe transaction
       expense: Expense
@@ -81,8 +82,16 @@ en:
       tags_cancel: Cancel
       tags_label: Tags
       transfer: Transfer
+    planned:
+      title: Expected movements
+      hint: The ones you expect that are not in the bank yet. They do not change the balance; they count in the Forecast until you import the statement with them.
+      add: Add expected
+      pill: Expected
+      overdue: Waiting for import
+      edit: Edit expected movement
     create:
       created: Transaction created
+      planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
     update:
       updated: Transaction updated
     new:

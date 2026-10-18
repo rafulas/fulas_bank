@@ -57,6 +57,60 @@ class Loan::InstallmentSyncTest < ActiveSupport::TestCase
     assert series.reload.ended?
   end
 
+  test "a loan paid twice, by its own movement and one from the bank, keeps the bank's and ends the other" do
+    own = sync.sync_account(@loan_account)
+    bank = @family.recurring_transactions.create!(
+      account: @checking, name: "Amortización préstamo", amount: 300, currency: "EUR", expected_day_of_month: 3,
+      status: "active", manual: false, bill_type: "bill",
+      last_occurrence_date: Date.new(2026, 10, 3), next_expected_date: Date.new(2026, 11, 3)
+    )
+    charge = @checking.entries.create!(date: Date.new(2026, 10, 3), amount: 300, currency: "EUR", name: "Amortización préstamo",
+                                       entryable: Transaction.new)
+    occurrence = bank.recurring_occurrences.find_or_initialize_by(original_due_on: charge.date)
+    occurrence.update!(family: @family, currency: "EUR", due_on: charge.date, expected_amount: 300,
+                       status: "paid", closed_at: Time.current, closed_source: "user")
+    RecurringAllocation.create!(recurring_occurrence: occurrence, entry: charge, allocated_amount: 300, currency: "EUR",
+                                source: "user_confirmed", paid_on: charge.date)
+
+    kept = sync.sync_account(@loan_account)
+
+    assert_equal bank, kept
+    assert_equal @loan_account.id, bank.reload.loan_account_id
+    assert bank.typed_installment?
+    assert_equal 3, bank.expected_day_of_month, "keeps the day the bank charges it"
+    assert own.reload.ended?
+    assert_nil own.loan_account_id
+    assert_equal bank.id, own.replaced_by_id
+    assert_equal [ bank ], @family.recurring_transactions.active.to_a
+  end
+
+  test "a twin with no bank charges matched ends, and the loan's own movement stays" do
+    own = sync.sync_account(@loan_account)
+    twin = @family.recurring_transactions.create!(
+      account: @checking, name: "Pago préstamo coche", amount: 300, currency: "EUR", expected_day_of_month: 7,
+      status: "active", manual: true, bill_type: "bill",
+      last_occurrence_date: Date.new(2026, 10, 7), next_expected_date: Date.new(2026, 11, 7)
+    )
+
+    assert_equal own, sync.sync_account(@loan_account)
+    assert twin.reload.ended?
+    assert own.reload.active?
+    assert_equal 5, own.expected_day_of_month
+  end
+
+  test "a payment of another amount is not taken for the loan" do
+    sync.sync_account(@loan_account)
+    other = @family.recurring_transactions.create!(
+      account: @checking, name: "Alquiler trastero", amount: 400, currency: "EUR", expected_day_of_month: 5,
+      status: "active", manual: true, bill_type: "bill",
+      last_occurrence_date: Date.new(2026, 10, 5), next_expected_date: Date.new(2026, 11, 5)
+    )
+
+    sync.sync_account(@loan_account)
+    assert other.reload.active?
+    assert_nil other.loan_account_id
+  end
+
   private
     def sync
       Loan::InstallmentSync.new(@family, today: @today)

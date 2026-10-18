@@ -1,5 +1,11 @@
+<%# Fulas Bank: the movements the user expects first, then the recurring ones. %>
+<% planned = @planned_items || [] %>
+<% if planned.any? %>
+  <%= render "transactions/planned", items: planned %>
+<% end %>
+
 <% if @projected_recurring.any? %>
-  <div id="upcoming" class="flex flex-col bg-container rounded-xl shadow-border-xs px-3 py-4 lg:p-4 relative group">
+  <div id="upcoming" class="<%= "mt-4 " if planned.any? %>flex flex-col bg-container rounded-xl shadow-border-xs px-3 py-4 lg:p-4 relative group">
     <div class="grid-cols-12 bg-container-inset rounded-xl px-5 py-3 text-xs uppercase font-medium text-secondary items-center mb-4 grid">
       <div class="pl-0.5 col-span-8 flex items-center gap-4"><p><%= t("transactions.list.transaction") %></p></div>
       <p class="col-span-2 md:block hidden"><%= t("transactions.search.filters.type") %></p>
@@ -24,6 +30,6 @@
       <% end %>
     </div>
   </div>
-<% else %>
+<% elsif planned.empty? %>
   <%= render "transactions/upcoming_empty" %>
 <% end %>

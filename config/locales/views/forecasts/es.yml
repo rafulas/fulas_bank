@@ -62,13 +62,15 @@ es:
       cash: Saldo efectivo
       investment: Ahorro / inversión
       title: Tabla de previsión
-      hint: "Cada línea con el saldo que quedará después. Recurrente: viene de tus recibos, nóminas y suscripciones (los fijos y recurrentes). Gastos varios: lo que sueles gastar en lo variable ese mes (media de los tres últimos meses iguales y los seis últimos meses, sin el mayor ni el menor). Con «Editar» cambias la fecha, el importe o el nombre de una línea, o la quitas."
+      hint: "La fila de cada mes muestra su resultado y el saldo con el que empieza; debajo, cada línea con el saldo que quedará después. Recurrente: viene de tus recibos, nóminas y suscripciones (los fijos y recurrentes). Gastos varios: lo que sueles gastar en lo variable ese mes (media de los tres últimos meses iguales y los seis últimos meses, sin el mayor ni el menor). Con «Editar» cambias la fecha, el importe o el nombre de una línea, o la quitas."
       add: Añadir línea
       empty: No hay movimientos previstos en este periodo.
       lines:
         one: 1 línea
         other: "%{count} líneas"
       end_of_month: "Saldo al final: %{amount}"
+      month_opening: Saldo al empezar el mes
+      month_net: Resultado del mes (ingresos menos gastos)
       month_label: Previsión de %{month}
       date: Fecha
       name: Concepto

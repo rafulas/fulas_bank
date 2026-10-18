@@ -22,6 +22,10 @@ class RecurringTransactionsController < ApplicationController
   before_action :ensure_series_writable, only: %i[update toggle_status destroy confirm dismiss]
 
   def index
+    # Fulas Bank: each loan's instalment, kept in step with the loan (and a
+    # loan paid twice, by its own movement and by one from the bank, merged).
+    Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
+
     scope = Current.family.recurring_transactions
                   .accessible_by(Current.user)
                   .includes(:merchant)

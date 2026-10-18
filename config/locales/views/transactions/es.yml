@@ -61,6 +61,7 @@ es:
       create_category: Crear «%{name}»
       create_category_error: No se pudo crear la categoría
       date: Fecha
+      date_future_hint: Con una fecha posterior a hoy se guarda como movimiento previsto (sale en Próximos y en el Forecast) y no cambia el saldo hasta que importes el extracto.
       description: Descripción
       description_placeholder: Describe la transacción
       expense: Gasto
@@ -81,8 +82,16 @@ es:
       tags_cancel: Cancelar
       tags_label: Etiquetas
       transfer: Transferencia
+    planned:
+      title: Movimientos previstos
+      hint: Los que esperas y aún no están en el banco. No cambian el saldo; cuentan en el Forecast hasta que importes el extracto con ellos.
+      add: Añadir previsto
+      pill: Previsto
+      overdue: Pendiente de importar
+      edit: Editar movimiento previsto
     create:
       created: Transacción creada
+      planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
     update:
       updated: Transacción actualizada
     new:

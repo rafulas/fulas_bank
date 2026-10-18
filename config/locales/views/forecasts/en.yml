@@ -69,6 +69,8 @@ en:
         one: 1 line
         other: "%{count} lines"
       end_of_month: "Balance at the end: %{amount}"
+      month_opening: Balance at the start of the month
+      month_net: Result of the month (income minus spending)
       month_label: Forecast for %{month}
       date: Date
       name: Description
