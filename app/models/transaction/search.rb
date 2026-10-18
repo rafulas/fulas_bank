@@ -57,15 +57,17 @@ class Transaction::Search
   # Compute totals for the specific search, excluding tax-advantaged accounts
   def totals
     @totals ||= begin
+      # v5: Fulas Bank, refunds lower spending instead of counting as income.
       # v4: Fulas Bank, income and spending by the Resumen's rule.
       # v3: bumped because the Uncategorized filter's exclusion set changed
       # (see #2592) -- without a version bump, a totals entry cached under
       # the old logic would keep being served (same cache_key_base) after
       # deploy, disagreeing with the (uncached) transactions_scope list
       # until entries_cache_version next changes for that family.
-      Rails.cache.fetch("transaction_search_totals/v4/#{cache_key_base}") do
+      Rails.cache.fetch("transaction_search_totals/v5/#{cache_key_base}") do
         scope = transactions_scope
         counted = Transaction.counts_as_flow_sql
+        refund = Transaction.refund_sql
 
         # Exclude tax-advantaged accounts from totals calculation
         tax_advantaged_ids = family.tax_advantaged_account_ids
@@ -75,8 +77,9 @@ class Transaction::Search
                   .select(
                     # Fulas Bank: income and spending by the Resumen's rule
                     # (see #apply_type_filter); the rest is "transfers".
-                    "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as expense_total",
-                    "COALESCE(SUM(CASE WHEN entries.amount < 0 AND #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as income_total",
+                    # A refund lowers spending instead of counting as income.
+                    "COALESCE(SUM(CASE WHEN (entries.amount >= 0 OR #{refund}) AND #{counted} THEN entries.amount * COALESCE(er.rate, 1) ELSE 0 END), 0) as expense_total",
+                    "COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{refund} AND #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as income_total",
                     "COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_inflow_total",
                     "COALESCE(SUM(CASE WHEN entries.amount >= 0 AND NOT #{counted} THEN ABS(entries.amount * COALESCE(er.rate, 1)) ELSE 0 END), 0) as transfer_outflow_total",
                     "COUNT(entries.id) as transactions_count"
@@ -185,10 +188,11 @@ class Transaction::Search
       return query if wanted.empty? || wanted.sort == %w[expense income transfer]
 
       counted = Transaction.counts_as_flow_sql
+      refund = Transaction.refund_sql
       conditions = wanted.map do |type|
         case type
-        when "expense" then "(#{counted} AND entries.amount >= 0)"
-        when "income" then "(#{counted} AND entries.amount < 0)"
+        when "expense" then "(#{counted} AND (entries.amount >= 0 OR #{refund}))"
+        when "income" then "(#{counted} AND entries.amount < 0 AND NOT #{refund})"
         when "transfer" then "(NOT #{counted})"
         end
       end

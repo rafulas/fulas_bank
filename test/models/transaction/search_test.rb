@@ -519,6 +519,30 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     assert_equal Money.new(0, "USD"), totals.income_money
   end
 
+  test "a refund lowers spending instead of counting as income, once there is an income category" do
+    categories(:income).update!(spending_class: "income")
+    create_transaction(account: @checking_account, amount: 300, category: categories(:food_and_drink))
+    create_transaction(account: @checking_account, amount: -50, category: categories(:food_and_drink)) # refund
+    create_transaction(account: @checking_account, amount: -2_000, category: categories(:income))
+    create_transaction(account: @checking_account, amount: -20) # uncategorized money in: income
+
+    totals = Transaction::Search.new(@family).totals
+    assert_equal Money.new(250, "USD"), totals.expense_money
+    assert_equal Money.new(2_020, "USD"), totals.income_money
+
+    expenses = Transaction::Search.new(@family, filters: { "types" => [ "expense" ] }).transactions_scope
+    assert_equal 2, expenses.count, "the refund is listed with the spending"
+  end
+
+  test "without an income category every inflow stays income" do
+    create_transaction(account: @checking_account, amount: 300, category: categories(:food_and_drink))
+    create_transaction(account: @checking_account, amount: -50, category: categories(:food_and_drink))
+
+    totals = Transaction::Search.new(@family).totals
+    assert_equal Money.new(300, "USD"), totals.expense_money
+    assert_equal Money.new(50, "USD"), totals.income_money
+  end
+
   test "totals handles empty results" do
     search = Transaction::Search.new(@family)
     totals = search.totals

@@ -65,6 +65,12 @@ class InvestmentsOverview
     sum(with_contributions.map(&:value)) - total_contributed
   end
 
+  # Fulas Bank: the accounts the gain leaves out, having no contributions
+  # to compare with (a pension plan or a savings policy with no movements).
+  def rows_without_contributions
+    rows.reject(&:contributed)
+  end
+
   def total_return_ratio
     return nil unless total_contributed.amount.positive?
 

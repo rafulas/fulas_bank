@@ -269,12 +269,23 @@ class ReportsController < ApplicationController
       end
     end
 
+    # Fulas Bank: a period still under way (this month, up to today) is
+    # compared with the same days of the period before, not with all of it.
     def build_previous_period
       duration = (@end_date - @start_date).to_i
       previous_end = @start_date - 1.day
       previous_start = previous_end - duration.days
 
+      if @end_date > Date.current && Date.current >= @start_date
+        previous_start = whole_month_period? ? @start_date.prev_month : previous_start
+        previous_end = [ previous_start + (Date.current - @start_date).to_i, previous_end ].min
+      end
+
       Period.custom(start_date: previous_start, end_date: previous_end)
+    end
+
+    def whole_month_period?
+      @start_date == @start_date.beginning_of_month && @end_date == @start_date.end_of_month
     end
 
     def build_summary_metrics

@@ -53,6 +53,10 @@
         <% end %>
       </div>
       <p class="mt-2 text-xs text-secondary"><%= t(".annual_return_hint") %></p>
+      <%# Fulas Bank: say which accounts the contributions and gain cover. %>
+      <% if (missing = overview.rows_without_contributions).any? && overview.total_contributed.amount.positive? %>
+        <p class="mt-1 text-xs text-secondary"><%= t(".partial_totals", accounts: missing.map { |row| row.account.name }.to_sentence) %></p>
+      <% end %>
     </div>
 
     <% if overview.suggested_trades.any? %>

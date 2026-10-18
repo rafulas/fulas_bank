@@ -29,7 +29,7 @@
 
       <%= render DS::Menu.new(variant: :button, placement: "bottom-end", max_height: "18rem") do |menu| %>
         <% menu.with_button(type: "button", class: pill_button_class, aria: { label: t(".month_picker_aria_label") }) do %>
-          <span class="capitalize"><%= I18n.l(data[:month], format: :month_year) %></span>
+          <span><%= I18n.l(data[:month], format: :month_year).upcase_first %></span>
           <%= icon("chevron-down", size: "sm") %>
         <% end %>
 
@@ -51,7 +51,7 @@
     <div class="flex items-center gap-3 min-w-0">
       <span class="w-1 h-10 rounded-full bg-success shrink-0"></span>
       <div class="min-w-0">
-        <p class="text-sm text-primary capitalize truncate"><%= I18n.l(data[:month], format: :month_year) %></p>
+        <p class="text-sm text-primary truncate"><%= I18n.l(data[:month], format: :month_year).upcase_first %></p>
         <p class="flex flex-wrap items-baseline gap-x-2">
           <span class="font-medium text-lg tabular-nums text-primary privacy-sensitive whitespace-nowrap"><%= format_money data[:current_total] %></span>
           <span class="text-sm tabular-nums privacy-sensitive whitespace-nowrap <%= data[:delta].negative? ? "text-success" : (data[:delta].zero? ? "text-secondary" : "text-destructive") %>">
@@ -65,7 +65,7 @@
       <span class="w-1 h-10 rounded-full bg-subdued shrink-0"></span>
       <div class="min-w-0">
         <p class="text-sm text-secondary truncate">
-          <span class="capitalize"><%= previous_label %></span>
+          <span><%= previous_label.to_s.upcase_first %></span>
           <%# While the selected month is still running, the figure below covers %>
           <%# the same elapsed days rather than the whole previous month. %>
           <% if previous_comparison_day %>

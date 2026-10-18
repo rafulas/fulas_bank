@@ -215,6 +215,52 @@
       "user_input": ":account_id",
       "confidence": "High",
       "note": "account_id is never mass-assigned: build_declared_bill resolves it through Current.user.accessible_accounts.find_by, so a foreign id degrades to no account rather than an association write."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "544929cbe6a0c470d484b680853d9ed2931254ce656bc85b4af681d8299a0872",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/transaction/month_summary.rb",
+      "line": 66,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"COALESCE(SUM(CASE WHEN entries.amount >= 0 OR #{Transaction.refund_sql} THEN entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Transaction::MonthSummary",
+        "method": "totals"
+      },
+      "user_input": "Transaction.refund_sql",
+      "confidence": "High",
+      "cwe_id": [
+        89
+      ],
+      "note": "Transaction.refund_sql only interpolates fixed column names and the constant Category::REFUND_IDS_SQL; no user input reaches it."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "bb75b4beb2ee27eafacd150888516989ed774e7bbe1fdee3d48484e3da58e44d",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/transaction/month_summary.rb",
+      "line": 67,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Arel.sql(\"COALESCE(SUM(CASE WHEN entries.amount < 0 AND NOT #{Transaction.refund_sql} THEN -entries.amount * COALESCE(month_rates.rate, 1) ELSE 0 END), 0)\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Transaction::MonthSummary",
+        "method": "totals"
+      },
+      "user_input": "Transaction.refund_sql",
+      "confidence": "High",
+      "cwe_id": [
+        89
+      ],
+      "note": "Transaction.refund_sql only interpolates fixed column names and the constant Category::REFUND_IDS_SQL; no user input reaches it."
     }
   ],
   "brakeman_version": "7.1.0"

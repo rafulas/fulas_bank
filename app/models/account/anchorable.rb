@@ -15,6 +15,15 @@ module Account::Anchorable
     result
   end
 
+  # Fulas Bank: the day the account starts counting in net worth, keeping
+  # its opening value (a house added today that was bought years ago).
+  # True when there was nothing to move or it moved.
+  def move_opening_anchor_date(date)
+    return true if date.nil? || linked? || date == opening_anchor_date
+
+    set_opening_anchor_balance(balance: opening_anchor_balance, date: date).success?
+  end
+
   def opening_anchor_date
     opening_balance_manager.opening_date
   end

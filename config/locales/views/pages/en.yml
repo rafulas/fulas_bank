@@ -143,6 +143,9 @@ en:
         feedback_privacy: "Your response is sent to PostHog. Describe the issue without account numbers, balances, or other private financial details."
         feedback_submit: "Send feedback"
       cashflow_sankey:
+        cash_flow: Cash Flow
+        surplus: Surplus
+        deficit: Deficit
         loading: "Loading cash flow…"
         load_error: "Cash flow could not be loaded. Please try again."
         retry: "Try again"

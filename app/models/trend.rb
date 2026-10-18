@@ -64,7 +64,8 @@ class Trend
 
   def percent_formatted
     if percent.finite?
-      "#{percent.round(1)}%"
+      # Fulas Bank: in the user's language ("113,2 %").
+      ActiveSupport::NumberHelper.number_to_percentage(percent.round(1), precision: 1, strip_insignificant_zeros: true, locale: I18n.locale)
     else
       percent > 0 ? "＋∞" : "-∞"
     end

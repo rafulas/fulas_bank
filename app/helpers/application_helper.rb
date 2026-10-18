@@ -169,6 +169,14 @@ module ApplicationHelper
     Money.new(number_or_money).format(options)
   end
 
+  # Fulas Bank: a percentage written the way of the user's language
+  # ("113,2 %" in Spanish), dropping a trailing ",0".
+  def format_percent(value, precision: 1)
+    return "—" if value.nil?
+
+    number_to_percentage(value, precision: precision, strip_insignificant_zeros: true)
+  end
+
   def totals_by_currency(collection:, money_method:, separator: " | ", negate: false)
     collection.group_by(&:currency)
               .map { |currency, items| format_money(calculate_total(items, money_method, negate, currency)) }

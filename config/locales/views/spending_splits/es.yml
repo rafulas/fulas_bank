@@ -7,6 +7,7 @@ es:
       essential: Necesario
       discretionary: Prescindible
       savings: Ahorro
+      income: Ingreso
       share: "%{share} % · obj. %{target} %"
       bars_hint: "Arriba, tu reparto real de lo ingresado; debajo, tu objetivo (%{target})."
       hint: "Sobre %{income} ingresados. El ahorro es lo que queda tras lo necesario y lo prescindible."

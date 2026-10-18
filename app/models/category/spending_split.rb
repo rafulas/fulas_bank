@@ -93,7 +93,9 @@ class Category::SpendingSplit
           if net.negative?
             result[:income] -= net
           else
-            rows.each { |row| result[row[:class] || :unclassified] += row[:amount] }
+            # "income" is not a spending class: an income category that
+            # spends more than it brings in counts as unclassified.
+            rows.each { |row| result[row[:class].in?(%i[essential discretionary savings]) ? row[:class] : :unclassified] += row[:amount] }
           end
         end
         result

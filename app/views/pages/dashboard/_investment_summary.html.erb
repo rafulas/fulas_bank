@@ -1,4 +1,4 @@
-<%# locals: (investment_statement:, period:, **args) %>
+<%# locals: (investment_statement:, period:, investments_overview: nil, **args) %>
 
 <% if investment_statement.investment_accounts.any? %>
   <div id="investment-summary" class="space-y-4">
@@ -12,8 +12,17 @@
           <%= format_money(investment_statement.portfolio_value_money) %>
         </p>
 
-        <% trend = investment_statement.unrealized_gains_trend %>
-        <% if trend %>
+        <%# Fulas Bank: the same gain and return as the Inversiones screen. %>
+        <% if investments_overview&.total_return_ratio %>
+          <% gain = investments_overview.total_gain %>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-secondary"><%= t(".total_return") %>:</span>
+            <span class="font-medium privacy-sensitive <%= gain.negative? ? "text-destructive" : "text-success" %>">
+              <%= format_money(gain) %>
+              (<%= number_to_percentage(investments_overview.total_return_ratio * 100, precision: 2) %>)
+            </span>
+          </div>
+        <% elsif (trend = investment_statement.unrealized_gains_trend) %>
           <div class="flex items-center gap-2 text-sm">
             <span class="text-secondary"><%= t(".total_return") %>:</span>
             <span class="font-medium privacy-sensitive" style="color: <%= trend.color %>">

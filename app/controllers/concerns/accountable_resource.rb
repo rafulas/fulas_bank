@@ -109,6 +109,12 @@ module AccountableResource
         end
       end
 
+      # Fulas Bank: the day the account starts counting (see accounts/_form).
+      unless move_opening_date
+        @account.assign_attributes(update_params)
+        raise ActiveRecord::Rollback
+      end
+
       # Update remaining account attributes. Note: currency is intentionally allowed
       # here so all account types (depositories, credit cards, loans, etc.) can
       # have their currency changed via this shared update path.
@@ -137,6 +143,20 @@ module AccountableResource
   end
 
   private
+    # Moves the account's opening value to the date the user typed, keeping
+    # its amount. False (with the error) when it cannot go there.
+    def move_opening_date
+      date = begin
+        account_params[:opening_balance_date].presence&.to_date
+      rescue Date::Error
+        nil
+      end
+      return true if @account.move_opening_anchor_date(date)
+
+      @error_message = t("accounts.form.since_error")
+      false
+    end
+
     # The "how would you like to add it?" step only makes sense when there is
     # something besides typing the balance. With bank linking switched off
     # (see config.x.account_provider_links) the form opens straight away.

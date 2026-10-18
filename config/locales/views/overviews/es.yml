@@ -27,6 +27,7 @@ es:
     show:
       under_a_year: Menos de un año
       annual_return: Rentabilidad anual
+      partial_totals: "Aportado, ganancia y rentabilidad cuentan solo las cuentas con aportaciones conocidas; no incluyen %{accounts}."
       annual_return_hint: "Rentabilidad: lo ganado sobre lo aportado. Rentabilidad anual (TIR): lo que has ganado al año, teniendo en cuenta cuándo aportaste cada euro; así una aportación de hace un mes no pesa como una de hace cinco años. Solo se da con al menos un año de historia, como hacen los bancos: con menos, anualizar dispara la cifra."
       refresh_prices: Actualizar precios
       refreshing_prices: Actualizando…
