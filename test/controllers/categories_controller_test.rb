@@ -441,6 +441,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     @transaction.update!(category: nil)
 
     patch toggle_active_category_url(category)
+    follow_redirect! # shows the notice, which names the category
 
     assert_not category.reload.active?
     assert_equal category, other.reload.category
