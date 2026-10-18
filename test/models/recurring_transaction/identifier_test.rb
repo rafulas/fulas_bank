@@ -270,7 +270,7 @@ class RecurringTransaction::IdentifierTest < ActiveSupport::TestCase
     @identifier.identify_recurring_patterns
 
     assert_not RecurringTransaction.exists?(stale.id), "the old suggestion is gone"
-    assert_equal [ club ], @family.recurring_transactions.to_a
+    assert_equal [ club ], @family.recurring_transactions.reload.to_a
   end
 
   test "identifies recurring pattern with transactions wrapping month boundary" do
