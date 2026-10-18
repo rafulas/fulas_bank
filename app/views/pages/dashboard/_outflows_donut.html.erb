@@ -35,7 +35,7 @@
                     <%= outflows_data[:currency_symbol] %><%= number_with_delimiter(category[:amount], delimiter: ",") %>
                   </p>
 
-                  <p class="text-sm text-secondary privacy-sensitive"><%= category[:percentage] %>%</p>
+                  <p class="text-sm text-secondary privacy-sensitive"><%= format_percent(category[:percentage]) %></p>
                 </div>
               </div>
             <% end %>
@@ -85,7 +85,7 @@
               </div>
               <div class="flex items-center gap-4 flex-shrink-0 text-right">
                 <span class="text-sm font-medium text-primary whitespace-nowrap privacy-sensitive"><%= format_money Money.new(category[:amount], category[:currency]) %></span>
-                <span class="text-sm text-secondary whitespace-nowrap w-10 @2xl:w-15 privacy-sensitive"><%= category[:percentage] %>%</span>
+                <span class="text-sm text-secondary whitespace-nowrap w-10 @2xl:w-15 privacy-sensitive"><%= format_percent(category[:percentage]) %></span>
               </div>
             <% end %>
 

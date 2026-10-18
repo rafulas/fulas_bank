@@ -48,13 +48,23 @@ class PropertiesController < ApplicationController
 
   def update_balances
     result = nil
+    date_error = false
     Account.transaction do
       @account.update!(currency: balance_params[:currency]) if balance_params[:currency].present?
       result = @account.set_current_balance(balance_params[:balance].to_d)
       raise ActiveRecord::Rollback unless result.success?
+
+      # Fulas Bank: since when the house counts in net worth.
+      unless @account.move_opening_anchor_date(opening_date_param)
+        date_error = true
+        raise ActiveRecord::Rollback
+      end
     end
 
-    if result&.success?
+    if date_error
+      @error_message = t("accounts.form.since_error")
+      render :balances, status: :unprocessable_entity
+    elsif result&.success?
       @success_message = "Balance updated successfully."
 
       if @account.active?
@@ -216,7 +226,13 @@ class PropertiesController < ApplicationController
     end
 
     def balance_params
-      params.require(:account).permit(:balance, :currency)
+      params.require(:account).permit(:balance, :currency, :opening_balance_date)
+    end
+
+    def opening_date_param
+      balance_params[:opening_balance_date].presence&.to_date
+    rescue Date::Error
+      nil
     end
 
     def address_params

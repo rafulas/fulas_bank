@@ -41,7 +41,7 @@
                   </td>
                   <td class="py-3 px-4 lg:px-6 text-right <%= trend[:net] >= 0 ? "text-success" : "text-destructive" %>">
                     <% savings_rate = trend[:income] > 0 ? ((trend[:net].to_f / trend[:income].to_f) * 100).round(1) : 0 %>
-                    <%= savings_rate %>%
+                    <%= format_percent(savings_rate) %>
                   </td>
                 </tr>
               <% end %>

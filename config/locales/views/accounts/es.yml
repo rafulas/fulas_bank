@@ -40,6 +40,9 @@ es:
       no_accounts: Aún no hay cuentas
     form:
       balance: Saldo actual
+      since_label: Cuenta desde
+      since_hint: "El día desde el que cuenta en tu patrimonio: cuando compraste la casa o el coche, o firmaste el préstamo. Así darla de alta tarde no parece una subida de este mes."
+      since_error: "Esa fecha tiene que ser anterior al primer movimiento de la cuenta."
       opening_balance_date_label: Fecha del saldo actual
       opening_balance_date_hint: Normalmente hoy. Si luego importas movimientos de días anteriores, la app calcula sola el saldo de esos días.
       name_label: Nombre de la cuenta

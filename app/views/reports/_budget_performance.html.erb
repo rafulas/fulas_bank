@@ -39,7 +39,7 @@
               <% end %>
 
               <span class="text-sm font-semibold text-primary">
-                <%= budget_item[:percent_used].round(0) %>%
+                <%= format_percent(budget_item[:percent_used], precision: 0) %>
               </span>
             </div>
           </div>

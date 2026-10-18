@@ -774,6 +774,11 @@ class Import < ApplicationRecord
         # raw_file_str might have invalid encoding, continue to detection
       end
 
+      # Fulas Bank: a Spanish bank's file that is not UTF-8 is Windows-1252
+      # (ñ, tildes, €). Guessing gets it wrong on short files: "España" came
+      # out as "Espaãa".
+      return if western_family? && convert_from_western_encoding
+
       # Detect encoding using rchardet
       begin
         require "rchardet"
@@ -796,6 +801,20 @@ class Import < ApplicationRecord
         # Handle encoding errors by falling back to common encodings
         try_common_encodings
       end
+    end
+
+    def western_family?
+      family.present? && (family.locale.to_s.start_with?("es") || family.country.to_s.upcase == "ES")
+    end
+
+    def convert_from_western_encoding
+      test = raw_file_str.dup.force_encoding("Windows-1252")
+      return false unless test.valid_encoding?
+
+      self.raw_file_str = test.encode("UTF-8", invalid: :replace, undef: :replace)
+      true
+    rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+      false
     end
 
     def try_common_encodings

@@ -18,7 +18,7 @@
       <span class="whitespace-nowrap"><%= format_money(@analysis.net, precision: 0) %></span>
     <% end %>
     <%= summary_card title: t(".savings_rate"), tone: :brand do %>
-      <%= @analysis.savings_rate %>%
+      <%= format_percent(@analysis.savings_rate) %>
     <% end %>
   </div>
 

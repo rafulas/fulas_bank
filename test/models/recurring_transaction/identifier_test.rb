@@ -241,6 +241,31 @@ class RecurringTransaction::IdentifierTest < ActiveSupport::TestCase
     assert_in_delta 6, recurring.expected_day_of_month, 1  # Should be around day 6
   end
 
+  test "movements that already pay another series are not suggested again, and an old suggestion goes" do
+    account = accounts(:depository)
+    dates = [ 2.months.ago.to_date, 1.month.ago.to_date, Date.current ].map { |date| date.change(day: [ Date.current.day, 28 ].min) }
+    entries = dates.map do |date|
+      account.entries.create!(date: date, amount: 9.99, currency: "USD", name: "PAGO CUOTA CLUB", entryable: Transaction.new)
+    end
+
+    # Named by hand, so its identity (name) is not the movements'.
+    club = @family.recurring_transactions.create!(
+      account: account, name: "Club de regatas", amount: 9.99, currency: "USD", expected_day_of_month: dates.last.day,
+      status: "active", manual: true, bill_type: "subscription", last_occurrence_date: dates.last, next_expected_date: dates.last.next_month
+    )
+    entries.each { |entry| SubscriptionLink.new(entry).link!(club) }
+
+    stale = @family.recurring_transactions.create!(
+      account: account, name: "PAGO CUOTA CLUB", amount: 9.99, currency: "USD", expected_day_of_month: dates.last.day,
+      status: "suggested", last_occurrence_date: dates.last, next_expected_date: dates.last.next_month
+    )
+
+    @identifier.identify_recurring_patterns
+
+    assert_not RecurringTransaction.exists?(stale.id), "the old suggestion is gone"
+    assert_equal [ club ], @family.recurring_transactions.to_a
+  end
+
   test "identifies recurring pattern with transactions wrapping month boundary" do
     account = @family.accounts.first
     merchant = merchants(:netflix)

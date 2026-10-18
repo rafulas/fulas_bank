@@ -29,6 +29,14 @@
           value: Time.zone.today,
           required: true %>
       <p class="text-xs text-secondary"><%= opening_balance_date_hint || t(".opening_balance_date_hint") %></p>
+    <% elsif account.persisted? && !account.linked? %>
+      <%# Fulas Bank: the day the account starts counting in net worth (when
+          the house was bought or the loan signed), so adding it later does
+          not show as a jump in this month's net worth. %>
+      <%= form.date_field :opening_balance_date,
+          label: t(".since_label"),
+          value: account.opening_anchor_date %>
+      <p class="text-xs text-secondary"><%= t(".since_hint") %></p>
     <% end %>
 
     <%= yield form %>

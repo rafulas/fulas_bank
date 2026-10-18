@@ -140,6 +140,12 @@ class Transaction < ApplicationRecord
   # use: not excluded by hand, a kind that counts (see counts_by_kind_sql)
   # and not in "Excluido" or "Traspasos". Assumes the entries and
   # transactions tables under their own names.
+  # Fulas Bank: money in to a category that is not income (a refund), which
+  # counts as less spending rather than as income (Category.refund_ids_sql).
+  def self.refund_sql(family, table: "transactions", amount: "entries.amount")
+    "(#{amount} < 0 AND #{table}.category_id IN (#{Category.refund_ids_sql(family)}))"
+  end
+
   def self.counts_as_flow_sql
     "(entries.excluded = FALSE AND #{counts_by_kind_sql} AND " \
       "(transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})))"

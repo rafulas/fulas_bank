@@ -15,7 +15,7 @@
         <%= account.property.trend.value %>
       </p>
 
-      <p>(<%= account.property.trend.percent %>%)</p>
+      <p>(<%= format_percent(account.property.trend.percent) %>)</p>
     </div>
   <% end %>
 

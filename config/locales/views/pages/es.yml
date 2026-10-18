@@ -143,6 +143,9 @@ es:
         feedback_privacy: Tu respuesta se envía a PostHog. Describe el problema sin números de cuenta, saldos ni otros datos financieros privados.
         feedback_submit: Enviar comentarios
       cashflow_sankey:
+        cash_flow: Flujo de caja
+        surplus: Ahorro
+        deficit: Déficit
         loading: Cargando flujo de caja…
         load_error: No se pudo cargar el flujo de caja. Inténtalo de nuevo.
         retry: Reintentar
