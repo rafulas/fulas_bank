@@ -16,7 +16,13 @@
       <%= t(row.over? ? "month_plans.show.over_budget" : "month_plans.show.left_to_spend", amount: format_money(Money.new(row.available.abs, currency))) %>
     </span>
   </div>
-  <div class="h-2 rounded-full overflow-hidden <%= red ? "bg-destructive/10" : "bg-success/10" %>">
-    <div class="h-full rounded-full <%= red ? "bg-destructive" : "bg-success" %>" style="width: <%= [ row.share * 100, 100 ].min.round(1) %>%"></div>
+  <div class="relative">
+    <div class="h-2 rounded-full overflow-hidden <%= red ? "bg-destructive/10" : "bg-success/10" %>">
+      <div class="h-full rounded-full <%= red ? "bg-destructive" : "bg-success" %>" style="width: <%= [ row.share * 100, 100 ].min.round(1) %>%"></div>
+    </div>
+    <%# Fulas Bank: where the month is today; past it, the bar is ahead of pace. %>
+    <% if plan.current_month? %>
+      <span class="absolute -top-0.5 -bottom-0.5 border-l-2 border-primary" style="left: <%= (plan.elapsed_share * 100).round(1) %>%" title="<%= t("month_plans.show.today") %>" aria-hidden="true"></span>
+    <% end %>
   </div>
 </div>

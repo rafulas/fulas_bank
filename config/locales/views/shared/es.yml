@@ -4,6 +4,10 @@ es:
     self_hostable:
       redis_configured: "¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Fulas Bank."
   shared:
+    analysis_tabs:
+      aria: Resumen o comparar
+      month: Mes
+      compare: Comparar
     preview: Vista previa
     dot_separator: "·"
     sync_toast:

@@ -438,6 +438,9 @@ Rails.application.routes.draw do
   resources :categories, except: :show do
     resources :deletions, only: %i[new create], module: :category
 
+    patch :move, on: :member
+    patch :toggle_active, on: :member
+
     get :merge, on: :collection
     post :perform_merge, on: :collection
     post :bootstrap, on: :collection

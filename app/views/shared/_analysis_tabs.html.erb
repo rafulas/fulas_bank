@@ -1,0 +1,6 @@
+<%# Fulas Bank: Resumen and Informes are one screen with two tabs — «Mes»
+    (the month by category) and «Comparar» (periods side by side). %>
+<%= render DS::SegmentedControl.new(aria_label: t("shared.analysis_tabs.aria")) do |control| %>
+  <% control.with_segment(t("shared.analysis_tabs.month"), href: category_summaries_path, active: current_page?(category_summaries_path)) %>
+  <% control.with_segment(t("shared.analysis_tabs.compare"), href: reports_path, active: current_page?(reports_path)) %>
+<% end %>

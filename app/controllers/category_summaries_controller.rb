@@ -12,6 +12,8 @@ class CategorySummariesController < ApplicationController
                                                  account_ids: report_account_ids,
                                                  target: Category::SpendingSplit.target_for(Current.user))
     @fixed_variable = Category::FixedVariable.new(Current.family, account_ids: report_account_ids)
+    savings_flow = SavingsFlow.new(Current.family, user: Current.user, period: @period, income: @analysis.income)
+    @observations = Category::Observations.new(@analysis, savings_flow: savings_flow)
   end
 
   def show

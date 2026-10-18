@@ -53,9 +53,27 @@ class MonthPlanTest < ActiveSupport::TestCase
     assert plan.ahead_of_pace?(row.with(spent: 400))
   end
 
+  test "the spending pace against the budget spread over the month" do
+    food = @family.categories.create!(name: "Comida plan", color: "#4da568", lucide_icon: "utensils")
+    @account.entries.create!(date: Date.new(2026, 10, 2), amount: 100, currency: "USD", name: "Súper",
+                             entryable: Transaction.new(category: food))
+    current = plan
+    current.stubs(:budget_rows).returns([ MonthPlan::BudgetRow.new(category: food, budgeted: 310, spent: 100, children: []) ])
+
+    pace = current.budget_pace
+    assert_equal 31, pace[:days]
+    assert_equal 310.0, pace[:total]
+    assert_equal 14, pace[:spent].size
+    assert_equal [ 0.0, 100.0 ], pace[:spent].first(2)
+    assert_equal 14, pace[:today]
+    assert_equal Money.new(140, "USD"), current.budget_pace_expected
+    assert_equal Money.new(-40, "USD"), current.budget_pace_gap
+  end
+
   test "no budget, no budget rows" do
     assert_nil plan.budget
     assert_empty plan.budget_rows
+    assert_nil plan.budget_pace
   end
 
   test "next payments: the unpaid ones in date order, overdue first" do

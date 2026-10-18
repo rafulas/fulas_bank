@@ -2,6 +2,12 @@
 en:
   month_plans:
     show:
+      pace:
+        chart_label: "Spent %{spent}; at the budget pace, %{expected}"
+        spent: Spent
+        budget: Budget spread by day
+        ahead: "%{amount} ahead of pace (today: %{expected})"
+        behind: "%{amount} under pace (today: %{expected})"
       title: Plans
       subtitle: The month's budgets and recurring movements, with what is paid and what is left.
       previous: Previous month

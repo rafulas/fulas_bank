@@ -23,6 +23,16 @@ class CategorySummariesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", category_summary_path(empty, period: @controller.instance_variable_get(:@period).key), count: 0
   end
 
+  test "Resumen and Informes are one screen with two tabs" do
+    get category_summaries_url
+    assert_select "a[href=?][aria-current=true]", category_summaries_path
+    assert_select "a[href=?]", reports_path
+
+    get reports_url
+    assert_response :success
+    assert_select "a[href=?][aria-current=true]", reports_path
+  end
+
   test "opens on the current month" do
     @user.update!(default_period: "last_30_days")
 

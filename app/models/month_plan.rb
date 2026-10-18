@@ -194,21 +194,10 @@ class MonthPlan
   def budget_series
     return nil if budget_rows.empty?
 
-    category_ids = budget_rows.map { |row| row.category.id }
-    category_ids += family.categories.where(parent_id: category_ids).pluck(:id)
     last_day = [ end_of_month, today ].min
     return nil if last_day < month
 
-    daily = family.entries
-                  .excluding_split_parents
-                  .where(account_id: report_account_ids, entryable_type: "Transaction", excluded: false, date: month..last_day)
-                  .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
-                  .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
-                  .where("t.category_id IN (?)", category_ids)
-                  .group(Arel.sql("entries.date"))
-                  .sum(:amount)
-                  .transform_keys(&:to_date)
-
+    daily = budget_daily_spending(last_day)
     running = 0
     values = (month..last_day).map do |date|
       running += daily.fetch(date, 0).to_d
@@ -216,6 +205,31 @@ class MonthPlan
     end
 
     Series.from_raw_values(values, interval: "1 day")
+  end
+
+  # Fulas Bank: the spending pace against the budget, for the Planes chart:
+  # what has been spent day by day and the budget spread evenly over the
+  # month (the line spending should stay under).
+  def budget_pace
+    return nil if budget_rows.empty? || month > today
+
+    last_day = [ end_of_month, today ].min
+    daily = budget_daily_spending(last_day)
+    running = 0
+    spent = (month..last_day).map { |date| (running += daily.fetch(date, 0).to_d).to_f.round(2) }
+
+    { days: end_of_month.day, total: budget_rows.sum(&:budgeted).to_f.round(2), spent: spent,
+      today: (today.day if current_month?) }
+  end
+
+  # Where spending should be today if the budget were spent evenly, and how
+  # far above (positive) or below it the month goes.
+  def budget_pace_expected
+    money(budget_rows.sum(&:budgeted).to_d * elapsed_share)
+  end
+
+  def budget_pace_gap
+    budget_spent - budget_pace_expected
   end
 
   # ---- Recurring movements ----
@@ -286,6 +300,21 @@ class MonthPlan
 
     def money(amount)
       Money.new(amount, currency)
+    end
+
+    def budget_daily_spending(last_day)
+      category_ids = budget_rows.map { |row| row.category.id }
+      category_ids += family.categories.where(parent_id: category_ids).pluck(:id)
+
+      family.entries
+            .excluding_split_parents
+            .where(account_id: report_account_ids, entryable_type: "Transaction", excluded: false, date: month..last_day)
+            .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+            .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
+            .where("t.category_id IN (?)", category_ids)
+            .group(Arel.sql("entries.date"))
+            .sum(:amount)
+            .transform_keys(&:to_date)
     end
 
     def report_account_ids

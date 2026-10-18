@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -435,6 +435,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_090000) do
   end
 
   create_table "categories", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "active", default: true, null: false
     t.string "classification_unused", default: "expense", null: false
     t.string "color", default: "#6172F3", null: false
     t.datetime "created_at", null: false
@@ -2355,6 +2356,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_090000) do
     t.uuid "family_id", null: false
     t.string "holiday_calendar"
     t.date "last_occurrence_date", null: false
+    t.uuid "loan_account_id"
     t.boolean "manual", default: false, null: false
     t.integer "match_days_early", default: 2, null: false
     t.integer "match_days_late", default: 7, null: false
@@ -2374,6 +2376,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_090000) do
     t.integer "upcoming_window_days"
     t.datetime "updated_at", null: false
     t.string "weekend_adjust", default: "none", null: false
+    t.index ["loan_account_id"], name: "index_recurring_transactions_on_loan_account_id"
     t.index ["account_id"], name: "index_recurring_transactions_on_account_id"
     t.index ["category_id"], name: "index_recurring_transactions_on_category_id"
     t.index ["destination_account_id"], name: "index_recurring_transactions_on_destination_account_id"
@@ -3343,6 +3346,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_090000) do
   add_foreign_key "recurring_occurrences", "recurring_transactions", on_delete: :cascade
   add_foreign_key "recurring_price_changes", "entries", on_delete: :nullify
   add_foreign_key "recurring_price_changes", "recurring_transactions", on_delete: :cascade
+  add_foreign_key "recurring_transactions", "accounts", column: "loan_account_id", on_delete: :nullify
   add_foreign_key "recurring_transactions", "accounts", column: "destination_account_id", on_delete: :cascade
   add_foreign_key "recurring_transactions", "accounts", on_delete: :cascade
   add_foreign_key "recurring_transactions", "categories", on_delete: :nullify

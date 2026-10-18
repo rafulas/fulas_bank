@@ -5,7 +5,10 @@
     offered again inside its own group ("Transporte (general)"). A category
     without subcategories is a plain option; one with them is a header that
     opens its subcategories (see category_tree_controller.js). %>
-<% if group.subcategories.empty? %>
+<%# Categories switched off are not offered (Category#offered?). %>
+<% subcategories = group.subcategories.select(&:active?) %>
+<% if !group.category.active? %>
+<% elsif subcategories.empty? %>
   <%= render option_partial, **option_locals, category: group.category, general: false %>
 <% else %>
   <div data-category-tree-target="group" data-expanded="<%= expanded %>">
@@ -20,7 +23,7 @@
         <%= render "categories/badge", category: group.category %>
       </span>
       <span class="flex shrink-0 items-center gap-1 text-xs text-secondary">
-        <%= group.subcategories.size %>
+        <%= subcategories.size %>
         <%= icon("chevron-right", size: "sm", color: "current", class: "transition-transform group-aria-expanded/tree:rotate-90") %>
       </span>
     </button>
@@ -28,7 +31,7 @@
          data-category-tree-target="children"
          <%= "hidden" unless expanded %>>
       <%= render option_partial, **option_locals, category: group.category, general: true %>
-      <% group.subcategories.each do |subcategory| %>
+      <% subcategories.each do |subcategory| %>
         <%= render option_partial, **option_locals, category: subcategory, general: false %>
       <% end %>
     </div>
