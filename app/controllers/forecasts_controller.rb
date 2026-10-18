@@ -8,6 +8,9 @@ class ForecastsController < ApplicationController
   PERIODS = { "1m" => 1, "3m" => 3, "6m" => 6, "1y" => 12, "2y" => 24, "5y" => 60 }.freeze
   DEFAULT_PERIOD = "5y"
 
+  # Fulas Bank: each loan's instalment, kept in step with the loan (and a
+  # loan paid twice, by its own movement and by one from the bank, merged).
+  before_action :sync_loan_installments, only: %i[show table]
   before_action :build_forecast, except: :update_columns
 
   def show
@@ -96,5 +99,9 @@ class ForecastsController < ApplicationController
       [ date, Date.current + 1 ].max
     rescue Date::Error
       nil
+    end
+
+    def sync_loan_installments
+      Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
     end
 end

@@ -127,6 +127,51 @@ class ForecastTest < ActiveSupport::TestCase
     assert_includes lines.first.name, loan_account.name
   end
 
+  test "each month's row starts from the balance the month begins with" do
+    today = Date.new(2026, 10, 18)
+    [ [ Date.new(2026, 10, 25), "outflow", 40 ], [ Date.new(2026, 11, 10), "outflow", 100 ], [ Date.new(2026, 12, 5), "inflow", 60 ] ].each do |date, nature, amount|
+      @family.forecast_items.create!(account: @account, name: "Previsto", nature: nature, amount: amount, date: date)
+    end
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
+    rows = forecast.table_rows(forecast.ledger)
+    months = rows.select(&:month?)
+
+    assert_equal [ Date.new(2026, 10, 1), Date.new(2026, 11, 1), Date.new(2026, 12, 1) ], months.map(&:month)
+    # October starts from today's balance; the lines below take from it.
+    assert_equal 1_000, months.first.balances[@account.id]
+    assert_equal 1_000, months.first.total.amount
+    assert_equal(-40, months.first.net.amount)
+    # November starts from what is left after October.
+    assert_equal 960, months.second.balances[@account.id]
+    assert_equal 860, months.third.balances[@account.id]
+    assert_equal 60, months.third.net.amount
+
+    october_line = rows[rows.index(months.first) + 1]
+    assert_equal 960, october_line.balances[@account.id]
+  end
+
+  test "an expected movement whose day has passed waits for the bank's statement" do
+    today = Date.new(2026, 10, 20)
+    create_transaction(account: @account, name: "Último movimiento importado", date: Date.new(2026, 10, 10), amount: 10)
+    item = @family.forecast_items.create!(account: @account, name: "Traspaso a ahorro", nature: "outflow", amount: 250,
+                                          date: Date.new(2026, 10, 15))
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 11, 30), include_variable: false, today: today)
+    line = forecast.flows.find { |flow| flow.record == item }
+
+    assert_equal today + 1, line.date
+    assert_includes line.name, "Traspaso a ahorro"
+    assert_includes ForecastItem.where(id: item.id).pending(today: today), item
+
+    # Once a statement with movements from that day on is imported, it is in the balance.
+    create_transaction(account: @account, name: "Traspaso a ahorro", date: Date.new(2026, 10, 15), amount: 250)
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2026, 11, 30), include_variable: false, today: today)
+
+    assert_nil forecast.flows.find { |flow| flow.record == item }
+    assert_empty ForecastItem.where(id: item.id).pending(today: today)
+  end
+
   test "a loan already paid by a recurring movement is not expected twice" do
     today = Date.new(2026, 10, 20)
     create_account("Préstamo social", Loan.new(payment_amount: 1_218.16, payment_day: 16), balance: 250_000)

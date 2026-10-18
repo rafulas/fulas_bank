@@ -1,7 +1,7 @@
 <%# locals: (forecast:, account:, expanded: false, hidden: []) %>
 <%# The forecast table: one dense table whose header stays in view while it
     scrolls, with a row opening each month (its result and the balance it
-    ends on) followed by that month's lines. %>
+    starts from) followed by that month's lines. %>
 
 <% rows = forecast.ledger(account: account) %>
 <%# Fulas Bank: as in the user's spreadsheet, the total, then the cash and the
@@ -51,7 +51,9 @@
         <% end %>
       <% end %>
       <% table.with_column(t(".name")) do |row| %>
-        <% unless row.month? %>
+        <% if row.month? %>
+          <span class="text-xs font-normal text-secondary"><%= t(".month_opening") %></span>
+        <% else %>
           <div class="flex items-center gap-1.5 min-w-0 max-w-64">
             <span class="truncate" title="<%= row.flow.name %>"><%= row.flow.name %></span>
             <%= render DS::Pill.new(label: t(".sources.#{row.flow.source}"), tone: forecast_source_tone(row.flow.source), marker: false, size: :sm) %>
@@ -68,7 +70,7 @@
       <% end %>
       <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") do |row| %>
         <% amount = row.month? ? row.net : forecast.user_amount(row.flow) %>
-        <span class="<%= amount.negative? ? "text-primary" : "text-success" %>"><%= forecast_signed_amount(amount.amount, forecast.currency) %></span>
+        <span class="<%= amount.negative? ? "text-primary" : "text-success" %>" title="<%= t(".month_net") if row.month? %>"><%= forecast_signed_amount(amount.amount, forecast.currency) %></span>
       <% end %>
       <% table.with_column(account ? account.name : t(".total"), numeric: true, class: "privacy-sensitive font-medium bg-info/10 text-primary") do |row| %>
         <%= account ? format_money(Money.new(row.balances[account.id], account.currency)) : format_money(row.total) %>

@@ -11,7 +11,7 @@ class ForecastItemsController < ApplicationController
     @item = Current.family.forecast_items.new(item_params)
 
     if @item.save
-      redirect_to forecast_path, notice: t(".success")
+      redirect_back_or_to forecast_path, notice: t(".success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -22,7 +22,7 @@ class ForecastItemsController < ApplicationController
 
   def update
     if @item.update(item_params)
-      redirect_to forecast_path, notice: t(".success")
+      redirect_back_or_to forecast_path, notice: t(".success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -30,7 +30,7 @@ class ForecastItemsController < ApplicationController
 
   def destroy
     @item.destroy!
-    redirect_to forecast_path, notice: t(".success")
+    redirect_back_or_to forecast_path, notice: t(".success")
   end
 
   private

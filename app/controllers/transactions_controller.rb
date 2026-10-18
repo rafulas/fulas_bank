@@ -97,6 +97,9 @@ class TransactionsController < ApplicationController
                     .to_a
     end
 
+    # Fulas Bank: the movements the user expects, not in the bank yet.
+    @planned_items = Current.family.forecast_items.where(account_id: @accessible_account_ids).pending
+
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.transactions"), nil ] ]
 
     # Fulas Bank: the next block of the list, asked for by its frame as the
@@ -150,6 +153,13 @@ class TransactionsController < ApplicationController
     end
 
     return unless require_account_permission!(account)
+
+    # Fulas Bank: a transaction dated after today has not happened yet, so it
+    # is saved as an expected movement (see #create_planned_item).
+    if future_dated? && (planned_account = planned_account_for(account))
+      create_planned_item(account, planned_account)
+      return
+    end
 
     idempotency_key = submitted_idempotency_key
 
@@ -664,6 +674,58 @@ class TransactionsController < ApplicationController
 
     def new_transaction_idempotency_key
       @new_transaction_idempotency_key ||= submitted_idempotency_key || SecureRandom.uuid
+    end
+
+    def future_dated?
+      date = params.dig(:entry, :date).to_s
+      date.present? && Date.iso8601(date) > Date.current
+    rescue Date::Error
+      false
+    end
+
+    # Where a future movement is expected: the account itself when the
+    # Forecast shows it; for a card, the account that pays it (or the main
+    # one), since that is where the money goes out in the end. Other kinds
+    # (a loan, a property...) keep the usual behaviour.
+    def planned_account_for(account)
+      return account if Forecast::ACCOUNT_TYPES.include?(account.accountable_type)
+      return unless Forecast::CARD_TYPES.include?(account.accountable_type)
+
+      candidates = accessible_accounts.visible.where(accountable_type: Forecast::ACCOUNT_TYPES).to_a
+      payer_id = account.accountable.try(:payment_account_id)
+      main_id = Current.user.preferences&.dig(Forecast::MAIN_ACCOUNT_PREFERENCE)
+
+      candidates.find { |candidate| candidate.id == payer_id } ||
+        candidates.find { |candidate| candidate.id.to_s == main_id.to_s } ||
+        Forecast.default_main_account(candidates)
+    end
+
+    # Fulas Bank: a movement the user expects (a transfer, a payment, an
+    # income...) is not in the bank yet, so it is not added to the account's
+    # balance, which must keep matching the bank's. It is saved as a
+    # ForecastItem instead: it shows in "Próximos" and in the Forecast, and
+    # stops counting once the bank's statement with it is imported.
+    def create_planned_item(account, planned_account)
+      attributes = params.require(:entry).permit(:name, :amount, :date, :notes, :nature)
+      item = Current.family.forecast_items.new(
+        account: planned_account, currency: planned_account.currency, name: attributes[:name], date: attributes[:date],
+        amount: attributes[:amount].presence && attributes[:amount].to_d.abs, notes: attributes[:notes],
+        nature: attributes[:nature] == "inflow" ? "inflow" : "outflow"
+      )
+
+      if item.save
+        notice = t(".planned", account: planned_account.name, date: l(item.date, format: :long))
+
+        respond_to do |format|
+          format.html { redirect_back_or_to transactions_path, notice: notice }
+          format.turbo_stream { stream_redirect_back_or_to(transactions_path, notice: notice) }
+        end
+      else
+        @entry = account.entries.new(entry_params)
+        item.errors.each { |error| @entry.errors.add(error.attribute.in?(%i[name amount date]) ? error.attribute : :base, error.message) }
+        set_new_transaction_form_options
+        render :new, status: :unprocessable_entity
+      end
     end
 
     def respond_with_created_entry(entry)

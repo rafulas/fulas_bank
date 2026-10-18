@@ -1,0 +1,35 @@
+<%# locals: (items:) %>
+<%# Fulas Bank: the movements the user expects (ForecastItem): saved as a
+    transaction with a later date or from the Forecast. They are not in the
+    account's balance yet; each waits for the bank's statement. %>
+<div id="planned" class="flex flex-col bg-container rounded-xl shadow-border-xs px-3 py-4 lg:p-4 gap-3">
+  <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+    <div class="space-y-0.5">
+      <h3 class="text-sm font-medium text-primary"><%= t("transactions.planned.title") %></h3>
+      <p class="text-xs text-secondary"><%= t("transactions.planned.hint") %></p>
+    </div>
+    <%= render DS::Link.new(text: t("transactions.planned.add"), icon: "plus", variant: :outline, size: :sm, href: new_forecast_item_path, frame: :modal) %>
+  </div>
+
+  <div class="bg-container-inset rounded-xl p-1">
+    <div class="bg-container shadow-border-xs rounded-lg divide-y divide-primary">
+      <% items.each do |item| %>
+        <div id="<%= dom_id(item) %>" class="flex items-center gap-3 text-sm p-3 lg:px-4">
+          <div class="w-24 shrink-0 text-secondary whitespace-nowrap"><%= l(item.date, format: "%d/%m/%y") %></div>
+          <div class="flex items-center gap-1.5 min-w-0 grow">
+            <span class="truncate font-medium text-primary" title="<%= item.name %>"><%= item.name %></span>
+            <%= render DS::Pill.new(label: t("transactions.planned.pill"), tone: :indigo, marker: false, size: :sm) %>
+            <% if item.overdue? %>
+              <%= render DS::Pill.new(label: t("transactions.planned.overdue"), tone: :warning, marker: false, size: :sm) %>
+            <% end %>
+          </div>
+          <div class="hidden md:block shrink-0 text-secondary truncate max-w-48"><%= item.account.name %></div>
+          <div class="shrink-0 font-medium privacy-sensitive <%= item.outflow? ? "text-primary" : "text-success" %>">
+            <%= forecast_signed_amount(-item.signed_amount, item.currency) %>
+          </div>
+          <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: edit_forecast_item_path(item), frame: :modal, aria: { label: t("transactions.planned.edit") }) %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

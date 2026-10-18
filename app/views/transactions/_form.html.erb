@@ -52,9 +52,10 @@
       label: t(".date"),
       required: true,
       min: Entry.min_supported_date,
-      max: Date.current,
       value: f.object.date || Date.current,
       data: { transaction_form_target: "date", action: "change->transaction-form#checkCurrencyDifference" } %>
+    <%# Fulas Bank: a later date is allowed; it is saved as an expected movement. %>
+    <p class="text-xs text-secondary -mt-2"><%= t(".date_future_hint") %></p>
 
     <% convert_input = capture do %>
       <%= f.fields_for :entryable do |ef| %>

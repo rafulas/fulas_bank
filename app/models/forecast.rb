@@ -7,7 +7,8 @@
 #      their pending payments already scheduled, and beyond those, as many as
 #      their schedule produces up to the date, however far it is. A series
 #      that ends (a loan, a plan with an end date) stops there.
-#   2. The one-off movements the user typed in (ForecastItem).
+#   2. The one-off movements the user typed in (ForecastItem), from the
+#      Forecast or as a transaction dated after today.
 #   3. Optionally, one "Gastos varios" line a month per account with the
 #      expected variable spending (see Forecast::VariableEstimate), on the last
 #      day of the month. In the current month, only what is still to come.
@@ -101,7 +102,10 @@ class Forecast
   end
 
   # The row opening a month in the table: the month's result (from the
-  # user's side) and the balances it ends on.
+  # user's side) and the balances it starts from. Fulas Bank: the balances
+  # the month starts from (today's for this month, and for the next ones what
+  # is left after the month before), so each line below adds to or takes
+  # from them, as in the user's spreadsheet.
   MonthRow = Data.define(:month, :net, :balances, :total) do
     def month?
       true
@@ -197,8 +201,8 @@ class Forecast
   def table_rows(ledger_rows)
     ledger_rows.group_by { |row| row.flow.date.beginning_of_month }.flat_map do |month, month_rows|
       net = month_rows.reject { |row| row.flow.skipped }.sum(money(0)) { |row| user_amount(row.flow) }
-      last = month_rows.last
-      [ MonthRow.new(month: month, net: net, balances: last.balances, total: last.total) ] + month_rows
+      opening_day = [ month - 1, today ].max
+      [ MonthRow.new(month: month, net: net, balances: raw_balances_on(opening_day), total: total_on(opening_day)) ] + month_rows
     end
   end
 
@@ -282,6 +286,11 @@ class Forecast
         list << through unless list.last == through
         list
       end
+    end
+
+    # { account_id => balance } at the end of `date`, as in a ledger row.
+    def raw_balances_on(date)
+      accounts.to_h { |account| [ account.id, balance_of(account, date) ] }
     end
 
     # Balance of an account at the end of `date`, in its own currency and its
@@ -441,10 +450,15 @@ class Forecast
 
     # ---- 2. One-off movements typed by the user ----
 
+    # Fulas Bank: like a recurring payment, one whose day has passed is still
+    # expected (tomorrow) until a movement of that day or later is imported.
     def planned_flows
-      family.forecast_items.where(account_id: account_ids, date: window).map do |item|
-        Flow.new(date: item.date, account: accounts_by_id[item.account_id], amount: item.signed_amount, name: item.name,
-                 source: :planned, record: item)
+      family.forecast_items.where(account_id: account_ids, date: (today - OVERDUE_LOOKBACK)..through).filter_map do |item|
+        on = expected_date(item.date, item.account_id)
+        next unless on
+
+        Flow.new(date: on, account: accounts_by_id[item.account_id], amount: item.signed_amount,
+                 name: overdue_name(item.name, item.date, on), source: :planned, record: item)
       end
     end
 

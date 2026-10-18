@@ -209,6 +209,47 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to account_url(first_entry.account)
   end
 
+  test "a transaction dated after today is saved as an expected movement, not in the balance" do
+    account = accounts(:depository)
+    date = Date.current + 10
+
+    assert_no_difference [ "Entry.count", "Transaction.count" ] do
+      assert_difference "ForecastItem.count", 1 do
+        post transactions_url, params: {
+          entry: { account_id: account.id, name: "Traspaso a ahorro", date: date, currency: "USD", amount: 250,
+                   nature: "outflow", entryable_type: "Transaction" }
+        }
+      end
+    end
+
+    item = ForecastItem.order(:created_at).last
+    assert_equal account, item.account
+    assert_equal "Traspaso a ahorro", item.name
+    assert_equal date, item.date
+    assert_equal 250, item.amount
+    assert item.outflow?
+    assert_response :redirect
+
+    get transactions_url
+    assert_response :success
+    assert_select "#planned", text: /Traspaso a ahorro/
+  end
+
+  test "a future transaction on a card is expected in the account that pays it" do
+    card = accounts(:credit_card)
+    payer = accounts(:depository)
+    card.accountable.update!(payment_account: payer)
+
+    assert_difference "ForecastItem.count", 1 do
+      post transactions_url, params: {
+        entry: { account_id: card.id, name: "Billetes de avión", date: Date.current + 3, currency: "USD", amount: 300,
+                 nature: "outflow", entryable_type: "Transaction" }
+      }
+    end
+
+    assert_equal payer, ForecastItem.order(:created_at).last.account
+  end
+
   test "the idempotency key does not mark the created transaction as provider-linked" do
     # Regression test: the idempotency key must not be stored in
     # external_id/source (Entry#linked? = external_id.present?), or a plain
