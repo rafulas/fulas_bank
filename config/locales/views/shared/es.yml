@@ -48,7 +48,14 @@ es:
       cancel: Cancelar
       title: "¿Estás seguro?"
     money_field:
+      above_max: Escribe un importe de %{max} como mucho.
+      below_min: Escribe un importe de al menos %{min}.
+      invalid_amount: Escribe un importe válido (por ejemplo 12,50) o una cuenta (12,50+4,30).
       label: Importe
+      operator_add: Sumar
+      operator_subtract: Restar
+      operator_multiply: Multiplicar
+      operator_divide: Dividir
     exchange_rate_tabs:
       calculate_rate_tab: Calcular tasa
       convert_tab: Convertir con tasa
