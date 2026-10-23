@@ -379,7 +379,7 @@ class RecurringTransactionsController < ApplicationController
       params.require(:recurring_transaction).permit(
         :name, :amount, :account_id, :first_due_on, :frequency_preset,
         :frequency_interval, :frequency_interval_unit,
-        :payment_url, :autopay, :notes, :is_income, :subscription
+        :payment_url, :autopay, :notes, :is_income
       )
     end
 
@@ -387,7 +387,8 @@ class RecurringTransactionsController < ApplicationController
       RecurringTransaction::DeclaredBill.new(
         family: Current.family,
         user: Current.user,
-        attrs: new_recurring_transaction_params
+        # Fulas Bank: opened from «Añadir suscripción», the series is one.
+        attrs: new_recurring_transaction_params.merge(subscription: params.dig(:recurring_transaction, :subscription).to_s == "1")
       ).build
     end
 
