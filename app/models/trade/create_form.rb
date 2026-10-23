@@ -17,10 +17,12 @@ class Trade::CreateForm
 
   ACTIVITY_LABELS = SECURITY_TRADE_LABELS.merge(CASH_TRADE_LABELS).freeze
   TRANSFER_TYPES = %w[deposit withdrawal].freeze
-  SUPPORTED_TYPES = (ACTIVITY_LABELS.keys + TRANSFER_TYPES).freeze
+  # Fulas Bank: shares received as pay (a bonus in shares).
+  GRANT_TYPE = "grant".freeze
+  SUPPORTED_TYPES = (ACTIVITY_LABELS.keys + TRANSFER_TYPES + [ GRANT_TYPE ]).freeze
 
   attr_accessor :account, :date, :amount, :currency, :qty,
-                :price, :fee, :ticker, :manual_ticker, :type, :transfer_account_id
+                :price, :fee, :ticker, :manual_ticker, :type, :transfer_account_id, :category_id
 
   # Either creates a trade, transaction, or transfer based on type
   # Returns the model, regardless of success or failure
@@ -36,6 +38,8 @@ class Trade::CreateForm
       create_fee
     when "deposit", "withdrawal"
       create_transfer
+    when GRANT_TYPE
+      create_grant
     end
   end
 
@@ -110,6 +114,8 @@ class Trade::CreateForm
     # @return [Boolean] true, or false (rolling back) when it cannot be saved
     def fund_purchase!(trade_entry, sec)
       return true unless type == "buy"
+      # Shares received as pay are paid for by that pay, booked just before.
+      return true if @grant
       # Without brokerage cash the buy is paid from a bank account outside
       # this one, and the account is worth only its positions.
       return true unless account.brokerage_cash?
@@ -128,6 +134,54 @@ class Trade::CreateForm
 
       trade_entry.errors.merge!(deposit.errors)
       raise ActiveRecord::Rollback
+    end
+
+    # Fulas Bank: shares received as pay — a bonus paid in shares. Two
+    # entries, the same day: the pay, as income in this account (so it counts
+    # as income, and as saved and invested), and the shares bought with it at
+    # the value received (so the investment starts at that cost, and a later
+    # sale shows its gain). Neither is saved unless both are.
+    def create_grant
+      total = amount.to_d.abs
+      shares = qty.to_d.abs
+      unless total.positive? && shares.positive? && ticker_present?
+        entry = account.entries.build(entryable: Trade.new)
+        entry.errors.add(:base, I18n.t("trades.form.grant_requires_fields"))
+        return entry
+      end
+
+      @grant = true
+      self.type = "buy"
+      self.price = total / shares
+      self.fee = 0
+      trade_entry = nil
+
+      Entry.transaction do
+        income = account.entries.build(
+          name: I18n.t("trades.form.grant_income_name", ticker: grant_ticker),
+          date: date, amount: -total, currency: currency,
+          entryable: Transaction.new(kind: "standard", category: grant_category)
+        )
+        raise ActiveRecord::Rollback unless income.save
+
+        trade_entry = create_trade
+        raise ActiveRecord::Rollback unless trade_entry.persisted?
+
+        income.lock_saved_attributes!
+      end
+
+      trade_entry
+    end
+
+    def grant_ticker
+      ticker.present? ? Security.parse_combobox_id(ticker)[:ticker] : manual_ticker
+    end
+
+    # The category picked, else the family's "Nómina", else its income root.
+    def grant_category
+      categories = account.family.categories
+      categories.find_by(id: category_id) || categories.find_by(name: "Nómina") ||
+        categories.roots.find_by(spending_class: "income")
     end
 
     # Dividends are always a Trade. Security is required.

@@ -24,6 +24,21 @@ es:
       add: Añadir préstamo
       debt_plan: Plan de deuda
   investments_overviews:
+    realized_gains:
+      title: "Beneficio realizado"
+      year: "Año"
+      fifo: "Para la renta %{year} (FIFO)"
+      average: "Con precio medio"
+      date: "Fecha"
+      security: "Valor"
+      proceeds: "Venta"
+      fifo_gain: "Beneficio FIFO"
+      average_gain: "Precio medio"
+      shares:
+        one: "1 acción"
+        other: "%{count} acciones"
+      hint: "FIFO: las primeras acciones compradas son las primeras vendidas, como pide Hacienda. Las acciones recibidas como bonus cuentan desde el valor con el que se recibieron."
+      none: "No hay ventas de acciones en %{year}."
     show:
       under_a_year: Menos de un año
       annual_return: Rentabilidad anual

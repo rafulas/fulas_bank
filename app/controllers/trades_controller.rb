@@ -120,7 +120,7 @@ class TradesController < ApplicationController
 
     def create_params
       params.require(:model).permit(
-        :date, :amount, :currency, :qty, :price, :fee, :ticker, :manual_ticker, :type, :transfer_account_id
+        :date, :amount, :currency, :qty, :price, :fee, :ticker, :manual_ticker, :type, :transfer_account_id, :category_id
       )
     end
 

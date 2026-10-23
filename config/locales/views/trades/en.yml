@@ -18,6 +18,12 @@ en:
       submit: Add transaction
       ticker_placeholder: AAPL
       type: Type
+      type_grant: Receive shares (bonus)
+      grant_amount: Value of the shares received
+      grant_category: Income as
+      grant_hint: "The value is booked as income in this account and the shares as bought at that price, the same day. It counts as income and as invested, and a later sale shows its gain."
+      grant_income_name: "Shares received: %{ticker}"
+      grant_requires_fields: Receiving shares needs the security, the amount and the number of shares
       type_buy: Buy
       type_sell: Sell
       type_deposit: Deposit

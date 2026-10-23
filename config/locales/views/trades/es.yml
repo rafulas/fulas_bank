@@ -18,6 +18,12 @@ es:
       submit: Añadir transacción
       ticker_placeholder: AAPL
       type: Tipo
+      type_grant: Recibir acciones (bonus)
+      grant_amount: Valor de las acciones recibidas
+      grant_category: Ingreso como
+      grant_hint: "Se apunta el valor como ingreso en esta cuenta y la compra de las acciones a ese precio, el mismo día. Así cuenta como ingreso y como inversión, y al vender verás el beneficio."
+      grant_income_name: "Acciones recibidas: %{ticker}"
+      grant_requires_fields: Para recibir acciones hace falta el valor, el importe y el número de acciones
       type_buy: Comprar
       type_sell: Vender
       type_deposit: Depósito

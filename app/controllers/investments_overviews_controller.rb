@@ -2,6 +2,8 @@
 class InvestmentsOverviewsController < ApplicationController
   def show
     @overview = InvestmentsOverview.new(Current.family, user: Current.user)
+    # Fulas Bank: the year's sales and what they gained (average cost and FIFO).
+    @realized = InvestmentsOverview::RealizedGains.new(Current.family, user: Current.user, year: params[:year])
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("investments_overviews.show.title"), nil ] ]
   end
 

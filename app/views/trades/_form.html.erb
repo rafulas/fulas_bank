@@ -11,7 +11,7 @@
     <div class="space-y-2">
       <%# Fulas Bank: an account without brokerage cash has no money of its own
           to deposit, withdraw or collect dividends into: only buys and sales. %>
-      <% type_options = [ [ t(".type_buy"), "buy" ], [ t(".type_sell"), "sell" ] ] %>
+      <% type_options = [ [ t(".type_buy"), "buy" ], [ t(".type_sell"), "sell" ], [ t(".type_grant"), "grant" ] ] %>
       <% if account.nil? || account.brokerage_cash? %>
         <% type_options += [
              [ t(".type_deposit"), "deposit" ],
@@ -28,7 +28,7 @@
           trade_form_key_param: "type",
         }} %>
 
-      <% if %w[buy sell].include?(type) %>
+      <% if %w[buy sell grant].include?(type) %>
         <% if Security.providers.any? %>
           <div class="form-field combobox">
             <%= form.combobox :ticker,
@@ -55,7 +55,16 @@
       <%= form.date_field :date, label: true, value: model.date || Date.current, required: true %>
 
       <% unless %w[buy sell].include?(type) %>
-        <%= form.money_field :amount, label: t(".amount"), value: model.amount, required: true, default_currency: account&.currency %>
+        <%= form.money_field :amount, label: (type == "grant" ? t(".grant_amount") : t(".amount")), value: model.amount, required: true, default_currency: account&.currency %>
+      <% end %>
+
+      <%# Fulas Bank: shares received as pay — what they were worth, how many and as what income. %>
+      <% if type == "grant" %>
+        <%= form.number_field :qty, label: t(".qty"), placeholder: "348", min: 0.000000000000000001, step: "any", required: true %>
+        <% income_categories = Current.family.categories.where(active: true).alphabetically %>
+        <%= form.collection_select :category_id, income_categories, :id, :name,
+              { label: t(".grant_category"), selected: income_categories.find_by(name: "Nómina")&.id, include_blank: true } %>
+        <p class="text-xs text-secondary"><%= t(".grant_hint") %></p>
       <% end %>
 
       <% if %w[deposit withdrawal].include?(type) %>
