@@ -1743,11 +1743,11 @@ end
   test "category-only update syncs the account" do
     assert_enqueued_with(job: SyncJob) do
       patch transaction_url(@entry), params: {
-        entry: { entryable_attributes: { id: @entry.entryable_id, category_id: categories(:food_and_drink).id } }
+        entry: { entryable_attributes: { id: @entry.entryable_id, category_id: categories(:income).id } }
       }
     end
 
-    assert_equal categories(:food_and_drink).id, @entry.reload.entryable.category_id
+    assert_equal categories(:income).id, @entry.reload.entryable.category_id
   end
 
   test "notes-only update does not sync the account" do
