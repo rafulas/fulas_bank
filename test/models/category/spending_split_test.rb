@@ -32,6 +32,19 @@ class Category::SpendingSplitTest < ActiveSupport::TestCase
     assert_equal [ 50, 30, 20 ], [ essential.target, discretionary.target, savings.target ]
   end
 
+  test "income and spending with no category are kept apart" do
+    move(-1_850, nil)
+    move(637.64, nil)
+
+    essential, discretionary, savings = split.parts
+
+    assert_equal Money.new(1_850, @family.currency), split.income
+    assert_equal Money.new(637.64, @family.currency), split.unclassified
+    assert_equal 0, essential.amount.amount
+    assert_equal BigDecimal("637.64"), discretionary.amount.amount
+    assert_equal BigDecimal("1212.36"), savings.amount.amount
+  end
+
   test "a target that does not add up to 100 falls back to 50/30/20" do
     assert_equal [ 50, 30, 20 ], Category::SpendingSplit.new(@family, range: range, account_ids: [], target: [ 70, 30, 20 ]).target
     assert_equal [ 60, 25, 15 ], Category::SpendingSplit.new(@family, range: range, account_ids: [], target: [ 60, 25, 15 ]).target

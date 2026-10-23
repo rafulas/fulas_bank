@@ -27,6 +27,20 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     assert_equal 55, analysis.savings_rate
   end
 
+  # A statement just imported has no categories yet: the salary must not
+  # cancel the purchases (it showed "0 € spent" and a 100 % savings rate).
+  test "income and spending with no category are kept apart" do
+    create_transaction(account: @account, amount: -1_850, date: Date.new(2026, 10, 1))
+    create_transaction(account: @account, amount: 87.45, date: Date.new(2026, 10, 2))
+    create_transaction(account: @account, amount: 550.19, date: Date.new(2026, 10, 6))
+
+    assert_equal BigDecimal("637.64"), analysis.spent.amount
+    assert_equal BigDecimal("1850"), analysis.income.amount
+    assert_equal 66, analysis.savings_rate
+    assert_equal [ BigDecimal("637.64") ], analysis.spending_slices.map(&:amount)
+    assert_equal [ BigDecimal("1850") ], analysis.income_slices.map(&:amount)
+  end
+
   test "the month's calendar, each day with what it went on" do
     create_transaction(account: @account, amount: 30, date: Date.new(2026, 10, 9), category: @market)
     create_transaction(account: @account, amount: 10, date: Date.new(2026, 10, 9), category: @home)

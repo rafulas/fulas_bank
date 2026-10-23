@@ -15,10 +15,12 @@ en:
         app: App
         calculating: Calculating…
         difference: "Difference of %{amount}"
+        large_difference: "The difference is more than half the balance: usually a statement read wrong (number format, another account), not a missing movement. Check the import before adjusting."
         adjust: Adjust the balance
         adjust_confirm:
           title: Adjust the balance?
           body: "%{account} will hold %{amount}, as the bank says. Before doing it, check whether a movement is missing or repeated: the adjustment does not fix that, it only matches the figure."
+          large: "Careful: the difference (%{difference}) is more than half the balance."
         typed_label: Balance at the bank today
         check: Check
       update:

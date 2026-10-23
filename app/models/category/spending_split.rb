@@ -116,10 +116,14 @@ class Category::SpendingSplit
                    .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
                    .where("t.category_id IS NULL OR t.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
                    .group(Arel.sql("COALESCE(parent_c.id, c.id)"), Arel.sql("COALESCE(c.spending_class, parent_c.spending_class)"))
+                   .group(Arel.sql(Transaction.uncategorized_inflow_sql(table: "t")))
                    .sum(Arel.sql("entries.amount * COALESCE(rates.rate, 1)"))
 
-      sums.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |((root_id, spending_class), amount), grouped|
-        grouped[root_id || "uncategorized"] << { amount: amount.to_d, class: spending_class&.to_sym }
+      # Movements with no category are kept apart by direction, so an
+      # uncategorized salary does not cancel the uncategorized purchases.
+      sums.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |((root_id, spending_class, inflow), amount), grouped|
+        key = root_id || (ActiveModel::Type::Boolean.new.cast(inflow) ? "uncategorized_in" : "uncategorized_out")
+        grouped[key] << { amount: amount.to_d, class: spending_class&.to_sym }
       end
     end
 end

@@ -1067,6 +1067,41 @@ class Balance::ForwardCalculatorTest < ActiveSupport::TestCase
     )
   end
 
+  # A movement added later, dated before the entered balance, moves every
+  # earlier day. An incremental run seeded from the day before the change
+  # would keep the old earlier days and jump on the entered balance's day.
+  test "a change before the entered balance recalculates the whole history" do
+    account = create_account_with_ledger(
+      account: { type: Depository, currency: "USD" },
+      entries: [
+        { type: "transaction", date: 5.days.ago.to_date, amount: -500 },
+        { type: "transaction", date: 3.days.ago.to_date, amount: 100 },
+        { type: "opening_anchor", date: 1.day.ago.to_date, balance: 1000 }
+      ]
+    )
+    Balance::Materializer.new(account, strategy: :forward).materialize_balances
+
+    # A forgotten 100 € expense, typed afterwards, 3 days before the anchor.
+    account.entries.create!(name: "Gasto olvidado", date: 4.days.ago.to_date, amount: 100, currency: "USD", entryable: Transaction.new)
+
+    calculator = Balance::ForwardCalculator.new(account, window_start_date: 4.days.ago.to_date)
+    calculated = calculator.calculate
+
+    assert_not calculator.incremental?
+    # 1000 = seed + 500 - 100 - 100  →  seed = 700
+    assert_balances(
+      calculated_data: calculated,
+      expected_balances: [
+        [ 5.days.ago.to_date, { balance: 1200, cash_balance: 1200 } ],
+        [ 4.days.ago.to_date, { balance: 1100, cash_balance: 1100 } ],
+        [ 3.days.ago.to_date, { balance: 1000, cash_balance: 1000 } ],
+        [ 2.days.ago.to_date, { balance: 1000, cash_balance: 1000 } ],
+        [ 1.day.ago.to_date, { balance: 1000, cash_balance: 1000 } ]
+      ]
+    )
+    assert calculated.all? { |balance| balance.cash_adjustments.zero? }, "no jump on the entered balance's day"
+  end
+
   private
     def assert_balances(calculated_data:, expected_balances:)
       # Sort calculated data by date to ensure consistent ordering

@@ -88,9 +88,15 @@ class Import::BankPreset
       BANK_SIGNATURES.find { |_key, signature| (signature[:all] - normalized).empty? }
     end
 
+    # Every value of the amount column and of the balance column («Disponible»,
+    # «Saldo»), not just the first rows: the Excel converter writes whole
+    # euros without decimals ("-50", "1850"), so a statement whose newest
+    # movements are round amounts gives no hint in its first rows. Guessing
+    # the Spanish format there made a later "-12.34" read as -1234.
     def detect_number_format(amount_header)
       # "-75.29€", "1.054,37 EUR": only the number decides the format.
-      samples = column_samples(amount_header).map { |value| value.gsub(/\A[^\d\-]+|[^\d]+\z/, "") }
+      samples = [ amount_header, *balance_headers ].uniq.flat_map { |header| column_samples(header) }
+                                                .map { |value| value.gsub(/\A[^\d\-]+|[^\d]+\z/, "") }
 
       if samples.any? { |value| value.match?(/,\d{1,2}\z/) } || samples.any? { |value| value.match?(/\d\.\d{3},/) }
         "1.234,56"
@@ -102,13 +108,21 @@ class Import::BankPreset
       end
     end
 
+    # The balance after each movement, when the statement has it: same
+    # number format as the amounts.
+    def balance_headers
+      Array(import.csv_headers).compact.select do |header|
+        Import::BankBalance::HEADERS.include?(normalize(header))
+      end
+    end
+
     def detect_date_format(date_header)
       samples = column_samples(date_header)
       Import.detect_date_format(samples, fallback: import.date_format.presence || "%d/%m/%Y")
     end
 
     def column_samples(header)
-      import.csv_rows.first(50).filter_map { |row| row[header].to_s.strip.presence }
+      import.csv_rows.filter_map { |row| row[header].to_s.strip.presence }
     end
 
     # "F.Valor" -> "f valor", "IMPORTE (€)" -> "importe", "Descripción" -> "descripcion"

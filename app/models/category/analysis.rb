@@ -249,14 +249,16 @@ class Category::Analysis
 
     # Spending (positive) or income (positive) by main category, biggest
     # first. A category whose net goes the other way (refunds bigger than
-    # spending) counts on the other side.
+    # spending) counts on the other side. Movements with no category are
+    # added up apart by direction (Transaction.uncategorized_inflow_sql), so
+    # an uncategorized salary does not cancel the uncategorized purchases.
     def slices_by_category(range, side)
       rows = base_scope(range)
                .joins(category_joins_sql)
-               .group(*category_group_sql)
+               .group(*category_group_sql, Arel.sql(Transaction.uncategorized_inflow_sql(table: "t")))
                .sum(Arel.sql(converted_amount_sql))
 
-      rows.filter_map do |(id, name, color), amount|
+      rows.filter_map do |(id, name, color, _inflow), amount|
         value = side == :spending ? amount.to_d : -amount.to_d
         build_slice(id, name, color, value) if value.positive?
       end.sort_by { |slice| -slice.amount }
