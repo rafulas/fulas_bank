@@ -1,7 +1,14 @@
 require "test_helper"
 
 class StyledFormBuilderTest < ActionView::TestCase
-  include ApplicationHelper, PeriodPickerHelper
+  include PeriodPickerHelper
+
+  # The date field's calendar button draws an icon; the icon itself is not
+  # what these tests look at.
+  def icon(*)
+    tag.svg
+  end
+
   setup do
     @builder = StyledFormBuilder.new(:account_statement, nil, self, {})
   end
