@@ -9,7 +9,10 @@ class Entry < ApplicationRecord
   # an account sync. Reports and budgets pick such edits up through
   # Family#entries_cache_version, which the save itself bumps.
   DESCRIPTIVE_ATTRIBUTES = %w[name notes updated_at].freeze
-  DESCRIPTIVE_TRANSACTION_ATTRIBUTES = %w[category_id merchant_id updated_at].freeze
+  # Fulas Bank: a category change is not descriptive here. The sync that
+  # follows runs the linkers (AssetLinker and friends), which propose a bank
+  # charge for the car or the house from its category ("Combustible").
+  DESCRIPTIVE_TRANSACTION_ATTRIBUTES = %w[merchant_id updated_at].freeze
 
   attr_accessor :unsplitting
 

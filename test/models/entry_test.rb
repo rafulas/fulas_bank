@@ -37,7 +37,7 @@ class EntryTest < ActiveSupport::TestCase
     entry = create_transaction(account: accounts(:depository), amount: 100)
     entry = Entry.find(entry.id)
 
-    entry.update!(name: "Renamed", notes: "note", entryable_attributes: { id: entry.entryable_id, category_id: categories(:food_and_drink).id })
+    entry.update!(name: "Renamed", notes: "note", entryable_attributes: { id: entry.entryable_id, merchant_id: merchants(:netflix).id })
 
     assert_not entry.saved_changes_affect_balances?
   end

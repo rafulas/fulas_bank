@@ -1738,14 +1738,22 @@ end
     Rails.cache = original_cache
   end
 
-  test "category-only update does not sync the account" do
-    assert_no_enqueued_jobs only: SyncJob do
+  # Fulas Bank: a category change still syncs, so the linkers can propose
+  # the charge for the car or the house.
+  test "category-only update syncs the account" do
+    assert_enqueued_with(job: SyncJob) do
       patch transaction_url(@entry), params: {
         entry: { entryable_attributes: { id: @entry.entryable_id, category_id: categories(:food_and_drink).id } }
       }
     end
 
     assert_equal categories(:food_and_drink).id, @entry.reload.entryable.category_id
+  end
+
+  test "notes-only update does not sync the account" do
+    assert_no_enqueued_jobs only: SyncJob do
+      patch transaction_url(@entry), params: { entry: { notes: "Cena con amigos" } }
+    end
   end
 
   test "amount update syncs the account" do
