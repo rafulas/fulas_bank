@@ -58,7 +58,7 @@ class OverviewsTest < ActiveSupport::TestCase
 
     assert_equal Money.new(1_000, "USD"), row.contributed
     assert_equal Money.new(1_000, "USD"), overview.total_contributed
-    assert_equal Money.new("17.41", "USD"), overview.total_gain
+    assert_equal Money.new(BigDecimal("17.41"), "USD"), overview.total_gain
   end
 
   test "Fulas Bank: current accounts and loans offer only the kinds that exist in Spain" do
