@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { evaluateAmountInput } from "utils/evaluate_amount_expression";
 
 // Reloads the "Bank charge" options of a vehicle log (or property expense)
 // form whenever its date
@@ -44,8 +45,11 @@ export default class extends Controller {
     return product > 0 ? product.toFixed(2) : "";
   }
 
+  // Read the way the money field reads it: "1.234,56" or "12,50+4,30".
   number(name) {
-    const value = Number.parseFloat(this.field(name).replace(",", "."));
+    const value = evaluateAmountInput(
+      this.element.querySelector(`[name="${this.scopeValue}[${name}]"]`),
+    );
     return Number.isFinite(value) ? value : 0;
   }
 
