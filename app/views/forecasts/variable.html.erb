@@ -1,0 +1,119 @@
+<%# Fulas Bank: «Ver cálculo» of a month's "Gastos varios" (see
+    Forecast::VariableBreakdown). With a category chosen, its movements
+    month by month; otherwise the months averaged, the categories and the
+    accounts that count. %>
+<% currency = Current.family.currency %>
+<% month_name = l(@month, format: "%B %Y") %>
+<%= render DS::Dialog.new(width: "lg") do |dialog| %>
+  <% if @category_row %>
+    <% dialog.with_header(title: @category_row.category&.name || t(".no_category"), subtitle: t(".category_subtitle", month: month_name)) %>
+    <% dialog.with_body do %>
+      <div class="space-y-4">
+        <%= link_to variable_forecast_path(month: @month.iso8601), class: "inline-flex items-center gap-1 text-sm text-secondary hover:text-primary", data: { turbo_frame: :modal } do %>
+          <%= icon "arrow-left", size: "sm" %><span><%= t(".back") %></span>
+        <% end %>
+
+        <% entries = @breakdown.entries_for(@category_row.key) %>
+        <% @breakdown.sample_months.each do |sample| %>
+          <% list = entries[sample] || [] %>
+          <div class="rounded-xl bg-container shadow-border-xs overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2 bg-container-inset text-sm">
+              <span class="font-medium text-primary first-letter:uppercase"><%= l(sample, format: "%B %Y") %></span>
+              <span class="privacy-sensitive font-amount text-primary"><%= format_money(Money.new(@category_row.totals[sample] || 0, currency)) %></span>
+            </div>
+            <% if list.empty? %>
+              <p class="px-4 py-2 text-xs text-secondary"><%= t(".no_movements") %></p>
+            <% else %>
+              <div class="divide-y divide-divider">
+                <% list.each do |entry| %>
+                  <%= link_to entry_path(entry), class: "flex items-center gap-3 px-4 py-2 text-sm hover:bg-container-hover", data: { turbo_frame: :_top } do %>
+                    <span class="w-14 shrink-0 text-xs text-secondary"><%= l(entry.date, format: "%d/%m") %></span>
+                    <span class="min-w-0 grow">
+                      <span class="block truncate text-primary"><%= entry.name %></span>
+                      <span class="block truncate text-xs text-secondary"><%= entry.account.name %></span>
+                    </span>
+                    <span class="shrink-0 privacy-sensitive font-amount text-primary"><%= format_money(-entry.amount_money) %></span>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <p class="text-xs text-secondary"><%= t(".fixed_hint") %></p>
+      </div>
+    <% end %>
+  <% else %>
+    <% dialog.with_header(title: t(".title", month: month_name), subtitle: t(".subtitle")) %>
+    <% dialog.with_body do %>
+      <div class="space-y-5">
+        <div class="rounded-xl bg-container-inset p-4">
+          <p class="text-xs text-secondary"><%= t(".result") %></p>
+          <p class="text-2xl font-semibold text-primary privacy-sensitive font-amount"><%= format_money(Money.new(@breakdown.monthly, currency)) %></p>
+        </div>
+
+        <section class="space-y-2">
+          <h3 class="text-sm font-medium text-primary"><%= t(".months") %></h3>
+          <p class="text-xs text-secondary"><%= t(".months_hint") %></p>
+          <% if @breakdown.samples.empty? %>
+            <p class="text-sm text-secondary"><%= t(".no_history") %></p>
+          <% else %>
+            <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+              <% @breakdown.samples.each do |sample| %>
+                <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm <%= "text-secondary" if sample.dropped %>">
+                  <span class="first-letter:uppercase <%= sample.dropped ? "line-through" : "text-primary" %>"><%= l(sample.month, format: "%B %Y") %></span>
+                  <span class="flex items-center gap-2">
+                    <% if sample.dropped %>
+                      <%= render DS::Pill.new(label: t(".dropped"), tone: :neutral, marker: false, size: :sm) %>
+                    <% end %>
+                    <span class="privacy-sensitive font-amount <%= "line-through" if sample.dropped %>"><%= format_money(Money.new(sample.total, currency)) %></span>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </section>
+
+        <% if @breakdown.categories.any? %>
+          <section class="space-y-2">
+            <h3 class="text-sm font-medium text-primary"><%= t(".categories") %></h3>
+            <p class="text-xs text-secondary"><%= t(".categories_hint") %></p>
+            <%= render DS::Table.new(rows: @breakdown.categories, dense: true, sticky_header: true, max_height: "max-h-96", label: t(".categories")) do |table| %>
+              <% table.with_column(t(".category"), class: "whitespace-nowrap") do |row| %>
+                <%= link_to row.category&.name || t(".no_category"),
+                      variable_forecast_path(month: @month.iso8601, category: row.key),
+                      class: "text-primary hover:underline", data: { turbo_frame: :modal } %>
+              <% end %>
+              <% table.with_column(t(".average"), numeric: true, class: "privacy-sensitive font-medium text-primary bg-info/5") do |row| %>
+                <%= format_money(Money.new(row.average, currency)) %>
+              <% end %>
+              <% @breakdown.sample_months.each do |sample| %>
+                <% table.with_column(l(sample, format: "%b %y"), numeric: true, class: "privacy-sensitive text-secondary whitespace-nowrap") do |row| %>
+                  <%= row.totals[sample] ? format_money(Money.new(row.totals[sample], currency), precision: 0) : "—" %>
+                <% end %>
+              <% end %>
+            <% end %>
+          </section>
+        <% end %>
+
+        <section class="space-y-2">
+          <h3 class="text-sm font-medium text-primary"><%= t(".accounts") %></h3>
+          <p class="text-xs text-secondary"><%= t(".accounts_hint") %></p>
+          <%= styled_form_with url: variable_accounts_forecast_path, method: :patch, class: "space-y-3", data: { turbo_frame: :_top } do |form| %>
+            <ul class="divide-y divide-subdued">
+              <% @variable_candidates.each do |account| %>
+                <li class="py-2">
+                  <label class="flex items-center gap-2 text-sm text-primary cursor-pointer">
+                    <%= check_box_tag "counted[]", account.id, @forecast.variable_excluded_ids.exclude?(account.id.to_s),
+                          id: dom_id(account, :variable_counted), class: "checkbox checkbox--light" %>
+                    <span class="truncate"><%= account.name %></span>
+                  </label>
+                </li>
+              <% end %>
+            </ul>
+            <%= form.submit t(".save") %>
+          <% end %>
+        </section>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

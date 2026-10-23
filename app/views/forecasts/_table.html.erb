@@ -90,6 +90,10 @@
       <% end %>
       <% table.with_column("", align: :right) do |row| %>
         <% unless row.month? %>
+          <% if row.flow.source == :variable %>
+            <%= render DS::Link.new(icon: "calculator", variant: :icon, size: :sm, href: variable_forecast_path(month: row.flow.date.beginning_of_month.iso8601),
+                  frame: :modal, aria: { label: t(".breakdown") }, title: t(".breakdown")) %>
+          <% end %>
           <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: forecast_line_edit_path(row.flow), frame: (row.flow.source.in?(%i[debt_plan card]) ? :_top : :modal), aria: { label: t(".edit") }) %>
         <% end %>
       <% end %>

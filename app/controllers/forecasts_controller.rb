@@ -11,7 +11,7 @@ class ForecastsController < ApplicationController
   # Fulas Bank: each loan's instalment, kept in step with the loan (and a
   # loan paid twice, by its own movement and by one from the bank, merged).
   before_action :sync_loan_installments, only: %i[show table]
-  before_action :build_forecast, except: :update_columns
+  before_action :build_forecast, except: %i[update_columns update_variable_accounts]
 
   def show
   end
@@ -42,6 +42,27 @@ class ForecastsController < ApplicationController
     redirect_back_or_to forecast_path, notice: t(".success")
   end
 
+  # Fulas Bank: «Ver cálculo» of a month's "Gastos varios": the months
+  # averaged, the categories behind them and, for one category, its
+  # movements; and which accounts count.
+  def variable
+    @month = variable_month
+    @breakdown = Forecast::VariableBreakdown.new(Current.family, accounts: @forecast.variable_accounts, month: @month)
+    @category_row = @breakdown.category_row(params[:category]) if params[:category].present?
+    @variable_candidates = @forecast.counted_accounts + @forecast.card_accounts
+  end
+
+  def update_variable_accounts
+    candidates = forecast_accounts + card_accounts
+    counted = Array(params[:counted]).map(&:to_s)
+
+    Current.user.update_dashboard_preferences(
+      Forecast::VARIABLE_EXCLUDED_PREFERENCE => candidates.map { |account| account.id.to_s }.reject { |id| counted.include?(id) }
+    )
+
+    redirect_back_or_to forecast_path, notice: t(".success")
+  end
+
   private
     def build_forecast
       @accounts = forecast_accounts
@@ -55,7 +76,8 @@ class ForecastsController < ApplicationController
       @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
                                main_account: @main_account, card_accounts: card_accounts,
                                debt_plan: Current.family.debt_plan&.forecast_feed(Current.user),
-                               column_groups: Current.user.preferences&.dig(Forecast::COLUMN_GROUPS_PREFERENCE) || {})
+                               column_groups: Current.user.preferences&.dig(Forecast::COLUMN_GROUPS_PREFERENCE) || {},
+                               variable_excluded_ids: Forecast.variable_excluded_ids(Current.user, Current.family, @accounts + card_accounts))
       @hidden_columns = Array(Current.user.preferences&.dig(Forecast::HIDDEN_COLUMNS_PREFERENCE))
     end
 
@@ -91,6 +113,13 @@ class ForecastsController < ApplicationController
       end
 
       Current.user.preferences&.dig(Forecast::CUSHION_PREFERENCE).presence&.to_d
+    end
+
+    # The month asked for in «Ver cálculo», this month by default.
+    def variable_month
+      Date.iso8601(params[:month].to_s).beginning_of_month
+    rescue Date::Error
+      Date.current.beginning_of_month
     end
 
     # A date typed in the form, never before tomorrow.

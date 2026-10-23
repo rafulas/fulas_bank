@@ -121,6 +121,28 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='main_account_id'] option[selected][value='#{other.id}']"
   end
 
+  test "«Ver cálculo» shows how the variable spending is worked out and which accounts count" do
+    checking = accounts(:depository)
+    category = categories(:food_and_drink)
+    entry = checking.entries.create!(date: Date.current.prev_month.beginning_of_month + 4, amount: 42, currency: checking.currency,
+                                     name: "Cervecería", entryable: Transaction.new(category: category))
+
+    get variable_forecast_url(month: Date.current.next_month.beginning_of_month.iso8601), headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "a[href=?]", variable_forecast_path(month: Date.current.next_month.beginning_of_month.iso8601, category: category.id)
+    assert_select "input[name='counted[]'][value=?]", checking.id
+
+    get variable_forecast_url(month: Date.current.next_month.beginning_of_month.iso8601, category: category.id), headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "a[href=?]", entry_path(entry)
+
+    patch variable_accounts_forecast_url, params: { counted: [ checking.id ] }
+    assert_redirected_to forecast_url
+    excluded = @user.reload.preferences[Forecast::VARIABLE_EXCLUDED_PREFERENCE]
+    assert_not_includes excluded, checking.id
+    assert_includes excluded, accounts(:credit_card).id
+  end
+
   test "edits the table: hides an account's column and changes where it adds up" do
     checking = accounts(:depository)
     brokerage = accounts(:investment)
