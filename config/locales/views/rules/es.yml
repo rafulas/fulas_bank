@@ -116,6 +116,8 @@ es:
       operators:
         contains: Contiene
         does_not_contain: No contiene
+        starts_with: Empieza por
+        ends_with: Termina en
         equal_to: Igual a
         is_equal_to: Es igual a
         not_equal_to: Distinto de

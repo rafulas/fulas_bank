@@ -821,6 +821,29 @@ class Rule::ConditionTest < ActiveSupport::TestCase
     assert_not filtered.map(&:id).include?(contribution_entry.transaction.id)
   end
 
+  test "Fulas Bank: starts_with and ends_with match the start or the end of the name" do
+    create_transaction(date: Date.current, account: @account, amount: 20, name: "COMPRA TARJ 1234 MERCADONA")
+    create_transaction(date: Date.current, account: @account, amount: 30, name: "MERCADONA DEVOLUCION")
+    create_transaction(date: Date.current, account: @account, amount: 40, name: "PAGO 100%_OFF")
+
+    starts = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "starts_with", value: "mercadona")
+    ends = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "ends_with", value: "  Mercadona ")
+    wildcard = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "ends_with", value: "%_OFF")
+
+    assert_equal [ "MERCADONA DEVOLUCION" ], starts.apply(starts.prepare(@rule_scope)).map { |t| t.entry.name }
+    assert_equal [ "COMPRA TARJ 1234 MERCADONA" ], ends.apply(ends.prepare(@rule_scope)).map { |t| t.entry.name }
+    # The value's own % and _ are literal, not wildcards.
+    assert_equal [ "PAGO 100%_OFF" ], wildcard.apply(wildcard.prepare(@rule_scope)).map { |t| t.entry.name }
+  end
+
+  test "Fulas Bank: the rules list names the operator as the form does" do
+    condition = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "starts_with", value: "x")
+
+    I18n.with_locale(:es) do
+      assert_equal "empieza por", condition.operator_display
+    end
+  end
+
   private
     # @param operator [String] a transaction_details operator
     # @param value [String] the text the rule searches for
