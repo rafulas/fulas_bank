@@ -54,8 +54,13 @@ module Accountable
       subtype_label_for(subtype, format: :long)
     end
 
-    def subtype_options_for_select
-      self::SUBTYPES.keys.map { |subtype| [ long_subtype_label_for(subtype), subtype ] }
+    # Fulas Bank: a type that lists OFFERED_SUBTYPES only offers those (the
+    # ones that exist in Spain), plus the account's own if it has another one,
+    # so editing never loses it.
+    def subtype_options_for_select(current: nil)
+      keys = const_defined?(:OFFERED_SUBTYPES, false) ? self::OFFERED_SUBTYPES : self::SUBTYPES.keys
+      keys += [ current ] if current.present? && self::SUBTYPES.key?(current) && !keys.include?(current)
+      keys.map { |subtype| [ long_subtype_label_for(subtype), subtype ] }
     end
 
     def favorable_direction

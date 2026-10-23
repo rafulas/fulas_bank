@@ -192,8 +192,12 @@ class Forecast
     end
   end
 
+  # Fulas Bank: the current account (cuenta corriente) where the payroll and
+  # the card charges land, rather than the first cash account by name, which
+  # could be a savings account.
   def self.default_main_account(accounts)
-    accounts.find { |account| account.accountable_type == "Depository" } || accounts.first
+    depositories = accounts.select { |account| account.accountable_type == "Depository" }
+    depositories.find { |account| account.subtype == "checking" } || depositories.first || accounts.first
   end
 
   def currency

@@ -15,7 +15,7 @@
         after the balance, above the divider and the loan's terms. %>
     <div>
       <%= loan_form.select :subtype,
-                Loan.subtype_options_for_select,
+                Loan.subtype_options_for_select(current: loan_form.object&.subtype),
                 { label: t("loans.form.subtype"), prompt: t("loans.form.subtype_prompt"), include_blank: t("loans.form.none") } %>
     </div>
 

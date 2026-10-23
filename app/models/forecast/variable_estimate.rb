@@ -83,9 +83,13 @@ class Forecast::VariableEstimate
     sample_months(month.beginning_of_month).select { |sample| sample >= start.beginning_of_month }
   end
 
-  # What all the accounts together spent on variable things in `month`.
+  # What all the accounts together spent on variable things in `month`, in
+  # the family's currency (an account in another currency is converted at
+  # today's rate, or added as is when there is no rate).
   def combined_total(month)
-    monthly_totals.values.sum { |months| months[month.beginning_of_month] || 0 }.to_d
+    monthly_totals.sum do |account_id, months|
+      in_family_currency(months[month.beginning_of_month] || 0, accounts_by_id[account_id])
+    end.to_d
   end
 
   # The months averaged for `month`, newest first.
@@ -94,6 +98,18 @@ class Forecast::VariableEstimate
   end
 
   private
+    def accounts_by_id
+      @accounts_by_id ||= accounts.index_by(&:id)
+    end
+
+    def in_family_currency(amount, account)
+      return amount if amount.zero? || account.nil? || account.currency == family.currency
+
+      Money.new(amount, account.currency).exchange_to(family.currency).amount
+    rescue Money::ConversionError
+      amount
+    end
+
     def current_month
       today.beginning_of_month
     end

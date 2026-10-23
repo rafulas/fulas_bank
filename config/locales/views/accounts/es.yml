@@ -27,11 +27,11 @@ es:
     chart:
       data_not_available: Datos no disponibles para el período seleccionado
     create:
-      success: Cuenta %{type} creada
+      success: Cuenta creada (%{type})
     set_default:
       depository_only: Solo las cuentas de efectivo y tarjeta de crédito pueden establecerse como predeterminadas.
     destroy:
-      success: Cuenta %{type} programada para eliminación
+      success: Cuenta programada para eliminación (%{type})
       cannot_delete_linked: No se puede eliminar una cuenta vinculada. Por favor, desvincúlela primero.
       failed: No se pudo eliminar el recurso. Inténtalo de nuevo más tarde.
     empty:
@@ -145,7 +145,7 @@ es:
         exclude_from_reports: Excluir de todos los informes
         include_in_reports: Incluir en los informes
     update:
-      success: Cuenta %{type} actualizada
+      success: Cuenta actualizada (%{type})
     sidebar:
       missing_data: Faltan datos históricos
       missing_data_description: "%{product} utiliza proveedores externos para obtener tipos de cambio históricos, precios de valores y más. Estos datos son necesarios para calcular saldos históricos precisos de las cuentas."
