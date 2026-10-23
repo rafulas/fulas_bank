@@ -44,4 +44,12 @@ class TradeLinkerTest < ActiveSupport::TestCase
 
     assert_equal 0, TradeLinker.new(@family).run!
   end
+
+  test "a failure is kept in the debug log and does not stop the sync" do
+    TradeLinker.any_instance.stubs(:run!).raises(StandardError, "boom")
+
+    assert_difference -> { DebugLogEntry.where(source: "TradeLinker", level: "error").count }, 1 do
+      assert_equal 0, TradeLinker.run_quietly(@family)
+    end
+  end
 end
