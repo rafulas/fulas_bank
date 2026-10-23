@@ -2,7 +2,7 @@
 es:
   transactions:
     show:
-      expense_type: Fijo, recurrente o variable
+      expense_type: Variable, fijo, recibo o suscripción
     expense_type:
       current: "Este movimiento es: %{type}."
       automatic_series: Lo ha decidido la app porque va con un recurrente.
@@ -13,21 +13,24 @@ es:
       types:
         variable: Variable
         fixed: Fijo
-        recurring: Recurrente
+        bill: Recibo
+        subscription: Suscripción
+        recurring: Fijo
       ends_by_label: Termina
+      ends_by_never: Nunca
       ends_by_date: En una fecha
       ends_by_periods: Tras un número de pagos
       end_on_label: Fecha del último pago
       periods_label: Pagos que quedan
-      hint: Fijo y recurrente se repiten y el Forecast los prevé uno a uno (recurrente es un fijo que termina, como un préstamo). Variable entra en la estimación de gastos varios de cada mes. Si no hay recurrente para este movimiento, al marcarlo fijo o recurrente se crea uno.
+      hint: "Fijo (hipoteca, préstamos, nómina), recibo (luz, teléfono, seguros) y suscripción (Netflix, el gimnasio) se repiten y el Forecast los prevé uno a uno; un fijo puede terminar, como un préstamo. Variable (una caña, el súper) entra en la estimación de gastos varios de cada mes. Si este movimiento no va con ningún recurrente, se crea uno."
       submit: Guardar
     expense_types:
       update:
         success: Tipo de movimiento guardado
         errors:
-          invalid_type: Elige fijo, recurrente o variable.
+          invalid_type: Elige variable, fijo, recibo o suscripción.
           transfer: Los traspasos no son ni fijos ni variables.
-          end_required: Indica cuándo termina el recurrente, con una fecha o con los pagos que quedan.
+          end_required: Indica cuándo termina el fijo, con una fecha o con los pagos que quedan.
           invalid_periods: El número de pagos tiene que estar entre 1 y 600.
           series_failed: No se ha podido crear el recurrente para este movimiento.
           invalid: No se ha podido guardar el cambio.

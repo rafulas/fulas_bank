@@ -63,9 +63,30 @@ class Transaction::ExpenseTypeChangeTest < ActiveSupport::TestCase
     series = Transaction.find(entry.entryable_id).recurring_series
     assert_equal Date.new(2027, 6, 30), series.end_on
 
+    # Fixed again keeps the end unless told it never ends.
     assert change(entry, "fixed").save
+    assert_equal Date.new(2027, 6, 30), series.reload.end_on
+
+    assert change(entry, "fixed", never_ends: true).save
     assert series.reload.ends_never?
     assert_nil series.end_on
+  end
+
+  # Fulas Bank: a bill or a subscription is the kind of its series; neither
+  # ends, they are switched off instead.
+  test "marking it a bill or a subscription gives its series that kind" do
+    entry = create_transaction(account: @account, name: "Iberdrola", amount: 64, date: Date.new(2026, 10, 10))
+
+    assert change(entry, "bill").save
+    transaction = Transaction.find(entry.entryable_id)
+    assert_equal "fixed", transaction.expense_type
+    assert_equal "bill", transaction.recurring_series.fulas_kind
+    assert_equal "bill", Transaction::ExpenseTypeChange.current_choice(transaction)
+
+    assert change(entry, "subscription", end_on: "2027-01-31").save
+    series = Transaction.find(entry.entryable_id).recurring_series
+    assert series.typed_subscription?
+    assert series.ends_never?
   end
 
   test "recurring needs an end" do

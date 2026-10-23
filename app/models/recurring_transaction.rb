@@ -681,6 +681,18 @@ class RecurringTransaction < ApplicationRecord
   end
 
   # Mark as inactive
+  # Fulas Bank: "fixed", "bill" or "subscription" (see RecurringTransaction::Kind).
+  def fulas_kind
+    Kind.of(self)
+  end
+
+  # Sets the kind, keeping a fixed series' bill type when it already has one.
+  def fulas_kind=(value)
+    return unless Kind::KINDS.include?(value.to_s)
+
+    self.bill_type = Kind.bill_type_for(value, self)
+  end
+
   def mark_inactive!
     update!(status: "inactive")
   end

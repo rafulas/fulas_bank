@@ -47,7 +47,7 @@ class SubscriptionCostsControllerTest < ActionDispatch::IntegrationTest
 
     get new_recurring_transaction_url(subscription: "1"), headers: { "Turbo-Frame" => "modal" }
     assert_response :success
-    assert_select "input[name=?][value=?]", "recurring_transaction[subscription]", "1"
+    assert_select "select[name=?] option[selected][value=?]", "recurring_transaction[fulas_kind]", "subscription"
   end
 
   test "a series created from add subscription is a subscription" do

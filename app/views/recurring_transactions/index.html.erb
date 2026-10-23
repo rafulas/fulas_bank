@@ -1,7 +1,8 @@
 <%# Fulas Bank: «Recurrentes», after FlowVista's "Detected Recurring" — what
     each kind adds up to a month, then every recurring movement in tabs
-    (bills, subscriptions, income, savings), and below the detection
-    settings that used to be the whole page. %>
+    (fixed, bills, subscriptions; see RecurringTransaction::Kind), the bills
+    and subscriptions switched off, and below the detection settings that
+    used to be the whole page. %>
 <% overview = @overview %>
 <% currency = overview.currency %>
 
@@ -35,10 +36,10 @@
 
 <div class="max-w-4xl space-y-6 pb-6">
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <%= summary_card(title: t(".totals.fixed_costs"), tone: :negative) do %><%= format_money(overview.fixed_costs) %><% end %>
+    <%= summary_card(title: t(".totals.fixed"), tone: :negative) do %><%= format_money(overview.monthly_total("fixed")) %><% end %>
+    <%= summary_card(title: t(".totals.bills")) do %><%= format_money(overview.monthly_total("bills")) %><% end %>
     <%= summary_card(title: t(".totals.subscriptions")) do %><%= format_money(overview.monthly_total("subscriptions")) %><% end %>
-    <%= summary_card(title: t(".totals.income"), tone: :positive) do %><%= format_money(overview.monthly_total("income")) %><% end %>
-    <%= summary_card(title: t(".totals.savings"), tone: :brand) do %><%= format_money(overview.monthly_total("savings")) %><% end %>
+    <%= summary_card(title: t(".totals.income"), tone: :positive) do %><%= format_money(overview.monthly_income) %><% end %>
   </div>
 
   <% if @suggested.any? && !@family.recurring_transactions_disabled? %>
@@ -68,7 +69,7 @@
             </div>
             <% if @tab == "all" %>
               <span class="hidden md:inline-flex">
-                <%= render DS::Pill.new(label: t(".kinds.#{row.kind}"), tone: { "income" => :success, "savings" => :info, "subscriptions" => :violet }.fetch(row.kind, :neutral), marker: false) %>
+                <%= render DS::Pill.new(label: t(".kinds.#{row.kind}"), tone: { "fixed" => :info, "subscriptions" => :violet }.fetch(row.kind, :neutral), marker: false) %>
               </span>
             <% end %>
             <div class="hidden sm:block w-28 shrink-0 text-right">
@@ -85,9 +86,11 @@
                 </p>
               <% end %>
             </div>
-            <% if preview_features_enabled? %>
-              <%= render DS::Link.new(icon: "pencil", variant: :icon, href: edit_recurring_transaction_path(series), frame: :modal, aria: { label: t(".edit", name: row.name) }) %>
+            <% if row.switchable? %>
+              <%= render DS::Button.new(text: t(".switch_off"), variant: :ghost, size: :sm, href: toggle_status_recurring_transaction_path(series), method: :post,
+                    confirm: CustomConfirm.new(title: t(".switch_off_title", name: row.name), body: t(".switch_off_body"), btn_text: t(".switch_off"))) %>
             <% end %>
+            <%= render DS::Link.new(icon: "pencil", variant: :icon, href: edit_recurring_transaction_path(series), frame: :modal, aria: { label: t(".edit", name: row.name) }) %>
           </div>
         <% end %>
       </div>
@@ -95,6 +98,29 @@
       <p class="rounded-xl bg-container shadow-border-xs p-4 text-sm text-secondary"><%= t(".empty.#{@tab}") %></p>
     <% end %>
   </section>
+
+  <% switched_off = overview.switched_off(@tab) %>
+  <% if switched_off.any? %>
+    <details class="rounded-xl bg-container shadow-border-xs" id="recurring-switched-off">
+      <summary class="cursor-pointer px-4 py-3 text-sm text-primary"><%= t(".switched_off", count: switched_off.size) %></summary>
+      <div class="divide-y divide-divider">
+        <% switched_off.each do |series| %>
+          <div class="flex items-center gap-3 px-4 py-2.5">
+            <div class="min-w-0 grow">
+              <p class="truncate text-sm text-secondary"><%= series.display_name %></p>
+              <p class="text-xs text-secondary privacy-sensitive">
+                <%= t(".kinds.#{RecurringOverview.kind_for(series)}") %> · <%= format_money(series.amount_money.abs) %> · <%= frequency_label(series) %>
+                <% if series.cancelled_on %>
+                  · <%= t(".switched_off_on", date: l(series.cancelled_on, format: "%-d %b %Y")) %>
+                <% end %>
+              </p>
+            </div>
+            <%= render DS::Button.new(text: t(".switch_on"), variant: :outline, size: :sm, href: toggle_status_recurring_transaction_path(series), method: :post) %>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
 
   <%= render DS::Disclosure.new(title: t(".detection"), align: "left") do %>
     <div class="space-y-4 pt-2">

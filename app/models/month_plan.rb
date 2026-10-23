@@ -12,14 +12,16 @@
 class MonthPlan
   FUTURE_LIMIT = 12
 
-  # Kinds of recurring movement, in the order the screen lists them.
+  # Kinds of recurring movement, in the order the screen lists them. Fulas
+  # Bank: fixed, bills and subscriptions (see RecurringTransaction::Kind),
+  # with the fixed income apart.
   GROUPS = {
-    "bill" => "bills",
-    "installment" => "loans",
-    "subscription" => "subscriptions",
     "income" => "income",
-    "transfer" => "other",
-    "other" => "other"
+    "installment" => "fixed",
+    "transfer" => "fixed",
+    "other" => "fixed",
+    "bill" => "bills",
+    "subscription" => "subscriptions"
   }.freeze
 
   # A budgeted main category, with the subcategories given their own
@@ -244,7 +246,7 @@ class MonthPlan
   end
 
   def groups
-    @groups ||= payments.group_by { |payment| GROUPS.fetch(payment.series.bill_type.to_s, "other") }
+    @groups ||= payments.group_by { |payment| GROUPS.fetch(payment.series.bill_type.to_s, "fixed") }
                         .map { |key, list| Group.new(key: key, payments: list) }
                         .sort_by { |group| GROUPS.values.uniq.index(group.key) }
   end

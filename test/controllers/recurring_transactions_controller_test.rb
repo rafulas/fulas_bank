@@ -824,6 +824,60 @@ class RecurringTransactionsControllerTest < ActionDispatch::IntegrationTest
 
   # --- Suggested-series review: confirm/dismiss from either page ---
 
+  # Fulas Bank: a suggestion is confirmed straight into its kind.
+  test "confirms a suggestion as a fixed one, a bill or a subscription" do
+    loan = create_series(name: "Préstamo coche", status: "suggested")
+    gym = create_series(name: "Gimnasio", status: "suggested")
+
+    post confirm_recurring_transaction_url(loan, kind: "fixed")
+    post confirm_recurring_transaction_url(gym, kind: "subscription")
+
+    assert loan.reload.active?
+    assert_equal "fixed", loan.fulas_kind
+    assert gym.reload.typed_subscription?
+  end
+
+  test "switching a bill off stops it from today, and on again resumes it" do
+    insurance = create_series(name: "Mapfre")
+
+    post toggle_status_recurring_transaction_url(insurance)
+    assert insurance.reload.inactive?
+    assert_equal Date.current, insurance.cancelled_on
+
+    get recurring_transactions_url
+    assert_select "#recurring-switched-off", text: /Mapfre/
+
+    post toggle_status_recurring_transaction_url(insurance)
+    assert insurance.reload.active?
+    assert_nil insurance.cancelled_on
+  end
+
+  test "edits the kind, and a fixed one's end" do
+    series = create_series(name: "Préstamo reforma")
+
+    patch recurring_transaction_url(series), params: { recurring_transaction: { fulas_kind: "fixed", end_mode: "on_date", end_on: "2030-05-19" } }
+    series.reload
+    assert_equal "fixed", series.fulas_kind
+    assert series.ends_on_date?
+    assert_equal Date.new(2030, 5, 19), series.end_on
+
+    patch recurring_transaction_url(series), params: { recurring_transaction: { fulas_kind: "bill" } }
+    assert series.reload.typed_bill?
+    assert series.ends_never?
+  end
+
+  test "a new fixed one can end after some payments" do
+    post recurring_transactions_url, params: { recurring_transaction: {
+      name: "Préstamo moto", amount: 150, account_id: accounts(:depository).id, first_due_on: Date.current.iso8601,
+      frequency_preset: "monthly", fulas_kind: "fixed", end_mode: "after_count", end_after_count: "36"
+    } }
+
+    series = @family.recurring_transactions.find_by!(name: "Préstamo moto")
+    assert_equal "fixed", series.fulas_kind
+    assert series.ends_after_count?
+    assert_equal 36, series.end_after_count
+  end
+
   test "confirming from the Bills page returns there and reconstructs the bill's history" do
     last_month_ninth = Date.current.beginning_of_month + 8.days - 1.month
     suggestion = @family.recurring_transactions.create!(
@@ -1054,9 +1108,9 @@ class RecurringTransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: I18n.t("recurring_transactions.index.title")
     assert_select "#recurring-rows", text: /Netflix/
 
-    get recurring_transactions_url(tab: "income")
+    get recurring_transactions_url(tab: "fixed")
     assert_response :success
-    assert_select "a[aria-current='true']", text: /#{I18n.t("recurring_transactions.index.tabs.income")}/
+    assert_select "a[aria-current='true']", text: /#{I18n.t("recurring_transactions.index.tabs.fixed")}/
     assert_select "#recurring-rows", text: /Netflix/, count: 0
   end
 

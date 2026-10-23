@@ -14,9 +14,12 @@ class RecurringTransaction
       @attrs = attrs
     end
 
-    # Fulas Bank: opened from «Añadir suscripción», the new series is one.
-    def subscription?
-      ActiveModel::Type::Boolean.new.cast(attrs[:subscription]) || false
+    # Fulas Bank: the kind chosen in the form (see RecurringTransaction::Kind).
+    # Opened from «Añadir suscripción», it is a subscription.
+    def kind
+      return "subscription" if ActiveModel::Type::Boolean.new.cast(attrs[:subscription])
+
+      attrs[:fulas_kind].to_s.presence_in(Kind::KINDS)
     end
 
     def build
@@ -45,7 +48,7 @@ class RecurringTransaction
       recurring = family.recurring_transactions.new(
         name: attrs[:name],
         amount: amount,
-        bill_type: is_income ? "income" : (subscription? ? "subscription" : "bill"),
+        bill_type: is_income ? "income" : { "fixed" => "installment", "subscription" => "subscription" }.fetch(kind, "bill"),
         account: account,
         currency: account&.currency || family.currency,
         payment_url: attrs[:payment_url],
@@ -59,6 +62,7 @@ class RecurringTransaction
       recurring.frequency_interval = attrs[:frequency_interval]
       recurring.frequency_interval_unit = attrs[:frequency_interval_unit]
       recurring.first_due_on = attrs[:first_due_on]
+      apply_end(recurring)
 
       # A chosen account that does not resolve to something writable is said
       # out loud, not silently dropped: a read-only share or a foreign id
@@ -94,6 +98,20 @@ class RecurringTransaction
       )
 
       recurring
+    end
+
+    # Fulas Bank: a fixed one may end on a date or after some payments.
+    def apply_end(recurring)
+      return unless recurring.fulas_kind == "fixed"
+
+      case attrs[:end_mode].to_s
+      when "on_date"
+        recurring.end_mode = "on_date"
+        recurring.end_on = attrs[:end_on]
+      when "after_count"
+        recurring.end_mode = "after_count"
+        recurring.end_after_count = attrs[:end_after_count]
+      end
     end
 
     # A series for this identifier may already exist; a second legitimate one

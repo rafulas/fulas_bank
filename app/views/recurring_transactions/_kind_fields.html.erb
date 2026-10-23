@@ -1,0 +1,36 @@
+<%# locals: (f:, recurring_transaction:) %>
+<%# Fulas Bank: what kind of recurring movement this is (see
+    RecurringTransaction::Kind) and, for a fixed one, when it ends: never, on
+    a date, or after a number of payments (a loan). %>
+<div class="space-y-3">
+  <div class="grid grid-cols-2 gap-3" data-controller="frequency-fields">
+    <%= f.select :fulas_kind,
+          RecurringTransaction::Kind::KINDS.map { |kind| [ t("recurring_transactions.kind_fields.kinds.#{kind}"), kind ] },
+          { label: t("recurring_transactions.kind_fields.kind_label"), selected: recurring_transaction.fulas_kind },
+          { data: { frequency_fields_target: "preset", action: "change->frequency-fields#update" } } %>
+    <% if recurring_transaction.persisted? %>
+      <%= f.collection_select :category_id,
+            Current.family.categories.alphabetically,
+            :id, :name,
+            { label: t("recurring_transactions.form.category_label"), include_blank: t("recurring_transactions.form.category_blank") } %>
+    <% end %>
+
+    <p class="col-span-2 -mt-1 text-xs text-secondary"><%= t("recurring_transactions.kind_fields.kind_hint") %></p>
+
+    <div data-frequency-fields-target="group" data-presets="fixed" class="hidden col-span-2">
+      <div class="grid grid-cols-2 gap-3" data-controller="frequency-fields">
+        <%= f.select :end_mode,
+              RecurringTransaction.end_modes.keys.map { |mode| [ t("recurring_transactions.kind_fields.end_modes.#{mode}"), mode ] },
+              { label: t("recurring_transactions.kind_fields.end_label"), selected: recurring_transaction.end_mode },
+              { data: { frequency_fields_target: "preset", action: "change->frequency-fields#update" } } %>
+        <div data-frequency-fields-target="group" data-presets="on_date" class="hidden">
+          <%= f.date_field :end_on, label: t("recurring_transactions.kind_fields.end_on_label") %>
+        </div>
+        <div data-frequency-fields-target="group" data-presets="after_count" class="hidden">
+          <%= f.number_field :end_after_count, label: t("recurring_transactions.kind_fields.end_after_count_label"), min: 1, step: 1 %>
+        </div>
+      </div>
+      <p class="text-xs text-secondary mt-1"><%= t("recurring_transactions.kind_fields.end_hint") %></p>
+    </div>
+  </div>
+</div>

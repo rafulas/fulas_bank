@@ -31,7 +31,7 @@
             <p class="text-xs text-secondary"><%= t(".recurring_hint") %></p>
 
             <%= form.select :expense_type,
-                  Transaction::ExpenseClassifiable::EXPENSE_TYPES.map { |type| [ t("transactions.expense_type.types.#{type}"), type ] },
+                  Transaction::ExpenseTypeChange::CHOICES.map { |type| [ t("transactions.expense_type.types.#{type}"), type ] },
                   { include_blank: t(".no_change"), label: t(".expense_type_label") } %>
             <%= form.date_field :end_on, label: t(".end_on_label") %>
             <p class="text-xs text-secondary"><%= t(".expense_type_hint") %></p>

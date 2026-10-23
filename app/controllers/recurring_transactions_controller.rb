@@ -44,6 +44,8 @@ class RecurringTransactionsController < ApplicationController
   # Identifier treats as "never suggest this again".
   def confirm
     first_confirmation = @recurring_transaction.suggested?
+    # Fulas Bank: confirmed as a fixed one, a bill or a subscription.
+    @recurring_transaction.fulas_kind = params[:kind] if params[:kind].present?
     @recurring_transaction.update!(status: "active")
 
     # A just-confirmed bill shows its lived history rather than starting
@@ -191,10 +193,15 @@ class RecurringTransactionsController < ApplicationController
     apply_editable_identity
     apply_frequency_preset
 
-    if @recurring_transaction.typed_installment? && @recurring_transaction.end_after_count.present?
+    # Fulas Bank: the end is chosen with the kind; an old instalment form
+    # without it still ends after its count.
+    if @recurring_transaction.typed_installment? && @recurring_transaction.end_after_count.present? &&
+        params.dig(:recurring_transaction, :end_mode).blank?
       @recurring_transaction.end_mode = "after_count"
-      @recurring_transaction.anchor_date ||= @recurring_transaction.last_occurrence_date
     end
+    # Only a fixed one ends; a bill or a subscription is switched off instead.
+    @recurring_transaction.end_mode = "never" unless @recurring_transaction.fulas_kind == "fixed"
+    @recurring_transaction.anchor_date ||= @recurring_transaction.last_occurrence_date if @recurring_transaction.ends_after_count?
 
     # apply_editable_identity flags a bad account id; save would wipe that
     # error while validating, so it is checked first.
@@ -218,19 +225,22 @@ class RecurringTransactionsController < ApplicationController
     end
   end
 
+  # Fulas Bank: switches a bill or a subscription off (to change company, or
+  # cancelled) and on again. Off, it stops counting in Planes and the
+  # Forecast from today.
   def toggle_status
     if @recurring_transaction.active?
-      @recurring_transaction.mark_inactive!
+      @recurring_transaction.update!(status: "inactive", cancelled_on: Date.current)
       message = t("recurring_transactions.marked_inactive")
     else
-      @recurring_transaction.mark_active!
+      @recurring_transaction.update!(status: "active", cancelled_on: nil)
       message = t("recurring_transactions.marked_active")
     end
 
     respond_to do |format|
       format.html do
         flash[:notice] = message
-        redirect_to recurring_transactions_path
+        redirect_back_or_to recurring_transactions_path
       end
     end
   end
@@ -368,8 +378,8 @@ class RecurringTransactionsController < ApplicationController
     # raw permit.
     def recurring_transaction_params
       params.require(:recurring_transaction).permit(
-        :payment_url, :autopay, :notes, :bill_type, :category_id,
-        :renews_on, :trial_ends_on, :cancelled_on, :end_after_count,
+        :payment_url, :autopay, :notes, :bill_type, :fulas_kind, :category_id,
+        :renews_on, :trial_ends_on, :cancelled_on, :end_mode, :end_on, :end_after_count,
         :frequency_preset, :frequency_day_of_month, :frequency_second_day_of_month,
         :frequency_weekday, :frequency_month_of_year, :frequency_interval, :frequency_interval_unit
       )
@@ -387,8 +397,11 @@ class RecurringTransactionsController < ApplicationController
       RecurringTransaction::DeclaredBill.new(
         family: Current.family,
         user: Current.user,
-        # Fulas Bank: opened from «Añadir suscripción», the series is one.
-        attrs: new_recurring_transaction_params.merge(subscription: params.dig(:recurring_transaction, :subscription).to_s == "1")
+        # Fulas Bank: its kind and, for a fixed one, when it ends. Read on
+        # their own so the reviewed permit list above stays as it is.
+        attrs: new_recurring_transaction_params.merge(
+          params.require(:recurring_transaction).permit(:fulas_kind, :subscription, :end_mode, :end_on, :end_after_count).to_h
+        )
       ).build
     end
 

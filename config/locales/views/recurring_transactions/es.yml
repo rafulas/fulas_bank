@@ -1,37 +1,57 @@
 ---
 es:
   recurring_transactions:
+    kind_fields:
+      kind_label: Tipo
+      kinds:
+        fixed: Fijo
+        bill: Recibo
+        subscription: Suscripción
+      kind_hint: "Fijo: lo que va sí o sí (hipoteca, préstamos, nómina). Recibo: un servicio imprescindible (luz, gas, teléfono, seguros), que puedes desactivar si cambias de compañía. Suscripción: lo que puedes cancelar y retomar (Netflix, Spotify, el gimnasio)."
+      end_label: Termina
+      end_modes:
+        never: Nunca
+        on_date: En una fecha
+        after_count: Tras unos pagos
+      end_on_label: Último pago
+      end_after_count_label: Número de pagos
+      end_hint: Un préstamo termina tras su último pago; a partir de ahí deja de contar en Planes y en el Forecast.
     index:
       title: Recurrentes
-      subtitle: Recibos, suscripciones, ingresos y ahorro que se repiten, con lo que suman al mes.
+      subtitle: Fijos (hipoteca, préstamos, nómina), recibos y suscripciones, con lo que suman al mes.
       list_title: Movimientos recurrentes
       tabs_aria: Tipo de recurrente
       tabs:
         all: Todos
-        bills: Facturas
+        fixed: Fijos
+        bills: Recibos
         subscriptions: Suscripciones
-        income: Ingresos
-        savings: Ahorro
       kinds:
-        bills: Factura
+        fixed: Fijo
+        bills: Recibo
         subscriptions: Suscripción
-        income: Ingreso
-        savings: Ahorro
       totals:
-        fixed_costs: Gastos fijos al mes
+        fixed: Fijos al mes
+        bills: Recibos al mes
         subscriptions: Suscripciones al mes
-        income: Ingresos al mes
-        savings: Ahorro al mes
+        income: Ingresos fijos al mes
+      switch_off: Desactivar
+      switch_off_title: "¿Desactivar %{name}?"
+      switch_off_body: Deja de contar desde hoy en Planes y en el Forecast. Puedes volver a activarlo cuando quieras, por ejemplo si cambias de compañía y luego vuelves.
+      switch_on: Activar
+      switched_off:
+        one: 1 desactivado
+        other: "%{count} desactivados"
+      switched_off_on: "desde el %{date}"
       next: Próximo
       before: "antes %{amount}"
       edit: "Editar %{name}"
       detection: Detección automática
       empty:
         all: Todavía no hay movimientos recurrentes. Pulsa «Identificar patrones» o añade uno desde Planes.
-        bills: No hay facturas recurrentes.
+        fixed: No hay fijos (hipoteca, préstamos, nómina, traspasos al ahorro).
+        bills: No hay recibos (luz, gas, teléfono, seguros).
         subscriptions: No hay suscripciones.
-        income: No hay ingresos recurrentes.
-        savings: No hay traspasos periódicos a cuentas de ahorro o inversión.
     title: Transacciones Recurrentes
     upcoming: Próximas Transacciones Recurrentes
     projected: Proyectado
@@ -194,8 +214,8 @@ es:
     identified: Identificados %{count} patrones de transacciones recurrentes
     identify_already_running: La detección ya está en marcha. Vuelve en un momento.
     cleaned_up: Limpiadas %{count} transacciones recurrentes obsoletas
-    marked_inactive: Transacción recurrente marcada como inactiva
-    marked_active: Transacción recurrente marcada como activa
+    marked_inactive: Desactivado. Ya no cuenta en Planes ni en el Forecast.
+    marked_active: Activado de nuevo.
     deleted: Transacción recurrente eliminada
     deleted_income: Ingreso eliminado. Tus transacciones no se han tocado.
     confirm_delete: "¿Estás seguro de que deseas eliminar esta transacción recurrente?"
@@ -224,14 +244,19 @@ es:
       paused: En pausa
       ended: Descartado
     suggested:
-      title: Posibles recibos nuevos
+      title: Posibles recurrentes nuevos
       seen_count:
         one: visto una vez
         other: visto %{count} veces
       collapsed_hint: Toca para revisar
       confirm: Añadir recibo
       dismiss: No es un recibo
-    confirmed: Recibo añadido a tus transacciones recurrentes
+      confirm_as:
+        fixed: Fijo
+        bill: Recibo
+        subscription: Suscripción
+      ignore: Ignorar
+    confirmed: Añadido a tus recurrentes
     dismissed: Descartado. Este patrón no se volverá a sugerir.
     badges:
       manual: Manual

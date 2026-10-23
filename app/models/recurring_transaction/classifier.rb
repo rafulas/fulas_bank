@@ -113,6 +113,13 @@ class RecurringTransaction
       end
     end
 
+    # Fulas Bank: whether a series' name or category says it is a service
+    # that can be cancelled (Netflix, the gym), and it is not an obligation.
+    def self.subscription_signal?(series)
+      classifier = new(name: series.display_name, entries: [], category: series.category)
+      !classifier.obligatory? && classifier.named_subscription?
+    end
+
     attr_reader :name, :entries, :account
 
     def initialize(name:, entries:, account: nil, category: nil)
@@ -151,6 +158,10 @@ class RecurringTransaction
       return true if loan? || category_in?(OBLIGATION_CATEGORIES)
 
       (matches?(BILL_KEYWORDS) || matches?(ACH_MARKERS)) && !matches?(SUBSCRIPTION_KEYWORDS)
+    end
+
+    def named_subscription?
+      matches?(SUBSCRIPTION_KEYWORDS) || category_in?(SUBSCRIPTION_CATEGORIES)
     end
 
     private

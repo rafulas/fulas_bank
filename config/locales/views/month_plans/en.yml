@@ -27,11 +27,10 @@ en:
       to_pay: to pay
       balance_after: Balance after recurring
       groups:
-        bills: Bills and insurance
-        loans: Loans and mortgage
+        income: Fixed income
+        fixed: Fixed
+        bills: Bills
         subscriptions: Subscriptions
-        income: Income
-        other: Other
       long_date: "%B %-d"
       today: Today
       overdue_on: "Overdue: %{date}"

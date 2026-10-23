@@ -1284,7 +1284,7 @@ class BillsControllerTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_match "GYM MEMBERSHIP", response.body
-    assert_match I18n.t("recurring_transactions.suggested.confirm"), response.body
+    assert_match I18n.t("recurring_transactions.suggested.confirm_as.subscription"), response.body
   end
 
   test "detect does not resurrect a dismissed pattern" do

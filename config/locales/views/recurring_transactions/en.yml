@@ -1,37 +1,57 @@
 ---
 en:
   recurring_transactions:
+    kind_fields:
+      kind_label: Kind
+      kinds:
+        fixed: Fixed
+        bill: Bill
+        subscription: Subscription
+      kind_hint: "Fixed: what comes or goes no matter what (mortgage, loans, salary). Bill: an essential service (power, gas, phone, insurance) you can switch off if you change company. Subscription: what you can cancel and take up again (Netflix, Spotify, the gym)."
+      end_label: Ends
+      end_modes:
+        never: Never
+        on_date: On a date
+        after_count: After some payments
+      end_on_label: Last payment
+      end_after_count_label: Number of payments
+      end_hint: A loan ends after its last payment; from then on it stops counting in Plans and the Forecast.
     index:
       title: Recurring
-      subtitle: Bills, subscriptions, income and savings that repeat, with what they add up to a month.
+      subtitle: Fixed (mortgage, loans, salary), bills and subscriptions, with what they add up to a month.
       list_title: Recurring movements
       tabs_aria: Kind of recurring movement
       tabs:
         all: All
+        fixed: Fixed
         bills: Bills
         subscriptions: Subscriptions
-        income: Income
-        savings: Savings
       kinds:
+        fixed: Fixed
         bills: Bill
         subscriptions: Subscription
-        income: Income
-        savings: Savings
       totals:
-        fixed_costs: Fixed costs a month
+        fixed: Fixed a month
+        bills: Bills a month
         subscriptions: Subscriptions a month
-        income: Income a month
-        savings: Savings a month
+        income: Fixed income a month
+      switch_off: Switch off
+      switch_off_title: "Switch off %{name}?"
+      switch_off_body: It stops counting in Plans and the Forecast from today. You can switch it on again whenever you like, for instance if you change company and come back.
+      switch_on: Switch on
+      switched_off:
+        one: 1 switched off
+        other: "%{count} switched off"
+      switched_off_on: "since %{date}"
       next: Next
       before: "was %{amount}"
       edit: "Edit %{name}"
       detection: Automatic detection
       empty:
         all: No recurring movements yet. Press "Identify patterns" or add one from Plans.
-        bills: No recurring bills.
+        fixed: No fixed movements (mortgage, loans, salary, transfers to savings).
+        bills: No bills (power, gas, phone, insurance).
         subscriptions: No subscriptions.
-        income: No recurring income.
-        savings: No regular transfers to savings or investment accounts.
     title: Recurring Transactions
     upcoming: Upcoming Recurring Transactions
     projected: Projected
@@ -194,8 +214,8 @@ en:
     identified: Identified %{count} recurring transaction patterns
     identify_already_running: Detection is already running. Check back in a moment.
     cleaned_up: Cleaned up %{count} stale recurring transactions
-    marked_inactive: Paused. It won't appear again until you resume it.
-    marked_active: Resumed.
+    marked_inactive: Paused. It no longer counts in Plans or the Forecast.
+    marked_active: Switched on again.
     deleted: Bill removed. Your transactions were not touched.
     deleted_income: Income removed. Your transactions were not touched.
     confirm_delete: "Remove %{name} from your bills? Your transactions stay exactly as they are. This only removes the bill and its payment schedule."
@@ -223,14 +243,19 @@ en:
       paused: Paused
       ended: Dismissed
     suggested:
-      title: Possible new bills
+      title: Possible new recurring movements
       seen_count:
         one: "seen once"
         other: "seen %{count} times"
       collapsed_hint: Tap to review
       confirm: Add bill
       dismiss: Not a bill
-    confirmed: Bill added to your recurring transactions
+      confirm_as:
+        fixed: Fixed
+        bill: Bill
+        subscription: Subscription
+      ignore: Ignore
+    confirmed: Added to your recurring movements
     dismissed: "Dismissed. This pattern won't be suggested again."
     badges:
       manual: Manual

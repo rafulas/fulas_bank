@@ -32,7 +32,8 @@ class FindMyBillsTest < ApplicationSystemTestCase
     row = find(:xpath,
       "//div[contains(@class,'justify-between')][.//p[contains(normalize-space(),'GYM MEMBERSHIP')]]",
       match: :first)
-    within(row) { click_on I18n.t("recurring_transactions.suggested.confirm") }
+    # Fulas Bank: confirmed straight into its kind; a gym is a subscription.
+    within(row) { click_on I18n.t("recurring_transactions.suggested.confirm_as.subscription") }
 
     # Confirmed on the page it was reviewed on: the bill is a worklist row now.
     assert_text I18n.t("recurring_transactions.confirmed")
@@ -40,6 +41,7 @@ class FindMyBillsTest < ApplicationSystemTestCase
 
     bill = @family.recurring_transactions.find_by!(name: "GYM MEMBERSHIP")
     assert bill.active?
+    assert bill.typed_subscription?
     assert_operator bill.recurring_occurrences.count, :>, 0
   end
 end
