@@ -68,6 +68,9 @@
     <% if recurring_transaction.new_record? && income %>
       <%= hidden_field_tag "recurring_transaction[is_income]", "1" %>
     <% end %>
+    <% if recurring_transaction.new_record? && recurring_transaction.typed_subscription? %>
+      <%= hidden_field_tag "recurring_transaction[subscription]", "1" %>
+    <% end %>
 
     <%# Name, amount, due date and how often are the whole job for most
         bills. How often used to render below the payment link and the

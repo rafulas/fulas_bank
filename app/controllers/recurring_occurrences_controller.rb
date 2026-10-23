@@ -3,7 +3,7 @@ class RecurringOccurrencesController < ApplicationController
 
   layout "settings"
 
-  before_action :ensure_recurring_enabled
+  before_action :ensure_recurring_available
   before_action :set_occurrence
   before_action :ensure_series_writable, only: %i[mark_paid skip reopen snooze override_amount]
 

@@ -17,6 +17,15 @@ module RecurringFeatureGuardable
       redirect_to root_path if Current.family.recurring_transactions_disabled?
     end
 
+    # Fulas Bank: recurring movements are a core part of the app (Planes,
+    # Forecast, Suscripciones, the movement detail), not a preview. Their forms
+    # only honor the family's recurring toggle. Behind the preview gate they
+    # failed silently: the redirect landed inside the modal frame, which stays
+    # empty on the home page, so «Añadir recurrente» seemed to do nothing.
+    def ensure_recurring_available
+      redirect_to root_path if Current.family.recurring_transactions_disabled?
+    end
+
     def dialog_layout
       turbo_frame_request? ? false : "settings"
     end

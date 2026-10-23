@@ -14,6 +14,11 @@ class RecurringTransaction
       @attrs = attrs
     end
 
+    # Fulas Bank: opened from «Añadir suscripción», the new series is one.
+    def subscription?
+      ActiveModel::Type::Boolean.new.cast(attrs[:subscription]) || false
+    end
+
     def build
       account = Account.writable_by(user).find_by(id: attrs[:account_id])
       due = begin
@@ -40,7 +45,7 @@ class RecurringTransaction
       recurring = family.recurring_transactions.new(
         name: attrs[:name],
         amount: amount,
-        bill_type: is_income ? "income" : "bill",
+        bill_type: is_income ? "income" : (subscription? ? "subscription" : "bill"),
         account: account,
         currency: account&.currency || family.currency,
         payment_url: attrs[:payment_url],

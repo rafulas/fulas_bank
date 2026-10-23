@@ -760,6 +760,7 @@ Rails.application.routes.draw do
   end
   # Fulas Bank: what the subscriptions cost (see SubscriptionsOverview).
   resources :subscription_costs, only: :index, path: "suscripciones" do
+    get :pick, on: :collection, path: "elegir"
     member do
       patch :could_drop
       patch :mark
