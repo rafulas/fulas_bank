@@ -2,7 +2,7 @@
 en:
   transactions:
     show:
-      expense_type: Fixed, recurring or variable
+      expense_type: Variable, fixed, bill or subscription
     expense_type:
       current: "This movement is: %{type}."
       automatic_series: The app decided it because it belongs to a recurring series.
@@ -13,21 +13,24 @@ en:
       types:
         variable: Variable
         fixed: Fixed
-        recurring: Recurring
+        bill: Bill
+        subscription: Subscription
+        recurring: Fixed
       ends_by_label: Ends
+      ends_by_never: Never
       ends_by_date: On a date
       ends_by_periods: After a number of payments
       end_on_label: Date of the last payment
       periods_label: Payments left
-      hint: Fixed and recurring movements repeat and the Forecast projects them one by one (recurring is a fixed one that ends, like a loan). Variable ones go into each month's estimate of variable spending. If this movement has no recurring series, marking it fixed or recurring creates one.
+      hint: "Fixed (mortgage, loans, salary), bills (power, phone, insurance) and subscriptions (Netflix, the gym) repeat and the Forecast projects them one by one; a fixed one may end, like a loan. Variable ones (a beer, groceries) go into each month's estimate of variable spending. If this movement has no recurring series, one is created."
       submit: Save
     expense_types:
       update:
         success: Movement type saved
         errors:
-          invalid_type: Choose fixed, recurring or variable.
+          invalid_type: Choose variable, fixed, bill or subscription.
           transfer: Transfers are neither fixed nor variable.
-          end_required: Say when the recurring movement ends, with a date or the payments left.
+          end_required: Say when the fixed movement ends, with a date or the payments left.
           invalid_periods: The number of payments must be between 1 and 600.
           series_failed: The recurring series for this movement could not be created.
           invalid: The change could not be saved.

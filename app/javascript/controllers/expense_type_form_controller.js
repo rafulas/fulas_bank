@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus";
 
-// The "fixed / recurring / variable" form in a movement's detail: the end of a
-// recurring movement only matters for "recurring", and it is given either as
-// a date or as the number of payments still to come.
+// The "variable / fixed / bill / subscription" form in a movement's detail:
+// only a fixed one ends (a loan), never, on a date or after the number of
+// payments still to come.
 export default class extends Controller {
   static targets = ["type", "end", "endsBy", "date", "periods"];
 
@@ -11,11 +11,11 @@ export default class extends Controller {
   }
 
   refresh() {
-    const recurring = this.typeTarget.value === "recurring";
-    const byDate = this.endsByTarget.value === "date";
+    const fixed = this.typeTarget.value === "fixed";
+    const endsBy = this.endsByTarget.value;
 
-    this.endTarget.hidden = !recurring;
-    this.dateTarget.hidden = !byDate;
-    this.periodsTarget.hidden = byDate;
+    this.endTarget.hidden = !fixed;
+    this.dateTarget.hidden = endsBy !== "date";
+    this.periodsTarget.hidden = endsBy !== "periods";
   }
 }

@@ -23,7 +23,7 @@ class Transactions::ExpenseTypesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to transaction_url(@entry)
     transaction = Transaction.find(@entry.entryable_id)
-    assert_equal "recurring", transaction.expense_type
+    assert_equal "fixed", transaction.expense_type
     assert transaction.recurring_series.ends_on_date?
   end
 

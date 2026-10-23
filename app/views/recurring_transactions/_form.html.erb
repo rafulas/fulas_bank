@@ -68,9 +68,6 @@
     <% if recurring_transaction.new_record? && income %>
       <%= hidden_field_tag "recurring_transaction[is_income]", "1" %>
     <% end %>
-    <% if recurring_transaction.new_record? && recurring_transaction.typed_subscription? %>
-      <%= hidden_field_tag "recurring_transaction[subscription]", "1" %>
-    <% end %>
 
     <%# Name, amount, due date and how often are the whole job for most
         bills. How often used to render below the payment link and the
@@ -126,27 +123,13 @@
       <% end %>
     </div>
 
-    <% if recurring_transaction.persisted? && %w[bill subscription installment other].include?(recurring_transaction.bill_type) %>
-      <div class="grid grid-cols-2 gap-3" data-controller="frequency-fields">
-        <%= f.select :bill_type,
-              %w[bill subscription installment other].map { |type| [ t("bills.all.types.#{type}"), type ] },
-              { label: t(".bill_type_label") },
-              { data: { frequency_fields_target: "preset", action: "change->frequency-fields#update" } } %>
-        <%= f.collection_select :category_id,
-              Current.family.categories.alphabetically,
-              :id, :name,
-              { label: t(".category_label"), include_blank: t(".category_blank") } %>
+    <%# Fulas Bank: fixed, bill or subscription (see RecurringTransaction::Kind),
+        and when a fixed one ends. Income and transfers are always fixed. %>
+    <% unless income || recurring_transaction.transfer? %>
+      <%= render "recurring_transactions/kind_fields", f: f, recurring_transaction: recurring_transaction %>
+    <% end %>
 
-        <p class="col-span-2 -mt-1 text-xs text-secondary"><%= t(".bill_type_hint") %></p>
-
-        <div data-frequency-fields-target="group" data-presets="installment" class="hidden col-span-2">
-          <%= f.number_field :end_after_count,
-                label: t(".installment_count_label"),
-                min: 2, step: 1 %>
-          <p class="text-xs text-secondary mt-1"><%= t(".installment_count_hint") %></p>
-        </div>
-      </div>
-
+    <% if recurring_transaction.persisted? %>
       <% if recurring_transaction.typed_subscription? %>
         <div class="space-y-2">
           <div class="grid grid-cols-3 gap-3">

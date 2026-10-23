@@ -1,7 +1,7 @@
 <%# locals: (entry:, can_edit:) %>
 <% transaction = entry.transaction %>
 <% series = transaction.recurring_series %>
-<% current = transaction.effective_expense_type %>
+<% current = Transaction::ExpenseTypeChange.current_choice(transaction) %>
 <% ends_on = series&.ends_on_date? ? series.end_on : nil %>
 
 <div class="px-3 py-2 space-y-3" id="<%= dom_id(entry, :expense_type) %>">
@@ -25,14 +25,14 @@
     <%= styled_form_with scope: :expense_type, url: transaction_expense_type_path(entry), method: :patch,
           class: "space-y-3", data: { controller: "expense-type-form", turbo_frame: :_top } do |form| %>
       <%= form.select :expense_type,
-            Transaction::ExpenseClassifiable::EXPENSE_TYPES.map { |type| [ t(".types.#{type}"), type ] },
+            Transaction::ExpenseTypeChange::CHOICES.map { |type| [ t(".types.#{type}"), type ] },
             { label: t(".type_label"), selected: current },
             { data: { expense_type_form_target: "type", action: "change->expense-type-form#refresh" } } %>
 
       <div class="space-y-3" data-expense-type-form-target="end">
         <%= form.select :ends_by,
-              [ [ t(".ends_by_date"), "date" ], [ t(".ends_by_periods"), "periods" ] ],
-              { label: t(".ends_by_label"), selected: "date" },
+              [ [ t(".ends_by_never"), "never" ], [ t(".ends_by_date"), "date" ], [ t(".ends_by_periods"), "periods" ] ],
+              { label: t(".ends_by_label"), selected: ends_on ? "date" : "never" },
               { data: { expense_type_form_target: "endsBy", action: "change->expense-type-form#refresh" } } %>
         <div data-expense-type-form-target="date">
           <%= form.date_field :end_on, label: t(".end_on_label"), value: ends_on %>

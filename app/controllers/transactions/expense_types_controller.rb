@@ -1,5 +1,5 @@
-# Fulas Bank: marks a movement as fixed, recurring or variable from its
-# detail panel (see Transaction::ExpenseTypeChange).
+# Fulas Bank: marks a movement as variable, fixed, a bill or a subscription
+# from its detail panel (see Transaction::ExpenseTypeChange).
 class Transactions::ExpenseTypesController < ApplicationController
   def update
     @entry = Current.accessible_entries.transactions.find(params[:transaction_id])
@@ -9,7 +9,8 @@ class Transactions::ExpenseTypesController < ApplicationController
       @entry.transaction,
       expense_type: expense_type_params[:expense_type],
       end_on: (expense_type_params[:end_on] if expense_type_params[:ends_by] == "date"),
-      periods: (expense_type_params[:periods] if expense_type_params[:ends_by] == "periods")
+      periods: (expense_type_params[:periods] if expense_type_params[:ends_by] == "periods"),
+      never_ends: expense_type_params[:ends_by] == "never"
     )
 
     if change.save

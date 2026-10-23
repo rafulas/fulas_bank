@@ -27,11 +27,10 @@ es:
       to_pay: por pagar
       balance_after: Saldo tras recurrentes
       groups:
-        bills: Facturas y seguros
-        loans: Préstamos e hipoteca
+        income: Ingresos fijos
+        fixed: Fijos
+        bills: Recibos
         subscriptions: Suscripciones
-        income: Ingresos
-        other: Otros
       long_date: "%-d de %B"
       today: Hoy
       overdue_on: "Vencido: %{date}"

@@ -41,16 +41,23 @@
             &middot; <%= t("recurring_transactions.suggested.seen_count", count: suggestion.occurrence_count) %>
           </p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        <%# Fulas Bank: confirmed straight into its kind (see
+            RecurringTransaction::Kind), the app's guess first. %>
+        <% guess = RecurringTransaction::Kind.guess(suggestion) %>
+        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
+          <% ([ guess ] + (RecurringTransaction::Kind::KINDS - [ guess ])).each do |kind| %>
+            <%= render DS::Link.new(
+              text: t("recurring_transactions.suggested.confirm_as.#{kind}"),
+              variant: kind == guess ? "primary" : "outline",
+              size: :sm,
+              href: confirm_recurring_transaction_path(suggestion, kind: kind),
+              method: :post
+            ) %>
+          <% end %>
           <%= render DS::Link.new(
-            text: t("recurring_transactions.suggested.confirm"),
-            variant: "primary",
-            href: confirm_recurring_transaction_path(suggestion),
-            method: :post
-          ) %>
-          <%= render DS::Link.new(
-            text: t("recurring_transactions.suggested.dismiss"),
+            text: t("recurring_transactions.suggested.ignore"),
             variant: "ghost",
+            size: :sm,
             href: dismiss_recurring_transaction_path(suggestion),
             method: :post
           ) %>

@@ -22,7 +22,7 @@ class MonthPlanTest < ActiveSupport::TestCase
 
     assert_equal %w[Alquiler Netflix Nómina], plan.payments.map(&:name)
     assert_equal [ :paid, :expected, :expected ], plan.payments.map(&:state)
-    assert_equal %w[bills subscriptions income], plan.groups.map(&:key)
+    assert_equal %w[income bills subscriptions], plan.groups.map(&:key)
     assert_equal Money.new(900, "USD"), plan.paid_total
     assert_equal Money.new(15, "USD"), plan.pending_total
     assert_equal 98, plan.paid_share

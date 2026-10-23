@@ -1,45 +1,56 @@
-# Fulas Bank: the user marks a movement as fixed, recurring or variable (see
-# Transaction::ExpenseClassifiable).
+# Fulas Bank: the user says what kind of movement this is: variable, fixed,
+# a bill or a subscription (see Transaction::ExpenseClassifiable and
+# RecurringTransaction::Kind).
 #
-# Fixed and recurring movements repeat, so they need a recurring series for
-# the forecast to project them:
+# A fixed one, a bill or a subscription repeats, so it needs a recurring
+# series for the forecast to project it:
 #   - if the movement already pays one, that one is used;
 #   - if not, one is created from the movement, as "Mark as recurring" does.
-# Fixed means it never ends; recurring means it ends on a date, given either
-# as the date itself or as the number of payments still to come. The end is
-# kept on the series, where the forecast and the Bills pages read it.
+# The series takes the kind chosen. A fixed one may end (a loan): on a date,
+# given as the date itself or as the number of payments still to come, or
+# never. The end is kept on the series, where the forecast and Planes read
+# it. "recurring", the old name of a fixed one that ends, is still taken.
 #
 # Marking a movement variable does not touch its series: the user may still
 # want the bill tracked, and archiving it stays a decision of the Bills page.
 class Transaction::ExpenseTypeChange
   MAX_PERIODS = RecurringTransaction::MAX_END_AFTER_COUNT
+  # What the user chooses, in the order offered.
+  CHOICES = (%w[variable] + RecurringTransaction::Kind::KINDS).freeze
 
-  attr_reader :transaction, :expense_type, :end_on, :periods, :today, :error
+  attr_reader :transaction, :expense_type, :end_on, :periods, :never_ends, :today, :error
 
-  def initialize(transaction, expense_type:, end_on: nil, periods: nil, today: Date.current)
+  # `never_ends` clears the end of a fixed one; without it, nor a date nor a
+  # number of payments, its end is left as it is.
+  def initialize(transaction, expense_type:, end_on: nil, periods: nil, never_ends: false, today: Date.current)
     @transaction = transaction
     @expense_type = expense_type.to_s
     @end_on = parse_date(end_on)
     @periods = periods.presence&.to_i
+    @never_ends = never_ends
     @today = today
+  end
+
+  # What a movement is, as offered in CHOICES: variable, or its series' kind.
+  def self.current_choice(transaction)
+    return "variable" if transaction.effective_expense_type == "variable"
+
+    transaction.recurring_series&.fulas_kind || "fixed"
   end
 
   # @return [Boolean] whether the change was saved; #error says why not
   def save
-    return fail_with(:invalid_type) unless Transaction::ExpenseClassifiable::EXPENSE_TYPES.include?(expense_type)
+    return fail_with(:invalid_type) unless (CHOICES + %w[recurring]).include?(expense_type)
     return fail_with(:transfer) if transaction.transfer?
+    return fail_with(:end_required) if expense_type == "recurring" && end_on.nil? && periods.nil?
+    return fail_with(:invalid_periods) if periods && !periods.between?(1, MAX_PERIODS)
 
-    if expense_type == "recurring"
-      return fail_with(:end_required) if end_on.nil? && periods.nil?
-      return fail_with(:invalid_periods) if periods && !periods.between?(1, MAX_PERIODS)
-    end
-
-    series = expense_type == "variable" ? nil : find_or_create_series
-    return fail_with(:series_failed) if expense_type != "variable" && series.nil?
+    series = variable? ? nil : find_or_create_series
+    return fail_with(:series_failed) if !variable? && series.nil?
 
     Transaction.transaction do
-      transaction.update!(expense_type: expense_type)
-      apply_end(series) if series
+      transaction.update!(expense_type: variable? ? "variable" : "fixed")
+      apply_kind(series) if series
     end
 
     true
@@ -72,20 +83,37 @@ class Transaction::ExpenseTypeChange
       transaction.existing_manual_recurring_transaction
     end
 
-    def apply_end(series)
+    def variable?
+      expense_type == "variable"
+    end
+
+    # The kind the series takes: "recurring" was a fixed one that ends.
+    def kind
+      expense_type == "recurring" ? "fixed" : expense_type
+    end
+
+    def apply_kind(series)
       series.status = "active" unless series.active? || series.paused?
+      series.fulas_kind = kind
+      apply_end(series)
+
+      series.save! if series.changed?
+    end
+
+    # Only a fixed one ends; a bill or a subscription is switched off
+    # instead. A fixed one without an end given keeps the one it had.
+    def apply_end(series)
+      clear = kind != "fixed" || never_ends || end_on || periods
+      return unless clear
+
       # Without an end first, so the schedule can count the payments to come.
       series.end_after_count = nil
       series.end_mode = "never"
       series.end_on = nil
+      return unless kind == "fixed" && (end_on || periods)
 
-      if expense_type == "recurring"
-        last_date = end_on || last_payment_date(series)
-        series.end_mode = "on_date"
-        series.end_on = last_date
-      end
-
-      series.save! if series.changed?
+      series.end_mode = "on_date"
+      series.end_on = end_on || last_payment_date(series)
     end
 
     # The date of the last of the next `periods` payments, read from the
