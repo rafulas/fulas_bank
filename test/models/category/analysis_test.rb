@@ -27,6 +27,34 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     assert_equal 55, analysis.savings_rate
   end
 
+  # A statement just imported has no categories yet: the salary must not
+  # cancel the purchases (it showed "0 € spent" and a 100 % savings rate).
+  test "income and spending with no category are kept apart" do
+    create_transaction(account: @account, amount: -1_850, date: Date.new(2026, 10, 1))
+    create_transaction(account: @account, amount: 87.45, date: Date.new(2026, 10, 2))
+    create_transaction(account: @account, amount: 550.19, date: Date.new(2026, 10, 6))
+
+    assert_equal BigDecimal("637.64"), analysis.spent.amount
+    assert_equal BigDecimal("1850"), analysis.income.amount
+    assert_equal 66, analysis.savings_rate
+    assert_equal [ BigDecimal("637.64") ], analysis.spending_slices.map(&:amount)
+    assert_equal [ BigDecimal("1850") ], analysis.income_slices.map(&:amount)
+  end
+
+  test "a refund lowers its category's spending, in the rings and the monthly bars" do
+    @salary.update!(spending_class: "income")
+    create_transaction(account: @account, amount: -1_000, date: Date.new(2026, 10, 1), category: @salary)
+    create_transaction(account: @account, amount: 100, date: Date.new(2026, 10, 2), category: @home)
+    create_transaction(account: @account, amount: -40, date: Date.new(2026, 10, 3), category: @home)
+
+    assert_equal [ [ "Hogar", 60 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+    assert_equal [ [ "Ingresos", 1_000 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
+
+    october = analysis.month_bars.last
+    assert_equal 60, october.spending.sum(&:amount).to_i
+    assert_equal 1_000, october.income.sum(&:amount).to_i
+  end
+
   test "the month's calendar, each day with what it went on" do
     create_transaction(account: @account, amount: 30, date: Date.new(2026, 10, 9), category: @market)
     create_transaction(account: @account, amount: 10, date: Date.new(2026, 10, 9), category: @home)

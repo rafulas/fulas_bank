@@ -81,6 +81,17 @@ class Balance::ForwardCalculator < Balance::BaseCalculator
           return opening_starting_balances
         end
 
+        # Fulas Bank: the days before the entered balance are worked out
+        # backwards from it (see back_derive_from_opening_anchor?). A change
+        # dated before that day moves every earlier day, which an incremental
+        # run seeded from the day before the change cannot do: it would keep
+        # the old earlier days and jump on the entered balance's day.
+        if back_derive_from_opening_anchor? && @window_start_date <= account.opening_anchor_date
+          Rails.logger.info("Change before the entered balance of an account worked out backwards, falling back to full recalculation")
+          @fell_back = true
+          return opening_starting_balances
+        end
+
         prior = prior_balance
 
         if prior && (prior.end_non_cash_balance || 0).zero?

@@ -157,13 +157,15 @@ class Category::Analysis
       rows = base_scope(range)
                .joins(category_joins_sql)
                .group(Arel.sql("date_trunc('month', entries.date)"), *category_group_sql)
-               .group(Arel.sql("entries.amount < 0"))
+               .group(Arel.sql(income_flow_sql))
                .sum(Arel.sql(converted_amount_sql))
 
       income = Hash.new { |hash, key| hash[key] = [] }
       spending = Hash.new { |hash, key| hash[key] = [] }
       rows.each do |(month, id, name, color, inflow), amount|
-        target = inflow ? income : spending
+        next if amount.to_d.zero?
+
+        target = income_side?(inflow, amount) ? income : spending
         target[month.to_date] << build_slice(id, name, color, amount.to_d.abs)
       end
 
@@ -248,18 +250,33 @@ class Category::Analysis
     end
 
     # Spending (positive) or income (positive) by main category, biggest
-    # first. A category whose net goes the other way (refunds bigger than
-    # spending) counts on the other side.
+    # first. Income and spending are added up apart (see income_flow_sql), so
+    # a salary with no category does not cancel the purchases with no
+    # category. Within spending, refunds lower their category; a category
+    # whose refunds are bigger than its spending counts on the income side.
     def slices_by_category(range, side)
       rows = base_scope(range)
                .joins(category_joins_sql)
-               .group(*category_group_sql)
+               .group(*category_group_sql, Arel.sql(income_flow_sql))
                .sum(Arel.sql(converted_amount_sql))
 
-      rows.filter_map do |(id, name, color), amount|
-        value = side == :spending ? amount.to_d : -amount.to_d
-        build_slice(id, name, color, value) if value.positive?
-      end.sort_by { |slice| -slice.amount }
+      slices = rows.filter_map do |(id, name, color, inflow), amount|
+        next if amount.to_d.zero?
+        next unless income_side?(inflow, amount) == (side == :income)
+
+        build_slice(id, name, color, amount.to_d.abs)
+      end
+
+      merge_slices(slices)
+    end
+
+    def income_flow_sql
+      Transaction.income_flow_sql(table: "t")
+    end
+
+    # Income, or spending that refunds turned negative.
+    def income_side?(inflow, amount)
+      ActiveModel::Type::Boolean.new.cast(inflow) || amount.to_d.negative?
     end
 
     def merge_slices(slices)

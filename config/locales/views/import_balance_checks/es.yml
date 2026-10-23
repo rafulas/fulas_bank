@@ -15,10 +15,12 @@ es:
         app: Fulas Bank
         calculating: Calculando…
         difference: "Diferencia de %{amount}"
+        large_difference: "La diferencia es más de la mitad del saldo: suele ser un extracto mal leído (formato de los importes, otra cuenta), no un movimiento que falta. Revisa la importación antes de ajustar."
         adjust: Ajustar el saldo
         adjust_confirm:
           title: "¿Ajustar el saldo?"
           body: "%{account} pasará a tener %{amount}, como dice el banco. Antes de hacerlo, revisa si falta o sobra algún movimiento: el ajuste no lo arregla, solo iguala la cifra."
+          large: "Ojo: la diferencia (%{difference}) es más de la mitad del saldo."
         typed_label: Saldo en el banco o en Bilance hoy
         check: Comprobar
       update:

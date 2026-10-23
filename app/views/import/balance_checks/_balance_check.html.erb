@@ -40,14 +40,19 @@
 
           <% if check.mismatched? %>
             <p class="text-xs text-warning"><%= t(".difference", amount: format_money(check.money(check.difference.abs))) %></p>
+            <% if check.large_difference? %>
+              <p class="text-xs text-destructive"><%= t(".large_difference") %></p>
+            <% end %>
             <% if check.adjustable? %>
+              <% confirm_body = t(".adjust_confirm.body", account: check.account.name, amount: format_money(check.money(check.bank_amount))) %>
+              <% confirm_body = [ t(".adjust_confirm.large", difference: format_money(check.money(check.difference.abs))), confirm_body ].join(" ") if check.large_difference? %>
               <%= render DS::Button.new(
                 text: t(".adjust"),
                 variant: :outline,
                 size: :sm,
                 icon: "scale",
                 href: adjust_import_balance_check_path(import, account_id: check.account.id),
-                confirm: CustomConfirm.new(title: t(".adjust_confirm.title"), body: t(".adjust_confirm.body", account: check.account.name, amount: format_money(check.money(check.bank_amount))), btn_text: t(".adjust"))
+                confirm: CustomConfirm.new(title: t(".adjust_confirm.title"), body: confirm_body, btn_text: t(".adjust"))
               ) %>
             <% end %>
           <% end %>

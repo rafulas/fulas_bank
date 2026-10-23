@@ -70,6 +70,22 @@ class Import::BalanceCheckTest < ActiveSupport::TestCase
     assert balance_check.any_pending?
   end
 
+  test "warns when the difference is more than half the balance" do
+    import = completed_import
+    @account.balances.create!(date: Date.current, balance: 5000.55, currency: "USD", start_cash_balance: 5000.55)
+    balance_check = Import::BalanceCheck.new(import, user: @user)
+
+    # A statement read with the wrong number format: 5000.55 as 500055.
+    balance_check.record!(@account, BigDecimal("500055"))
+    assert Import::BalanceCheck.new(import.reload, user: @user).checks.sole.large_difference?
+
+    # A missing 30 € movement is an ordinary difference.
+    balance_check.record!(@account, BigDecimal("4970.55"))
+    check = Import::BalanceCheck.new(import.reload, user: @user).checks.sole
+    assert check.mismatched?
+    assert_not check.large_difference?
+  end
+
   test "adjusts the account to the bank's balance" do
     import = completed_import
     @account.balances.create!(date: Date.current, balance: 1000, currency: "USD", start_cash_balance: 1000)

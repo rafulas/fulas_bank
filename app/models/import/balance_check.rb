@@ -15,6 +15,10 @@
 # often show them as negative: their balances are compared without sign.
 class Import::BalanceCheck
   TOLERANCE = BigDecimal("0.01")
+  # A difference bigger than half of what the account holds is rarely a
+  # missing movement: more often the statement was read wrong (a number
+  # format, another account). Shown as a warning before adjusting.
+  LARGE_DIFFERENCE_SHARE = BigDecimal("0.5")
   SUMMARY_KEY = "bank_balances"
 
   Check = Data.define(:account, :date, :bank_amount, :app_amount, :source) do
@@ -40,6 +44,10 @@ class Import::BalanceCheck
 
     def adjustable?
       mismatched? && !account.linked?
+    end
+
+    def large_difference?
+      mismatched? && difference.abs > app_amount.abs * Import::BalanceCheck::LARGE_DIFFERENCE_SHARE
     end
 
     def money(amount)
