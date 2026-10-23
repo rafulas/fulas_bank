@@ -200,8 +200,12 @@ class TransactionsController < ApplicationController
   end
 
   def update
+    category_before = @entry.entryable.try(:category_id)
     if @entry.update(permitted_entry_params)
-      sync_needed = @entry.saved_changes_affect_balances?
+      # Fulas Bank: a new category also syncs, so the linkers can propose
+      # the charge for the car, the house or an insurance (compared with the
+      # value before, as the transaction may be saved again by callbacks).
+      sync_needed = @entry.saved_changes_affect_balances? || @entry.entryable.try(:category_id) != category_before
       transaction = @entry.transaction
       transaction.record_category_usage!
 
