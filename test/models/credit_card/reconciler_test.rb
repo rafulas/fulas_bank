@@ -73,7 +73,39 @@ class CreditCard::ReconcilerTest < ActiveSupport::TestCase
     assert_not Transfer.exists?(outflow_transaction: charge.entryable)
   end
 
+  # Fulas Bank: a transfer to the card in the middle of the month pays part
+  # of the statement in advance; the bank charges only the rest.
+  test "a payment to the card during the period lowers what the statement charges" do
+    advance = card_payment(300, Date.new(2026, 9, 16), "Traspaso a tarjeta")
+    # Paying the August statement on 4 September is not an advance.
+    card_payment(80, Date.new(2026, 9, 4), "ADEUDO MENSUAL DE TARJETA")
+
+    statement = CreditCard::Cycle.new(@card, today: @today).statement(Date.new(2026, 9, 1))
+
+    assert_equal [ advance ], statement.advances
+    assert_equal BigDecimal("300"), statement.advanced
+    assert_equal BigDecimal("700"), statement.amount
+  end
+
+  test "a payment in advance near the payment day is not taken as the bank's charge" do
+    card_payment(49.5, Date.new(2026, 10, 8), "Traspaso")
+    charge = bank_charge(1_000, Date.new(2026, 10, 5), "ADEUDO MENSUAL DE TARJETA")
+    reconciler.run!
+
+    status = reconciler.status_for(CreditCard::Cycle.new(@card, today: @today).statement(Date.new(2026, 9, 1)))
+
+    assert_equal charge, status.entry
+    assert_equal :matched, status.state
+  end
+
   private
+    def card_payment(amount, date, name)
+      outflow = bank_charge(amount, date, name)
+      inflow = create_transaction(account: @card, name: name, amount: -amount, date: date, currency: "EUR")
+      Transfer.create!(inflow_transaction: inflow.entryable, outflow_transaction: outflow.entryable, status: "confirmed")
+      inflow
+    end
+
     def reconciler(today: @today)
       CreditCard::Reconciler.new(@card, today: today)
     end

@@ -142,15 +142,21 @@ class CreditCard::Reconciler
     end
 
     # A charge already filed as a payment to this card near the payment day.
+    # Fulas Bank: the one named as the statement's charge, or else the one of
+    # its amount. Any other payment to the card nearby (a «Traspaso» made a
+    # few days later) is a payment in advance, not the bank's charge.
     def filed_statement_charge(statement)
-      payment_account.entries.where(entryable_type: "Transaction", date: window(statement.charged_on))
-                     .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
-                     .joins("INNER JOIN transfers ON transfers.outflow_transaction_id = transactions.id")
-                     .joins("INNER JOIN transactions inflows ON inflows.id = transfers.inflow_transaction_id")
-                     .joins("INNER JOIN entries inflow_entries ON inflow_entries.entryable_id = inflows.id AND inflow_entries.entryable_type = 'Transaction'")
-                     .where(inflow_entries: { account_id: card.id })
-                     .reject { |entry| named?(entry, FINANCED_WORDS) }
-                     .first
+      filed = payment_account.entries.where(entryable_type: "Transaction", date: window(statement.charged_on))
+                             .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
+                             .joins("INNER JOIN transfers ON transfers.outflow_transaction_id = transactions.id")
+                             .joins("INNER JOIN transactions inflows ON inflows.id = transfers.inflow_transaction_id")
+                             .joins("INNER JOIN entries inflow_entries ON inflow_entries.entryable_id = inflows.id AND inflow_entries.entryable_type = 'Transaction'")
+                             .where(inflow_entries: { account_id: card.id })
+                             .order(:date)
+                             .reject { |entry| named?(entry, FINANCED_WORDS) }
+
+      filed.find { |entry| named?(entry, STATEMENT_WORDS) } ||
+        filed.find { |entry| (entry.amount.to_d - statement.amount).abs <= 0.01 }
     end
 
     # The card's payment in: the one it already has, or a new one.

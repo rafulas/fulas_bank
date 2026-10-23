@@ -51,10 +51,11 @@ en:
         period: Period
         in_progress: In progress
         purchases: Purchases
+        advanced_column: Paid early
         financed_column: Financed
         charge: Charged
         charge_date: Payment day
-        hint: "The charge is the period's purchases minus what was financed, which is charged apart with its fee and instalments. Choose a period to see its movements. A purchase can be moved to the next statement from its detail."
+        hint: "The charge is the period's purchases minus what was financed (charged apart with its fee and instalments) and minus what you already paid into the card during the period with a transfer. Choose a period to see its movements. A purchase can be moved to the next statement from its detail."
         see_movements: See the statement movements
         see_charges: See instalments and payments
         financed_title: Purchases in instalments
@@ -81,6 +82,8 @@ en:
         title: "Statement from %{from} to %{to}"
         purchases: Purchases
         financed: Financed
+        advanced: Paid early
+        advances_title: "Payments in advance (transfers to the card during the period)"
         charge: Charged
         charged_on: Charged on
         to_charge_on: To be charged on
