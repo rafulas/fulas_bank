@@ -24,6 +24,21 @@ en:
       add: Add loan
       debt_plan: Debt plan
   investments_overviews:
+    realized_gains:
+      title: "Realised gain"
+      year: "Year"
+      fifo: "For the %{year} tax return (FIFO)"
+      average: "At average cost"
+      date: "Date"
+      security: "Security"
+      proceeds: "Sale"
+      fifo_gain: "FIFO gain"
+      average_gain: "Average cost"
+      shares:
+        one: "1 share"
+        other: "%{count} shares"
+      hint: "FIFO: the first shares bought are the first sold, as the tax office requires. Shares received as a bonus count from the value they were received at."
+      none: "No sales of shares in %{year}."
     show:
       under_a_year: Under a year
       annual_return: Yearly return

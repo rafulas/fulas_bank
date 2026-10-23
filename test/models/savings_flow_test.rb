@@ -25,6 +25,17 @@ class SavingsFlowTest < ActiveSupport::TestCase
     assert_equal 20.0, flow.share_of_income
   end
 
+  test "pay that lands straight in an investment account counts as saved" do
+    @broker.entries.create!(date: 3.days.ago.to_date, amount: -7_000, currency: "USD", name: "Bonus en acciones",
+                            entryable: Transaction.new(kind: "standard"))
+
+    flow = SavingsFlow.new(@family, user: @user, period: @period, income: Money.new(10_000, "USD"))
+
+    assert_equal Money.new(7_000, "USD"), flow.received_directly
+    assert_equal Money.new(7_000, "USD"), flow.saved
+    assert_equal 70.0, flow.share_of_income
+  end
+
   test "no income, no share" do
     flow = SavingsFlow.new(@family, user: @user, period: @period, income: Money.new(0, "USD"))
 

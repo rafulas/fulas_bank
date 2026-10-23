@@ -1,6 +1,9 @@
 # Fulas Bank: FlowVista's "saved and invested": the money moved in a period
 # from the everyday accounts to savings and investment accounts, net of what
-# came back, and the share of income that is.
+# came back, and the share of income that is. Pay that lands straight in a
+# savings or investment account (a bonus in shares, a pension plan paid
+# from payroll) counts as saved too: it is money that could have been taken
+# as cash.
 class SavingsFlow
   SAVINGS_SUBTYPES = %w[savings cd money_market].freeze
   INVESTING_TYPES = %w[Investment Crypto].freeze
@@ -31,7 +34,27 @@ class SavingsFlow
   end
 
   def saved
-    @saved ||= transfers_total(into_savings: true)
+    @saved ||= transfers_total(into_savings: true) + received_directly
+  end
+
+  # Income booked in the savings and investment accounts themselves: money
+  # in that is not a transfer (dividends and interest are trades, not this).
+  def received_directly
+    @received_directly ||= begin
+      return Money.new(0, currency) if saving_ids.empty?
+
+      totals = family.entries
+                     .where(account_id: saving_ids, entryable_type: "Transaction", excluded: false)
+                     .where(date: period.start_date..period.end_date)
+                     .where("entries.amount < 0")
+                     .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+                     .where(t: { kind: "standard" })
+                     .where("NOT EXISTS (SELECT 1 FROM transfers tr WHERE tr.inflow_transaction_id = t.id OR tr.outflow_transaction_id = t.id)")
+                     .group("entries.currency")
+                     .sum("entries.amount")
+
+      Money.new(totals.sum { |entry_currency, amount| converted(-amount, entry_currency) }, currency)
+    end
   end
 
   def withdrawn

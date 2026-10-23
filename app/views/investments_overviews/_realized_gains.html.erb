@@ -1,0 +1,59 @@
+<%# locals: (realized:) %>
+<%# Fulas Bank: the year's sales of shares and what they gained, by average
+    cost and by FIFO (the one the tax return asks for). See
+    InvestmentsOverview::RealizedGains. %>
+<section class="rounded-xl bg-container shadow-border-xs p-4 space-y-3" id="realized-gains" aria-labelledby="realized-gains-title">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 id="realized-gains-title" class="text-sm font-medium text-primary"><%= t(".title") %></h2>
+    <% if realized.years.size > 1 %>
+      <%= render DS::SegmentedControl.new(aria_label: t(".year")) do |control| %>
+        <% realized.years.first(5).each do |year| %>
+          <% control.with_segment(year.to_s, href: investments_overview_path(year: year, anchor: "realized-gains"), active: year == realized.year) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if realized.any? %>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <p class="text-xs text-secondary"><%= t(".fifo", year: realized.year) %></p>
+        <p class="<%= class_names("font-amount text-xl font-semibold privacy-sensitive", realized.fifo_total.negative? ? "text-destructive" : "text-success") %>"><%= format_money(realized.fifo_total) %></p>
+      </div>
+      <div>
+        <p class="text-xs text-secondary"><%= t(".average") %></p>
+        <p class="font-amount text-xl font-semibold text-primary privacy-sensitive"><%= format_money(realized.average_total) %></p>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-secondary">
+            <th class="py-1 pr-3 font-normal"><%= t(".date") %></th>
+            <th class="py-1 pr-3 font-normal"><%= t(".security") %></th>
+            <th class="py-1 pr-3 font-normal text-right"><%= t(".proceeds") %></th>
+            <th class="py-1 pr-3 font-normal text-right"><%= t(".fifo_gain") %></th>
+            <th class="py-1 font-normal text-right"><%= t(".average_gain") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-divider">
+          <% realized.sales.each do |sale| %>
+            <tr>
+              <td class="py-2 pr-3 whitespace-nowrap"><%= format_date(sale.date) %></td>
+              <td class="py-2 pr-3">
+                <span class="text-primary"><%= sale.security&.ticker %></span>
+                <span class="text-xs text-secondary">· <%= t(".shares", count: (sale.qty % 1).zero? ? sale.qty.to_i : sale.qty.to_f.round(4)) %> · <%= sale.account.name %></span>
+              </td>
+              <td class="py-2 pr-3 text-right font-amount privacy-sensitive whitespace-nowrap"><%= format_money(Money.new(sale.proceeds, sale.currency)) %></td>
+              <td class="py-2 pr-3 text-right font-amount font-semibold privacy-sensitive whitespace-nowrap <%= sale.fifo_gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(Money.new(sale.fifo_gain, sale.currency)) %></td>
+              <td class="py-2 text-right font-amount privacy-sensitive whitespace-nowrap text-secondary"><%= format_money(Money.new(sale.average_gain, sale.currency)) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-secondary"><%= t(".hint") %></p>
+  <% else %>
+    <p class="text-sm text-secondary"><%= t(".none", year: realized.year) %></p>
+  <% end %>
+</section>

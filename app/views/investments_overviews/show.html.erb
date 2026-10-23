@@ -59,6 +59,8 @@
       <% end %>
     </div>
 
+    <%= render "investments_overviews/realized_gains", realized: @realized %>
+
     <% if overview.suggested_trades.any? %>
       <%= render "investments_overviews/suggested_trades", trades: overview.suggested_trades %>
     <% end %>
