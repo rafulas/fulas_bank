@@ -14,6 +14,39 @@ class TransferTest < ActiveSupport::TestCase
     end
   end
 
+  test "deleting one leg gives the other leg back the standard kind" do
+    transfer = Transfer::Creator.new(
+      family: families(:dylan_family),
+      source_account_id: accounts(:depository).id,
+      destination_account_id: accounts(:credit_card).id,
+      date: Date.current,
+      amount: 100
+    ).create
+    outflow = transfer.outflow_transaction
+    assert_equal "cc_payment", outflow.reload.kind
+
+    assert_difference "Transfer.count", -1 do
+      transfer.inflow_transaction.entry.destroy!
+    end
+
+    assert_equal "standard", outflow.reload.kind
+  end
+
+  test "destroy resets the transfer kinds, like destroy!" do
+    transfer = Transfer::Creator.new(
+      family: families(:dylan_family),
+      source_account_id: accounts(:depository).id,
+      destination_account_id: accounts(:credit_card).id,
+      date: Date.current,
+      amount: 100
+    ).create
+
+    transfer.destroy
+
+    assert_equal "standard", transfer.outflow_transaction.reload.kind
+    assert_equal "standard", transfer.inflow_transaction.reload.kind
+  end
+
   test "destroy! clears the idempotency key so a retried request can create a new transfer" do
     idempotency_key = SecureRandom.uuid
 

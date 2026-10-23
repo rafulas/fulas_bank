@@ -200,7 +200,12 @@ class TransactionsController < ApplicationController
   end
 
   def update
+    category_before = @entry.entryable.try(:category_id)
     if @entry.update(permitted_entry_params)
+      # Fulas Bank: a new category also syncs, so the linkers can propose
+      # the charge for the car, the house or an insurance (compared with the
+      # value before, as the transaction may be saved again by callbacks).
+      sync_needed = @entry.saved_changes_affect_balances? || @entry.entryable.try(:category_id) != category_before
       transaction = @entry.transaction
       transaction.record_category_usage!
 
@@ -215,7 +220,7 @@ class TransactionsController < ApplicationController
       @entry.lock_saved_attributes!
       @entry.mark_user_modified!
       @entry.transaction.lock_attr!(:tag_ids) if @entry.transaction.tags.any?
-      @entry.sync_account_later
+      @entry.sync_account_later if sync_needed
 
       notes_changed = @entry.saved_change_to_notes?
 
@@ -279,7 +284,6 @@ class TransactionsController < ApplicationController
     @entry.lock_saved_attributes!
     @entry.mark_user_modified!
     @entry.transaction.lock_attr!(:tag_ids)
-    @entry.sync_account_later
 
     respond_to do |format|
       # JSON stays first so Accept: */* callers keep the original response.
