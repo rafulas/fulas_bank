@@ -64,3 +64,14 @@ Los dos modos usan la misma base de datos, así que tus datos son los mismos.
 La misma configuración funciona en local: abre la carpeta del proyecto en VS Code, pulsa **><** abajo a la izquierda → **Reopen in Container** → **Probar Fulas Bank**, y luego `bin/probar`. Abre la app en **http://127.0.0.1:3001** (con `http`, sin la «s»): fuera de un Codespace la app no usa https.
 
 En el Mac usa el puerto **3001** porque el 3000 es del Fulas Bank de verdad (instalado con `mac/instalar.sh`), y así pueden estar los dos en marcha a la vez. Usa `127.0.0.1` y no `localhost`: el navegador guarda la sesión por nombre y no por puerto, así que con `localhost` en los dos, entrar en uno te sacaría del otro.
+
+### Si el contenedor no arranca en el Mac
+
+- **No pongas la carpeta del proyecto dentro de iCloud Drive** (ni en Documentos o Escritorio si los sincronizas con iCloud). iCloud puede quitar archivos del Mac para ahorrar espacio y crear duplicados dentro de `.git`. El código ya está en GitHub y los datos dentro de Docker, así que no hace falta sincronizarlo.
+- **Si mueves la carpeta del proyecto a otro sitio**, el contenedor de la app se queda con la ruta antigua y da un error de `.bashrc`. Bórralo (solo ese, tus datos están en otro) desde el Terminal del Mac y vuelve a abrir el proyecto en el contenedor:
+
+  ```bash
+  docker rm -f probar-app-1
+  ```
+- **«The 'docker' command was not found»:** en Docker Desktop, *Settings → Advanced → System (requires password) → Apply & restart*, y cierra VS Code con Cmd + Q antes de volver a abrirlo.
+- La imagen de la app la construye un `docker build` normal antes de arrancar (`initializeCommand`), no Docker Compose. Así funciona con las versiones nuevas de Docker Desktop, que con Compose pedían un permiso extra (`additional privileges requested`).

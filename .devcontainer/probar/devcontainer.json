@@ -2,6 +2,7 @@
   "name": "Probar Fulas Bank",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
+  "initializeCommand": "docker build -t fulas-bank-probar -f .devcontainer/Dockerfile .devcontainer",
   "workspaceFolder": "/workspace",
   "containerEnv": {
     "FULAS_CODESPACE": "true",
