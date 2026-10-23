@@ -45,6 +45,9 @@ es:
       since_error: "Esa fecha tiene que ser anterior al primer movimiento de la cuenta."
       opening_balance_date_label: Fecha del saldo actual
       opening_balance_date_hint: Normalmente hoy. Si luego importas movimientos de días anteriores, la app calcula sola el saldo de esos días.
+      closing_balance: Saldo al cierre del día
+      closing_balance_date_label: Día del saldo
+      closing_balance_date_hint: "Normalmente ayer: el «Disponible» del último movimiento de ayer en el extracto o en la app del banco. Lo que apuntes o importes desde hoy se suma encima, y lo de días anteriores se calcula hacia atrás."
       name_label: Nombre de la cuenta
       name_placeholder: Ejemplo de nombre de cuenta
       additional_details: Detalles adicionales

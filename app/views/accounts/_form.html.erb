@@ -17,18 +17,19 @@
     <%= form.text_field :name, placeholder: name_placeholder || t(".name_placeholder"), required: "required", label: name_label || t(".name_label") %>
 
     <% unless account.linked? %>
-      <%= form.money_field :balance, label: balance_label || t(".balance"), required: balance_required, default_currency: Current.family.currency %>
+      <%= form.money_field :balance, label: balance_label || (account.new_record? && account.balance_type == :cash ? t(".closing_balance") : t(".balance")), required: balance_required, default_currency: Current.family.currency %>
       <% if balance_hint.present? %>
         <p class="text-xs text-secondary"><%= balance_hint %></p>
       <% end %>
     <% end %>
 
     <% if show_opening_balance_date && account.new_record? && !account.linked? %>
+      <% closing = account.balance_type == :cash %>
       <%= form.date_field :opening_balance_date,
-          label: opening_balance_date_label || t(".opening_balance_date_label"),
-          value: Time.zone.today,
+          label: opening_balance_date_label || t(closing ? ".closing_balance_date_label" : ".opening_balance_date_label"),
+          value: account.default_opening_balance_date,
           required: true %>
-      <p class="text-xs text-secondary"><%= opening_balance_date_hint || t(".opening_balance_date_hint") %></p>
+      <p class="text-xs text-secondary"><%= opening_balance_date_hint || t(closing ? ".closing_balance_date_hint" : ".opening_balance_date_hint") %></p>
     <% elsif account.persisted? && !account.linked? %>
       <%# Fulas Bank: the day the account starts counting in net worth (when
           the house was bought or the loan signed), so adding it later does

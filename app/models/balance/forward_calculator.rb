@@ -145,7 +145,8 @@ class Balance::ForwardCalculator < Balance::BaseCalculator
     end
 
     # Fulas Bank: a manual account is created with the balance it has on a
-    # given day ("Saldo actual" + "Fecha del saldo actual", usually today).
+    # given day (by default the close of yesterday, see
+    # Account::Anchorable#default_opening_balance_date).
     # Statements imported afterwards often start earlier than that day. Seeding
     # those earlier days at zero would show a made-up history that jumps to the
     # entered balance on its date. Instead, the entered balance is treated as a

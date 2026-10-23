@@ -45,6 +45,9 @@ en:
       since_error: "That date must be before the account's first movement."
       opening_balance_date_label: Current balance date
       opening_balance_date_hint: Usually today. If you later import earlier transactions, the balance for those days is worked out from this one.
+      closing_balance: Balance at the end of the day
+      closing_balance_date_label: Balance date
+      closing_balance_date_hint: "Usually yesterday: the bank's available balance after yesterday's last transaction. What you record or import from today on adds on top, and earlier days are worked out backwards."
       name_label: Account name
       name_placeholder: Example account name
       additional_details: Additional details

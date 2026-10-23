@@ -944,4 +944,38 @@ class AccountTest < ActiveSupport::TestCase
     accounts(:credit_card).account_shares.find_by!(user: member).update!(permission: "read_write")
     assert_includes Account.annotatable_by(member).pluck(:id), accounts(:credit_card).id, "read_write share"
   end
+
+  # Fulas Bank: a current account or a card is opened with the balance at the
+  # close of yesterday, so what is recorded today moves it; a house or a car
+  # with its value today.
+  test "a new account's balance is for the close of yesterday when it is cash" do
+    travel_to Time.zone.local(2026, 10, 23, 12) do
+      assert_equal Date.new(2026, 10, 22), Account.new(accountable: Depository.new).default_opening_balance_date
+      assert_equal Date.new(2026, 10, 22), Account.new(accountable: CreditCard.new).default_opening_balance_date
+      assert_equal Date.new(2026, 10, 23), Account.new(accountable: Property.new).default_opening_balance_date
+      assert_equal Date.new(2026, 10, 23), Account.new(accountable: Investment.new).default_opening_balance_date
+    end
+  end
+
+  test "a movement on the day after the closing balance moves the account's balance" do
+    Account.any_instance.stubs(:sync_later)
+    account = Account.create_and_sync(
+      {
+        family: @family,
+        owner: @admin,
+        name: "BBVA",
+        balance: 2_970,
+        currency: @family.currency,
+        accountable_type: "Depository",
+        accountable_attributes: {}
+      },
+      opening_balance_date: 1.day.ago.to_date,
+      skip_initial_sync: true
+    )
+    create_transaction(account: account, date: Date.current, amount: 50, currency: @family.currency)
+
+    Balance::Materializer.new(account, strategy: :forward).materialize_balances
+
+    assert_equal 2_920, account.reload.balance
+  end
 end
