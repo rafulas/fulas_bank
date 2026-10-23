@@ -19,7 +19,7 @@
 
 <div class="max-w-2xl space-y-4 pb-6">
   <div class="flex items-center justify-end">
-    <%= render UI::PeriodPicker.new(selected: @period, url: category_summary_path(@category)) %>
+    <%= render UI::PeriodPicker.new(selected: @period, url: category_summary_path(@category), picker: true) %>
   </div>
 
   <div class="overflow-hidden rounded-xl bg-container-inset shadow-border-xs">

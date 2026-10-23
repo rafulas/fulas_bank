@@ -26,6 +26,9 @@ class MonthPlansControllerTest < ActionDispatch::IntegrationTest
     get month_plan_url(month: "2026-03")
     assert_response :success
     assert_match I18n.l(Date.new(2026, 3, 1), format: "%B %Y"), response.body
+    # Fulas Bank: the month grid offers every month of that year.
+    assert_select "#month-picker a[href=?]", month_plan_path(month: "2026-07")
+    assert_select "#month-picker a[aria-current='date']", count: 1
 
     get month_plan_url(month: "nonsense")
     assert_response :success

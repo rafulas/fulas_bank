@@ -12,7 +12,15 @@
   <div class="flex items-center gap-2">
     <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_plan_path(month: (plan.month << 1).strftime("%Y-%m"), view: (@view if @view == "timeline")), aria: { label: t(".previous") }) %>
     <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_plan_path(month: (plan.month >> 1).strftime("%Y-%m"), view: (@view if @view == "timeline")), aria: { label: t(".next") }) %>
-    <span class="text-sm font-medium text-primary first-letter:uppercase"><%= plan.current_month? ? t(".this_month") : l(plan.month, format: "%B %Y") %></span>
+    <%# Fulas Bank: the month opens a month grid, as in Bilance. %>
+    <%= render DS::Popover.new(variant: "button", placement: "bottom-start", no_padding: true) do |popover| %>
+      <% popover.with_button(id: "month-plan-month-button", type: "button", variant: "ghost", size: :sm, icon: "calendar",
+                             text: (plan.current_month? ? t(".this_month") : l(plan.month, format: "%B %Y").capitalize)) %>
+      <% popover.with_custom_content do %>
+        <%= render "shared/month_picker", month: plan.month,
+              href: ->(month) { month_plan_path(month: month.strftime("%Y-%m"), view: (@view if @view == "timeline")) } %>
+      <% end %>
+    <% end %>
   </div>
 
   <%# ---- Budgets ---- %>

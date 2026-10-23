@@ -15,12 +15,14 @@ class UI::PeriodPicker < ApplicationComponent
   #
   # NOTE: `url` must be a path without a query string; pass query state via
   # `extra_params` so the picker can compose `?period=…` cleanly.
-  attr_reader :selected, :selected_key, :url, :frame, :extra_params, :placement, :options
+  attr_reader :selected, :selected_key, :url, :frame, :extra_params, :placement, :options, :picker
 
   # `options` narrows the menu to [key, label] pairs, for a chart that offers
   # its own timescales under the shared period keys (the loan chart). Without
   # it every Period is offered under its own short label.
-  def initialize(selected:, url:, frame: nil, extra_params: {}, placement: "bottom-end", options: nil)
+  # Fulas Bank: `picker: true` shows the app's period picker (after Bilance,
+  # shared/_period_picker) instead of the list of periods.
+  def initialize(selected:, url:, frame: nil, extra_params: {}, placement: "bottom-end", options: nil, picker: false)
     @selected = selected
     @selected_key = selected.respond_to?(:key) ? selected.key : selected.to_s
     @url = url
@@ -28,6 +30,7 @@ class UI::PeriodPicker < ApplicationComponent
     @extra_params = (extra_params || {}).symbolize_keys
     @placement = placement
     @options = options
+    @picker = picker && options.nil?
   end
 
   # [key, label] pairs, in menu order.
@@ -99,7 +102,23 @@ class UI::PeriodPicker < ApplicationComponent
     item_selected ? "replace" : "advance"
   end
 
+  # Fulas Bank: the dates the period picker starts from; none for all time.
+  def picker_start
+    selected_dates&.first
+  end
+
+  def picker_end
+    selected_dates&.last
+  end
+
   private
+    def selected_dates
+      period = selected.is_a?(Period) ? selected : period_for(selected_key)
+      return nil if period.key == "all_time"
+
+      [ period.start_date, period.end_date ]
+    end
+
     def period_for(key)
       Period.from_key(key)
     rescue Period::InvalidKeyError

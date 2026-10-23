@@ -1,0 +1,104 @@
+<%# locals: (start_name:, end_name:, start: nil, finish: nil, submit: true, id: "period-picker", all_param: nil) %>
+<%# Fulas Bank: the period picker, after Bilance (see period_picker_controller.js):
+    all time, a month, a year or a shortcut, applied at once, and a custom
+    range on a vertical calendar. It fills two inputs and submits their form.
+    `all_param` ([name, value]) is sent for all time instead of two empty
+    dates, for pages whose empty dates mean their default period. %>
+<% payday = period_picker_payday %>
+<div id="<%= id %>" class="w-80 max-w-full p-3"
+     data-controller="period-picker"
+     data-period-picker-start-value="<%= start %>"
+     data-period-picker-end-value="<%= finish %>"
+     data-period-picker-today-value="<%= Date.current.iso8601 %>"
+     data-period-picker-month-names-value="<%= I18n.t("date.month_names").drop(1).to_json %>"
+     data-period-picker-month-short-value="<%= t("shared.period_picker.month_short").to_json %>"
+     data-period-picker-payday-value="<%= payday %>"
+     data-period-picker-pick-first-value="<%= t("shared.period_picker.pick_first") %>"
+     data-period-picker-pick-last-value="<%= t("shared.period_picker.pick_last") %>"
+     data-period-picker-submit-value="<%= submit %>">
+  <%= hidden_field_tag start_name, start, id: "#{id}-start", data: { period_picker_target: "startInput" } %>
+  <%= hidden_field_tag end_name, finish, id: "#{id}-end", data: { period_picker_target: "endInput" } %>
+  <% if all_param %>
+    <%= hidden_field_tag all_param.first, all_param.last, id: "#{id}-all", disabled: true, data: { period_picker_target: "allInput" } %>
+  <% end %>
+
+  <div class="space-y-2" data-period-picker-target="quick">
+    <button type="button" data-action="period-picker#all" data-period-picker-target="choice" data-choice="all"
+            class="w-full h-11 rounded-xl bg-container-inset text-sm font-semibold text-primary cursor-pointer hover:bg-container-inset-hover">
+      <%= t("shared.period_picker.all") %>
+    </button>
+
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-container-inset">
+      <button type="button" data-action="period-picker#prevMonths" aria-label="<%= t("shared.period_picker.prev_months") %>"
+              class="size-11 shrink-0 flex items-center justify-center rounded-lg text-primary cursor-pointer hover:bg-container-hover">
+        <%= icon("chevron-left", size: "sm") %>
+      </button>
+      <div class="grow grid grid-cols-4 gap-1" data-period-picker-target="monthRow"></div>
+      <button type="button" data-action="period-picker#nextMonths" aria-label="<%= t("shared.period_picker.next_months") %>"
+              class="size-11 shrink-0 flex items-center justify-center rounded-lg text-primary cursor-pointer hover:bg-container-hover">
+        <%= icon("chevron-right", size: "sm") %>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-1 p-1 rounded-xl bg-container-inset">
+      <button type="button" data-action="period-picker#prevYear" aria-label="<%= t("shared.period_picker.prev_year") %>"
+              class="size-11 shrink-0 flex items-center justify-center rounded-lg text-primary cursor-pointer hover:bg-container-hover">
+        <%= icon("chevron-left", size: "sm") %>
+      </button>
+      <button type="button" data-action="period-picker#pickYear" data-period-picker-target="year" class="grow h-11 rounded-lg text-sm font-semibold text-primary"></button>
+      <button type="button" data-action="period-picker#nextYear" aria-label="<%= t("shared.period_picker.next_year") %>"
+              class="size-11 shrink-0 flex items-center justify-center rounded-lg text-primary cursor-pointer hover:bg-container-hover">
+        <%= icon("chevron-right", size: "sm") %>
+      </button>
+    </div>
+
+    <button type="button" data-action="period-picker#openRange"
+            class="w-full h-11 rounded-xl bg-container-inset text-sm font-semibold text-primary cursor-pointer hover:bg-container-inset-hover flex items-center justify-center gap-2">
+      <%= icon("calendar-range", size: "sm") %><span><%= t("shared.period_picker.custom") %></span>
+    </button>
+
+    <div class="pt-2 border-t border-divider space-y-2">
+      <p class="text-xs font-medium uppercase text-secondary"><%= t("shared.period_picker.shortcuts") %></p>
+      <div class="flex flex-wrap gap-1.5">
+        <% shortcuts = %w[last30 last90 ytd] %>
+        <% shortcuts << "payday" if payday %>
+        <% shortcuts.each do |key| %>
+          <button type="button" data-action="period-picker#shortcut" data-period="<%= key %>"
+                  class="h-9 px-3 rounded-full border border-secondary text-sm text-primary cursor-pointer hover:bg-container-hover">
+            <%= t("shared.period_picker.shortcuts_list.#{key}", day: payday) %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-2" data-period-picker-target="calendar" hidden>
+    <div class="flex items-center gap-2">
+      <button type="button" data-action="period-picker#closeRange" aria-label="<%= t("shared.period_picker.back") %>"
+              class="size-11 shrink-0 flex items-center justify-center rounded-full bg-container-inset text-primary cursor-pointer hover:bg-container-inset-hover">
+        <%= icon("chevron-left", size: "sm") %>
+      </button>
+      <div class="min-w-0">
+        <p class="text-xs text-secondary"><%= t("shared.period_picker.custom") %></p>
+        <p class="text-sm font-semibold text-primary truncate" data-period-picker-target="rangeLabel"></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <%= date_field_tag "#{id}-from", start, id: "#{id}-from", name: nil, class: "form-field__input border border-secondary rounded-md px-2 py-1.5 text-sm",
+            aria: { label: t("shared.period_picker.from") }, data: { period_picker_target: "startField", action: "change->period-picker#typed" } %>
+      <%= date_field_tag "#{id}-to", finish, id: "#{id}-to", name: nil, class: "form-field__input border border-secondary rounded-md px-2 py-1.5 text-sm",
+            aria: { label: t("shared.period_picker.to") }, data: { period_picker_target: "endField", action: "change->period-picker#typed" } %>
+    </div>
+
+    <div class="grid grid-cols-7 py-1.5 border-y border-divider text-center text-xs font-medium text-secondary" aria-hidden="true">
+      <% t("shared.period_picker.weekdays").each do |day| %><span><%= day %></span><% end %>
+    </div>
+    <div class="h-80 overflow-y-auto" data-period-picker-target="months"></div>
+
+    <div class="flex items-center justify-between gap-2 pt-2 border-t border-divider">
+      <%= render DS::Button.new(text: t("shared.period_picker.clear"), variant: :ghost, size: :sm, data: { action: "period-picker#clear" }) %>
+      <%= render DS::Button.new(text: t("shared.period_picker.apply"), size: :sm, data: { action: "period-picker#applyRange", period_picker_target: "apply" }) %>
+    </div>
+  </div>
+</div>

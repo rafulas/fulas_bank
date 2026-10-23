@@ -1,6 +1,14 @@
 require "test_helper"
 
 class StyledFormBuilderTest < ActionView::TestCase
+  include PeriodPickerHelper
+
+  # The date field's calendar button draws an icon; the icon itself is not
+  # what these tests look at.
+  def icon(*)
+    tag.svg
+  end
+
   setup do
     @builder = StyledFormBuilder.new(:account_statement, nil, self, {})
   end
@@ -20,5 +28,18 @@ class StyledFormBuilderTest < ActionView::TestCase
 
     assert_nil fragment.at(".form-field")
     assert_includes fragment.at("input[type=file]")["class"].split, "hidden"
+  end
+
+  # Fulas Bank: every date field gets the app's calendar, and stays a real
+  # date input that can be typed into.
+  test "a date field gets the calendar button and keeps the date input" do
+    field = Nokogiri::HTML.fragment(@builder.date_field(:statement_date, label: "Fecha")).at(".form-field")
+
+    wrapper = field.at("[data-controller='date-field']")
+    assert wrapper
+    input = wrapper.at("input[type=date]")
+    assert_equal "input", input["data-date-field-target"]
+    assert_includes input["class"].split, "form-field__input"
+    assert wrapper.at("button[data-date-field-target='button']")
   end
 end

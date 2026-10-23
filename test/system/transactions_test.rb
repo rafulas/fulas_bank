@@ -99,9 +99,12 @@ class TransactionsTest < ApplicationSystemTestCase
 
   test "the period and type buttons filter the list" do
     find("#transaction-period-button").click
+    # Fulas Bank: the custom range opens the calendar, where the dates can
+    # be tapped or typed.
     within "#transaction-period-menu" do
-      fill_in "q_start_date", with: 2.days.ago.to_date
-      fill_in "q_end_date", with: Date.current
+      click_button "Custom range"
+      fill_in "transaction-period-menu-from", with: 2.days.ago.to_date
+      fill_in "transaction-period-menu-to", with: Date.current
       click_button "Apply"
     end
 
@@ -117,6 +120,17 @@ class TransactionsTest < ApplicationSystemTestCase
       click_link "All"
     end
     assert_selector "#" + dom_id(@transaction), count: 1
+  end
+
+  test "the period picker applies a shortcut and all time at once" do
+    find("#transaction-period-button").click
+    within("#transaction-period-menu") { click_button "Last 30 days" }
+
+    assert_selector "#transaction-period-button", text: (Date.current - 29).strftime("%d/%m/%Y")
+
+    find("#transaction-period-button").click
+    within("#transaction-period-menu") { click_button "All time" }
+    assert_selector "#transaction-period-button", text: I18n.t("transactions.searches.bar.periods.all")
   end
 
   test "all filters work and empty state shows if no match" do

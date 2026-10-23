@@ -173,4 +173,16 @@ class UI::PeriodPickerTest < ViewComponent::TestCase
     assert_equal LOAN_OPTIONS.size, page.all("a[role='menuitemradio']").size
     assert_no_selector "a[href*='start_date=']"
   end
+
+  # Fulas Bank: the app's period picker, after Bilance.
+  test "with picker it renders the period picker in a form to the page, keeping the frame and extra params" do
+    render_inline(UI::PeriodPicker.new(selected: "current_month", url: "/resumen", frame: "dashboard_sections",
+                                       extra_params: { tab: "x" }, picker: true))
+
+    form = page.find("form[action='/resumen'][data-turbo-frame='dashboard_sections']", visible: :all)
+    assert form.has_selector?("input[type=hidden][name=tab][value=x]", visible: :all)
+    assert form.has_selector?("[data-controller='period-picker'][data-period-picker-start-value='#{Date.current.beginning_of_month.iso8601}']", visible: :all)
+    assert form.has_selector?("input[name=period][value=all_time][disabled]", visible: :all)
+    assert_no_selector "a[role='menuitemradio']"
+  end
 end
