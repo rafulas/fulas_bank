@@ -3,7 +3,7 @@ class StyledFormBuilder < ActionView::Helpers::FormBuilder
   # :check_box -> :checkbox. Exclude both spellings of the non-text helpers, and
   # alias the legacy method names below so existing `form.text_area` call sites
   # stay styled. (Harmless on Rails 7.2, where the old names are present instead.)
-  NON_TEXT_FIELD_HELPERS = [ :label, :check_box, :checkbox, :radio_button, :fields_for, :fields, :hidden_field, :file_field ].freeze
+  NON_TEXT_FIELD_HELPERS = [ :label, :check_box, :checkbox, :radio_button, :fields_for, :fields, :hidden_field, :file_field, :date_field ].freeze
   class_attribute :text_field_helpers, default: field_helpers - NON_TEXT_FIELD_HELPERS
 
   # Options the builder handles itself instead of passing them to the input as
@@ -26,6 +26,22 @@ class StyledFormBuilder < ActionView::Helpers::FormBuilder
 
   # Keep `form.text_area` styled after Rails 8 renamed the helper to `textarea`.
   alias_method :text_area, :textarea if method_defined?(:textarea)
+
+  # Fulas Bank: the app's own calendar (date_field_controller.js) on every
+  # date field. The input stays a real date input, so the date can still be
+  # typed and the form sends it as before.
+  def date_field(method, options = {})
+    form_options = options.slice(*BUILDER_OPTIONS, :required)
+    html_options = options.except(*BUILDER_OPTIONS)
+    html_options[:data] = (html_options[:data] || {}).merge(date_field_target: "input")
+    html_options[:class] = @template.class_names(html_options[:class] || "form-field__input", "[&::-webkit-calendar-picker-indicator]:hidden pr-10")
+
+    build_field(method, form_options, html_options) do |merged_options|
+      @template.tag.div(class: "relative", data: date_field_data) do
+        super(method, merged_options) + date_field_button
+      end
+    end
+  end
 
   def radio_button(method, tag_value, options = {})
     merged_options = { class: "form-field__radio" }.merge(options)
@@ -133,6 +149,31 @@ class StyledFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   private
+    def date_field_data
+      payday = @template.respond_to?(:period_picker_payday) ? @template.period_picker_payday : nil
+      {
+        controller: "date-field",
+        date_field_labels_value: {
+          open: I18n.t("shared.date_field.open"), today: I18n.t("shared.date_field.today"),
+          yesterday: I18n.t("shared.date_field.yesterday"),
+          payday: I18n.t("shared.date_field.payday", day: payday),
+          prev: I18n.t("shared.date_field.prev_month"), next: I18n.t("shared.date_field.next_month")
+        }.to_json,
+        date_field_month_names_value: I18n.t("date.month_names").drop(1).to_json,
+        date_field_weekdays_value: I18n.t("shared.period_picker.weekdays").to_json,
+        date_field_payday_value: payday,
+        date_field_today_value: Date.current.iso8601
+      }
+    end
+
+    def date_field_button
+      @template.tag.button(type: "button", aria: { label: I18n.t("shared.date_field.open") },
+                           data: { date_field_target: "button", action: "date-field#toggle" },
+                           class: "absolute right-2 top-1/2 -translate-y-1/2 size-8 flex items-center justify-center rounded-md text-secondary cursor-pointer hover:bg-container-hover") do
+        @template.icon("calendar", size: "sm")
+      end
+    end
+
     def build_field(method, options = {}, html_options = {}, &block)
       if options[:help_text].present?
         help_text_id = field_id(method, :help_text)

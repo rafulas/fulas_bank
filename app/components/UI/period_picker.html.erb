@@ -1,3 +1,25 @@
+<%# Fulas Bank: the full period menu is the app's period picker (after
+    Bilance, shared/_period_picker): all time, a month, a year, shortcuts and
+    a custom range on a vertical calendar, where the page asks for it
+    (`picker`). Otherwise, and for a chart with its own timescales
+    (`options`), the plain menu below. %>
+<% if picker %>
+  <%= render DS::Popover.new(variant: "button", placement: placement, no_padding: true) do |popover| %>
+    <% popover.with_button(type: "button", text: selected_label, variant: "outline", icon: "calendar", size: :sm,
+                           aria: { label: t("UI.period_picker.aria_label", period: selected_label) }) %>
+    <% popover.with_custom_content do %>
+      <%= form_with url: url, method: :get, data: { turbo_frame: frame, turbo_action: "advance" }.compact do %>
+        <% extra_params.each do |name, value| %>
+          <%= hidden_field_tag name, value, id: nil %>
+        <% end %>
+        <%= helpers.render "shared/period_picker", id: "period-picker-#{object_id}",
+              start_name: "start_date", end_name: "end_date",
+              start: (picker_start&.iso8601), finish: (picker_end&.iso8601),
+              all_param: [ "period", "all_time" ] %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% else %>
 <%= render DS::Menu.new(variant: :button, placement: placement) do |menu| %>
   <% menu.with_button(
        type: "button",
@@ -39,4 +61,5 @@
          data: { turbo_action: turbo_action_for(true) }
        ) %>
   <% end %>
+<% end %>
 <% end %>

@@ -76,6 +76,15 @@ module TransactionsHelper
     key = active_transaction_period(q)
     return t("transactions.searches.bar.periods.#{key}") unless key == "custom"
 
+    # Fulas Bank: a whole month or year, chosen in the period picker, by name.
+    first = Date.iso8601(q[:start_date].to_s) if q[:start_date].present?
+    last = Date.iso8601(q[:end_date].to_s) if q[:end_date].present?
+    if first && last && first == first.beginning_of_month && last == first.end_of_month
+      return l(first, format: "%B %Y").capitalize
+    elsif first && last && first == first.beginning_of_year && last == first.end_of_year
+      return first.year.to_s
+    end
+
     [ q[:start_date], q[:end_date] ].map { |date| date.present? ? l(Date.iso8601(date), format: "%d/%m/%Y") : "…" }.join(" – ")
   rescue Date::Error
     t("transactions.searches.bar.periods.custom")

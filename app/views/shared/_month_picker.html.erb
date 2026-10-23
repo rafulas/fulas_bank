@@ -1,0 +1,25 @@
+<%# locals: (month:, href:) %>
+<%# Fulas Bank: pick a month, after Bilance's «Selecciona mes»: the year with
+    arrows and its twelve months. `href` gives each month's link. %>
+<% year = month.year %>
+<% current = Date.current.beginning_of_month %>
+<div class="w-72 p-3 space-y-3" id="month-picker">
+  <div class="flex items-center justify-between">
+    <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: href.call(Date.new(year - 1, month.month, 1)), aria: { label: t("shared.period_picker.prev_year") }) %>
+    <span class="text-sm font-semibold text-primary"><%= year %></span>
+    <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: href.call(Date.new(year + 1, month.month, 1)), aria: { label: t("shared.period_picker.next_year") }) %>
+  </div>
+  <div class="grid grid-cols-4 gap-2">
+    <% t("shared.period_picker.month_short").each_with_index do |name, index| %>
+      <% date = Date.new(year, index + 1, 1) %>
+      <%= link_to name.capitalize, href.call(date),
+            aria: { current: (date == month ? "date" : nil), label: l(date, format: "%B %Y") },
+            class: class_names("h-14 rounded-full flex items-center justify-center text-sm font-medium",
+                               date == month ? "bg-inverse text-inverse" : "text-primary hover:bg-container-hover",
+                               date == current && date != month ? "text-brand font-semibold" : nil) %>
+    <% end %>
+  </div>
+  <% unless month == current %>
+    <%= link_to t("month_plans.show.this_month"), href.call(current), class: "block text-center text-sm text-link hover:underline" %>
+  <% end %>
+</div>

@@ -4,6 +4,35 @@ es:
     self_hostable:
       redis_configured: "¡Redis ya está configurado correctamente! Ahora puedes configurar tu aplicación Fulas Bank."
   shared:
+    period_picker:
+      all: Todo el tiempo
+      prev_months: Meses anteriores
+      next_months: Meses siguientes
+      prev_year: Año anterior
+      next_year: Año siguiente
+      custom: Rango personalizado
+      shortcuts: Atajos
+      shortcuts_list:
+        last30: Últimos 30 días
+        last90: Últimos 90 días
+        ytd: En lo que va de año
+        payday: "Desde la nómina (día %{day})"
+      back: Volver
+      from: Desde
+      to: Hasta
+      pick_first: Elige el primer día
+      pick_last: elige el último
+      clear: Borrar
+      apply: Aplicar
+      weekdays: [L, M, X, J, V, S, D]
+      month_short: [ene, feb, mar, abr, may, jun, jul, ago, sept, oct, nov, dic]
+    date_field:
+      open: Abrir el calendario
+      today: Hoy
+      yesterday: Ayer
+      payday: "Día de nómina (%{day})"
+      prev_month: Mes anterior
+      next_month: Mes siguiente
     analysis_tabs:
       aria: Resumen o comparar
       month: Mes

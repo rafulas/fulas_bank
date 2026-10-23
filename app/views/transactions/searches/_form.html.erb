@@ -44,25 +44,10 @@
       <% popover.with_button(id: "transaction-period-button", type: "button", text: transaction_period_label(@q),
                              variant: (period == "all" ? "outline" : "secondary"), icon: "calendar", size: :sm) %>
       <% popover.with_custom_content do %>
-        <div id="transaction-period-menu" class="w-72 p-2 space-y-1">
-          <% (%w[all] + TransactionsHelper::TRANSACTION_PERIODS).each do |key| %>
-            <% first, last = transaction_period_range(key) %>
-            <%= link_to t("transactions.searches.bar.periods.#{key}"),
-                  transactions_filter_path(@q, start_date: first&.iso8601, end_date: last&.iso8601),
-                  class: class_names("block px-3 py-2 rounded-md text-sm hover:bg-container-inset",
-                                     key == period ? "bg-container-inset font-medium text-primary" : "text-secondary") %>
-          <% end %>
-          <div class="border-t border-secondary pt-2 mt-1 space-y-2 px-1">
-            <p class="text-xs text-secondary"><%= t("transactions.searches.bar.custom_range") %></p>
-            <div class="grid grid-cols-2 gap-2">
-              <%= form.date_field :start_date, value: @q[:start_date], class: "form-field__input border border-secondary rounded-md px-2 py-1.5 text-sm", aria: { label: t("transactions.searches.bar.from") } %>
-              <%= form.date_field :end_date, value: @q[:end_date], class: "form-field__input border border-secondary rounded-md px-2 py-1.5 text-sm", aria: { label: t("transactions.searches.bar.to") } %>
-            </div>
-            <div class="flex justify-end">
-              <%= render DS::Button.new(text: t(".apply"), type: :submit, size: :sm) %>
-            </div>
-          </div>
-        </div>
+        <%# Fulas Bank: the period picker, after Bilance. %>
+        <%= render "shared/period_picker", id: "transaction-period-menu",
+              start_name: "q[start_date]", end_name: "q[end_date]",
+              start: @q[:start_date], finish: @q[:end_date] %>
       <% end %>
     <% end %>
 

@@ -4,6 +4,35 @@ en:
     self_hostable:
       redis_configured: "Redis is now configured properly! You can now setup your Sure application."
   shared:
+    period_picker:
+      all: All time
+      prev_months: Previous months
+      next_months: Next months
+      prev_year: Previous year
+      next_year: Next year
+      custom: Custom range
+      shortcuts: Shortcuts
+      shortcuts_list:
+        last30: Last 30 days
+        last90: Last 90 days
+        ytd: Year to date
+        payday: "Since payday (day %{day})"
+      back: Back
+      from: From
+      to: To
+      pick_first: Pick the first day
+      pick_last: pick the last one
+      clear: Clear
+      apply: Apply
+      weekdays: [M, T, W, T, F, S, S]
+      month_short: [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+    date_field:
+      open: Open the calendar
+      today: Today
+      yesterday: Yesterday
+      payday: "Payday (%{day})"
+      prev_month: Previous month
+      next_month: Next month
     analysis_tabs:
       aria: Summary or compare
       month: Month

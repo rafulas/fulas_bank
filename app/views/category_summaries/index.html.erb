@@ -8,7 +8,7 @@
 
 <div class="max-w-2xl space-y-4 pb-6">
   <div class="flex items-center justify-end gap-2">
-    <%= render UI::PeriodPicker.new(selected: @period, url: category_summaries_path) %>
+    <%= render UI::PeriodPicker.new(selected: @period, url: category_summaries_path, picker: true) %>
   </div>
 
   <%= render "category_summaries/rings", analysis: @analysis %>

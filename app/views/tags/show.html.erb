@@ -30,7 +30,7 @@
 <div class="max-w-2xl space-y-6 pb-6">
   <div class="flex items-center justify-between gap-2">
     <p class="text-sm text-secondary"><%= t(".by_category") %></p>
-    <%= render UI::PeriodPicker.new(selected: @period, url: tag_path(@tag)) %>
+    <%= render UI::PeriodPicker.new(selected: @period, url: tag_path(@tag), picker: true) %>
   </div>
 
   <% if @report.category_rows.any? %>
