@@ -41,7 +41,7 @@
             </div>
           </div>
           <%= icon("chevron-right") %>
-          <%= form.file_field :file, class: "hidden", accept: ".csv,.xlsx", data: { auto_submit_form_target: "auto" } %>
+          <%= form.file_field :file, class: "hidden", accept: ".csv,.xlsx", data: { auto_submit_form_target: "auto", autosubmit_trigger_event: "change", autosubmit_debounce_timeout: "0" } %>
         </label>
       <% end %>
     <% end %>

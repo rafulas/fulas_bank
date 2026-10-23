@@ -61,6 +61,9 @@ export default class extends Controller {
       case "time":
       case "week":
       case "color":
+      // A file input (often hidden behind a label) never blurs, so waiting for
+      // blur meant picking a file did nothing.
+      case "file":
         return "change";
       case "checkbox":
       case "radio":

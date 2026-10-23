@@ -34,4 +34,15 @@ class DragAndDropImportTest < ApplicationSystemTestCase
     # configuration step when it knows the account, or asks which one first.
     assert_current_path(%r{/imports/[^/]+/configuration|/importar/[^/]+/edit})
   end
+
+  # Fulas Bank: «Importar cualquier archivo» waited for the hidden file input
+  # to blur, which never happens, so choosing a file did nothing. Choosing it
+  # must submit the form on its own.
+  test "choosing a file in «Importar cualquier archivo» uploads it" do
+    visit new_import_path
+
+    attach_file "file", file_fixture("imports/transactions.csv"), make_visible: true
+
+    assert_current_path(%r{/imports/[^/]+/configuration|/importar/[^/]+/edit})
+  end
 end
