@@ -89,28 +89,20 @@ class Category::SpendingSplit
       @totals ||= begin
         result = Hash.new(0.to_d)
         rows_by_root.each_value do |rows|
-          # Income is added up apart from spending (Transaction.income_flow_sql),
-          # so a salary with no category does not cancel the purchases with
-          # no category.
-          incoming, spending = rows.partition { |row| row[:income] }
-          result[:income] -= incoming.sum { |row| row[:amount] }
-
-          net = spending.sum { |row| row[:amount] }
+          net = rows.sum { |row| row[:amount] }
           if net.negative?
-            # Refunds bigger than the spending: money in.
             result[:income] -= net
           else
             # "income" is not a spending class: an income category that
-            # spends counts as unclassified.
-            spending.each { |row| result[row[:class].in?(%i[essential discretionary savings]) ? row[:class] : :unclassified] += row[:amount] }
+            # spends more than it brings in counts as unclassified.
+            rows.each { |row| result[row[:class].in?(%i[essential discretionary savings]) ? row[:class] : :unclassified] += row[:amount] }
           end
         end
         result
       end
     end
 
-    # { root id => [ { amount:, class:, income: } per category and side ] },
-    # spending positive.
+    # { root id => [ { amount:, class: } per category ] }, spending positive.
     def rows_by_root
       sums = family.entries
                    .excluding_split_parents
@@ -124,15 +116,14 @@ class Category::SpendingSplit
                    .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
                    .where("t.category_id IS NULL OR t.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
                    .group(Arel.sql("COALESCE(parent_c.id, c.id)"), Arel.sql("COALESCE(c.spending_class, parent_c.spending_class)"))
-                   .group(Arel.sql(Transaction.income_flow_sql(table: "t")))
+                   .group(Arel.sql(Transaction.uncategorized_inflow_sql(table: "t")))
                    .sum(Arel.sql("entries.amount * COALESCE(rates.rate, 1)"))
 
+      # Movements with no category are kept apart by direction, so an
+      # uncategorized salary does not cancel the uncategorized purchases.
       sums.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |((root_id, spending_class, inflow), amount), grouped|
-        grouped[root_id || "uncategorized"] << {
-          amount: amount.to_d,
-          class: spending_class&.to_sym,
-          income: ActiveModel::Type::Boolean.new.cast(inflow)
-        }
+        key = root_id || (ActiveModel::Type::Boolean.new.cast(inflow) ? "uncategorized_in" : "uncategorized_out")
+        grouped[key] << { amount: amount.to_d, class: spending_class&.to_sym }
       end
     end
 end

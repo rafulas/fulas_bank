@@ -148,13 +148,14 @@ class Transaction < ApplicationRecord
     "(#{amount} < 0 AND #{table}.category_id IS NOT NULL AND #{table}.category_id IN (#{Category::REFUND_IDS_SQL}))"
   end
 
-  # Fulas Bank: money in that is income, not a refund: the side each movement
-  # goes on, the same rule as Informes (IncomeStatement). Grouping by it keeps
-  # a category's income and spending apart, so movements with no category
-  # (a salary and the purchases of a statement just imported) are not netted
-  # into one figure.
-  def self.income_flow_sql(table: "transactions", amount: "entries.amount")
-    "(#{amount} < 0 AND NOT #{refund_sql(table: table, amount: amount)})"
+  # Fulas Bank: for movements with no category, whether money comes in (true)
+  # or goes out (false); NULL for the rest. Grouping by it keeps a salary
+  # with no category apart from the purchases with no category, which would
+  # otherwise net into one figure (a statement just imported showed "0 €
+  # spent"). A category still nets its own money in and out (refunds, an
+  # investment sold against what was put in).
+  def self.uncategorized_inflow_sql(table: "transactions", amount: "entries.amount")
+    "(CASE WHEN #{table}.category_id IS NULL THEN #{amount} < 0 END)"
   end
 
   def self.counts_as_flow_sql

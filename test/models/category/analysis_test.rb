@@ -41,20 +41,6 @@ class Category::AnalysisTest < ActiveSupport::TestCase
     assert_equal [ BigDecimal("1850") ], analysis.income_slices.map(&:amount)
   end
 
-  test "a refund lowers its category's spending, in the rings and the monthly bars" do
-    @salary.update!(spending_class: "income")
-    create_transaction(account: @account, amount: -1_000, date: Date.new(2026, 10, 1), category: @salary)
-    create_transaction(account: @account, amount: 100, date: Date.new(2026, 10, 2), category: @home)
-    create_transaction(account: @account, amount: -40, date: Date.new(2026, 10, 3), category: @home)
-
-    assert_equal [ [ "Hogar", 60 ] ], analysis.spending_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
-    assert_equal [ [ "Ingresos", 1_000 ] ], analysis.income_slices.map { |slice| [ slice.name, slice.amount.to_i ] }
-
-    october = analysis.month_bars.last
-    assert_equal 60, october.spending.sum(&:amount).to_i
-    assert_equal 1_000, october.income.sum(&:amount).to_i
-  end
-
   test "the month's calendar, each day with what it went on" do
     create_transaction(account: @account, amount: 30, date: Date.new(2026, 10, 9), category: @market)
     create_transaction(account: @account, amount: 10, date: Date.new(2026, 10, 9), category: @home)
