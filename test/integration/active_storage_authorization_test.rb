@@ -443,6 +443,25 @@ class ActiveStorageAuthorizationTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "Fulas Bank: a vehicle's and a home's receipts are only served to their family" do
+    log = accounts(:vehicle).vehicle.logs.create!(kind: "expense", category: "toll", date: Date.current, amount: 5)
+    log.attachments.attach(io: StringIO.new("Ticket peaje"), filename: "peaje.pdf", content_type: "application/pdf")
+    expense = accounts(:property).property.expenses.create!(kind: "renovation", date: Date.current, amount: 500)
+    expense.attachments.attach(io: StringIO.new("Factura obra"), filename: "obra.pdf", content_type: "application/pdf")
+
+    sign_in @user_b
+    get rails_blob_path(log.attachments.first)
+    assert_response :not_found
+    get rails_blob_path(expense.attachments.first)
+    assert_response :not_found
+
+    sign_in @user_a
+    get rails_blob_path(log.attachments.first)
+    assert_response :redirect
+    get rails_blob_path(expense.attachments.first)
+    assert_response :redirect
+  end
+
   test "every attachment is either access-checked or intentionally public" do
     # Logos and avatars are not sensitive. Archived exports have no owning family;
     # ArchivedExportsController releases them by download token.

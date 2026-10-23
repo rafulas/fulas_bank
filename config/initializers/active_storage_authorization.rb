@@ -3,7 +3,11 @@ Rails.application.config.to_prepare do
   module ActiveStorageAttachmentAuthorization
     extend ActiveSupport::Concern
     # STI subclasses (PdfImport, SureImport, ...) are stored under their base class, "Import".
-    PROTECTED_RECORD_TYPES = %w[Transaction AccountStatement FamilyExport Import FamilyDocument].freeze
+    # Fulas Bank adds the receipts of a home or a vehicle and insurance documents.
+    PROTECTED_RECORD_TYPES = %w[
+      Transaction AccountStatement FamilyExport Import FamilyDocument
+      Property::Expense Vehicle::Log Insurance
+    ].freeze
 
     included do
       include Authentication
@@ -41,8 +45,12 @@ Rails.application.config.to_prepare do
           family_export_attachment_authorized?(attachment)
         when "Import"
           import_attachment_authorized?(attachment)
-        when "FamilyDocument"
+        when "FamilyDocument", "Insurance"
           family_record_attachment_authorized?(attachment)
+        when "Property::Expense"
+          asset_record_attachment_authorized?(attachment) { |expense| expense.property.account }
+        when "Vehicle::Log"
+          asset_record_attachment_authorized?(attachment) { |log| log.vehicle.account }
         else
           false
         end
@@ -93,6 +101,18 @@ Rails.application.config.to_prepare do
         return false if record.nil?
 
         record.family_id == Current.family&.id
+      rescue ActiveRecord::RecordNotFound, NoMethodError
+        false
+      end
+
+      # Fulas Bank: mirrors Properties::BaseController and Vehicles::BaseController,
+      # which only open homes and vehicles whose account is shared with the user.
+      def asset_record_attachment_authorized?(attachment)
+        record = attachment.record
+        return false if record.nil?
+
+        account = yield(record)
+        account.present? && account.family_id == Current.family&.id && account.shared_with?(Current.user)
       rescue ActiveRecord::RecordNotFound, NoMethodError
         false
       end
