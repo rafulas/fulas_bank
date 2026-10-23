@@ -368,8 +368,9 @@ class TransactionImportTest < ActiveSupport::TestCase
       date_format: "%m/%d/%Y", amount_type_strategy: "signed_amount", signage_convention: "inflows_negative"
     )
     @import.generate_rows_from_csv
+    @import.mappings.create! key: traspasos.name, mappable: traspasos, type: "Import::CategoryMapping"
+    @import.mappings.create! key: "", create_when_empty: false, mappable: nil, type: "Import::CategoryMapping"
     @import.reload
-    @import.mappings.categories.each { |mapping| mapping.update!(mappable: traspasos) if mapping.key == traspasos.name }
 
     # The bar is a different movement; the transfer is not imported again.
     assert_difference -> { account.entries.count } => 1 do
