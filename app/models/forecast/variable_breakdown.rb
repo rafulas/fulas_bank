@@ -84,7 +84,7 @@ class Forecast::VariableBreakdown
   # The movements behind a category's figures, newest first, grouped by
   # sample month: { month => [entries] }.
   def entries_for(key)
-    scope = sample_scope.includes(:account, entryable: :category).order(date: :desc)
+    scope = sample_scope.preload(:account, entryable: :category).order(date: :desc)
     scope = key.to_s == NONE ? scope.where(transactions: { category_id: nil }) : scope.where(transactions: { category_id: key })
 
     scope.to_a.group_by { |entry| entry.date.beginning_of_month }
