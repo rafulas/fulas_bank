@@ -350,6 +350,34 @@ class TransactionImportTest < ActiveSupport::TestCase
     assert_equal 2, account.entries.where(date: Date.new(2024, 1, 1), amount: 100).count
   end
 
+  # Fulas Bank: the bank's «Traspaso programa Tu Cuenta» and Bilance's
+  # «Redondeo tarjeta» are one transfer, named twice.
+  test "keeps a transfer once when it comes again under another name" do
+    account = accounts(:depository)
+    traspasos = account.family.categories.find_by(special: "transfers") ||
+      account.family.categories.create!(name: "Traspasos", special: "transfers", color: "#7c7ca0")
+    account.entries.create!(
+      date: Date.new(2024, 1, 1), amount: 21, currency: "USD", name: "Redondeo tarjeta",
+      entryable: Transaction.new(category: traspasos)
+    )
+
+    @import.update!(
+      account: account,
+      raw_file_str: "date,name,amount,category\n01/01/2024,Traspaso programa Tu Cuenta,21,#{traspasos.name}\n01/01/2024,Bar,21,\n",
+      date_col_label: "date", amount_col_label: "amount", name_col_label: "name", category_col_label: "category",
+      date_format: "%m/%d/%Y", amount_type_strategy: "signed_amount", signage_convention: "inflows_negative"
+    )
+    @import.generate_rows_from_csv
+    @import.reload
+    @import.mappings.categories.each { |mapping| mapping.update!(mappable: traspasos) if mapping.key == traspasos.name }
+
+    # The bar is a different movement; the transfer is not imported again.
+    assert_difference -> { account.entries.count } => 1 do
+      @import.publish
+    end
+    assert_equal %w[Bar Redondeo\ tarjeta], account.entries.where(date: Date.new(2024, 1, 1)).order(:name).pluck(:name)
+  end
+
   test "imports all identical transactions from CSV even when one exists in database" do
     account = accounts(:depository)
 

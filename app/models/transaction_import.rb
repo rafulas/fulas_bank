@@ -43,6 +43,17 @@ class TransactionImport < Import
           exclude_entry_ids: claimed_entry_ids
         )
 
+        # Fulas Bank: the same transfer often comes from two files with two
+        # names (the bank's «Traspaso programa Tu Cuenta», Bilance's «Redondeo
+        # tarjeta»). It is a transfer in both, so it is kept once.
+        if duplicate_entry.nil? && category&.special_transfers?
+          transfer_duplicate = transfer_duplicate_for(mapped_account, row, effective_currency, claimed_entry_ids)
+          if transfer_duplicate
+            claimed_entry_ids.add(transfer_duplicate.id)
+            next
+          end
+        end
+
         if duplicate_entry
           # Update existing transaction instead of creating a new one
           duplicate_entry.transaction.category = category if category.present?
@@ -119,6 +130,22 @@ class TransactionImport < Import
     @merchants_by_name[name.downcase] ||=
       family.merchants.where("LOWER(name) = ?", name.downcase).first ||
       family.merchants.create!(name: name)
+  end
+
+  # Fulas Bank: an entry already in the account, same day, amount and
+  # currency, that is a transfer too: matched as one, or in «Traspasos».
+  # Any name, as the bank and Bilance word the same transfer differently.
+  def transfer_duplicate_for(account, row, currency, claimed_entry_ids)
+    candidates = account.entries
+                        .where(entryable_type: "Transaction", date: row.date_iso, amount: row.signed_amount, currency: currency)
+                        .where.not(id: claimed_entry_ids.to_a)
+                        .includes(entryable: :category)
+                        .order(:created_at)
+
+    candidates.find do |entry|
+      transaction = entry.entryable
+      transaction.transfer? || transaction.transfer.present? || transaction.category&.special_transfers?
+    end
   end
 
   def csv_template
