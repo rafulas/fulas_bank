@@ -389,6 +389,14 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal @account, forecast.main_account
   end
 
+  test "the main account prefers a cuenta corriente over a savings account listed first" do
+    savings = create_account("Ahorro", Depository.new(subtype: "savings"), balance: 500)
+    checking = create_account("Nómina", Depository.new(subtype: "checking"), balance: 800)
+    forecast = Forecast.new(@family, accounts: [ savings, checking ], through: Date.current + 31)
+
+    assert_equal checking, forecast.main_account
+  end
+
   test "a recurring transfer leaves one account and reaches the other" do
     savings = create_account("Forecast savings", Depository.new, balance: 0)
     create_series(@account, name: "Ahorro mensual", amount: 100, destination_account: savings)
