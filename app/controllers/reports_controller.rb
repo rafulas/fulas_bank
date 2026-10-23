@@ -353,7 +353,7 @@ class ReportsController < ApplicationController
         expenses = income_statement.expense_totals(period: period).total
 
         trends << {
-          month: month_start.strftime("%b %Y"),
+          month: I18n.l(month_start, format: "%b %Y"),
           is_current_month: (month_start.month == Date.current.month && month_start.year == Date.current.year),
           income: income,
           expenses: expenses,
@@ -849,7 +849,7 @@ class ReportsController < ApplicationController
 
       CSV.generate do |csv|
         # Build header row: Category + Month columns + Total
-        month_headers = @export_data[:months].map { |m| m.strftime("%b %Y") }
+        month_headers = @export_data[:months].map { |m| I18n.l(m, format: "%b %Y") }
         header_row = [ "Category" ] + month_headers + [ "Total" ]
         csv << header_row
 
@@ -925,7 +925,7 @@ class ReportsController < ApplicationController
 
       workbook.add_worksheet(name: "Breakdown") do |sheet|
         # Build header row: Category + Month columns + Total
-        month_headers = @export_data[:months].map { |m| m.strftime("%b %Y") }
+        month_headers = @export_data[:months].map { |m| I18n.l(m, format: "%b %Y") }
         header_row = [ "Category" ] + month_headers + [ "Total" ]
         sheet.add_row header_row, style: bold_style
 
@@ -1004,7 +1004,7 @@ class ReportsController < ApplicationController
 
         if @export_data[:income].any? || @export_data[:expenses].any?
           # Build header row
-          month_headers = @export_data[:months].map { |m| m.strftime("%b %Y") }
+          month_headers = @export_data[:months].map { |m| I18n.l(m, format: "%b %Y") }
           header_row = [ "Category" ] + month_headers + [ "Total" ]
 
           # Income section

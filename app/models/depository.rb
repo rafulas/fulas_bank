@@ -12,6 +12,9 @@ class Depository < ApplicationRecord
     "money_market" => { short: "MM", long: "Money Market" }
   }.freeze
 
+  # Fulas Bank: the US-only kinds (HSA, CD, money market) are not offered.
+  OFFERED_SUBTYPES = %w[checking savings cash].freeze
+
   # Depository subtypes that carry tax-advantaged treatment in the budget /
   # cashflow / income-statement filters (`Family#tax_advantaged_account_ids`,
   # `TaxTreatable#tax_advantaged?`). HSA cash sits here because Plaid routes

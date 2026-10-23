@@ -65,6 +65,8 @@ es:
         format_label: Formato
         amount_type_strategy_label: Estrategia de tipo de importe
         select_strategy: Selecciona la estrategia
+        strategy_custom_column: Una columna dice si es ingreso o gasto
+        strategy_signed_amount: Importe con signo (+/-)
         set: Establecer
         as_amount_type_column: como columna de tipo de importe
         select_value: Selecciona el valor
@@ -168,6 +170,11 @@ es:
         manually_configure: Configurar manualmente
         apply_template: Aplicar plantilla
         sample_caption: Datos de ejemplo del archivo subido
+    mappings:
+      form:
+        leave_unassigned: Dejar sin asignar
+        select_option: Elige una opción
+        unassigned: "(sin asignar)"
     confirms:
       sure_import:
         title: Confirma tu importación

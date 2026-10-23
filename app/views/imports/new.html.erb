@@ -17,7 +17,7 @@
                   </span>
                 </div>
                 <span class="text-sm text-primary group-hover:text-secondary">
-                  <%= t(".resume", type: @pending_import.type.titleize) %>
+                  <%= t(".resume", type: t("imports.type_labels.#{@pending_import.type.underscore}", default: @pending_import.type.titleize).downcase_first) %>
                 </span>
               </div>
               <%= icon("chevron-right") %>
@@ -70,7 +70,7 @@
                       </span>
                     </div>
                     <span class="text-sm text-primary group-hover:text-secondary">
-                      <%= t(".resume", type: @pending_import.type.titleize) %>
+                      <%= t(".resume", type: t("imports.type_labels.#{@pending_import.type.underscore}", default: @pending_import.type.titleize).downcase_first) %>
                     </span>
                   </div>
                   <%= icon("chevron-right") %>
@@ -190,7 +190,7 @@
                       </span>
                     </div>
                     <span class="text-sm text-primary group-hover:text-secondary">
-                      <%= t(".resume", type: @pending_import.type.titleize) %>
+                      <%= t(".resume", type: t("imports.type_labels.#{@pending_import.type.underscore}", default: @pending_import.type.titleize).downcase_first) %>
                     </span>
                   </div>
                   <%= icon("chevron-right") %>

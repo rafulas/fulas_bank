@@ -61,6 +61,13 @@ class OverviewsTest < ActiveSupport::TestCase
     assert_equal Money.new("17.41", "USD"), overview.total_gain
   end
 
+  test "Fulas Bank: current accounts and loans offer only the kinds that exist in Spain" do
+    assert_equal %w[checking savings cash], Depository.subtype_options_for_select.map(&:last)
+    assert_includes Depository.subtype_options_for_select(current: "hsa").map(&:last), "hsa"
+    assert_not_includes Loan.subtype_options_for_select.map(&:last), "student"
+    assert_includes Loan.subtype_options_for_select(current: "student").map(&:last), "student"
+  end
+
   test "the investment types offered are the Spanish ones, keeping an account's own" do
     assert_equal %w[stocks mutual_fund pension savings_insurance fixed_income other], Investment.subtypes_for_select.map(&:last)
     assert_includes Investment.subtypes_for_select(current: "401k").map(&:last), "401k"

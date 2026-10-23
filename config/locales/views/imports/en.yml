@@ -67,6 +67,8 @@ en:
         format_label: Format
         amount_type_strategy_label: Amount type strategy
         select_strategy: Select strategy
+        strategy_custom_column: Custom column
+        strategy_signed_amount: Signed amount
         set: Set
         as_amount_type_column: as amount type column
         select_value: Select value
@@ -172,6 +174,11 @@ en:
         manually_configure: Manually configure
         apply_template: Apply template
         sample_caption: Sample data from your uploaded CSV
+    mappings:
+      form:
+        leave_unassigned: Leave unassigned
+        select_option: Select an option
+        unassigned: "(unassigned)"
     confirms:
       sure_import:
         title: Confirm your import

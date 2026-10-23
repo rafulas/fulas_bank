@@ -11,6 +11,9 @@ class Loan < ApplicationRecord
     "other" => { short: "Other Loan", long: "Other Loan" }
   }.freeze
 
+  # Fulas Bank: student and home equity loans are US products.
+  OFFERED_SUBTYPES = %w[mortgage auto line_of_credit business other].freeze
+
   # The rate types the form offers. They are not the only ones a loan can
   # carry: PlaidAccount::Liabilities::MortgageProcessor writes Plaid's raw
   # `interest_rate.type` straight through ("arm", among others), and a loan
