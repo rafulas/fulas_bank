@@ -63,6 +63,10 @@ class Forecast
   # hidden, and the group each account adds up in.
   HIDDEN_COLUMNS_PREFERENCE = "forecast_hidden_columns".freeze
   COLUMN_GROUPS_PREFERENCE = "forecast_column_groups".freeze
+  # Fulas Bank: the accounts left out of "Gastos varios", chosen in «Ver
+  # cálculo». Unset, the pass-through accounts are left out (see
+  # .pass_through_account_ids).
+  VARIABLE_EXCLUDED_PREFERENCE = "forecast_variable_excluded_accounts".freeze
 
   # Fulas Bank: like the user's spreadsheet, the total is the cash (current
   # and savings accounts) plus the savings and investments (funds, shares).
@@ -112,12 +116,13 @@ class Forecast
     end
   end
 
-  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups
+  attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups,
+              :variable_excluded_ids
 
   # `main_account` is where the monthly variable spending and the card
   # charges are expected (by default the first current account);
   # `card_accounts` are the cards whose spending ends up there.
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {})
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {}, variable_excluded_ids: [])
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
     @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
@@ -127,6 +132,38 @@ class Forecast
     @today = today
     @debt_plan = debt_plan
     @column_groups = (column_groups || {}).to_h.transform_keys(&:to_s)
+    @variable_excluded_ids = Array(variable_excluded_ids).map(&:to_s)
+  end
+
+  # Fulas Bank: the accounts and cards whose spending makes "Gastos varios":
+  # those that add up in the totals, and the cards, without the ones left
+  # out in «Ver cálculo».
+  def variable_accounts
+    (counted_accounts + card_accounts).reject { |account| variable_excluded_ids.include?(account.id.to_s) }
+  end
+
+  # Fulas Bank: the accounts whose money comes in and goes out again, like
+  # the one the payslip deductions pass through: no balance, and what came
+  # in over the last year went out. Their spending has no income to match
+  # in the forecast, so it would inflate "Gastos varios".
+  def self.pass_through_account_ids(family, accounts, today: Date.current)
+    candidates = accounts.select { |account| account.accountable_type == "Depository" && account.balance.to_d.abs < 0.01 }
+    return [] if candidates.empty?
+
+    family.entries
+          .where(account_id: candidates.map(&:id), entryable_type: "Transaction", date: (today - 1.year)..today)
+          .group(:account_id)
+          .pluck(:account_id, Arel.sql("SUM(entries.amount)"), Arel.sql("SUM(CASE WHEN entries.amount > 0 THEN entries.amount ELSE 0 END)"))
+          .filter_map { |account_id, net, spent| account_id if spent.to_d.positive? && net.to_d.abs < 1 }
+  end
+
+  # The accounts left out of "Gastos varios" for `user`: those chosen, or
+  # the pass-through ones until a choice is made.
+  def self.variable_excluded_ids(user, family, accounts, today: Date.current)
+    chosen = user.preferences&.dig(VARIABLE_EXCLUDED_PREFERENCE)
+    return Array(chosen).map(&:to_s) unless chosen.nil?
+
+    pass_through_account_ids(family, accounts, today: today).map(&:to_s)
   end
 
   # Fulas Bank: "cash", "investment" or "none" (see GROUPS): what the user
@@ -475,7 +512,7 @@ class Forecast
     def variable_flows
       return [] unless include_variable && main_account
 
-      estimate = Forecast::VariableEstimate.new(family, accounts: counted_accounts + card_accounts, today: today)
+      estimate = Forecast::VariableEstimate.new(family, accounts: variable_accounts, today: today)
 
       months.filter_map do |month|
         date = month.end_of_month

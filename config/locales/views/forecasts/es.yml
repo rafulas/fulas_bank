@@ -14,6 +14,28 @@ es:
       save: Guardar
     update_columns:
       success: Tabla actualizada.
+    variable:
+      title: "Gastos varios de %{month}"
+      subtitle: Cómo se calcula lo que sueles gastar en lo variable ese mes.
+      result: Previsión del mes
+      months: Meses que se promedian
+      months_hint: "El mismo mes de los tres últimos años y los seis últimos meses. Se quitan el mayor y el menor y se hace la media del resto."
+      dropped: Descartado
+      no_history: Todavía no hay movimientos para calcularlo.
+      categories: Por categoría
+      categories_hint: "Lo gastado en cada categoría en cada mes, de más a menos. Pulsa una para ver sus movimientos. Si alguno es fijo (un préstamo, un recibo), enlázalo a su recurrente o márcalo como fijo y dejará de contar aquí."
+      category: Categoría
+      average: Media
+      no_category: Sin categoría
+      category_subtitle: "Movimientos que cuentan en los gastos varios de %{month}."
+      back: Volver al cálculo
+      no_movements: Sin movimientos este mes.
+      fixed_hint: "Un movimiento que no es variable deja de contar si lo marcas como fijo en su detalle o lo enlazas a su recurrente."
+      accounts: Cuentas que cuentan
+      accounts_hint: "Quita las cuentas de paso, como la de la nómina: su dinero entra y sale, y sus gastos inflarían la previsión. Al principio se quitan solas las que están a cero y todo lo que entra vuelve a salir."
+      save: Guardar
+    update_variable_accounts:
+      success: Cuentas de los gastos varios actualizadas.
     variable_line: Gastos varios %{month}
     overdue_line: "%{name} (vencía el %{date})"
     loan_line: "Cuota %{name}"
@@ -57,6 +79,7 @@ es:
       chart_account: Saldo previsto de %{name}
       accounts_title: Por cuenta
     table:
+      breakdown: Ver cálculo
       expand: Ampliar
       edit_columns: Editar tabla
       cash: Saldo efectivo

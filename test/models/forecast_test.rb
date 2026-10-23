@@ -355,6 +355,33 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal [ BigDecimal("300"), BigDecimal("300") ], lines.map(&:amount)
   end
 
+  test "an account left out in «Ver cálculo» is left out of the variable spending" do
+    today = Date.new(2026, 10, 14)
+    payslip = create_account("Cuenta Fake Nómina", Depository.new, balance: 0)
+    create_transaction(account: @account, name: "Súper", amount: 300, date: Date.new(2026, 9, 10))
+    create_transaction(account: payslip, name: "Préstamo vivienda", amount: 1_200, date: Date.new(2026, 9, 19))
+
+    forecast = Forecast.new(@family, accounts: [ @account, payslip ], main_account: @account,
+                            through: Date.new(2026, 11, 30), today: today, variable_excluded_ids: [ payslip.id ])
+
+    assert_equal [ @account ], forecast.variable_accounts
+    assert_equal [ BigDecimal("300"), BigDecimal("300") ], forecast.flows.select { |flow| flow.source == :variable }.map(&:amount)
+  end
+
+  test "a pass-through account is left out until the user chooses" do
+    today = Date.new(2026, 10, 14)
+    payslip = create_account("Cuenta Fake Nómina", Depository.new, balance: 0)
+    # The payslip deductions come in and go out again.
+    create_transaction(account: payslip, name: "Nómina bruta", amount: -1_200, date: Date.new(2026, 9, 19))
+    create_transaction(account: payslip, name: "Préstamo vivienda", amount: 1_200, date: Date.new(2026, 9, 19))
+
+    user = users(:family_admin)
+    assert_equal [ payslip.id ], Forecast.variable_excluded_ids(user, @family, [ @account, payslip ], today: today)
+
+    user.update!(preferences: (user.preferences || {}).merge(Forecast::VARIABLE_EXCLUDED_PREFERENCE => []))
+    assert_empty Forecast.variable_excluded_ids(user, @family, [ @account, payslip ], today: today)
+  end
+
   test "the main account defaults to the first current account" do
     savings = create_account("Forecast savings", Depository.new, balance: 500)
     forecast = Forecast.new(@family, accounts: [ @account, savings ], through: Date.current + 31)

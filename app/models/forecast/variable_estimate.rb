@@ -23,6 +23,22 @@ class Forecast::VariableEstimate
   SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
   RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
 
+  # The movements that count as variable spending in `accounts` between
+  # two dates, joined to their transactions. Forecast::VariableBreakdown
+  # lists them, so both always agree.
+  def self.spending_entries(family, accounts:, from:, to:)
+    family.entries
+          .excluding_split_parents
+          .where(account_id: accounts.map(&:id), entryable_type: "Transaction", excluded: false, date: from..to)
+          .where("entries.amount > 0")
+          .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
+          .where.not(transactions: { kind: Transaction::TRANSFER_KINDS + [ "one_time" ] })
+          .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
+          .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
+          .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
+          .where(Transaction.variable_expense_sql)
+  end
+
   attr_reader :family, :accounts, :today
 
   def initialize(family, accounts:, today: Date.current)
@@ -50,17 +66,26 @@ class Forecast::VariableEstimate
   # spent across them each month, averaged the same way. A month counts once
   # any of them has history.
   def combined_monthly(month)
-    start = history_starts.values.compact.min
-    return BigDecimal("0") unless start
-
-    values = sample_months(month.beginning_of_month).filter_map do |sample|
-      combined_total(sample) if sample >= start.beginning_of_month
-    end
+    values = combined_sample_months(month).map { |sample| combined_total(sample) }
     TrimmedMonthlyAverage.mean(values)
   end
 
   def combined_spent(month)
     combined_total(month.beginning_of_month)
+  end
+
+  # The months that go into the combined estimate for `month`, newest first:
+  # the sample months from the first one any account has history in.
+  def combined_sample_months(month)
+    start = history_starts.values.compact.min
+    return [] unless start
+
+    sample_months(month.beginning_of_month).select { |sample| sample >= start.beginning_of_month }
+  end
+
+  # What all the accounts together spent on variable things in `month`.
+  def combined_total(month)
+    monthly_totals.values.sum { |months| months[month.beginning_of_month] || 0 }.to_d
   end
 
   # The months averaged for `month`, newest first.
@@ -69,10 +94,6 @@ class Forecast::VariableEstimate
   end
 
   private
-    def combined_total(month)
-      monthly_totals.values.sum { |months| months[month] || 0 }.to_d
-    end
-
     def current_month
       today.beginning_of_month
     end
@@ -96,18 +117,9 @@ class Forecast::VariableEstimate
       @monthly_totals ||= begin
         from = current_month << (12 * SAME_MONTH_YEARS)
 
-        rows = family.entries
-                     .excluding_split_parents
-                     .where(account_id: accounts.map(&:id), entryable_type: "Transaction", excluded: false, date: from..today.end_of_month)
-                     .where("entries.amount > 0")
-                     .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
-                     .where.not(transactions: { kind: Transaction::TRANSFER_KINDS + [ "one_time" ] })
-                     .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
-                     .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
-                     .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
-                     .where(Transaction.variable_expense_sql)
-                     .group(:account_id, Arel.sql("date_trunc('month', entries.date)"))
-                     .sum(:amount)
+        rows = self.class.spending_entries(family, accounts: accounts, from: from, to: today.end_of_month)
+                   .group(:account_id, Arel.sql("date_trunc('month', entries.date)"))
+                   .sum(:amount)
 
         rows.each_with_object(Hash.new { |hash, key| hash[key] = {} }) do |((account_id, month), amount), totals|
           totals[account_id][month.to_date] = amount.to_d

@@ -14,6 +14,28 @@ en:
       save: Save
     update_columns:
       success: Table updated.
+    variable:
+      title: "Variable spending in %{month}"
+      subtitle: How what you usually spend on variable things that month is worked out.
+      result: Expected for the month
+      months: Months averaged
+      months_hint: "The same month of the last three years and the last six months. The highest and the lowest are dropped and the rest averaged."
+      dropped: Dropped
+      no_history: There are no movements to work it out yet.
+      categories: By category
+      categories_hint: "What each category spent each month, heaviest first. Pick one to see its movements. If one is fixed (a loan, a bill), link it to its recurring payment or mark it as fixed and it stops counting here."
+      category: Category
+      average: Average
+      no_category: Uncategorized
+      category_subtitle: "Movements that count in the variable spending of %{month}."
+      back: Back to the calculation
+      no_movements: No movements this month.
+      fixed_hint: "A movement that is not variable stops counting once you mark it as fixed in its detail or link it to its recurring payment."
+      accounts: Accounts that count
+      accounts_hint: "Leave out pass-through accounts, like the payslip one: money comes in and goes out, and its spending would inflate the forecast. At first, accounts at zero whose money all goes out again are left out on their own."
+      save: Save
+    update_variable_accounts:
+      success: Variable spending accounts updated.
     variable_line: Variable spending %{month}
     overdue_line: "%{name} (due on %{date})"
     loan_line: "%{name} payment"
@@ -57,6 +79,7 @@ en:
       chart_account: Expected balance of %{name}
       accounts_title: By account
     table:
+      breakdown: See the calculation
       expand: Expand
       edit_columns: Edit table
       cash: Cash balance

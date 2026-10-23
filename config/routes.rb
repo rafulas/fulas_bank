@@ -784,6 +784,9 @@ Rails.application.routes.draw do
     # Fulas Bank: which accounts the table shows and how they add up.
     get :columns, to: "forecasts#edit_columns"
     patch :columns, to: "forecasts#update_columns"
+    # Fulas Bank: «Ver cálculo» of "Gastos varios" and the accounts it counts.
+    get :variable, path: "gastos-varios"
+    patch :variable_accounts, path: "gastos-varios/cuentas", to: "forecasts#update_variable_accounts"
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do
