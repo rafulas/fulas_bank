@@ -24,6 +24,18 @@ module Account::Anchorable
     set_opening_anchor_balance(balance: opening_anchor_balance, date: date).success?
   end
 
+  # Fulas Bank: the day a new account's typed balance is for, by default.
+  # Current accounts and cards: the close of yesterday, which is what a
+  # statement shows (the «Disponible» after yesterday's last movement).
+  # Everything dated today or later then adds on top, and earlier movements
+  # are worked out backwards from it (Balance::ForwardCalculator). With today
+  # as the default, anything recorded later the same day was absorbed by the
+  # typed balance and never moved it. Other accounts keep today: their
+  # balance is a value (a house, a car), not a running sum of movements.
+  def default_opening_balance_date
+    balance_type == :cash ? Time.zone.yesterday : Time.zone.today
+  end
+
   def opening_anchor_date
     opening_balance_manager.opening_date
   end
