@@ -5,7 +5,11 @@
 #
 # Sure's own "Publish Docker image" workflow is disabled in forks; this one is
 # a smaller version of it without releases, nightlies or the Render demo.
-# Changes are already tested by the pull request workflow before merging.
+# The tests run again here first (the same ones as in pull requests): the
+# pull request ones ran on the branch, and main can differ from it after
+# merging another change. If any fails, no image is published and the Mac
+# keeps its version. A failure that looks random can be retried from the
+# Actions tab with «Re-run failed jobs».
 name: Imagen Fulas Bank
 
 on:
@@ -33,8 +37,13 @@ permissions:
   packages: write
 
 jobs:
+  ci:
+    name: Pruebas
+    uses: ./.github/workflows/ci.yml
+
   build:
     name: Construir (${{ matrix.platform }})
+    needs: ci
     strategy:
       fail-fast: true
       matrix:
