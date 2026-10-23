@@ -51,10 +51,11 @@ es:
         period: Periodo
         in_progress: En curso
         purchases: Gastos
+        advanced_column: Pagado antes
         financed_column: Financiado
         charge: A cobrar
         charge_date: Día de cobro
-        hint: "Lo que se cobra es lo gastado en el periodo menos lo financiado, que se cobra aparte con su comisión y sus cuotas. Pulsa un periodo para ver sus movimientos. Un gasto se puede pasar al extracto siguiente desde su detalle."
+        hint: "Lo que se cobra es lo gastado en el periodo menos lo financiado (que se cobra aparte con su comisión y sus cuotas) y menos lo que ya pagaste a la tarjeta durante el periodo con un traspaso. Pulsa un periodo para ver sus movimientos. Un gasto se puede pasar al extracto siguiente desde su detalle."
         see_movements: Ver los movimientos del extracto
         see_charges: Ver cuotas y pagos
         financed_title: Pagos financiados
@@ -81,6 +82,8 @@ es:
         title: "Extracto del %{from} al %{to}"
         purchases: Gastos
         financed: Financiado
+        advanced: Pagado antes
+        advances_title: "Pagos anticipados (traspasos a la tarjeta durante el periodo)"
         charge: A cobrar
         charged_on: Cobrado el
         to_charge_on: Se cobrará el

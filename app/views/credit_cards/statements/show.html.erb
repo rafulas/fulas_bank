@@ -6,7 +6,7 @@
                         subtitle: @account.name) %>
   <% dialog.with_body do %>
     <div class="space-y-4">
-      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+      <dl class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
         <div class="rounded-lg bg-container-inset p-3">
           <dt class="text-xs text-secondary"><%= t(".purchases") %></dt>
           <dd class="font-medium text-primary privacy-sensitive"><%= format_money(@statement.purchases_money) %></dd>
@@ -14,6 +14,10 @@
         <div class="rounded-lg bg-container-inset p-3">
           <dt class="text-xs text-secondary"><%= t(".financed") %></dt>
           <dd class="font-medium text-primary privacy-sensitive"><%= @statement.financed.positive? ? format_money(-@statement.financed_money) : "—" %></dd>
+        </div>
+        <div class="rounded-lg bg-container-inset p-3">
+          <dt class="text-xs text-secondary"><%= t(".advanced") %></dt>
+          <dd class="font-medium text-primary privacy-sensitive"><%= @statement.advanced.positive? ? format_money(-@statement.advanced_money) : "—" %></dd>
         </div>
         <div class="rounded-lg bg-info/10 p-3">
           <dt class="text-xs text-secondary"><%= t(".charge") %></dt>
@@ -59,6 +63,23 @@
           <p class="text-sm text-secondary"><%= t(".no_movements") %></p>
         <% end %>
       </section>
+
+      <% if @statement.advances.any? %>
+        <section class="space-y-2">
+          <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".advances_title") %></h3>
+          <ul class="divide-y divide-primary text-sm">
+            <% @statement.advances.each do |entry| %>
+              <li class="flex items-center justify-between gap-3 py-2">
+                <span class="min-w-0">
+                  <%= link_to entry.name, entry_path(entry), class: "block truncate text-primary hover:underline", data: { turbo_frame: "drawer" } %>
+                  <span class="block text-xs text-secondary"><%= l(entry.date, format: "%d/%m/%y") %></span>
+                </span>
+                <span class="privacy-sensitive text-secondary whitespace-nowrap"><%= format_money(entry.amount_money) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
 
       <% if @financings.any? %>
         <section class="space-y-2">

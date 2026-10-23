@@ -47,6 +47,7 @@
       <% end %>
       <% table.with_column(t(".purchases"), numeric: true, class: "privacy-sensitive") { |statement| format_money(statement.purchases_money) } %>
       <% table.with_column(t(".financed_column"), numeric: true, class: "privacy-sensitive") { |statement| statement.financed.positive? ? format_money(-statement.financed_money) : "—" } %>
+      <% table.with_column(t(".advanced_column"), numeric: true, class: "privacy-sensitive") { |statement| statement.advanced.positive? ? format_money(-statement.advanced_money) : "—" } %>
       <% table.with_column(t(".charge"), numeric: true, class: "privacy-sensitive font-medium bg-info/10") { |statement| format_money(statement.amount_money) } %>
       <% table.with_column(t(".charge_date"), numeric: true) { |statement| l(statement.charged_on, format: "%d/%m/%y") } %>
       <% if reconciler.active? %>

@@ -15,11 +15,19 @@
 #   on a Sunday is charged on Friday the 3rd).
 # - What is charged: the purchases minus refunds of the statement, minus the
 #   purchases paid in instalments (CardFinancing), which the bank charges
-#   apart, with their fee and instalments.
+#   apart, with their fee and instalments, minus what was paid into the card
+#   during the period ("pagos anticipados": a transfer from an account to the
+#   card in the middle of the month pays part of the statement in advance).
+#   The payment of the previous statement and of the instalments are not
+#   advances, though they come in during the period too.
 #
 # Working days follow SpanishHolidays (national and Madrid holidays).
 class CreditCard::Cycle
-  Statement = Data.define(:closes_on, :opens_on, :charged_on, :entries, :financed, :currency) do
+  Statement = Data.define(:closes_on, :opens_on, :charged_on, :entries, :financed, :currency, :advances) do
+    def initialize(closes_on:, opens_on:, charged_on:, entries:, financed:, currency:, advances: [])
+      super
+    end
+
     def month
       closes_on.beginning_of_month
     end
@@ -28,9 +36,18 @@ class CreditCard::Cycle
       entries.sum(&:amount).to_d
     end
 
+    # Fulas Bank: what was paid into the card during the period, positive.
+    def advanced
+      -advances.sum(&:amount).to_d
+    end
+
+    def advanced_money
+      Money.new(advanced, currency)
+    end
+
     # What the bank will charge for it in the payment account.
     def amount
-      [ purchases - financed, 0 ].max
+      [ purchases - financed - advanced, 0 ].max
     end
 
     def amount_money
@@ -120,6 +137,7 @@ class CreditCard::Cycle
       statement_month_for(entry.date, next_statement: entry.entryable.next_card_statement)
     end
     financed = financed_by_month(months)
+    advances = advances_for(months)
 
     months.map do |each_month|
       Statement.new(
@@ -128,7 +146,8 @@ class CreditCard::Cycle
         charged_on: charge_date(each_month),
         entries: grouped.fetch(each_month, []).sort_by(&:date),
         financed: financed.fetch(each_month, 0).to_d,
-        currency: account.currency
+        currency: account.currency,
+        advances: advances.fetch(each_month, [])
       )
     end
   end
@@ -155,6 +174,51 @@ class CreditCard::Cycle
              .includes(:entryable)
              .to_a
              .select { |entry| months.include?(statement_month_for(entry.date, next_statement: entry.entryable.next_card_statement)) }
+    end
+
+    # Fulas Bank: { month => [entries] } of the payments into the card made
+    # during each statement's period, newest last. A payment of a statement
+    # or of the instalments is left out: it pays what the bank charged.
+    def advances_for(months)
+      from = closing_date(months.first.prev_month) + 1
+      to = closing_date(months.last)
+
+      account.entries.where(entryable_type: "Transaction", date: from..to)
+             .where("entries.amount < 0")
+             .excluding_split_parents
+             .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
+             .joins("INNER JOIN transfers ON transfers.inflow_transaction_id = transactions.id")
+             .includes(entryable: { transfer_as_inflow: { outflow_transaction: :entry } })
+             .order(:date)
+             .to_a
+             .reject { |entry| charge_payment?(entry) }
+             .group_by { |entry| month_closing_on_or_after(entry.date) }
+             .select { |month, _| months.include?(month) }
+    end
+
+    # The month whose statement period holds `date`, by the closing day
+    # alone (a payment is not a purchase: the bank does not book it later).
+    def month_closing_on_or_after(date)
+      month = date.beginning_of_month
+      date > closing_date(month) ? month.next_month : month
+    end
+
+    # A payment of what the bank charged: the statement or the instalments,
+    # by its name or the name of the charge it came from.
+    def charge_payment?(entry)
+      outflow = entry.entryable.transfer_as_inflow&.outflow_transaction&.entry
+      names = [ entry.name, outflow&.name ].compact.map { |name| AssetLinker.normalize(name) }
+      words = CreditCard::Reconciler::STATEMENT_WORDS + CreditCard::Reconciler::FINANCED_WORDS + charge_payment_names
+
+      names.any? { |name| words.any? { |word| name.include?(word) } }
+    end
+
+    # The names the reconciler gives the card's side of a charge it files.
+    def charge_payment_names
+      @charge_payment_names ||= [
+        I18n.t("credit_cards.reconciler.installments_name"),
+        I18n.t("credit_cards.reconciler.payment_name", account: account.credit_card.payment_account&.name.to_s)
+      ].map { |name| AssetLinker.normalize(name) }.reject(&:blank?)
     end
 
     def financed_by_month(months)
