@@ -34,6 +34,12 @@ es:
       add: Añadir suscripción
       all_recurring: Ver todos los recurrentes
       link_hint: "Cada cargo va con su suscripción por comercio e importe; así dos de Apple (Music a 10,99 € e iCloud a 2,99 €) son dos suscripciones. Si alguno va con la que no es, cámbialo en su detalle."
+    pick:
+      title: Añadir suscripción
+      hint: Elige cuál de tus recurrentes es una suscripción, o crea una nueva.
+      choose: Es esta
+      none: No hay recurrentes que puedan ser una suscripción.
+      new: Crear una nueva
     mark:
       success: "%{name} ahora es una suscripción."
     cancel:

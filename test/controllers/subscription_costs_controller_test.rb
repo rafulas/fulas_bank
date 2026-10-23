@@ -33,6 +33,32 @@ class SubscriptionCostsControllerTest < ActionDispatch::IntegrationTest
     assert series.reload.typed_subscription?
   end
 
+  # «Añadir suscripción» used to open the recurring form behind the preview
+  # gate and did nothing. It now lets you pick a recurring payment or create one.
+  test "add subscription offers the recurring payments and a blank form" do
+    series = recurring_transactions(:netflix_subscription)
+    series.update_columns(bill_type: "bill")
+    @user.update!(preferences: (@user.preferences || {}).merge("preview_features_enabled" => false))
+
+    get pick_subscription_costs_url, headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "form[action=?]", mark_subscription_cost_path(series)
+    assert_select "a[href=?]", new_recurring_transaction_path(subscription: "1")
+
+    get new_recurring_transaction_url(subscription: "1"), headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "input[name=?][value=?]", "recurring_transaction[subscription]", "1"
+  end
+
+  test "a series created from add subscription is a subscription" do
+    post recurring_transactions_url, params: { recurring_transaction: {
+      name: "Gimnasio", amount: 39.9, account_id: accounts(:depository).id,
+      first_due_on: Date.current.iso8601, frequency_preset: "monthly", subscription: "1"
+    } }
+
+    assert @user.family.recurring_transactions.find_by!(name: "Gimnasio").typed_subscription?
+  end
+
   test "cancels a subscription and takes it up again" do
     series = recurring_transactions(:netflix_subscription)
     series.update_columns(bill_type: "subscription")

@@ -117,7 +117,7 @@
   <% end %>
 
   <div class="flex flex-wrap gap-2">
-    <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, size: :sm, href: new_recurring_transaction_path, frame: :modal) %>
+    <%= render DS::Link.new(text: t(".add"), icon: "plus", variant: :outline, size: :sm, href: pick_subscription_costs_path, frame: :modal) %>
     <%= render DS::Link.new(text: t(".all_recurring"), icon: "receipt", variant: :ghost, size: :sm, href: recurring_transactions_path) %>
   </div>
   <p class="px-1 text-xs text-secondary"><%= t(".link_hint") %></p>

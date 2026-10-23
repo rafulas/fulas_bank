@@ -60,12 +60,12 @@ class SubscriptionsOverview
 
   # Active recurring payments not marked as subscriptions, which may be one.
   # What must be paid anyway (insurance, a loan, the power bill) is left out.
-  def other_candidates
+  def other_candidates(limit: 20)
     family.recurring_transactions.accessible_by(user).active
           .where(bill_type: %w[bill other]).where(destination_account_id: nil).where("amount > 0")
           .includes(:merchant, category: :parent).order(:name).to_a
           .reject { |series| RecurringTransaction::Classifier.obligatory?(series) }
-          .first(20)
+          .then { |list| limit ? list.first(limit) : list }
   end
 
   # Subscriptions cancelled (paused) or retired, newest first, to take up again.

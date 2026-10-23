@@ -1,7 +1,7 @@
 class RecurringAllocationsController < ApplicationController
   include RecurringFeatureGuardable
 
-  before_action :ensure_recurring_enabled
+  before_action :ensure_recurring_available
 
   def create
     occurrence = find_occurrence(params[:recurring_occurrence_id])

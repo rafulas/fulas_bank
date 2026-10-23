@@ -34,6 +34,12 @@ en:
       add: Add subscription
       all_recurring: See all recurring payments
       link_hint: "Each charge goes with its subscription by shop and amount, so two from Apple (Music at 10.99 and iCloud at 2.99) are two subscriptions. If one goes with the wrong one, change it in its detail."
+    pick:
+      title: Add subscription
+      hint: Pick which of your recurring payments is a subscription, or create a new one.
+      choose: This one
+      none: No recurring payments could be a subscription.
+      new: Create a new one
     mark:
       success: "%{name} is now a subscription."
     cancel:

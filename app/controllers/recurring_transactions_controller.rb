@@ -13,11 +13,9 @@ class RecurringTransactionsController < ApplicationController
   # targets _top and cannot live inside a turbo frame).
   PICKER_SHOWN = 20
 
-  # The declare, edit and suggestion paths shipped with Bills and sit behind
-  # its preview gate like every other Bills surface. The actions that predate
-  # Bills (index, toggle_status, destroy, update_settings, identify, cleanup)
-  # keep their historical reach.
-  before_action :ensure_recurring_enabled, only: %i[new create edit update confirm dismiss]
+  # Fulas Bank: the declare, edit and suggestion paths only honor the family's
+  # recurring toggle; recurring movements are not a preview feature here.
+  before_action :ensure_recurring_available, only: %i[new create edit update confirm dismiss]
   before_action :set_recurring_transaction, only: %i[edit update toggle_status destroy confirm dismiss]
   before_action :ensure_series_writable, only: %i[update toggle_status destroy confirm dismiss]
 
@@ -141,6 +139,8 @@ class RecurringTransactionsController < ApplicationController
       first_due_on: Date.current
     )
     @recurring_transaction.is_income = income
+    # Fulas Bank: «Añadir suscripción» → «Crear una nueva».
+    @recurring_transaction.bill_type = "subscription" if params[:subscription].present? && !income
 
     # Accessible, not merely same-family: prefilling reads the entry's name,
     # amount and account straight back to the user.
@@ -379,7 +379,7 @@ class RecurringTransactionsController < ApplicationController
       params.require(:recurring_transaction).permit(
         :name, :amount, :account_id, :first_due_on, :frequency_preset,
         :frequency_interval, :frequency_interval_unit,
-        :payment_url, :autopay, :notes, :is_income
+        :payment_url, :autopay, :notes, :is_income, :subscription
       )
     end
 

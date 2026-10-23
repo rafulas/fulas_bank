@@ -6,6 +6,13 @@ class SubscriptionCostsController < ApplicationController
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("subscription_costs.index.title"), nil ] ]
   end
 
+  # «Añadir suscripción»: pick which recurring payment is a subscription, or
+  # open the form for a new one.
+  def pick
+    @candidates = SubscriptionsOverview.new(Current.family, user: Current.user).other_candidates(limit: nil)
+    render layout: turbo_frame_request? ? false : "application"
+  end
+
   # Marks a subscription as one that could be dropped, or unmarks it.
   def could_drop
     series = accessible_series.find(params[:id])
