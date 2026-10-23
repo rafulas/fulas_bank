@@ -337,6 +337,7 @@ en:
       description: Please check that your file format, for any errors and that all required fields are filled, then come back and try again.
       try_again: Try again
     success:
+      transactions_counts: "New transactions: %{created} · Already there: %{existing}"
       title: Import successful
       description: Your imported data has been successfully added to the app and is now ready for use.
       back_to_dashboard: Back to dashboard
@@ -474,6 +475,9 @@ en:
       finalize_upload: Please finalize your file upload.
       finalize_mappings: Please finalize your mappings before proceeding.
     ready:
+      existing_rows_notice:
+        one: 1 row of the file was already in the account and is not added again (a missing category, merchant or notes are filled in from the file).
+        other: "%{count} rows of the file were already in the account and are not added again (missing categories, merchants or notes are filled in from the file)."
       description: Here's a summary of the new items that will be added to your account
         once you publish this import.
       title: Confirm your import data

@@ -323,6 +323,7 @@ es:
       description: Comprueba el formato de tu archivo, revisa que no haya errores y que todos los campos obligatorios estén rellenos; después vuelve e inténtalo de nuevo.
       try_again: Inténtalo de nuevo
     success:
+      transactions_counts: "Movimientos nuevos: %{created} · Ya estaban: %{existing}"
       title: Importación correcta
       description: Tus datos importados se han añadido correctamente a la aplicación y ya están listos para usarse.
       back_to_dashboard: Volver al panel
@@ -460,6 +461,9 @@ es:
       finalize_upload: Por favor, finaliza la subida de tu archivo.
       finalize_mappings: Por favor, finaliza tus mapeos antes de continuar.
     ready:
+      existing_rows_notice:
+        one: 1 movimiento del archivo ya estaba en la cuenta y no se añade otra vez (si le faltaba categoría, comercio o notas, se completan con las del archivo).
+        other: "%{count} movimientos del archivo ya estaban en la cuenta y no se añaden otra vez (si les faltaba categoría, comercio o notas, se completan con las del archivo)."
       description: Aquí tienes un resumen de los nuevos elementos que se añadirán a tu cuenta una vez publiques esta importación.
       title: Confirma tus datos de importación
       summary_item_label: Elemento
