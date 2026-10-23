@@ -8,9 +8,13 @@ x-db-env: &db_env
 
 services:
   app:
-    build:
-      context: ../..
-      dockerfile: .devcontainer/Dockerfile
+    # The image is built beforehand by initializeCommand (devcontainer.json)
+    # with a plain `docker build`. If compose built it, the Dev Containers
+    # extension would pass it a Dockerfile from a temp folder, and newer
+    # Docker Desktop versions (compose builds through "bake") refuse to read
+    # files outside the project without an extra permission.
+    image: fulas-bank-probar
+    pull_policy: never
     volumes:
       - ../.bashrc:/root/.bashrc:ro,cached
       - ../..:/workspace:cached
