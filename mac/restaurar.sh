@@ -8,6 +8,11 @@
 #   db.dump          the database (pg_dump, custom format)
 #   storage.tar.gz   the uploaded files
 #   secret-key-base  the key for the encrypted fields (e.g. user emails)
+#   filas.txt        how many rows the main tables had, checked at the end
+#
+# Copies ending in .tar.enc are encrypted: the passphrase comes from this
+# Mac's Keychain or, on another Mac, is asked for (it is the one shown when
+# the first encrypted copy was made, see «Ver frase de las copias»).
 #
 # Steps: stop the app, empty the database and load the copy, replace the
 # uploaded files, use the copy's SECRET_KEY_BASE, and start again. On start
@@ -25,9 +30,29 @@ copy="${1:-}"
 [[ -n "$copy" && -f "$copy" ]] || { echo "Uso: restaurar.sh <copia.tar>" >&2; exit 1; }
 copy="$(cd "$(dirname "$copy")" && pwd)/$(basename "$copy")"
 
+KEYCHAIN_SERVICE="Fulas Bank copias"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-tar -C "$work" -xf "$copy"
+
+if [[ "$copy" == *.enc ]]; then
+  clave="$(security find-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w 2> /dev/null || true)"
+  for intento in 1 2 3; do
+    if [[ -n "$clave" ]] && FULAS_COPIA_CLAVE="$clave" openssl enc -d -aes-256-cbc -md sha256 -pbkdf2 -iter 200000 \
+        -pass env:FULAS_COPIA_CLAVE -in "$copy" -out "$work/copia.tar" 2> /dev/null; then
+      break
+    fi
+    rm -f "$work/copia.tar"
+    [[ $intento -eq 3 ]] && { echo "No se ha podido abrir la copia: la frase no es la buena." >&2; exit 1; }
+    read -r -s -p "Frase de las copias (la de «Ver frase de las copias»): " clave < /dev/tty
+    echo
+  done
+  # On a new Mac, keep the passphrase that worked for the next copies.
+  security add-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w "$clave" -U 2> /dev/null || true
+  tar -C "$work" -xf "$work/copia.tar"
+  rm -f "$work/copia.tar"
+else
+  tar -C "$work" -xf "$copy"
+fi
 src="$(dirname "$(find "$work" -name db.dump | head -1)")"
 [[ -f "$src/db.dump" ]] || { echo "Esa copia no trae base de datos (db.dump)." >&2; exit 1; }
 
@@ -65,6 +90,26 @@ docker compose run --rm --no-deps -T --entrypoint "" web sh -c \
 users="$(docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT count(*) FROM users"' 2> /dev/null || echo 0)"
 [[ "${users:-0}" -gt 0 ]] || { echo "La base de datos no se ha cargado bien (no hay usuarios)." >&2; exit 1; }
 echo "  $users usuario(s) cargados."
+
+# Every table must hold what it held when the copy was made. pg_restore can
+# report a harmless error, so its exit code is not enough: a table it failed
+# to load would show here.
+faltan=""
+if [[ -f "$src/filas.txt" ]]; then
+  while read -r table expected; do
+    [[ -n "$table" ]] || continue
+    actual="$(docker compose exec -T db sh -c "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tAc 'SELECT count(*) FROM $table'" 2> /dev/null | tr -d '[:space:]' || true)"
+    if [[ "$actual" != "$expected" ]]; then
+      faltan="$faltan\n  $table: la copia tenía $expected filas y se han cargado ${actual:-0}"
+    fi
+  done < "$src/filas.txt"
+fi
+if [[ -n "$faltan" ]]; then
+  printf "La copia NO se ha cargado entera:%b\n" "$faltan" >&2
+  echo "Tus datos de antes de restaurar están en la última copia de la carpeta de copias." >&2
+  exit 1
+fi
+[[ -f "$src/filas.txt" ]] && echo "  Comprobado: todas las tablas tienen las filas de la copia."
 
 if [[ -f "$src/storage.tar.gz" ]]; then
   echo "▶ Cargando los archivos subidos"

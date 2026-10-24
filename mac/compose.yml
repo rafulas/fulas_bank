@@ -24,7 +24,7 @@ x-rails-env: &rails_env
   # only fully readable with the same value, so copia.sh saves it too.
   SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Falta SECRET_KEY_BASE en .env}
   SELF_HOSTED: "true"
-  # Reached over plain http (localhost, the home wifi or Tailscale).
+  # Reached over plain http, only from this Mac (http://localhost).
   RAILS_FORCE_SSL: "false"
   RAILS_ASSUME_SSL: "false"
   RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-warn}
@@ -40,8 +40,8 @@ x-rails-env: &rails_env
   # Share and fund prices from Yahoo Finance: free, no key, covers the
   # Madrid stock exchange. Another can still be chosen in Ajustes.
   SECURITIES_PROVIDER: ${SECURITIES_PROVIDER:-yahoo_finance}
-  # Nobody else can create an account: the app is reached from the home wifi
-  # or Tailscale, and only its owners use it. Ajustes › Autohospedaje can
+  # Nobody else can create an account: the app is only reachable from this
+  # Mac, and only its owners use it. Ajustes › Autohospedaje can
   # still open it (or require an invitation) when it is needed.
   ONBOARDING_STATE: ${ONBOARDING_STATE:-closed}
 
@@ -51,9 +51,10 @@ services:
     volumes:
       - app-storage:/rails/storage
     ports:
-      # Every network interface: http://localhost:3000 on the Mac, and the
-      # Mac's address from a phone or iPad on the same wifi or Tailscale.
-      - ${PORT:-3000}:3000
+      # Only this Mac (http://localhost:3000). Without "127.0.0.1:" anyone
+      # on the same wifi (a café, a hotel, a guest at home) could reach the
+      # login page. To open it to the home wifi on purpose, remove it.
+      - 127.0.0.1:${PORT:-3000}:3000
     restart: unless-stopped
     environment:
       <<: *rails_env

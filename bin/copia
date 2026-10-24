@@ -42,6 +42,14 @@ echo "Haciendo copia de seguridad…"
 "$PG_BIN/pg_dump" -Fc -d "$POSTGRES_DB" > "$work/$name/db.dump"
 [[ -s "$work/$name/db.dump" ]] || { echo "La copia de la base de datos ha salido vacía." >&2; exit 1; }
 
+# How many rows the main tables had, so a restore can check them.
+for table in users accounts entries transactions valuations balances categories imports; do
+  count="$(psql -d "$POSTGRES_DB" -tAc "SELECT count(*) FROM $table" 2> /dev/null | tr -d '[:space:]' || true)"
+  if [[ -n "$count" ]]; then
+    echo "$table $count" >> "$work/$name/filas.txt"
+  fi
+done
+
 mkdir -p storage
 tar -C storage --exclude=./.probar -czf "$work/$name/storage.tar.gz" .
 echo "probar $(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$work/$name/origen.txt"

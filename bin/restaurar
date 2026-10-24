@@ -30,7 +30,26 @@ fi
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-tar -C "$work" -xf "$copy"
+
+# Copies from the Mac end in .tar.enc: encrypted with the passphrase the Mac
+# keeps in its Keychain («Ver frase de las copias» in ~/FulasBank).
+if [[ "$copy" == *.enc ]]; then
+  clave="${FULAS_COPIA_CLAVE:-}"
+  for intento in 1 2 3; do
+    if [[ -n "$clave" ]] && FULAS_COPIA_CLAVE="$clave" openssl enc -d -aes-256-cbc -md sha256 -pbkdf2 -iter 200000 \
+        -pass env:FULAS_COPIA_CLAVE -in "$copy" -out "$work/copia.tar" 2> /dev/null; then
+      break
+    fi
+    rm -f "$work/copia.tar"
+    [[ $intento -eq 3 ]] && { echo "No se ha podido abrir la copia: la frase no es la buena." >&2; exit 1; }
+    read -r -s -p "Frase de las copias (en el Mac: «Ver frase de las copias»): " clave < /dev/tty
+    echo
+  done
+  tar -C "$work" -xf "$work/copia.tar"
+  rm -f "$work/copia.tar"
+else
+  tar -C "$work" -xf "$copy"
+fi
 src="$(dirname "$(find "$work" -name db.dump | head -1)")"
 [[ -f "$src/db.dump" ]] || { echo "Esa copia no trae base de datos (db.dump)." >&2; exit 1; }
 
@@ -64,6 +83,25 @@ if [[ "${users:-0}" -le 0 ]]; then
   exit 1
 fi
 echo "  $users usuario(s) cargados."
+
+# Every table must hold what it held when the copy was made: pg_restore
+# errors do not stop it, so a table it failed to load would show here.
+if [[ -f "$src/filas.txt" ]]; then
+  faltan=""
+  while read -r table expected; do
+    [[ -n "$table" ]] || continue
+    actual="$(psql -d "$POSTGRES_DB" -tAc "SELECT count(*) FROM $table" 2> /dev/null | tr -d '[:space:]' || true)"
+    if [[ "$actual" != "$expected" ]]; then
+      faltan="$faltan\n  $table: la copia tenía $expected filas y se han cargado ${actual:-0}"
+    fi
+  done < "$src/filas.txt"
+  if [[ -n "$faltan" ]]; then
+    cat "$work/errores.txt" >&2
+    printf "La copia NO se ha cargado entera:%b\n" "$faltan" >&2
+    exit 1
+  fi
+  echo "  Comprobado: todas las tablas tienen las filas de la copia."
+fi
 
 if [[ -f "$src/storage.tar.gz" ]]; then
   echo "▶ Cargando los archivos subidos"

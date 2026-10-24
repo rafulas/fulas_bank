@@ -6,9 +6,9 @@ Instalación de una sola vez. Después, Fulas Bank arranca solo al encender el M
 
 - **El motor**, en Docker: la app, la base de datos, Redis y el ayudante en segundo plano. Se encienden solos al abrir Docker, y Docker se abre solo al iniciar sesión.
 - **La app «Fulas Bank»** en Aplicaciones: una ventana de Mac con el logo FB que se conecta al motor (`http://localhost:3000`).
-- **Una copia diaria** a las 13:00 en **iCloud Drive → Fulas Bank → Copias**. Se guardan las 30 últimas.
+- **Una copia diaria y cifrada** a las 13:00 en **iCloud Drive → Fulas Bank → Copias**. Se guardan las 30 últimas.
 - **Un aviso** cuando haya una versión nueva. Tú decides cuándo actualizar.
-- La carpeta **`~/FulasBank`** (en tu carpeta de usuario), con las contraseñas (`.env`) y dos accesos directos: **Actualizar Fulas Bank** y **Hacer copia ahora**.
+- La carpeta **`~/FulasBank`** (en tu carpeta de usuario), con las contraseñas (`.env`) y accesos directos: **Actualizar Fulas Bank**, **Hacer copia ahora**, **Ver frase de las copias** y, tras la primera actualización, **Volver a la versión anterior**.
 
 ## Instalar
 
@@ -35,6 +35,7 @@ Si en el paso 3 sale un error que dice **«denied»**: en GitHub, tu perfil → 
   El Mac lo comprueba cada hora. Para mirarlo en el momento (también después de un «Más tarde»), en la app: menú **Fulas Bank → Buscar actualizaciones…**. Te enseña los cambios con **Actualizar ahora**, o te dice que ya estás al día. Al terminar de actualizar, la app se vuelve a abrir sola.
 
   Sin la app, también vale el doble clic en **`~/FulasBank/Actualizar Fulas Bank`**.
+- **Si una actualización sale mal:** doble clic en **`~/FulasBank/Volver a la versión anterior`**. Vuelve a la versión que tenías y carga la copia hecha justo antes de actualizar (se pierde lo apuntado desde entonces; te lo pregunta antes). Te quedas en esa versión hasta que vuelvas a pulsar «Actualizar».
 - **Copia a mano:** doble clic en **`~/FulasBank/Hacer copia ahora`**.
 
 ## Probar un cambio antes de unirlo
@@ -65,33 +66,35 @@ Para probar una solicitud de cambios **antes de unirla**:
 
    y en el de verdad, doble clic en **Actualizar Fulas Bank** cuando termine el robot «Imagen Fulas Bank».
 
-## Desde el móvil o el iPad
+## Solo desde este Mac
 
-Con el Mac encendido y Fulas Bank en marcha:
+Fulas Bank solo se abre desde el propio Mac (`localhost`). Ni otro ordenador ni un móvil conectados a la misma wifi pueden llegar a él, ni siquiera a la pantalla de entrada: así, en una wifi ajena (una cafetería, un hotel) o con invitados en casa, nadie ve que existe.
 
-- **En casa, con la misma wifi:** mira la IP del Mac en Ajustes del Sistema → Wi-Fi → Detalles (algo como `192.168.1.50`) y abre en Safari `http://192.168.1.50:3000`. Luego, Compartir → **Añadir a pantalla de inicio**.
-- **Fuera de casa:** instala [Tailscale](https://tailscale.com) en el Mac, el móvil y el iPad, con la misma cuenta. Abre `http://<nombre-del-mac>:3000` (el nombre sale en la app de Tailscale). Solo tus dispositivos pueden entrar.
-- El Mac **no debe dormirse**: Ajustes del Sistema → Batería → Opciones → «Evitar el reposo automático con el adaptador de corriente cuando la pantalla está apagada».
-- La primera vez, macOS puede preguntar si Docker acepta conexiones entrantes: di que sí.
+Si algún día quieres usarlo desde el móvil, se puede abrir a propósito (en `compose.yml`, quitando `127.0.0.1:` de la línea del puerto), pero lo recomendable sería hacerlo con Tailscale, que solo deja entrar a tus dispositivos. Pídelo y se prepara.
 
 ## Copias de seguridad
 
-- Cada copia es un único archivo, `fulasbank-AAAA-MM-DD_HHMM.tar`, con la base de datos, los archivos subidos (extractos, facturas) y la clave para leer los campos cifrados.
+- Cada copia es un único archivo, `fulasbank-AAAA-MM-DD_HHMM.tar.enc`, con la base de datos, los archivos subidos (extractos, facturas) y la clave para leer los campos cifrados.
+- **Van cifradas** (AES-256), porque contienen todas tus finanzas y están en iCloud. La primera copia crea una **frase** de seis grupos de cuatro letras y números, la guarda en el **Llavero** del Mac y te la enseña una vez en una ventana. **Apúntala fuera del Mac** (gestor de contraseñas o papel): sin ella no se puede abrir una copia en otro Mac. Puedes volver a verla con doble clic en **`~/FulasBank/Ver frase de las copias`**.
+- En este Mac no hace falta escribirla nunca: las copias y la recuperación la toman del Llavero.
+- Las copias antiguas sin cifrar (`.tar`) siguen sirviendo para recuperar y se borran solas cuando haya 30 nuevas.
+- Cada copia apunta cuántas filas tenían las tablas principales (movimientos, cuentas, saldos…). Al recuperarla se comprueba que han llegado todas; si falta algo, lo dice claramente en vez de dar la copia por buena.
 - **Por qué no la base de datos directamente en iCloud:** PostgreSQL escribe en sus archivos todo el rato, e iCloud los subiría a medio escribir, lo que puede estropearla. Una copia terminada es un archivo cerrado que iCloud sube sin problema.
 - **Otra carpeta (por ejemplo Google Drive):** añade al final de `~/FulasBank/.env` una línea como `FULAS_COPIAS_DIR=/Users/tu-usuario/Library/CloudStorage/GoogleDrive-tu@gmail.com/Mi unidad/Fulas Bank` (la ruta exacta la ves en Finder, en la barra lateral, con Google Drive para Mac instalado).
-- La copia incluye la clave de cifrado: trata esos archivos como privados (tu iCloud ya lo es).
 - **Recuperar una copia** (sustituye los datos actuales; antes hace otra copia por si acaso):
 
   ```
-  ~/FulasBank/restaurar.sh "ruta/a/fulasbank-2026-10-14_1300.tar"
+  ~/FulasBank/restaurar.sh "ruta/a/fulasbank-2026-10-14_1300.tar.enc"
   ```
 
   Puedes arrastrar el archivo a la ventana de Terminal para no escribir la ruta.
 - **Mac nuevo:** instala Docker y lanza el instalador con la copia al final:
 
   ```
-  curl -fsSL https://raw.githubusercontent.com/rafulas/fulas_bank/main/mac/instalar.sh | bash -s -- "ruta/a/la-copia.tar"
+  curl -fsSL https://raw.githubusercontent.com/rafulas/fulas_bank/main/mac/instalar.sh | bash -s -- "ruta/a/la-copia.tar.enc"
   ```
+
+  Te pedirá la frase de las copias (la que apuntaste).
 
 ## Si algo falla
 
@@ -105,9 +108,9 @@ Con el Mac encendido y Fulas Bank en marcha:
 |---|---|
 | `compose.yml` | Describe las cuatro piezas y cómo se conectan |
 | `instalar.sh` | Lo deja todo listo; se puede repetir sin peligro |
-| `actualizar.sh` | Copia, descarga la versión nueva y reinicia |
-| `copia.sh` | Hace la copia diaria |
+| `actualizar.sh` | Copia, descarga la versión nueva y reinicia; con `--volver`, deshace la última actualización |
+| `copia.sh` | Hace la copia diaria, cifrada |
 | `aviso.sh` | Cada hora mira si hay versión nueva y, si la hay, te pregunta |
-| `restaurar.sh` | Carga una copia |
+| `restaurar.sh` | Carga una copia y comprueba que ha llegado entera |
 
-La «imagen» de Fulas Bank (la app ya preparada, lista para Docker) la fabrica GitHub después de cada merge a `main`: `.github/workflows/fulas-imagen.yml`, para Mac con chip Apple y con Intel. La app de Aplicaciones (carpeta `desktop/`) la fabrica `.github/workflows/fulas-app-mac.yml` y queda en la release «app-mac» del repositorio.
+La «imagen» de Fulas Bank (la app ya preparada, lista para Docker) la fabrica GitHub después de cada merge a `main`, solo si antes pasan todas las pruebas: `.github/workflows/fulas-imagen.yml`, para Mac con chip Apple y con Intel. La app de Aplicaciones (carpeta `desktop/`) la fabrica `.github/workflows/fulas-app-mac.yml` y queda en la release «app-mac» del repositorio.
