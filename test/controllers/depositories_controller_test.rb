@@ -117,7 +117,8 @@ class DepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", new_plaid_item_path(region: "us", accountable_type: "Depository"), count: 0
     assert_select "form[action=?]", depositories_path
-    assert_select "input[name=?][value=?]", "account[opening_balance_date]", Time.zone.today.iso8601
+    # The balance typed is the close of yesterday, so today's movements add on top.
+    assert_select "input[name=?][value=?]", "account[opening_balance_date]", Time.zone.yesterday.iso8601
   ensure
     Rails.configuration.x.account_provider_links = original
   end
