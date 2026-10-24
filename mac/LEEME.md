@@ -36,7 +36,8 @@ Si en el paso 3 sale un error que dice **«denied»**: en GitHub, tu perfil → 
 
   Sin la app, también vale el doble clic en **`~/FulasBank/Actualizar Fulas Bank`**.
 - **Si una actualización sale mal:** doble clic en **`~/FulasBank/Volver a la versión anterior`**. Vuelve a la versión que tenías y carga la copia hecha justo antes de actualizar (se pierde lo apuntado desde entonces; te lo pregunta antes). Te quedas en esa versión hasta que vuelvas a pulsar «Actualizar».
-- **Copia a mano:** doble clic en **`~/FulasBank/Hacer copia ahora`**.
+- **Copia a mano:** en la app, menú **Fulas Bank → Hacer copia ahora**, o doble clic en **`~/FulasBank/Hacer copia ahora`** (en Finder, **⌘ ⇧ G** y escribe `~/FulasBank`).
+- **Ver la frase de las copias:** menú **Fulas Bank → Ver frase de las copias…**, o doble clic en **`~/FulasBank/Ver frase de las copias`**.
 
 ## Probar un cambio antes de unirlo
 

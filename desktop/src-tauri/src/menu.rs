@@ -7,6 +7,8 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let prefs = MenuItem::with_id(app, "preferences", "Preferencias…", true, Some("Cmd+,"))?;
     let switch = MenuItem::with_id(app, "switch_server", "Cambiar dirección…", true, Some("Cmd+Shift+O"))?;
     let updates = MenuItem::with_id(app, "check_updates", "Buscar actualizaciones…", true, None::<&str>)?;
+    let backup = MenuItem::with_id(app, "backup_now", "Hacer copia ahora", true, None::<&str>)?;
+    let passphrase = MenuItem::with_id(app, "show_passphrase", "Ver frase de las copias…", true, None::<&str>)?;
     let app_menu = Submenu::with_items(
         app,
         &pkg.name,
@@ -14,6 +16,9 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         &[
             &PredefinedMenuItem::about(app, Some(&pkg.name), Some(AboutMetadata::default()))?,
             &updates,
+            &PredefinedMenuItem::separator(app)?,
+            &backup,
+            &passphrase,
             &PredefinedMenuItem::separator(app)?,
             &prefs,
             &switch,
@@ -87,6 +92,18 @@ pub fn on_event(app: &tauri::AppHandle, id: &str) {
         // version and answers in a native window, with «Actualizar ahora»
         // when there is one.
         "check_updates" => check_updates(app),
+        // The same shortcuts as in ~/FulasBank, opened in Terminal so the
+        // copy shows its progress (and, the first time, the passphrase).
+        "backup_now" => open_shortcut(
+            app,
+            "Hacer copia ahora.command",
+            "No encuentro «Hacer copia ahora» en la carpeta FulasBank de tu usuario. Vuelve a lanzar el instalador (mac/LEEME.md).",
+        ),
+        "show_passphrase" => open_shortcut(
+            app,
+            "Ver frase de las copias.command",
+            "Todavía no hay frase de las copias: se crea con la primera copia. Usa antes «Hacer copia ahora».",
+        ),
         "reload" => {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.eval("window.location.reload()");
@@ -116,6 +133,30 @@ fn check_updates(app: &tauri::AppHandle) {
             let _ = w.eval(
                 "alert('No encuentro la instalación de Fulas Bank en la carpeta FulasBank de tu usuario. Vuelve a lanzar el instalador (mac/LEEME.md).')",
             );
+        }
+    }
+}
+
+// Fulas Bank: opens one of the .command shortcuts that the Mac install keeps
+// in ~/FulasBank; macOS runs a .command file in Terminal.
+fn open_shortcut(app: &tauri::AppHandle, file_name: &str, missing_message: &str) {
+    let shortcut = std::env::var("HOME")
+        .map(|home| std::path::Path::new(&home).join("FulasBank").join(file_name))
+        .ok()
+        .filter(|path| path.exists());
+    let started = match shortcut.map(|path| std::process::Command::new("/usr/bin/open").arg(path).spawn()) {
+        Some(Ok(mut child)) => {
+            std::thread::spawn(move || {
+                let _ = child.wait();
+            });
+            true
+        }
+        _ => false,
+    };
+    if !started {
+        if let Some(w) = app.get_webview_window("main") {
+            let message = serde_json::to_string(missing_message).unwrap_or_default();
+            let _ = w.eval(&format!("alert({message})"));
         }
     }
 }
