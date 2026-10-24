@@ -47,15 +47,23 @@ fi
 
 # The passphrase from the Keychain, created the first time.
 copias_clave() {
-  local clave
-  if clave="$(security find-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w 2> /dev/null)" && [[ -n "$clave" ]]; then
+  local clave rc=0
+  clave="$(security find-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w 2> /dev/null)" || rc=$?
+  if [[ $rc -eq 0 && -n "$clave" ]]; then
     printf '%s' "$clave"
     return
+  fi
+  # A new passphrase only when the Keychain says there is none (code 44). If
+  # it cannot be read for another reason (Keychain locked, access refused),
+  # making a new one would replace the passphrase of every earlier copy.
+  if [[ $rc -ne 44 ]]; then
+    echo "No se ha podido leer la frase de las copias del Llavero (código $rc). ¿Está bloqueado el Llavero?" >&2
+    return 1
   fi
 
   # Six groups of four letters and digits: easy to copy by hand, ~120 bits.
   clave="$(LC_ALL=C tr -dc 'abcdefghjkmnpqrstuvwxyz23456789' < /dev/urandom | head -c 24 | sed 's/.\{4\}/&-/g; s/-$//')"
-  security add-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w "$clave" -U
+  security add-generic-password -a "$USER" -s "$KEYCHAIN_SERVICE" -w "$clave"
   echo "Frase de las copias creada y guardada en el Llavero (\"$KEYCHAIN_SERVICE\")." >&2
   # In the background, so the copy goes on while the window waits for you
   # (it may be the 13:00 copy, with nobody in front of the Mac).
@@ -98,7 +106,7 @@ if ! docker compose ps --status running --services 2> /dev/null | grep -qx db; t
   exit 1
 fi
 
-clave="$(copias_clave)"
+clave="$(copias_clave)" || exit 1
 [[ -n "$clave" ]] || { echo "No hay frase para cifrar la copia en el Llavero: no se hace copia." >&2; exit 1; }
 
 name="fulasbank-$(date '+%Y-%m-%d_%H%M')"
