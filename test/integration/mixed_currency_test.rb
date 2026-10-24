@@ -97,7 +97,7 @@ class MixedCurrencyTest < ActionDispatch::IntegrationTest
   end
 
   test "API reads convert before combining amounts" do
-    api_key = ApiKey.create!(user: @user, name: "Mixed currency", scopes: [ "read" ], source: "web",
+    api_key = ApiKey.create!(user: @user, name: "Mixed currency", scopes: [ "read" ], source: "web", # pipelock:ignore Credential in URL
                              display_key: "mixed_currency_#{SecureRandom.hex(8)}")
 
     assert_no_currency_mismatch do
