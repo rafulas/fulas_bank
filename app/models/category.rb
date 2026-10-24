@@ -56,6 +56,11 @@ class Category < ApplicationRecord
   before_save :inherit_color_from_parent
   before_destroy :prevent_special_destroy
 
+  # prepend: runs before dependent: :nullify's own before_destroy, so the
+  # reassignment (which touches entries to bust report caches) still sees the
+  # transactions; nullify then runs as the safety net.
+  before_destroy :reassign_transactions_to_nothing, prepend: true
+
   scope :alphabetically, -> { order(:name) }
   scope :recently_used, -> { where.not(last_used_at: nil).order(last_used_at: :desc) }
   scope :alphabetically_by_hierarchy, -> {
@@ -415,7 +420,7 @@ class Category < ApplicationRecord
 
   def replace_and_destroy!(replacement)
     transaction do
-      transactions.update_all category_id: replacement&.id
+      Transaction.reassign_category!(transactions, replacement&.id)
       destroy!
     end
   end
@@ -492,6 +497,14 @@ class Category < ApplicationRecord
 
       errors.add(:base, :special_cannot_be_deleted)
       throw :abort
+    end
+
+    def reassign_transactions_to_nothing
+      # Fulas Bank: a special category is never deleted on its own
+      # (prevent_special_destroy), so its transactions keep it.
+      return if special? && !destroyed_by_association
+
+      Transaction.reassign_category!(transactions, nil)
     end
 
     def category_level_limit

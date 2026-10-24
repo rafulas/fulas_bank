@@ -1738,6 +1738,47 @@ end
     Rails.cache = original_cache
   end
 
+  # Fulas Bank: a category change still syncs, so the linkers can propose
+  # the charge for the car or the house.
+  test "category-only update syncs the account" do
+    assert_enqueued_with(job: SyncJob) do
+      patch transaction_url(@entry), params: {
+        entry: { entryable_attributes: { id: @entry.entryable_id, category_id: categories(:income).id } }
+      }
+    end
+
+    assert_equal categories(:income).id, @entry.reload.entryable.category_id
+  end
+
+  test "notes-only update does not sync the account" do
+    assert_no_enqueued_jobs only: SyncJob do
+      patch transaction_url(@entry), params: { entry: { notes: "Cena con amigos" } }
+    end
+  end
+
+  test "amount update syncs the account" do
+    assert_enqueued_with(job: SyncJob) do
+      patch transaction_url(@entry), params: { entry: { amount: @entry.amount + 10 } }
+    end
+  end
+
+  test "category and date updated together still sync the account" do
+    assert_enqueued_with(job: SyncJob) do
+      patch transaction_url(@entry), params: {
+        entry: {
+          date: @entry.date - 1.day,
+          entryable_attributes: { id: @entry.entryable_id, category_id: categories(:food_and_drink).id }
+        }
+      }
+    end
+  end
+
+  test "toggling a tag does not sync the account" do
+    assert_no_enqueued_jobs only: SyncJob do
+      patch tags_transaction_url(@entry), params: { toggle_tag_id: tags(:two).id }, as: :turbo_stream
+    end
+  end
+
   test "index with ai_status=current renders the AI filter badge" do
     @entry.entryable.enrich_attribute(:category_id, categories(:income).id, source: "ai")
 

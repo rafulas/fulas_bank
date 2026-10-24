@@ -22,6 +22,13 @@ class Transfer < ApplicationRecord
 
   after_create :categorize_investment_withdrawal
 
+  # Runs on every destroy, including the cascade when one leg's transaction
+  # (or its entry) is deleted, so the surviving leg never keeps a transfer
+  # kind without a transfer (idea from Sure #4158). Before, only destroy!
+  # reset the kinds, and a leg left as "funds_movement" or "cc_payment"
+  # silently dropped out of income, spending and budgets.
+  before_destroy :release_transactions
+
   class << self
     def kind_for_account(account)
       if account.loan?
@@ -108,29 +115,6 @@ class Transfer < ApplicationRecord
     end
   end
 
-  def destroy!
-    Transfer.transaction do
-      [ inflow_transaction, outflow_transaction ].each do |transaction|
-        next if transaction.nil?
-        next unless Transaction.exists?(transaction.id)
-        begin
-          transaction.update!(kind: "standard")
-          # The entry survives this destroy (only the Transfer join row and
-          # fee transactions go away), but its idempotency_key must not: a
-          # later retry of the original create request looks up that key,
-          # finds no Transfer anymore, and would otherwise hit the unique
-          # index on the stale entry and raise instead of creating a new
-          # transfer (see Transfer::Creator#find_existing_transfer).
-          transaction.entry.update!(idempotency_key: nil) if transaction.entry&.idempotency_key.present?
-        rescue ActiveRecord::RecordNotFound
-        rescue NoMethodError
-          next
-        end
-      end
-      super
-    end
-  end
-
   def confirm!
     update!(status: "confirmed")
   end
@@ -154,6 +138,31 @@ class Transfer < ApplicationRecord
   end
 
   private
+    # Gives each surviving transaction back its standalone state. When the
+    # transfer goes because one leg is being deleted (dependent: :destroy on
+    # Transaction), that leg is skipped.
+    def release_transactions
+      deleted_leg_key = destroyed_by_association&.foreign_key&.to_s
+
+      { "inflow_transaction_id" => inflow_transaction, "outflow_transaction_id" => outflow_transaction }.each do |key, transaction|
+        next if transaction.nil? || key == deleted_leg_key
+        next unless Transaction.exists?(transaction.id)
+
+        begin
+          transaction.update!(kind: "standard")
+          # The entry survives this destroy (only the Transfer join row and
+          # fee transactions go away), but its idempotency_key must not: a
+          # later retry of the original create request looks up that key,
+          # finds no Transfer anymore, and would otherwise hit the unique
+          # index on the stale entry and raise instead of creating a new
+          # transfer (see Transfer::Creator#find_existing_transfer).
+          transaction.entry.update!(idempotency_key: nil) if transaction.entry&.idempotency_key.present?
+        rescue ActiveRecord::RecordNotFound, NoMethodError
+          next
+        end
+      end
+    end
+
     def transfer_has_different_accounts
       return unless inflow_transaction&.entry && outflow_transaction&.entry
       errors.add(:base, :different_accounts) if to_account == from_account
