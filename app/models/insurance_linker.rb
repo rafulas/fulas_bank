@@ -17,6 +17,12 @@ class InsuranceLinker
     new(family).run!
   rescue => error
     Rails.logger.error("InsuranceLinker failed for family #{family.id}: #{error.message}")
+    # Fulas Bank: visible in Ajustes › Registro de depuración, not only the log.
+    DebugLogEntry.capture(
+      category: "linkers", level: "error", source: "InsuranceLinker", family: family,
+      message: "InsuranceLinker failed: #{error.class}: #{error.message}",
+      metadata: { backtrace: Array(error.backtrace).first(5) }
+    )
     Sentry.capture_exception(error) if defined?(Sentry)
     0
   end

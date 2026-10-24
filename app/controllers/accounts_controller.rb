@@ -249,7 +249,7 @@ class AccountsController < ApplicationController
     else
       begin
         @account.destroy_later
-        redirect_to accounts_path, notice: t("accounts.destroy.success", type: @account.accountable_type)
+        redirect_to accounts_path, notice: t("accounts.destroy.success", type: @account.accountable_class.singular_display_name)
       rescue => e
         Rails.logger.error "Failed to schedule account #{@account.id} for deletion: #{e.message}"
         redirect_to accounts_path, alert: t("accounts.destroy.failed")

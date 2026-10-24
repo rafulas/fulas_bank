@@ -308,6 +308,36 @@ class TransactionImportTest < ActiveSupport::TestCase
     assert_equal @import.id, existing_entry.reload.import_id
   end
 
+  test "Fulas Bank: importing a statement again keeps what was set by hand and says what was already there" do
+    account = accounts(:depository)
+    existing_entry = account.entries.create!(
+      date: Date.new(2024, 1, 1), amount: 100, currency: "USD", name: "Coffee Shop", notes: "Con Ana",
+      entryable: Transaction.new(category: categories(:food_and_drink))
+    )
+
+    @import.update!(
+      account: account,
+      raw_file_str: "date,name,amount,category,notes\n01/01/2024,Coffee Shop,100,Otra,Del banco\n02/01/2024,Bakery,20,,\n",
+      date_col_label: "date", amount_col_label: "amount", name_col_label: "name",
+      category_col_label: "category", notes_col_label: "notes",
+      date_format: "%m/%d/%Y", amount_type_strategy: "signed_amount", signage_convention: "inflows_negative"
+    )
+    @import.generate_rows_from_csv
+    @import.mappings.create! key: "Otra", mappable: categories(:income), type: "Import::CategoryMapping"
+    @import.mappings.create! key: "", create_when_empty: false, mappable: nil, type: "Import::CategoryMapping"
+    @import.reload
+
+    assert_equal 1, @import.existing_rows_count
+    assert_equal 1, @import.dry_run[:transactions]
+
+    @import.publish
+    @import.reload
+
+    assert_equal categories(:food_and_drink), existing_entry.reload.transaction.category
+    assert_equal "Con Ana", existing_entry.notes
+    assert_equal({ "created" => 1, "existing" => 1 }, @import.published_counts)
+  end
+
   test "creates new transaction when name differs even if date and amount match" do
     account = accounts(:depository)
 

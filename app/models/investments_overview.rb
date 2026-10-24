@@ -8,6 +8,8 @@
 # count. An account with no money movements but with positions (shares
 # recorded purchase by purchase) uses what those positions cost instead;
 # with neither, there is nothing to compare against and no gain is shown.
+# An account holding funds by participaciones (InvestmentFund) uses the
+# "Total aportado" typed for its funds, as the funds table does.
 class InvestmentsOverview
   ACCOUNT_TYPES = %w[Investment Crypto].freeze
   TOP_HOLDINGS = 5
@@ -41,7 +43,8 @@ class InvestmentsOverview
 
   def rows
     @rows ||= accounts.map do |account|
-      net_in = account.brokerage_cash? ? (contributions[account.id] || holdings_cost(account)) : trades_net_in(account)
+      net_in = funds_cost(account) ||
+        (account.brokerage_cash? ? (contributions[account.id] || holdings_cost(account)) : trades_net_in(account))
       Row.new(
         account: account,
         value: Money.new(account.balance.to_d, account.currency),
@@ -136,6 +139,16 @@ class InvestmentsOverview
                        .where.not(trades: { qty: 0 })
                        .pluck(:amount)
       amounts.sum(&:to_d) if amounts.any?
+    end
+
+    # Fulas Bank: what was put into the account's funds (their "Total
+    # aportado"), so the header agrees with the funds table. nil when the
+    # account holds no funds or a fund has no cost typed in.
+    def funds_cost(account)
+      list = funds.select { |fund| fund.account_id == account.id }
+      return if list.empty? || list.any? { |fund| fund.cost.nil? }
+
+      list.sum { |fund| fund.cost.to_d }
     end
 
     # What the current positions cost, for an account recorded only with

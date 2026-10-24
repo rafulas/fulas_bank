@@ -5,6 +5,7 @@ class TransactionImport < Import
 
       new_transactions = []
       updated_entries = []
+      skipped_transfers = 0
       claimed_entry_ids = Set.new # Track entries we've already claimed in this import
 
       rows.each_with_index do |row, index|
@@ -50,16 +51,20 @@ class TransactionImport < Import
           transfer_duplicate = transfer_duplicate_for(mapped_account, row, effective_currency, claimed_entry_ids)
           if transfer_duplicate
             claimed_entry_ids.add(transfer_duplicate.id)
+            skipped_transfers += 1
             next
           end
         end
 
         if duplicate_entry
-          # Update existing transaction instead of creating a new one
-          duplicate_entry.transaction.category = category if category.present?
-          duplicate_entry.transaction.tags = tags if tags.any?
-          duplicate_entry.transaction.merchant = merchant if merchant.present?
-          duplicate_entry.notes = row.notes if row.notes.present?
+          # Update existing transaction instead of creating a new one.
+          # Fulas Bank: only what it lacks, so importing the same statement
+          # again never undoes a category, shop, tags or notes set by hand.
+          existing = duplicate_entry.transaction
+          existing.category = category if category.present? && existing.category_id.nil?
+          existing.tags = tags if tags.any? && existing.tags.empty?
+          existing.merchant = merchant if merchant.present? && existing.merchant_id.nil?
+          duplicate_entry.notes = row.notes if row.notes.present? && duplicate_entry.notes.blank?
           duplicate_entry.import = self
           duplicate_entry.import_locked = true  # Protect from provider sync overwrites
           updated_entries << duplicate_entry
@@ -93,6 +98,51 @@ class TransactionImport < Import
 
       # Bulk import new transactions
       Transaction.import!(new_transactions, recursive: true) if new_transactions.any?
+
+      # Fulas Bank: what the file brought, for the final screen.
+      update_column(:summary, (summary || {}).merge(
+        SUMMARY_KEY => { "created" => new_transactions.size, "existing" => updated_entries.size + skipped_transfers }
+      ))
+    end
+  end
+
+  SUMMARY_KEY = "transactions".freeze
+
+  # Fulas Bank: { "created" => n, "existing" => m } once published, or nil.
+  def published_counts
+    counts = (summary || {})[SUMMARY_KEY]
+    counts if counts.is_a?(Hash) && counts.key?("existing")
+  end
+
+  # Fulas Bank: on the confirm step, the transactions that will be added,
+  # not counting the rows already in the account (re-importing a statement
+  # that overlaps the last one), which are not added again.
+  def dry_run
+    super.merge(transactions: [ rows_count - existing_rows_count, 0 ].max)
+  end
+
+  # Rows that match a movement already in their account, by the same rule as
+  # the import (same day, amount, currency and name, each movement once).
+  # One query per account rather than one per row.
+  def existing_rows_count
+    @existing_rows_count ||= rows.group_by { |row| account || mappings.accounts.mappable_for(row.account) }.sum do |mapped_account, account_rows|
+      next 0 if mapped_account.nil?
+
+      dates = account_rows.filter_map { |row| row_date(row) }
+      next 0 if dates.empty?
+
+      available = mapped_account.entries.where(entryable_type: "Transaction", external_id: nil, date: dates.min..dates.max)
+                                .pluck(:date, :amount, :currency, :name)
+                                .map { |date, amount, currency, name| [ date.iso8601, amount.to_d, currency, name ] }
+                                .tally
+      account_rows.count do |row|
+        currency = currency_col_label.present? ? row.currency : (mapped_account.currency.presence || family.currency)
+        key = [ row_date(row), row.signed_amount, currency, row.name ]
+        next false unless available[key].to_i.positive?
+
+        available[key] -= 1
+        true
+      end
     end
   end
 
@@ -116,6 +166,13 @@ class TransactionImport < Import
     return [] if entity_type_col_label.nil?
 
     csv_rows.map { |row| row[entity_type_col_label] }.uniq
+  end
+
+  # A row's date as ISO text, or nil when it cannot be read yet.
+  def row_date(row)
+    row.date_iso
+  rescue ArgumentError, TypeError
+    nil
   end
 
   # Fulas Bank: the family's merchant with that name, created when there is

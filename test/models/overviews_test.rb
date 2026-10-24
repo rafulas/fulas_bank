@@ -49,6 +49,25 @@ class OverviewsTest < ActiveSupport::TestCase
     assert_equal Money.new(660, "USD"), row.gain
   end
 
+  test "funds held by participaciones count what was put into them in the totals" do
+    account = @family.accounts.create!(name: "Fondos", balance: "1017.41", currency: "USD", accountable: Investment.new)
+    @family.investment_funds.create!(account: account, name: "Indexado", units: 100, price: "10.1741", price_date: Date.current, cost: 1_000)
+
+    overview = InvestmentsOverview.new(@family, user: @user)
+    row = overview.rows.sole
+
+    assert_equal Money.new(1_000, "USD"), row.contributed
+    assert_equal Money.new(1_000, "USD"), overview.total_contributed
+    assert_equal Money.new(BigDecimal("17.41"), "USD"), overview.total_gain
+  end
+
+  test "Fulas Bank: current accounts and loans offer only the kinds that exist in Spain" do
+    assert_equal %w[checking savings cash], Depository.subtype_options_for_select.map(&:last)
+    assert_includes Depository.subtype_options_for_select(current: "hsa").map(&:last), "hsa"
+    assert_not_includes Loan.subtype_options_for_select.map(&:last), "student"
+    assert_includes Loan.subtype_options_for_select(current: "student").map(&:last), "student"
+  end
+
   test "the investment types offered are the Spanish ones, keeping an account's own" do
     assert_equal %w[stocks mutual_fund pension savings_insurance fixed_income other], Investment.subtypes_for_select.map(&:last)
     assert_includes Investment.subtypes_for_select(current: "401k").map(&:last), "401k"
