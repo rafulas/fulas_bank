@@ -55,6 +55,14 @@ class Rule::Condition < ApplicationRecord
     end
   end
 
+  # Fulas Bank: the operator as the rule form names it ("Empieza por"), not
+  # its stored code ("starts_with"), for the rules list.
+  def operator_display
+    operators.find { |_label, code| code == operator }&.first&.downcase || operator
+  rescue StandardError
+    operator
+  end
+
   def options
     filter.options
   end

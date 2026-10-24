@@ -6,10 +6,22 @@ class Rule::ConditionFilter
   # Operators that don't require a value (and that the form hides the value field for)
   VALUELESS_OPERATORS = [ "is_null", "is_not_null" ].freeze
 
+  # The ILIKE pattern each text operator matches, around the escaped value.
+  PATTERN_OPERATORS = {
+    "like" => "%%%<value>s%%",
+    "not_like" => "%%%<value>s%%",
+    "starts_with" => "%<value>s%%",
+    "ends_with" => "%%%<value>s"
+  }.freeze
+
   OPERATORS_MAP = {
     "text" => [
       [ :contains, "like" ],
       [ :does_not_contain, "not_like" ],
+      # Fulas Bank: for names whose start or end gives the shop away
+      # ("COMPRA TARJ 1234 MERCADONA"), where "contains" catches too much.
+      [ :starts_with, "starts_with" ],
+      [ :ends_with, "ends_with" ],
       [ :equal_to, "=" ],
       [ :not_equal_to, "!=" ],
       [ :is_empty, "is_null" ],
@@ -105,8 +117,9 @@ class Rule::ConditionFilter
         normalized_value = normalize_value(value)
         normalized_field = normalize_field(field)
 
-        if operator == "like" || operator == "not_like"
-          sanitized_value = "%#{ActiveRecord::Base.sanitize_sql_like(normalized_value)}%"
+        if PATTERN_OPERATORS.key?(operator)
+          escaped = ActiveRecord::Base.sanitize_sql_like(normalized_value)
+          sanitized_value = format(PATTERN_OPERATORS[operator], value: escaped)
           expression = ActiveRecord::Base.sanitize_sql_for_conditions([
             "#{normalized_field} #{sanitize_operator(operator)} ?",
             sanitized_value
@@ -128,7 +141,7 @@ class Rule::ConditionFilter
       raise UnsupportedOperatorError, "Unsupported operator: #{operator} for type: #{type}" unless operators.map(&:last).include?(operator)
 
       case operator
-      when "like"
+      when "like", "starts_with", "ends_with"
         "ILIKE"
       when "not_like"
         "NOT ILIKE"
