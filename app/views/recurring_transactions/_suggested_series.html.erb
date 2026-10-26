@@ -1,4 +1,4 @@
-<%# locals: (suggested:) %>
+<%# locals: (suggested:, lookalikes: {}) %>
 <%# Detection proposes, the user disposes. Rendered from both the Bills
     overview and Settings -> Recurring, so every key is absolutely scoped.
 
@@ -45,11 +45,23 @@
         <%# Fulas Bank: confirmed straight into its kind (see
             RecurringTransaction::Kind), the app's guess first. %>
         <% guess = RecurringTransaction::Kind.guess(suggestion) %>
+        <% lookalike = lookalikes[suggestion.id] %>
         <div class="flex flex-wrap items-center gap-2">
+          <%# Fulas Bank: probably one the user already has, under another
+              name: offered first. %>
+          <% if lookalike %>
+            <%= render DS::Link.new(
+              text: t("recurring_transactions.suggested.is", name: lookalike.list_name),
+              variant: "primary",
+              size: :sm,
+              href: merge_recurring_transaction_path(suggestion, into: lookalike.id),
+              method: :post
+            ) %>
+          <% end %>
           <% ([ guess ] + (RecurringTransaction::Kind::KINDS - [ guess ])).each do |kind| %>
             <%= render DS::Link.new(
               text: t("recurring_transactions.suggested.confirm_as.#{kind}"),
-              variant: kind == guess ? "primary" : "outline",
+              variant: kind == guess && lookalike.nil? ? "primary" : "outline",
               size: :sm,
               href: confirm_recurring_transaction_path(suggestion, kind: kind),
               method: :post

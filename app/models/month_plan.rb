@@ -69,7 +69,8 @@ class MonthPlan
 
   # Fulas Bank: a payment still to make (or income still to come), for
   # Inicio's "next payments" and the timeline.
-  NextPayment = Data.define(:series, :date, :amount, :state) do
+  # `occurrence` is the stored payment, to open it (nil for a later one).
+  NextPayment = Data.define(:series, :date, :amount, :state, :occurrence) do
     def income?
       series.typed_income? || series.amount.to_d.negative?
     end
@@ -87,11 +88,12 @@ class MonthPlan
     next_month = new(family, user: user, month: today.next_month, today: today)
 
     pending = (this_month.payments + next_month.payments).reject(&:paid).map do |payment|
-      NextPayment.new(series: payment.series, date: payment.date, amount: payment.amount, state: payment.state)
+      NextPayment.new(series: payment.series, date: payment.date, amount: payment.amount, state: payment.state,
+                      occurrence: payment.occurrence)
     end
     seen = pending.map { |payment| payment.series.id }.to_set
     later = next_month.upcoming.reject { |item| seen.include?(item.series.id) }.map do |item|
-      NextPayment.new(series: item.series, date: item.date, amount: item.amount, state: :expected)
+      NextPayment.new(series: item.series, date: item.date, amount: item.amount, state: :expected, occurrence: nil)
     end
 
     (pending.sort_by(&:date) + later).first(limit)

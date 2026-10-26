@@ -43,7 +43,7 @@
   </div>
 
   <% if @suggested.any? && !@family.recurring_transactions_disabled? %>
-    <%= render "recurring_transactions/suggested_series", suggested: @suggested %>
+    <%= render "recurring_transactions/suggested_series", suggested: @suggested, lookalikes: @lookalikes %>
   <% end %>
 
   <section class="space-y-3" aria-labelledby="recurring-list-title">

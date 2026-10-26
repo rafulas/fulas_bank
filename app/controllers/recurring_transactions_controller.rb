@@ -15,9 +15,9 @@ class RecurringTransactionsController < ApplicationController
 
   # Fulas Bank: the declare, edit and suggestion paths only honor the family's
   # recurring toggle; recurring movements are not a preview feature here.
-  before_action :ensure_recurring_available, only: %i[new create edit update confirm dismiss]
-  before_action :set_recurring_transaction, only: %i[edit update toggle_status destroy confirm dismiss]
-  before_action :ensure_series_writable, only: %i[update toggle_status destroy confirm dismiss]
+  before_action :ensure_recurring_available, only: %i[new create edit update confirm dismiss merge]
+  before_action :set_recurring_transaction, only: %i[edit update toggle_status destroy confirm dismiss merge]
+  before_action :ensure_series_writable, only: %i[update toggle_status destroy confirm dismiss merge]
 
   def index
     # Fulas Bank: each loan's instalment, kept in step with the loan (and a
@@ -31,6 +31,9 @@ class RecurringTransactionsController < ApplicationController
     # Fresh detections wait in their own review strip until confirmed; they
     # are not real bills yet and would only be noise inside the main table.
     @suggested = scope.suggested.order(next_expected_date: :asc)
+    # Fulas Bank: the active series each suggestion probably is already.
+    active = scope.active.to_a
+    @lookalikes = @suggested.to_h { |suggestion| [ suggestion.id, RecurringTransaction::Lookalike.for(suggestion, among: active) ] }.compact
     @recurring_transactions = scope.where.not(status: :suggested)
                                    .order(status: :asc, next_expected_date: :asc)
     @family = Current.family
@@ -65,6 +68,19 @@ class RecurringTransactionsController < ApplicationController
     end
 
     flash[:notice] = t("recurring_transactions.confirmed")
+    redirect_back_or_to recurring_transactions_path
+  end
+
+  # Fulas Bank: «Es <serie>»: the suggestion is a series the user already
+  # has under another name. Its movements become that series' payments (which
+  # teaches it the bank's name) and the suggestion is not offered again.
+  def merge
+    target = Current.family.recurring_transactions.accessible_by(Current.user).active.find(params[:into])
+    entries = RecurringTransaction::Lookalike.new(@recurring_transaction).entries
+    count = RecurringAssignment.new(family: Current.family, entries: entries, series_id: target.id).apply!
+    @recurring_transaction.update!(status: "ended")
+
+    flash[:notice] = t("recurring_transactions.merged", count: count, name: target.display_name)
     redirect_back_or_to recurring_transactions_path
   end
 
@@ -259,6 +275,7 @@ class RecurringTransactionsController < ApplicationController
       @recurring_transaction.destroy!
     else
       @recurring_transaction.update!(status: "ended")
+      release_movements(@recurring_transaction)
     end
 
     flash[:notice] = t(income ? "recurring_transactions.deleted_income" : "recurring_transactions.deleted")
@@ -266,6 +283,17 @@ class RecurringTransactionsController < ApplicationController
   end
 
   protected
+
+    # Fulas Bank: the movements a removed series had leave it, so another
+    # series (the one it duplicated, say) can take them. A movement is only
+    # ever one series' payment.
+    def release_movements(series)
+      RecurringAllocation.joins(:recurring_occurrence)
+                         .where(recurring_occurrences: { recurring_transaction_id: series.id })
+                         .includes(:recurring_occurrence, :entry).find_each do |allocation|
+        RecurringTransaction::Allocator.new(allocation.recurring_occurrence).unallocate!(allocation)
+      end
+    end
 
     # Seeds the dialog's model from an existing transaction. Shared with the
     # smart-fill path, so a failed suggestion still leaves the user exactly

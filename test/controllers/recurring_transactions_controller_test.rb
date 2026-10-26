@@ -352,6 +352,57 @@ class RecurringTransactionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "Fulas Bank: a suggestion that is a series under another name is merged into it" do
+    account = accounts(:depository)
+    loan = @family.recurring_transactions.create!(
+      name: "Préstamo Reforma Vivienda", account: account, amount: 344.21, currency: "USD",
+      dedup_scope: "reforma", bill_type: "installment", expected_day_of_month: (Date.current - 2).day,
+      anchor_date: Date.current, last_occurrence_date: Date.current, next_expected_date: Date.current,
+      status: "active", manual: true
+    )
+    suggestion = @family.recurring_transactions.create!(
+      name: "Préstamo RRHH Reforma", account: account, amount: 344.21, currency: "USD",
+      dedup_scope: "rrhh", expected_day_of_month: (Date.current - 3).day, last_occurrence_date: Date.current - 3,
+      next_expected_date: Date.current.next_month, status: "suggested", occurrence_count: 3
+    )
+    payments = 3.times.map do |i|
+      account.entries.create!(date: Date.current - 3 - i.months, amount: 344.21, currency: "USD",
+                              name: "Préstamo RRHH Reforma", entryable: Transaction.create!)
+    end
+
+    get recurring_transactions_url
+    assert_select "a[href=?]", merge_recurring_transaction_path(suggestion, into: loan.id)
+
+    post merge_recurring_transaction_url(suggestion, into: loan.id)
+
+    assert suggestion.reload.ended?, "the suggestion is not offered again"
+    linked = RecurringAllocation.joins(:recurring_occurrence)
+                                .where(recurring_occurrences: { recurring_transaction_id: loan.id }).pluck(:entry_id)
+    assert_equal payments.map(&:id).sort, linked.sort
+    assert_includes Array(loan.reload.matcher_hints["name_aliases"]), "Préstamo RRHH Reforma"
+  end
+
+  test "Fulas Bank: the edit dialog can delete, and a removed detected series lets go of its movements" do
+    account = accounts(:depository)
+    duplicate = @family.recurring_transactions.create!(
+      name: "Nómina BBVA", account: account, amount: -1444.49, currency: "USD",
+      dedup_scope: "dup", bill_type: "income", expected_day_of_month: Date.current.day,
+      anchor_date: Date.current, last_occurrence_date: Date.current, next_expected_date: Date.current,
+      status: "active", manual: false
+    )
+    payslip = account.entries.create!(date: Date.current, amount: -1444.49, currency: "USD", name: "Nómina BBVA", entryable: Transaction.create!)
+    SubscriptionLink.new(payslip).link!(duplicate)
+    assert_equal duplicate, SubscriptionLink.new(payslip.reload).current
+
+    get edit_recurring_transaction_url(duplicate), headers: { "Turbo-Frame" => "modal" }
+    assert_select "form[action=?] input[name=_method][value=delete]", recurring_transaction_path(duplicate)
+
+    delete recurring_transaction_url(duplicate)
+
+    assert duplicate.reload.ended?
+    assert_nil SubscriptionLink.new(payslip.reload).current
+  end
+
   test "creating income says income, not bill" do
     post recurring_transactions_url, params: {
       recurring_transaction: {

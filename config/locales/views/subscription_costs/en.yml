@@ -48,18 +48,19 @@ en:
       success: "%{name} is active again."
   transactions:
     show:
-      subscription: Subscription
+      subscription: Recurring
     subscription:
-      linked: "Goes with %{name} (%{amount})."
-      not_linked: Not linked to any subscription.
-      change: This charge's subscription
+      linked: "Goes with %{name}, %{kind} of %{amount}."
+      not_linked: Not part of any recurring payment.
+      change: This movement's recurring payment
       none: None
-      new_name: New subscription's name
-      create: Create subscription
+      new_name: New recurring payment's name
+      new_kind: Kind
+      create: Create recurring payment
     subscriptions:
       update:
-        success: Subscription updated.
-        failed: Could not link it. That subscription may have no payment near this date.
+        success: Recurring payment updated.
+        failed: Could not link it. That recurring payment may have no payment near this date.
       create:
-        success: "Subscription %{name} created."
+        success: "Recurring payment %{name} created."
         failed: Could not create it. A matching recurring payment may already exist; look for it in the list.

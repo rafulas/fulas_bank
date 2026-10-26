@@ -48,18 +48,19 @@ es:
       success: "%{name} vuelve a estar activa."
   transactions:
     show:
-      subscription: Suscripción
+      subscription: Recurrente
     subscription:
-      linked: "Va con %{name} (%{amount})."
-      not_linked: No va con ninguna suscripción.
-      change: Suscripción de este cargo
-      none: Ninguna
-      new_name: Nombre de la suscripción nueva
-      create: Crear suscripción
+      linked: "Va con %{name}, %{kind} de %{amount}."
+      not_linked: No va con ningún recurrente.
+      change: Recurrente de este movimiento
+      none: Ninguno
+      new_name: Nombre del recurrente nuevo
+      new_kind: Tipo
+      create: Crear recurrente
     subscriptions:
       update:
-        success: Suscripción actualizada.
-        failed: No se ha podido vincular. Puede que esa suscripción no tenga cobros cerca de esta fecha.
+        success: Recurrente actualizado.
+        failed: No se ha podido vincular. Puede que ese recurrente no tenga pagos cerca de esta fecha.
       create:
-        success: "Suscripción %{name} creada."
+        success: "Recurrente %{name} creado."
         failed: No se ha podido crear. Puede que ya exista un recurrente igual; búscalo en la lista.
