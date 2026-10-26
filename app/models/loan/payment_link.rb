@@ -1,7 +1,9 @@
 # A bank movement recorded as the payment of one of a loan's instalments.
 #
 # The movement stays where the bank import put it -- in the account it was paid
-# from -- so the money is counted once. The link is what makes it show on the
+# from -- so the money is counted once. Fulas Bank: a loan taken out of the
+# pay has no such account, and its instalment is booked in the loan itself
+# (Loan::PayrollDeduction). The link is what makes it show on the
 # loan's page, beside the instalment the schedule expected for that month.
 class Loan::PaymentLink < ApplicationRecord
   self.table_name = "loan_payment_links"
@@ -33,7 +35,8 @@ class Loan::PaymentLink < ApplicationRecord
       return if entry.blank? || loan.blank?
 
       loan_account = loan.account
-      return if loan_account.present? && entry.account.family_id == loan_account.family_id && entry.account_id != loan_account.id
+      return if loan_account.present? && entry.account.family_id == loan_account.family_id &&
+        (entry.account_id != loan_account.id || loan.payroll_deducted?)
 
       errors.add(:entry, :invalid)
     end
