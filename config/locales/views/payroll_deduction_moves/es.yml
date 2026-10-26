@@ -1,6 +1,6 @@
 ---
 es:
-  loan_payroll_moves:
+  payroll_deduction_moves:
     create:
       success:
         one: "1 mes pasado a %{loan}."

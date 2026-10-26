@@ -1,6 +1,6 @@
 # Fulas Bank: moves a payroll-deducted loan's months, booked in another
 # account (the «Cuenta Fake»), into the loan itself (Loan::PayrollDeduction).
-class LoanPayrollMovesController < ApplicationController
+class PayrollDeductionMovesController < ApplicationController
   def create
     loan_account = accessible_accounts.where(accountable_type: "Loan").find(params.require(:loan_account_id))
     return unless require_account_permission!(loan_account)

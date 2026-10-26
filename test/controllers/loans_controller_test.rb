@@ -264,7 +264,7 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#payroll-deduction"
 
-    post loan_payroll_moves_path, params: { loan_account_id: @account.id, desde: "todo" }
+    post payroll_deduction_moves_path, params: { loan_account_id: @account.id, desde: "todo" }
     assert_redirected_to account_path(@account, tab: "payments")
     assert_equal @account, expense.reload.account
     assert_equal expense, @account.loan.payment_links.joins(:entry).find_by(entries: { date: date }).entry

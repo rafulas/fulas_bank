@@ -29,7 +29,7 @@
           <% table.with_column(t(".paid"), numeric: true, class: "privacy-sensitive") { |pair| format_money(pair.expense.amount_money) } %>
         <% end %>
         <%= render DS::Button.new(text: t(".payroll.move", count: pairs.size), icon: "arrow-right-left",
-                                  href: loan_payroll_moves_path, method: :post,
+                                  href: payroll_deduction_moves_path, method: :post,
                                   params: { loan_account_id: account.id, desde: params[:desde] },
                                   confirm: CustomConfirm.new(title: t(".payroll.move_title"), body: t(".payroll.move_body"), btn_text: t(".payroll.move", count: pairs.size))) %>
       <% else %>
