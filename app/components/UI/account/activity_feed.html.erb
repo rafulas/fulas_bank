@@ -18,6 +18,15 @@
                 data: { turbo_frame: :modal }) %>
           <% end %>
 
+          <% if account.valuation_import_supported? %>
+            <% menu.with_item(
+                variant: "link",
+                text: t("accounts.show.activity.import_values"),
+                icon: "upload",
+                href: new_account_valuation_import_path(account),
+                data: { turbo_frame: :modal }) %>
+          <% end %>
+
           <% unless account.crypto? %>
             <% if account.investment? %>
               <% menu.with_item(

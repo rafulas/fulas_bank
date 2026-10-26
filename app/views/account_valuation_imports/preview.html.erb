@@ -1,0 +1,87 @@
+<% shown_limit = 300 %>
+<% importable = @import.importable_rows %>
+<% errors = @import.error_rows %>
+
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <div class="space-y-4">
+      <% if importable.any? %>
+        <p class="text-sm text-secondary">
+          <%= t(".period", from: format_date(@import.first_date), to: format_date(@import.last_date)) %>
+        </p>
+      <% end %>
+
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <dl class="space-y-2">
+          <%= render DS::DetailRow.new(label: t(".counts.new"), value: @import.count(:new).to_s, align: :center) %>
+          <%= render DS::DetailRow.new(label: t(".counts.update"), value: @import.count(:update).to_s, align: :center) %>
+          <%= render DS::DetailRow.new(label: t(".counts.unchanged"), value: @import.count(:unchanged).to_s, align: :center) %>
+          <%= render DS::DetailRow.new(label: t(".counts.errors"), value: errors.size.to_s, align: :center) %>
+        </dl>
+      <% end %>
+
+      <% if @import.moves_opening_anchor_back? %>
+        <%= render DS::Alert.new(
+          message: t(".moves_opening_anchor_back",
+                     date: format_date(@import.first_date),
+                     old_date: format_date(@import.opening_anchor.date)),
+          variant: :info) %>
+      <% end %>
+
+      <% if errors.any? %>
+        <%= render DS::Alert.new(title: t(".errors_title"), message: t(".errors_description"), variant: :warning) %>
+        <ul class="space-y-1 text-sm text-primary">
+          <% errors.first(50).each do |row| %>
+            <li><%= t(".error.#{row.status}", number: row.number, date: row.raw_date.presence || "—", amount: row.raw_amount.presence || "—") %></li>
+          <% end %>
+          <% if errors.size > 50 %>
+            <li class="text-secondary"><%= t(".more", count: errors.size - 50) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <% if importable.any? %>
+        <%= render DS::Table.new(rows: importable.first(shown_limit), sticky_header: true, dense: true, label: t(".table_label")) do |table| %>
+          <% table.with_column(t(".date")) { |row| format_date(row.date) } %>
+          <% table.with_column(t(".value"), numeric: true, class: "privacy-sensitive") { |row| format_money(Money.new(row.amount, @account.currency)) } %>
+          <% table.with_column(t(".status")) do |row| %>
+            <% if row.status == :update %>
+              <span class="text-secondary"><%= t(".status_update", previous: format_money(Money.new(row.previous_amount, @account.currency))) %></span>
+            <% else %>
+              <%= t(".status_new") %>
+            <% end %>
+          <% end %>
+        <% end %>
+        <% if importable.size > shown_limit %>
+          <p class="text-xs text-secondary"><%= t(".more", count: importable.size - shown_limit) %></p>
+        <% end %>
+      <% end %>
+
+      <% if importable.empty? %>
+        <%= render DS::Alert.new(message: t(".nothing_new"), variant: :info) %>
+      <% else %>
+        <%= styled_form_with url: account_valuation_import_path(@account), method: :post, data: { turbo_frame: :_top }, class: "space-y-4" do |form| %>
+          <%= hidden_field_tag :content, @content %>
+          <%= hidden_field_tag :confirm, "1" %>
+
+          <% if @import.can_start_at_first_row? %>
+            <div class="flex items-center justify-between gap-3">
+              <div class="space-y-1">
+                <p class="text-sm text-primary"><%= t(".start_at_first_row_label", date: format_date(@import.first_date)) %></p>
+                <p class="text-xs text-secondary">
+                  <%= t(".start_at_first_row_hint",
+                        old_date: format_date(@import.opening_anchor.date),
+                        old_amount: format_money(Money.new(@import.opening_anchor.amount, @account.currency))) %>
+                </p>
+              </div>
+              <%= form.toggle :start_at_first_row %>
+            </div>
+          <% end %>
+
+          <%= form.submit t(".submit", count: importable.size) %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
