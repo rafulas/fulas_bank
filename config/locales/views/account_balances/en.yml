@@ -1,0 +1,22 @@
+---
+en:
+  account_balances:
+    show:
+      title: Edit balances
+      subtitle: All your accounts with today's balance. Change the ones that don't match the bank and save once.
+      empty: You have no accounts whose balance you can change by hand.
+      current: "Now in the app: %{amount}"
+      open: Open account
+      how_it_saves: Only the balances you change are saved, just as if you edited each account. Transactions are left alone; charts and totals are recalculated in a few seconds.
+      submit: Save changes
+      errors_title: These balances weren't saved
+    update:
+      success:
+        one: 1 balance updated
+        other: "%{count} balances updated"
+      nothing_changed: You didn't change any balance.
+      failed:
+        one: 1 balance couldn't be saved
+        other: "%{count} balances couldn't be saved"
+      invalid_amount: "«%{amount}» isn't an amount"
+      not_saved: couldn't be saved

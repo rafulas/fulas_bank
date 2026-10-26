@@ -719,6 +719,9 @@ Rails.application.routes.draw do
     resource :valuation_import, only: %i[new create], controller: "account_valuation_imports"
   end
 
+  # Fulas Bank: «Editar saldos», every account's balance on one page.
+  resource :account_balances, only: %i[show update]
+
   resources :account_statements, only: %i[index show create update destroy] do
     member do
       patch :link

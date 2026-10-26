@@ -1,0 +1,22 @@
+---
+es:
+  account_balances:
+    show:
+      title: Editar saldos
+      subtitle: Todas tus cuentas con su saldo de hoy. Cambia los que no coincidan con el banco y guarda una sola vez.
+      empty: No tienes cuentas cuyo saldo puedas cambiar a mano.
+      current: "Ahora en la app: %{amount}"
+      open: Ver cuenta
+      how_it_saves: Solo se guardan los saldos que cambies, igual que si editaras cada cuenta. Los movimientos no se tocan; los gráficos y totales se recalculan en unos segundos.
+      submit: Guardar cambios
+      errors_title: Estos saldos no se han guardado
+    update:
+      success:
+        one: 1 saldo actualizado
+        other: "%{count} saldos actualizados"
+      nothing_changed: No has cambiado ningún saldo.
+      failed:
+        one: 1 saldo no se ha podido guardar
+        other: "%{count} saldos no se han podido guardar"
+      invalid_amount: "«%{amount}» no es un importe"
+      not_saved: no se ha podido guardar
