@@ -774,6 +774,15 @@ class Import < ApplicationRecord
         # raw_file_str might have invalid encoding, continue to detection
       end
 
+      # Fulas Bank: an uploaded file arrives as raw bytes (binary), not tagged
+      # as UTF-8. Bytes that are valid UTF-8 are UTF-8: reading them as
+      # Windows-1252 turned "Título" into "TÃtulo" and "€" into "â‚¬".
+      as_utf8 = raw_file_str.dup.force_encoding(Encoding::UTF_8)
+      if as_utf8.valid_encoding?
+        self.raw_file_str = as_utf8
+        return
+      end
+
       # Fulas Bank: a Spanish bank's file that is not UTF-8 is Windows-1252
       # (ñ, tildes, €). Guessing gets it wrong on short files: "España" came
       # out as "Espaãa".

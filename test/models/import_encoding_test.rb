@@ -90,6 +90,22 @@ class ImportEncodingTest < ActiveSupport::TestCase
     assert_includes import.raw_file_str, "Café €"
   end
 
+  test "a Spanish family's UTF-8 file uploaded as raw bytes stays UTF-8" do
+    @family.update_columns(locale: "es", country: "ES")
+    csv_content = "Título,Fecha,Importe\nWaylet,2026-10-26,-10.72€\nNómina,2026-10-19,1402.20€\n".b
+    assert_equal Encoding::ASCII_8BIT, csv_content.encoding
+
+    import = @family.imports.create!(type: "TransactionImport", account: @account, date_format: "%Y-%m-%d",
+                                     date_col_label: "Fecha", amount_col_label: "Importe", name_col_label: "Título",
+                                     signage_convention: "inflows_positive", amount_type_strategy: "signed_amount")
+    import.update!(raw_file_str: csv_content)
+
+    assert_equal Encoding::UTF_8, import.reload.raw_file_str.encoding
+    assert_includes import.raw_file_str, "Título"
+    assert_includes import.raw_file_str, "-10.72€"
+    assert_includes import.raw_file_str, "Nómina"
+  end
+
   test "handles UTF-8 files without modification" do
     # Test that valid UTF-8 files are not modified
     file_path = Rails.root.join("test/fixtures/files/imports/transactions.csv")
