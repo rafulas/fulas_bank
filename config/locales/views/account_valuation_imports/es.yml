@@ -1,0 +1,54 @@
+---
+es:
+  account_valuation_imports:
+    not_supported: Esta cuenta calcula su saldo con sus movimientos, así que no se le pueden importar valores.
+    errors:
+      missing_file: Elige un archivo Excel (.xlsx) o CSV de hasta 5 MB.
+      unreadable: No se ha podido leer el archivo. Tiene que ser un Excel (.xlsx) o un CSV.
+      no_columns: "No se encuentran las columnas. La primera fila tiene que tener los títulos: «Fecha» y «Valor»."
+      empty: El archivo no tiene ninguna fila con fecha y valor.
+      too_many_rows: El archivo tiene más de 5.000 filas. Divídelo en varios archivos.
+    new:
+      title: Importar valores
+      intro: Carga de una vez el valor que tenía «%{account}» en distintos días, por ejemplo los de los extractos de la aseguradora.
+      format: "Sube un Excel (.xlsx) o un CSV con dos columnas: «Fecha» (DD/MM/AAAA) y «Valor». Cada fila es lo que valía la cuenta ese día, como un «Nuevo saldo»."
+      file: Archivo Excel o CSV
+      safe_hint: Antes de guardar nada verás qué hará cada fila. Si un día ya tiene valor, se cambia por el del archivo; no se duplica.
+      submit: Revisar archivo
+    preview:
+      title: Importar valores
+      period: Del %{from} al %{to}.
+      counts:
+        new: Valores nuevos
+        update: Valores que cambian
+        unchanged: Ya estaban igual
+        errors: Filas con errores
+      moves_opening_anchor_back: El archivo empieza antes que la cuenta. «Cuenta desde» pasará al %{date}, con el primer valor del archivo, y el valor que tenía el %{old_date} se queda en su día.
+      errors_title: Filas que no se importarán
+      errors_description: Estas filas se saltan. El resto se importa igual; si quieres, corrige el archivo y vuelve a subirlo.
+      error:
+        invalid_date: "Fila %{number}: la fecha «%{date}» no se entiende (usa DD/MM/AAAA)"
+        invalid_amount: "Fila %{number}: el valor «%{amount}» no es un número"
+        future_date: "Fila %{number}: el %{date} todavía no ha llegado"
+        too_old: "Fila %{number}: el %{date} es demasiado antiguo"
+        duplicate_date: "Fila %{number}: el %{date} ya está en una fila anterior del archivo"
+      more:
+        one: y 1 más
+        other: y %{count} más
+      table_label: Valores que se importarán
+      date: Fecha
+      value: Valor
+      status: Qué pasa
+      status_new: Nuevo
+      status_update: Antes %{previous}
+      nothing_new: No hay nada nuevo que importar.
+      start_at_first_row_label: Empezar la cuenta el %{date}, con el primer valor del archivo
+      start_at_first_row_hint: Ahora la cuenta empieza el %{old_date} con %{old_amount}. Actívalo si ese valor no es correcto para ese día.
+      submit:
+        one: Importar 1 valor
+        other: Importar %{count} valores
+    create:
+      success:
+        one: 1 valor importado
+        other: "%{count} valores importados"
+      nothing_imported: No había valores nuevos que importar.

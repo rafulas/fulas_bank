@@ -687,6 +687,12 @@ class Account < ApplicationRecord
     accountable.nil? || accountable.brokerage_cash?
   end
 
+  # Fulas Bank: whether a list of dated values can be loaded from a file
+  # (see Account::ValuationImport).
+  def valuation_import_supported?
+    Account::ValuationImport.supported?(self)
+  end
+
   def balance_type
     case accountable_type
     when "Depository", "CreditCard"

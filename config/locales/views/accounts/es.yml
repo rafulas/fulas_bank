@@ -113,6 +113,7 @@ es:
         filter: Filtrar
         new: Nuevo
         new_activity: Nueva actividad
+        import_values: Importar valores
         new_balance: Nuevo saldo
         new_trade: Nueva operación
         new_transaction: Nueva transacción

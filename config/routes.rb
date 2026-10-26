@@ -715,6 +715,8 @@ Rails.application.routes.draw do
     end
 
     resource :sharing, only: [ :show, :update ], controller: "account_sharings"
+    # Fulas Bank: dated values loaded from a file (see Account::ValuationImport).
+    resource :valuation_import, only: %i[new create], controller: "account_valuation_imports"
   end
 
   resources :account_statements, only: %i[index show create update destroy] do

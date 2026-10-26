@@ -1,0 +1,54 @@
+---
+en:
+  account_valuation_imports:
+    not_supported: This account's balance comes from its transactions, so values can't be imported into it.
+    errors:
+      missing_file: Choose an Excel (.xlsx) or CSV file of up to 5 MB.
+      unreadable: The file couldn't be read. It has to be an Excel (.xlsx) or CSV file.
+      no_columns: "The columns weren't found. The first row needs the titles «Date» and «Value»."
+      empty: The file has no row with a date and a value.
+      too_many_rows: The file has more than 5,000 rows. Split it into several files.
+    new:
+      title: Import values
+      intro: Load at once what «%{account}» was worth on different days, such as the figures from your provider's statements.
+      format: "Upload an Excel (.xlsx) or CSV file with two columns: «Date» (DD/MM/YYYY) and «Value». Each row is what the account was worth that day, like a «New balance»."
+      file: Excel or CSV file
+      safe_hint: You'll see what each row will do before anything is saved. A day that already has a value gets the file's value instead; nothing is duplicated.
+      submit: Review file
+    preview:
+      title: Import values
+      period: From %{from} to %{to}.
+      counts:
+        new: New values
+        update: Values that change
+        unchanged: Already the same
+        errors: Rows with errors
+      moves_opening_anchor_back: The file starts before the account. «Since» will move to %{date}, with the file's first value, and the value it had on %{old_date} stays on its day.
+      errors_title: Rows that won't be imported
+      errors_description: These rows are skipped. The rest is imported anyway; you can fix the file and upload it again.
+      error:
+        invalid_date: "Row %{number}: the date «%{date}» isn't understood (use DD/MM/YYYY)"
+        invalid_amount: "Row %{number}: the value «%{amount}» isn't a number"
+        future_date: "Row %{number}: %{date} hasn't arrived yet"
+        too_old: "Row %{number}: %{date} is too old"
+        duplicate_date: "Row %{number}: %{date} is already on an earlier row of the file"
+      more:
+        one: and 1 more
+        other: and %{count} more
+      table_label: Values to import
+      date: Date
+      value: Value
+      status: What happens
+      status_new: New
+      status_update: Was %{previous}
+      nothing_new: There's nothing new to import.
+      start_at_first_row_label: Start the account on %{date}, with the file's first value
+      start_at_first_row_hint: The account now starts on %{old_date} with %{old_amount}. Turn this on if that value isn't right for that day.
+      submit:
+        one: Import 1 value
+        other: Import %{count} values
+    create:
+      success:
+        one: 1 value imported
+        other: "%{count} values imported"
+      nothing_imported: There were no new values to import.
