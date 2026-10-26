@@ -188,12 +188,20 @@ class Import < ApplicationRecord
 
     def parse_csv_str(csv_str, col_sep: ",")
       CSV.parse(
-        (csv_str || "").strip,
+        without_space_before_quotes((csv_str || "").strip, col_sep),
         headers: true,
         col_sep: col_sep,
         converters: [ ->(str) { str&.strip } ],
         liberal_parsing: true
       )
+    end
+
+    # Fulas Bank: some exports (Bilance since October 2026) put a space after
+    # each separator, before a quoted value: «-10.72€, "Transporte"». CSV only
+    # reads a quoted value when the quote comes first, so the quotes stayed in
+    # the text and commas inside them split the value. The space goes.
+    def without_space_before_quotes(text, col_sep)
+      text.gsub(/(^|#{Regexp.escape(col_sep)})[ \t]+(?=")/) { Regexp.last_match(1) }
     end
 
     # Attempts to identify the best-matching date format from a list of candidates
