@@ -70,7 +70,13 @@ Rails.application.configure do
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   if ENV["REDIS_URL"].present?
-    config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"] }
+    # Fulas Bank: each version keeps its cache apart (namespace from the
+    # commit the image was built from). Cached objects are Ruby objects, and a
+    # new version may change their shape (Series::Value gained :details), so
+    # reading what an older version cached breaks pages. Entries left behind by
+    # older versions expire on their own (expires_in).
+    build = ENV["BUILD_COMMIT_SHA"].to_s[0, 12].presence || "local"
+    config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"], namespace: "cache-#{build}", expires_in: 7.days }
   end
 
   config.action_mailer.perform_caching = false
