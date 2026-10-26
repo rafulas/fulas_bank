@@ -79,6 +79,10 @@ es:
           projection_basis: Compara el saldo registrado hoy con el saldo que marca el calendario para el mismo día. Un pago registrado antes de su fecha aparece como adelantado hasta esa fecha; uno registrado después, como atrasado.
           legend: Series del gráfico
           since_start: desde el inicio del préstamo
+        investment:
+          value: Valor de la inversión
+          gain: Ganancia acumulada
+          contributed: Aportado hasta ese día
         no_data_available: No hay datos disponibles
         title:
           balance: Saldo

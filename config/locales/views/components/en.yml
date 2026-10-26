@@ -79,6 +79,10 @@ en:
           projection_basis: Compares today's recorded balance with the schedule's balance on the same day. A payment posted before its scheduled date reads as ahead until that date; one posted after reads as behind.
           legend: Chart series
           since_start: since the loan started
+        investment:
+          value: Investment value
+          gain: Gain so far
+          contributed: Contributed so far
         no_data_available: "No data available"
         title:
           balance: Balance

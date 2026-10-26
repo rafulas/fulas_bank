@@ -68,6 +68,7 @@ export default class extends Controller {
       date_formatted: d.date_formatted,
       value: d.value,
       trend: d.trend,
+      details: d.details,
     }));
   }
 
@@ -575,7 +576,39 @@ export default class extends Controller {
         `
         }
       </div>
+      ${this._detailsTemplate(datum)}
     `;
+  }
+
+  // Fulas Bank: extra figures of the day, when the series carries them (an
+  // investment account's value, gain and money put in).
+  _detailsTemplate(datum) {
+    if (!datum.details?.length) return "";
+
+    const rows = datum.details
+      .map(
+        (detail) => `
+        <div class="flex items-baseline justify-between gap-4">
+          <span class="text-secondary">${this._escapeHtml(detail.label)}</span>
+          <span class="text-primary font-medium tabular-nums">
+            ${this._escapeHtml(this._extractFormattedValue(detail.value))}${
+              detail.percent_formatted
+                ? ` <span class="text-secondary font-normal">(${this._escapeHtml(detail.percent_formatted)})</span>`
+                : ""
+            }
+          </span>
+        </div>
+      `,
+      )
+      .join("");
+
+    return `<div class="mt-2 pt-2 border-t border-primary space-y-1 text-xs">${rows}</div>`;
+  }
+
+  _escapeHtml(text) {
+    const node = document.createElement("span");
+    node.textContent = String(text ?? "");
+    return node.innerHTML;
   }
 
   _getTrendIcon(datum) {
