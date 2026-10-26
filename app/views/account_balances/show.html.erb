@@ -1,0 +1,54 @@
+<%# Fulas Bank: «Editar saldos», every account's balance in one form (see
+    Account::BalanceBulkUpdate). Only the amounts changed are saved. %>
+<% content_for :page_header do %>
+  <div class="mb-6 space-y-1">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="space-y-4">
+  <% if flash[:balance_errors].present? %>
+    <%= render DS::Alert.new(title: t(".errors_title"), variant: :error) do %>
+      <ul class="list-disc pl-4 space-y-1">
+        <% Array(flash[:balance_errors]).each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+
+  <% if @editor.accounts.empty? %>
+    <p class="text-sm text-secondary"><%= t(".empty") %></p>
+  <% else %>
+    <%= styled_form_with url: account_balances_path, method: :patch, scope: :balances, data: { turbo: false }, class: "space-y-4" do |form| %>
+      <% @editor.groups.each do |type, accounts| %>
+        <section class="bg-container rounded-xl shadow-border-xs p-4 space-y-3" aria-labelledby="balances_<%= type.underscore %>">
+          <h2 id="balances_<%= type.underscore %>" class="text-sm font-medium text-secondary"><%= Accountable.from_type(type)&.display_name || type %></h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% accounts.each do |account| %>
+              <div id="<%= dom_id(account, :balance) %>" class="space-y-1">
+                <%= form.money_field account.id,
+                      label: account.name,
+                      value: account.balance,
+                      currency_value_override: account.currency,
+                      hide_currency: true %>
+                <p class="text-xs text-secondary">
+                  <%= t(".current", amount: format_money(account.balance_money)) %>
+                  · <%= link_to t(".open"), account_path(account), class: "underline hover:text-primary" %>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+
+      <p class="text-xs text-secondary"><%= t(".how_it_saves") %></p>
+
+      <div class="flex justify-end">
+        <%= render DS::Button.new(text: t(".submit"), type: "submit", icon: "check") %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -62,6 +62,7 @@ en:
       enable_category_matcher_hint: When enabled, the provider's suggested category is applied to imported transactions. Disable to leave new transactions uncategorized.
     index:
       accounts: Accounts
+      edit_balances: Edit balances
       financekit_accounts:
         title: Apple Wallet
         description: Manage Apple Wallet connections and sync in the Sure iOS app.

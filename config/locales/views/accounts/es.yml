@@ -62,6 +62,7 @@ es:
       enable_category_matcher_hint: Si está activado, la categoría sugerida por el proveedor se aplica a las transacciones importadas. Desactívalo para dejar las nuevas transacciones sin categoría.
     index:
       accounts: Cuentas
+      edit_balances: Editar saldos
       financekit_accounts:
         title: Apple Wallet
         description: Gestiona las conexiones de Apple Wallet y su sincronización desde la app de Sure para iOS.

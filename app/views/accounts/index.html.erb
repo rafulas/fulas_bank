@@ -2,6 +2,12 @@
 <%= content_for :page_actions do %>
   <%= render "accounts/sync_controls", family: Current.family %>
   <%= render DS::Link.new(
+    text: t(".edit_balances"),
+    href: account_balances_path,
+    variant: "outline",
+    icon: "pencil"
+  ) %>
+  <%= render DS::Link.new(
     text: t(".new_account"),
     href: new_account_path(return_to: accounts_path),
     variant: "primary",
