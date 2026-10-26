@@ -83,6 +83,33 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
     assert_equal "1,234.56", import.reload.number_format
   end
 
+  test "reads the October 2026 export: spaces before quoted values and transfers as two rows" do
+    csv = <<~CSV
+      Título, Fecha, Importe, Categoría, Subcategoría, Etiquetas, Concepto, Comercio, Cuentas, Nota
+      "Mapfre España SA", 2026-10-23 00:00:00.000, -79.60€, "Gastos financieros", "Seguros", , "PAGO CON TARJETA DE TASA, SEGUROS, IMPUESTOS", , "BBVA Casa a medias",
+      "Traspaso redondeo tarjeta", 2026-10-22 00:00:00.000, -0.60€, "Traspasos", , , "TRASPASO A CUENTA", , "de BBVA Casa a medias",
+      "Traspaso redondeo tarjeta", 2026-10-22 00:00:00.000, 0.60€, "Traspasos", , , "TRASPASO DESDE CUENTA", , "a Tarjeta Repsol",
+      "Adeudo mensual de tarjeta", 2026-10-05 00:00:00.000, -449.97€, "Traspasos", , , , , "de BBVA Casa a medias a Tarjeta Repsol",
+    CSV
+    import = @family.imports.create!(type: "TransactionImport", raw_file_str: csv, col_sep: ",")
+    Import::BankPreset.apply(import)
+    import.reload.generate_rows_from_csv
+    rows = import.reload.rows.ordered.to_a
+
+    mapfre = rows.find { |row| row.name == "Mapfre España SA" }
+    assert_equal "Gastos financieros:Seguros", mapfre.category
+    assert_equal "BBVA Casa a medias", mapfre.account
+    assert_equal "PAGO CON TARJETA DE TASA, SEGUROS, IMPUESTOS", mapfre.notes
+
+    sides = rows.select { |row| row.name == "Traspaso redondeo tarjeta" }.map { |row| [ row.account, row.signed_amount ] }.sort
+    # signed_amount is the entry's sign: money out of an account is positive.
+    assert_equal [ [ "BBVA Casa a medias", BigDecimal("0.60") ], [ "Tarjeta Repsol", BigDecimal("-0.60") ] ], sides
+
+    adeudo = rows.select { |row| row.name == "Adeudo mensual de tarjeta" }.map { |row| [ row.account, row.signed_amount ] }.sort
+    assert_equal [ [ "BBVA Casa a medias", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ], adeudo
+    assert_equal 5, rows.size
+  end
+
   private
     def configured_import(account: nil)
       import = @family.imports.create!(type: "TransactionImport", raw_file_str: @csv, col_sep: ",", account: account)

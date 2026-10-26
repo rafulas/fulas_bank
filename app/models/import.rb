@@ -188,12 +188,20 @@ class Import < ApplicationRecord
 
     def parse_csv_str(csv_str, col_sep: ",")
       CSV.parse(
-        (csv_str || "").strip,
+        without_space_before_quotes((csv_str || "").strip, col_sep),
         headers: true,
         col_sep: col_sep,
         converters: [ ->(str) { str&.strip } ],
         liberal_parsing: true
       )
+    end
+
+    # Fulas Bank: some exports (Bilance since October 2026) put a space after
+    # each separator, before a quoted value: «-10.72€, "Transporte"». CSV only
+    # reads a quoted value when the quote comes first, so the quotes stayed in
+    # the text and commas inside them split the value. The space goes.
+    def without_space_before_quotes(text, col_sep)
+      text.gsub(/(^|#{Regexp.escape(col_sep)})[ \t]+(?=")/) { Regexp.last_match(1) }
     end
 
     # Attempts to identify the best-matching date format from a list of candidates
@@ -772,6 +780,15 @@ class Import < ApplicationRecord
         end
       rescue ArgumentError
         # raw_file_str might have invalid encoding, continue to detection
+      end
+
+      # Fulas Bank: an uploaded file arrives as raw bytes (binary), not tagged
+      # as UTF-8. Bytes that are valid UTF-8 are UTF-8: reading them as
+      # Windows-1252 turned "Título" into "TÃtulo" and "€" into "â‚¬".
+      as_utf8 = raw_file_str.dup.force_encoding(Encoding::UTF_8)
+      if as_utf8.valid_encoding?
+        self.raw_file_str = as_utf8
+        return
       end
 
       # Fulas Bank: a Spanish bank's file that is not UTF-8 is Windows-1252

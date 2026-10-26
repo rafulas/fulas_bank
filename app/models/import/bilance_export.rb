@@ -14,12 +14,17 @@
 # - The category is two columns, Categoría and Subcategoría. They are joined
 #   as "Categoría:Subcategoría", which the category mapping already reads as a
 #   parent and its child, so "Transporte:Combustible" matches "Combustible".
+# - Newer exports also write a transfer as its two sides, one row each:
+#   "de <origin>" with the money going out and "a <destination>" with the
+#   money coming in. Those rows already have the right sign; they only need
+#   the account name without "de"/"a".
 # - There are two texts: Concepto (the bank's wording) and Nota (what the
 #   user wrote). A movement has one notes field, so both go there, the note
 #   first. Comercio is read as the merchant.
 class Import::BilanceExport
   HEADERS = %w[titulo fecha importe categoria subcategoria cuentas].freeze
   TRANSFER = /\Ade (.+ a .+)\z/i
+  ONE_SIDE = /\A(de|a) (.+)\z/
 
   def self.match?(headers)
     normalized = Array(headers).map { |header| normalize(header) }
@@ -61,6 +66,12 @@ class Import::BilanceExport
   def adjust(mapped_rows, csv_rows)
     adjusted = mapped_rows.zip(csv_rows).flat_map do |row, csv_row|
       row = row.merge(category: category_for(row, csv_row), notes: notes_for(row, csv_row))
+
+      side_account = one_side_account(csv_row[header("cuentas")])
+      if side_account
+        row = row.merge(account: side_account) if import.account.nil? && import.account_col_label.present?
+        next [ row ]
+      end
 
       origin, destination = transfer_accounts(csv_row)
       next [ row ] if origin.nil? || row[:amount].blank?
@@ -111,6 +122,8 @@ class Import::BilanceExport
     # may contain " a " themselves ("Casa a medias"), so when there is more
     # than one way to split, the one naming a known account wins.
     def transfer_accounts(csv_row)
+      return if one_side_account(csv_row[header("cuentas")])
+
       match = csv_row[header("cuentas")].to_s.strip.match(TRANSFER)
       return if match.nil?
 
@@ -123,15 +136,34 @@ class Import::BilanceExport
       splits.find { |origin, destination| known?(origin) || known?(destination) } || splits.first
     end
 
-    # The accounts the file is about: those its ordinary rows belong to, and
-    # the account chosen for the import.
+    # The account of a row that is one side of a transfer ("de BBVA" going
+    # out, "a Ahorro" coming in), or nil. "de X a Y" is a whole transfer,
+    # unless "X a Y" is itself the name of an account the file has rows for.
+    def one_side_account(value)
+      match = value.to_s.strip.match(ONE_SIDE)
+      return if match.nil?
+
+      name = match[2].strip
+      return name if match[1] == "a"
+      return name unless value.to_s.strip.match?(TRANSFER)
+
+      name if plain_names.include?(comparable(name))
+    end
+
+    # The accounts named on ordinary rows (not transfers or transfer sides).
+    def plain_names
+      @plain_names ||= import.csv_rows.filter_map do |csv_row|
+        value = csv_row[header("cuentas")].to_s.strip
+        comparable(value) unless value.blank? || value.match?(TRANSFER) || value.match?(ONE_SIDE)
+      end.uniq
+    end
+
+    # The accounts the file is about: those its ordinary rows and transfer
+    # sides belong to, and the account chosen for the import.
     def home_names
       @home_names ||= begin
-        names = import.csv_rows.filter_map do |csv_row|
-          value = csv_row[header("cuentas")].to_s.strip
-          value unless value.blank? || value.match?(TRANSFER)
-        end
-        (names + [ import.account&.name ]).compact.map { |name| comparable(name) }.uniq
+        sides = import.csv_rows.filter_map { |csv_row| one_side_account(csv_row[header("cuentas")]) }
+        (plain_names + (sides + [ import.account&.name ]).compact.map { |name| comparable(name) }).uniq
       end
     end
 
