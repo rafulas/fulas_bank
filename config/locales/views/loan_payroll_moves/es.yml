@@ -1,0 +1,8 @@
+---
+es:
+  loan_payroll_moves:
+    create:
+      success:
+        one: "1 mes pasado a %{loan}."
+        other: "%{count} meses pasados a %{loan}."
+      failure: No se han podido pasar. Revisa los movimientos e inténtalo otra vez.

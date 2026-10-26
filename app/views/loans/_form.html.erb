@@ -82,6 +82,29 @@
                                default_currency: Current.family.currency %>
       <p class="text-xs text-secondary"><%= t("loans.form.payment_amount_hint") %></p>
 
+      <%# Fulas Bank: an instalment the employer takes out of the pay is
+          booked in the loan by itself each month (Loan::PayrollDeduction). %>
+      <% loan = account.loan %>
+      <% category_options = Current.family.categories.includes(:parent).sort_by { |category| [ category.parent&.name.to_s.downcase, category.name.downcase ] }
+                                                    .map { |category| [ category.parent ? "#{category.parent.name} › #{category.name}" : category.name, category.id ] } %>
+      <% payroll_income = loan.payroll_income_category_id || Current.family.categories.find_by(name: "Nómina")&.id %>
+      <div class="rounded-lg border border-secondary p-3 space-y-3">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-medium text-primary"><%= t("loans.form.payroll_deducted") %></p>
+            <p class="text-xs text-secondary"><%= t("loans.form.payroll_deducted_hint") %></p>
+          </div>
+          <%= loan_form.toggle :payroll_deducted %>
+        </div>
+        <%= loan_form.select :payroll_expense_category_id, category_options,
+              { label: t("loans.form.payroll_expense_category"), include_blank: true } %>
+        <%= loan_form.select :payroll_income_category_id, category_options,
+              { label: t("loans.form.payroll_income_category"), include_blank: true, selected: payroll_income } %>
+        <% if loan.payroll_deducted_since %>
+          <p class="text-xs text-secondary"><%= t("loans.form.payroll_deducted_since", date: l(loan.payroll_deducted_since, format: :long)) %></p>
+        <% end %>
+      </div>
+
       <%# Rate changes only mean something for a loan whose rate can move. The
           section is rendered for every rate type, retained rows included, and
           for fixed it is hidden AND its inputs disabled -- here, server-side,

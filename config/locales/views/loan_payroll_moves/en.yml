@@ -1,0 +1,8 @@
+---
+en:
+  loan_payroll_moves:
+    create:
+      success:
+        one: "1 month moved to %{loan}."
+        other: "%{count} months moved to %{loan}."
+      failure: They could not be moved. Check the movements and try again.

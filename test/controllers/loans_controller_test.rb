@@ -247,6 +247,29 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     assert_empty @account.loan.payment_links.reload
   end
 
+  test "Fulas Bank: a payroll-deducted loan moves its months from another account" do
+    @account.loan.update!(interest_rate: 0, rate_type: "fixed", term_months: 12, initial_balance: 12_000,
+                          start_date: 2.months.ago.to_date.beginning_of_month, payment_day: 10)
+    category = @account.family.categories.first
+    patch loan_path(@account), params: { account: { accountable_type: "Loan", accountable_attributes: {
+      id: @account.loan.id, payroll_deducted: "1", payroll_expense_category_id: category.id
+    } } }
+    assert @account.loan.reload.payroll_deducted?
+
+    date = 1.month.ago.to_date.change(day: 10)
+    Entry.create!(account: accounts(:depository), name: "Nómina préstamo", date: date, amount: -1_000, currency: "USD", entryable: Transaction.new)
+    expense = Entry.create!(account: accounts(:depository), name: "Pago préstamo", date: date, amount: 1_000, currency: "USD", entryable: Transaction.new)
+
+    get account_path(@account, tab: "payments", desde: "todo")
+    assert_response :success
+    assert_select "#payroll-deduction"
+
+    post loan_payroll_moves_path, params: { loan_account_id: @account.id, desde: "todo" }
+    assert_redirected_to account_path(@account, tab: "payments")
+    assert_equal @account, expense.reload.account
+    assert_equal expense, @account.loan.payment_links.joins(:entry).find_by(entries: { date: date }).entry
+  end
+
   test "a transaction's details offer to link it to a loan" do
     charge = Entry.create!(account: accounts(:depository), name: "Recibo", date: Date.current,
                            amount: 1_000, currency: "USD", entryable: Transaction.new)
@@ -551,7 +574,7 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
     @account.loan.update!(rate_type: "variable", start_date: Date.new(2026, 1, 1),
                           variable_rate_schedule: { "2026-04-01" => "7.25" })
 
-    patch loan_path(@account), params: { account: { accountable_attributes: {
+    patch loan_path(@account), params: { account: { accountable_type: "Loan", accountable_attributes: {
       id: @account.loan.id, rate_type: "variable",
       rate_changes: [ "", { effective_date: "2026-04-01", rate: "7.25" }, { effective_date: "", rate: "9" } ]
     } } }
@@ -579,7 +602,7 @@ class LoansControllerTest < ActionDispatch::IntegrationTest
 
     # What the browser sends after the select is flipped to variable and the
     # inputs are enabled: the sentinel and the row it rendered.
-    patch loan_path(@account), params: { account: { accountable_attributes: {
+    patch loan_path(@account), params: { account: { accountable_type: "Loan", accountable_attributes: {
       id: @account.loan.id, rate_type: "variable",
       rate_changes: [ "", { effective_date: "2026-04-01", rate: "7.25" } ]
     } } }

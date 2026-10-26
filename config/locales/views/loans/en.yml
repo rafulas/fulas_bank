@@ -1,6 +1,8 @@
 ---
 en:
   loans:
+    payroll_deduction:
+      income_name: "Pay deducted · %{loan}"
     edit:
       edit: Edit %{account}
     form:
@@ -13,6 +15,11 @@ en:
       payment_day_placeholder: '30'
       payment_amount: Monthly payment
       payment_amount_hint: Optional. If you know the payment you make now, enter it and the amortization schedule uses it as given; leave blank to have it calculated. On a variable loan it applies while the current rate lasts and is re-sized at each rate change you record.
+      payroll_deducted: Deducted from pay
+      payroll_deducted_hint: "Your employer takes the instalment out of your pay and pays the lender: the money never goes through your accounts. Each month, on the payment day, the app books the pay and the instalment in this loan and brings the debt down."
+      payroll_expense_category: Category of the instalment
+      payroll_income_category: Category of the pay
+      payroll_deducted_since: "Booked by itself since %{date}. Earlier months can be moved in from the Payments tab."
       insurance_annual_amount: Annual insurance amount
       insurance_rate_type_fixed_amount: Fixed annual amount
       asset_account: Link to an asset
@@ -59,6 +66,19 @@ en:
       unknown: Unknown
     tabs:
       payments:
+        payroll:
+          title: Deducted from pay
+          hint: "Since %{date}, each instalment is booked in this loan by itself. Earlier months booked in another account can be moved here."
+          found:
+            one: "1 month since %{since} booked in another account: the pay and the instalment, the same day."
+            other: "%{count} months since %{since} booked in another account: the pay and the instalment, the same day."
+          none: No months since %{since} are booked in another account.
+          all_years: Look in earlier years too
+          move:
+            one: Move 1 month to this loan
+            other: Move %{count} months to this loan
+          move_title: Move these months to the loan?
+          move_body: "Both movements of each month move to this loan with their name and category, and the instalment is linked as a payment. They leave the other account."
         linked_title: Linked payments
         hint: Movements from your accounts recorded as instalments of this loan, beside the instalment the amortization schedule expected that month.
         empty_title: No linked payments yet

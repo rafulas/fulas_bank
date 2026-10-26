@@ -38,6 +38,17 @@ class Loan < ApplicationRecord
   # Bank movements recorded as payments of this loan's instalments.
   has_many :payment_links, class_name: "Loan::PaymentLink", dependent: :destroy
 
+  # Fulas Bank: an instalment the employer takes out of the pay is booked in
+  # the loan itself, as pay in and instalment out (Loan::PayrollDeduction).
+  belongs_to :payroll_expense_category, class_name: "Category", optional: true
+  belongs_to :payroll_income_category, class_name: "Category", optional: true
+  validates :payroll_expense_category, presence: true, if: :payroll_deducted?
+  validate :payroll_categories_belong_to_family
+  # Booked by itself from the day the option is switched on; what came
+  # before can be moved in from where it was (see the loan's Payments tab).
+  before_save -> { self.payroll_deducted_since ||= Date.current }, if: -> { payroll_deducted? && will_save_change_to_payroll_deducted? }
+  before_save -> { self.payroll_deducted_since = nil }, if: -> { !payroll_deducted? && will_save_change_to_payroll_deducted? }
+
   # Fields the amortisation schedule is built from. When one changes (a
   # corrected start date, say), the balances anchored at each linked payment
   # are worked out again from the new schedule.
@@ -223,6 +234,17 @@ class Loan < ApplicationRecord
     end
   rescue ActiveRecord::RecordInvalid => error
     Rails.logger.warn("Loan #{id}: could not re-anchor linked payments: #{error.message}")
+  end
+
+  private def payroll_categories_belong_to_family
+    # Read as asset_account_must_be_a_family_asset does, without caching.
+    loan_account = association(:account).target || association(:account).scope.first
+    family_id = loan_account&.family_id
+    return if family_id.nil?
+
+    [ payroll_expense_category, payroll_income_category ].compact.each do |category|
+      errors.add(:base, :invalid) unless category.family_id == family_id
+    end
   end
 
   private def asset_account_must_be_a_family_asset

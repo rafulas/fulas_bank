@@ -9,6 +9,38 @@
 <% can_link = account.permission_for(Current.user).in?([ :owner, :full_control ]) %>
 
 <div class="space-y-6">
+  <%# Fulas Bank: a loan taken out of the pay — its months booked in another
+      account (the «Cuenta Fake») can be moved here once. %>
+  <% if loan.payroll_deducted? && can_link %>
+    <% all_years = params[:desde] == "todo" %>
+    <% since = all_years ? (loan.start_date || Date.current - 10.years) : Date.current.beginning_of_year %>
+    <% pairs = Loan::PayrollDeduction.new(loan).pairs_elsewhere(since: since) %>
+    <div class="rounded-lg border border-secondary p-4 space-y-3" id="payroll-deduction">
+      <div>
+        <h3 class="text-sm font-medium text-primary"><%= t(".payroll.title") %></h3>
+        <p class="text-sm text-secondary"><%= t(".payroll.hint", date: l(loan.payroll_deducted_since, format: :long)) %></p>
+      </div>
+      <% if pairs.any? %>
+        <p class="text-sm text-primary"><%= t(".payroll.found", count: pairs.size, since: l(since, format: :long)) %></p>
+        <%= render DS::Table.new(rows: pairs, label: t(".payroll.title")) do |table| %>
+          <% table.with_column(t(".date")) { |pair| format_date(pair.date) } %>
+          <% table.with_column(t(".from_account")) { |pair| pair.account.name } %>
+          <% table.with_column(t(".name")) { |pair| "#{pair.income.name} · #{pair.expense.name}".truncate(60) } %>
+          <% table.with_column(t(".paid"), numeric: true, class: "privacy-sensitive") { |pair| format_money(pair.expense.amount_money) } %>
+        <% end %>
+        <%= render DS::Button.new(text: t(".payroll.move", count: pairs.size), icon: "arrow-right-left",
+                                  href: loan_payroll_moves_path, method: :post,
+                                  params: { loan_account_id: account.id, desde: params[:desde] },
+                                  confirm: CustomConfirm.new(title: t(".payroll.move_title"), body: t(".payroll.move_body"), btn_text: t(".payroll.move", count: pairs.size))) %>
+      <% else %>
+        <p class="text-sm text-subdued"><%= t(".payroll.none", since: l(since, format: :long)) %></p>
+      <% end %>
+      <% unless all_years %>
+        <%= link_to t(".payroll.all_years"), account_path(account, tab: "payments", desde: "todo"), class: "text-xs text-link hover:underline" %>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="space-y-3">
     <div>
       <h3 class="text-sm font-medium text-primary"><%= t(".linked_title") %></h3>
