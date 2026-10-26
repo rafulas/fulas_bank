@@ -778,6 +778,8 @@ Rails.application.routes.draw do
   end
   resources :loans, only: %i[new create edit update]
   resources :loan_payment_links, only: %i[create destroy]
+  # Fulas Bank: a payroll-deducted loan's months moved in from another account.
+  resources :payroll_deduction_moves, only: :create
   # Links between bank charges and vehicle logs or property expenses that the
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show do

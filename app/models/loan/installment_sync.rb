@@ -43,8 +43,11 @@ class Loan::InstallmentSync
     attributes = { loan_account_id: loan_account.id, amount: payment, expected_day_of_month: payment_day(loan),
                    bill_type: "installment" }.merge(end_attributes(loan))
     attributes.delete(:expected_day_of_month) if series && matched_to_bank?(series)
+    # Fulas Bank: taken out of the pay, it never leaves a bank account: it is
+    # the loan's own, booked in it by itself (Loan::PayrollDeduction).
+    attributes.merge!(account_id: loan_account.id, autopay: true) if loan.payroll_deducted?
 
-    if series
+    series = if series
       series.assign_attributes(attributes)
       series.status = "active" if series.ended?
       series.save! if series.changed?
@@ -52,6 +55,9 @@ class Loan::InstallmentSync
     else
       create_series(loan_account, payment, attributes)
     end
+
+    Loan::PayrollDeduction.new(loan, today: today).book_due! if loan.payroll_deducted?
+    series
   end
 
   private
@@ -140,9 +146,10 @@ class Loan::InstallmentSync
     end
 
     def create_series(loan_account, payment, attributes)
-      payer = payer_account
+      payer = attributes.key?(:account_id) ? loan_account : payer_account
       return unless payer
 
+      attributes = attributes.except(:account_id)
       day = attributes[:expected_day_of_month]
       next_date = today.change(day: [ day, today.end_of_month.day ].min)
       next_date = next_date.next_month.change(day: [ day, next_date.next_month.end_of_month.day ].min) if next_date < today

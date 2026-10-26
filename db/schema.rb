@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1773,6 +1773,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
     t.jsonb "locked_attributes", default: {}
     t.decimal "payment_amount", precision: 19, scale: 4
     t.integer "payment_day"
+    t.boolean "payroll_deducted", default: false, null: false
+    t.date "payroll_deducted_since"
+    t.uuid "payroll_expense_category_id"
+    t.uuid "payroll_income_category_id"
     t.string "rate_type"
     t.date "start_date"
     t.string "subtype"
@@ -1780,6 +1784,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
     t.datetime "updated_at", null: false
     t.jsonb "variable_rate_schedule", default: {}, null: false
     t.index ["asset_account_id"], name: "index_loans_on_asset_account_id"
+    t.index ["payroll_expense_category_id"], name: "index_loans_on_payroll_expense_category_id"
+    t.index ["payroll_income_category_id"], name: "index_loans_on_payroll_income_category_id"
     t.check_constraint "down_payment IS NULL OR down_payment >= 0::numeric", name: "chk_loans_down_payment_non_negative"
     t.check_constraint "insurance_annual_amount IS NULL OR insurance_annual_amount >= 0::numeric", name: "chk_loans_insurance_annual_amount_non_negative"
     t.check_constraint "insurance_rate IS NULL OR insurance_rate >= 0::numeric", name: "chk_loans_insurance_rate_non_negative"
@@ -3312,6 +3318,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
   add_foreign_key "loan_payment_links", "entries", on_delete: :cascade
   add_foreign_key "loan_payment_links", "loans", on_delete: :cascade
   add_foreign_key "loans", "accounts", column: "asset_account_id", on_delete: :nullify
+  add_foreign_key "loans", "categories", column: "payroll_expense_category_id", on_delete: :nullify
+  add_foreign_key "loans", "categories", column: "payroll_income_category_id", on_delete: :nullify
   add_foreign_key "lunchflow_accounts", "lunchflow_items"
   add_foreign_key "lunchflow_items", "families"
   add_foreign_key "merchants", "families"

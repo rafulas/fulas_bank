@@ -55,6 +55,8 @@ class PagesController < ApplicationController
     @free_cash = build_free_cash(income_statement, income_totals, expense_totals, family_currency)
     @cash_cushion = CashCushion.new(Current.family, user: Current.user)
     @savings_flow = SavingsFlow.new(Current.family, user: Current.user, period: @period, income: @free_cash.income)
+    # Fulas Bank: a loan taken out of the pay books its instalment by itself.
+    Loan::PayrollDeduction.book_all!(Current.family)
     @next_payments = MonthPlan.next_payments(Current.family, user: Current.user)
     @duplicate_charges = DuplicateCharges.new(Current.family, user: Current.user)
     # Fulas Bank: the first observations of the period, as in the Resumen.
