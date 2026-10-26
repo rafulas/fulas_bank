@@ -165,8 +165,13 @@ class UI::Account::Chart < ApplicationComponent
   end
 
   # Read by the trend, its comparison label and the chart mount; built once.
+  # Fulas Bank: on an investment account's value, each day also carries what
+  # had been put in and gained by then, for the tooltip.
   def series
-    @series ||= account.balance_series(period: period, view: view)
+    @series ||= begin
+      list = account.balance_series(period: period, view: view)
+      view == "balance" ? Account::InvestmentProgress.new(account).annotate(list) : list
+    end
   end
 
   # Current total unrealized gains, taken from the series so the main indicator

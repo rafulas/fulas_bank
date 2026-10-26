@@ -60,6 +60,21 @@ class InvestmentsOverview::AnnualReturn
     flows.size >= 2 && short?(flows)
   end
 
+  # Fulas Bank: an account's money put in and taken out, from the investor's
+  # side ([[date, amount]], money put in negative), without today's value.
+  # The chart of an investment account adds these up day by day to show what
+  # had been put in by each date (Account::InvestmentProgress).
+  def contribution_flows(account)
+    @contribution_flows ||= {}
+    @contribution_flows[account.id] ||= begin
+      # Fulas Bank: an account without brokerage cash has no money
+      # movements of its own: its buys and sales are the money in and out.
+      moves = account.brokerage_cash? ? money_movements(account) : []
+      moves = purchases(account) if moves.empty?
+      opening(account, moves) + moves
+    end
+  end
+
   private
     def with_flows
       accounts.select { |account| flows_for(account).size >= 2 }
@@ -73,11 +88,7 @@ class InvestmentsOverview::AnnualReturn
     def flows_for(account)
       @flows_for ||= {}
       @flows_for[account.id] ||= begin
-        # Fulas Bank: an account without brokerage cash has no money
-        # movements of its own: its buys and sales are the money in and out.
-        moves = account.brokerage_cash? ? money_movements(account) : []
-        moves = purchases(account) if moves.empty?
-        list = opening(account, moves) + moves
+        list = contribution_flows(account).dup
         list << [ today, convert(account.balance.to_d, account) ] if list.any?
         list
       end

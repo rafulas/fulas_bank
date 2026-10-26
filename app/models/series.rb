@@ -17,6 +17,10 @@ class Series
     :date_formatted,
     :value,
     :trend,
+    # Fulas Bank: optional extra figures for the tooltip of that day, as
+    # [{ key:, label:, value: Money, percent_formatted: }] (an investment
+    # account's value, gain and money put in: Account::InvestmentProgress).
+    :details,
     keyword_init: true
   )
 
@@ -75,7 +79,9 @@ class Series
       interval: interval,
       trend: trend,
       values: values.map do |v|
-        { date: v.date, date_formatted: v.date_formatted, value: display_amount(v.value), trend: display_trend(v.trend) }
+        json = { date: v.date, date_formatted: v.date_formatted, value: display_amount(v.value), trend: display_trend(v.trend) }
+        json[:details] = display_details(v.details) if v.details.present?
+        json
       end
     }
   end
@@ -92,6 +98,10 @@ class Series
         previous: display_amount(trend.previous),
         favorable_direction: trend.favorable_direction
       )
+    end
+
+    def display_details(details)
+      details.map { |detail| detail.merge(value: display_amount(detail[:value])) }
     end
 
     def display_amount(amount)
