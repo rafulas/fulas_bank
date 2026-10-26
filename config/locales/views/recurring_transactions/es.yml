@@ -139,6 +139,9 @@ es:
       trigger_label: Editar recibo
       title: Editar %{name}
       income_title: Editar ingreso · %{name}
+      delete: Eliminar
+      delete_title: "¿Eliminar %{name}?"
+      delete_body: "Deja de salir en Recurrentes, Planes y el Forecast. Los movimientos que tenía vinculados no se borran: quedan libres para vincularlos a otro."
     form:
       payment_url_label: Enlace de pago
       payment_url_placeholder: banco.ejemplo.com/pagar
@@ -256,8 +259,12 @@ es:
         bill: Recibo
         subscription: Suscripción
       ignore: Ignorar
+      is: "Es «%{name}»"
     confirmed: Añadido a tus recurrentes
     dismissed: Descartado. Este patrón no se volverá a sugerir.
+    merged:
+      one: "Se ha vinculado 1 movimiento a %{name}."
+      other: "Se han vinculado %{count} movimientos a %{name}."
     badges:
       manual: Manual
     transfer_marked_as_recurring: Transferencia marcada como recurrente

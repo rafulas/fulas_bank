@@ -41,6 +41,31 @@ class SubscriptionLinkTest < ActiveSupport::TestCase
     assert_equal series, SubscriptionLink.new(charge.reload).current
   end
 
+  test "Fulas Bank: a payslip can be linked to a fixed income and a charge to a bill" do
+    salary = @family.recurring_transactions.create!(
+      account: @account, name: "Nómina BBVA", amount: -1444.49, currency: "USD", expected_day_of_month: (Date.current - 3).day,
+      status: "active", manual: true, bill_type: "income", dedup_scope: "salary",
+      last_occurrence_date: Date.current - 3, next_expected_date: (Date.current - 3).next_month
+    )
+    payslip = create_transaction(account: @account, name: "INGRESO POR NOMINA", amount: -1444.49, date: Date.current - 3)
+
+    link = SubscriptionLink.new(payslip)
+    assert_includes link.options, salary
+    assert_not_includes link.options, @music, "a charge's series are not offered for an income"
+
+    link.link!(salary)
+    assert_equal salary, SubscriptionLink.new(payslip.reload).current
+  end
+
+  test "Fulas Bank: a new recurring payment from a movement takes the kind chosen" do
+    charge = create_transaction(account: @account, name: "GANA ENERGIA LUZ", amount: 58.13, date: Date.current - 2)
+
+    series = SubscriptionLink.new(charge).create!(name: "Luz", kind: "bill")
+
+    assert series.typed_bill?
+    assert_equal series, SubscriptionLink.new(charge.reload).current
+  end
+
   test "the page adds them up a month, a year and in five years, and what dropping one saves" do
     SubscriptionsOverview.toggle_could_drop!(@user, @music.id, true)
 

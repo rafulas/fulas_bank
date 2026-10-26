@@ -654,6 +654,7 @@ Rails.application.routes.draw do
       post :toggle_status
       post :confirm
       post :dismiss
+      post :merge
     end
   end
 

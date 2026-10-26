@@ -1,7 +1,7 @@
 <%# locals: (payment:, currency:, show_mode: true) %>
 <%# Fulas Bank: one recurring payment on a line — a dot for its state (green
-    paid, red overdue, orange still to pay), its name and date, whether it
-    is direct-debited or paid by hand, and the amount. Shared by Inicio's
+    paid, red overdue, orange still to pay), its name (which opens it) and
+    date, whether it is direct-debited or paid by hand, and the amount. Shared by Inicio's
     next payments and the Planes timeline. %>
 <% series = payment.series %>
 <% dot = { paid: "bg-success", overdue: "bg-destructive" }.fetch(payment.state, "bg-warning") %>
@@ -12,7 +12,15 @@
   <%= render DS::ColorLabel.new(label: series.category&.display_name || payment.name, color: series.category&.color || Category::UNCATEGORIZED_COLOR,
                                 icon: series.category&.lucide_icon || "repeat", dashed: series.category.nil?, size: :md, show_label: false) %>
   <div class="min-w-0 flex-1">
-    <p class="truncate text-sm font-medium text-primary"><%= RecurringTransaction.readable_name(payment.name) %></p>
+    <%# Fulas Bank: opens the payment, to link the movement that paid it,
+        mark it paid or skip it. %>
+    <% if payment.occurrence %>
+      <%= link_to RecurringTransaction.readable_name(payment.name), recurring_occurrence_path(payment.occurrence),
+            data: { turbo_frame: :drawer, turbo_prefetch: false },
+            class: "block truncate text-sm font-medium text-primary hover:underline" %>
+    <% else %>
+      <p class="truncate text-sm font-medium text-primary"><%= RecurringTransaction.readable_name(payment.name) %></p>
+    <% end %>
     <p class="text-xs <%= payment.state == :overdue ? "text-destructive" : "text-secondary" %>"><%= month_plan_payment_date(payment) %></p>
   </div>
   <% if show_mode && payment.state != :paid && !payment.income? %>

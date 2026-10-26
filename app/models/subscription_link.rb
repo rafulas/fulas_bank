@@ -1,5 +1,10 @@
-# Fulas Bank: links a movement to one subscription (a recurring series of
-# type "subscription"), from the movement's detail, like the car's charges.
+# Fulas Bank: links a movement to one recurring series (fixed, bill or
+# subscription; see RecurringTransaction::Kind), from the movement's detail,
+# like the car's charges. It began with subscriptions only, hence the name.
+#
+# It is also how a payment the app did not recognise gets its series: the
+# bank writes «Préstamo RRHH Reforma» and the series is called «Préstamo
+# Reforma Vivienda», so the matcher leaves it alone until the user links it.
 #
 # Two charges from the same shop can be two subscriptions (Apple Music at
 # 10,99 € and iCloud 2 TB at 2,99 €): each is its own series, and the app's
@@ -19,14 +24,19 @@ class SubscriptionLink
     @family = entry.account.family
   end
 
-  # The subscription series the movement pays, if any.
+  # The series the movement pays, if any.
   def current
-    allocations.map { |allocation| allocation.recurring_occurrence.recurring_transaction }.find(&:typed_subscription?)
+    allocations.map { |allocation| allocation.recurring_occurrence.recurring_transaction }.first
   end
 
-  # The family's active subscriptions, by name.
+  # The family's active series the movement could pay: an income with the
+  # incomes, a charge with the charges. Fixed first, then bills and
+  # subscriptions, each by name.
   def options
-    family.recurring_transactions.active.typed_subscription.includes(:merchant).sort_by { |series| series.display_name.to_s.downcase }
+    income = entry.amount.negative?
+    family.recurring_transactions.active.includes(:merchant).to_a
+          .select { |series| series.amount.to_d.negative? == income }
+          .sort_by { |series| [ RecurringTransaction::Kind::KINDS.index(series.fulas_kind), series.display_name.to_s.downcase ] }
   end
 
   # Moves the movement to `series` (nil: to none).
@@ -41,12 +51,14 @@ class SubscriptionLink
     true
   end
 
-  # A new subscription made from the movement, and the movement linked to it.
-  def create!(name: nil)
+  # A new series made from the movement, of `kind` (by default the one its
+  # name and category suggest), and the movement linked to it.
+  def create!(name: nil, kind: "subscription")
     series = RecurringTransaction.transaction(requires_new: true) do
       RecurringTransaction.create_from_transaction(entry.transaction)
     end
-    series.update!(bill_type: "subscription", name: name.presence || series.name)
+    kind = RecurringTransaction::Kind::KINDS.include?(kind.to_s) ? kind.to_s : RecurringTransaction::Kind.guess(series)
+    series.update!(bill_type: RecurringTransaction::Kind.bill_type_for(kind, series), name: name.presence || series.name)
     link!(series)
     series
   end

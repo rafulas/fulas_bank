@@ -139,6 +139,9 @@ en:
       trigger_label: Edit bill
       title: "Edit %{name}"
       income_title: "Edit income · %{name}"
+      delete: Delete
+      delete_title: "Delete %{name}?"
+      delete_body: "It stops showing in Recurring, Plans and the Forecast. The movements linked to it are not deleted: they are left free to link to another one."
     form:
       payment_url_label: Payment link
       payment_url_placeholder: bank.example.com/pay
@@ -255,8 +258,12 @@ en:
         bill: Bill
         subscription: Subscription
       ignore: Ignore
+      is: "It is «%{name}»"
     confirmed: Added to your recurring movements
     dismissed: "Dismissed. This pattern won't be suggested again."
+    merged:
+      one: "1 movement linked to %{name}."
+      other: "%{count} movements linked to %{name}."
     badges:
       manual: Manual
     transfer_marked_as_recurring: Transfer marked as recurring

@@ -1,21 +1,26 @@
 <%# locals: (entry:, can_edit:) %>
-<%# Fulas Bank: which subscription a charge pays, to change it or make a new
-    one from it (see SubscriptionLink). %>
+<%# Fulas Bank: which recurring payment (fixed, bill or subscription) a
+    movement belongs to, to change it or make a new one from it (see
+    SubscriptionLink). %>
 <% link = SubscriptionLink.new(entry) %>
 <% current = link.current %>
 <% options = link.options %>
+<% kind_label = ->(kind) { t("recurring_transactions.suggested.confirm_as.#{kind}") } %>
 
 <div class="px-3 py-2 space-y-3" id="<%= dom_id(entry, :subscription) %>">
   <p class="text-sm text-secondary">
-    <%= current ? t(".linked", name: current.display_name, amount: format_money(current.amount_money)) : t(".not_linked") %>
+    <%= current ? t(".linked", name: current.display_name, kind: kind_label.call(current.fulas_kind).downcase, amount: format_money(current.amount_money.abs)) : t(".not_linked") %>
   </p>
 
   <% if can_edit %>
     <% if options.any? %>
+      <% grouped = options.group_by(&:fulas_kind).map do |kind, list|
+           [ kind_label.call(kind), list.map { |series| [ "#{series.display_name} (#{format_money(series.amount_money.abs)})", series.id ] } ]
+         end %>
       <%= styled_form_with scope: :subscription, url: transaction_subscription_path(entry), method: :patch,
             data: { controller: "auto-submit-form", turbo_frame: :_top } do |form| %>
         <%= form.select :series_id,
-              options_for_select([ [ t(".none"), "" ] ] + options.map { |series| [ "#{series.display_name} (#{format_money(series.amount_money)})", series.id ] }, current&.id),
+              options_for_select([ [ t(".none"), "" ] ], current ? nil : "") + grouped_options_for_select(grouped, current&.id),
               { label: t(".change") },
               { data: { auto_submit_form_target: "auto", autosubmit_trigger_event: "change" } } %>
       <% end %>
@@ -23,11 +28,16 @@
 
     <% unless current %>
       <%= styled_form_with scope: :subscription, url: transaction_subscription_path(entry), method: :post,
-            class: "flex items-end gap-2", data: { turbo_frame: :_top } do |form| %>
-        <div class="grow">
-          <%= form.text_field :name, value: entry.name, label: t(".new_name") %>
+            class: "space-y-2", data: { turbo_frame: :_top } do |form| %>
+        <%= form.text_field :name, value: entry.name, label: t(".new_name") %>
+        <div class="flex items-end gap-2">
+          <div class="grow">
+            <%= form.select :kind,
+                  RecurringTransaction::Kind::KINDS.map { |kind| [ kind_label.call(kind), kind ] },
+                  { label: t(".new_kind"), selected: entry.amount.negative? ? "fixed" : "subscription" } %>
+          </div>
+          <%= form.submit t(".create") %>
         </div>
-        <%= form.submit t(".create") %>
       <% end %>
     <% end %>
   <% end %>

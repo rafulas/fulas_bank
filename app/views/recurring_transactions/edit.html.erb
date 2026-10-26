@@ -5,5 +5,25 @@
     <%= render "form",
           recurring_transaction: @recurring_transaction,
           sibling_count: @sibling_count.to_i %>
+
+    <%# Fulas Bank: to remove one that should not be there, such as a
+        duplicate. Its movements are released, so another can take them. %>
+    <div class="mt-4 pt-4 border-t border-divider flex justify-end">
+      <%= render DS::Button.new(
+            text: t(".delete"),
+            icon: "trash-2",
+            variant: :outline_destructive,
+            size: :sm,
+            href: recurring_transaction_path(@recurring_transaction),
+            method: :delete,
+            frame: :_top,
+            confirm: CustomConfirm.new(
+              title: t(".delete_title", name: @recurring_transaction.display_name),
+              body: t(".delete_body"),
+              btn_text: t(".delete"),
+              destructive: true
+            )
+          ) %>
+    </div>
   <% end %>
 <% end %>
