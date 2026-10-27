@@ -4,7 +4,7 @@
     ERB dependency tracker mis-parses as a bogus "Ds/D" template dependency
     and then logs "Couldn't find template for digesting: Ds/D" on every cache
     miss. The cache key is already manually versioned via
-    account_sidebar_tabs_cache_key ("account_sidebar_tabs_v5",
+    account_sidebar_tabs_cache_key ("account_sidebar_tabs_v6",
     invalidate_on_data_updates: true), so we opt out of automatic template
     digesting. Bump that version suffix when changing this template or its
     sidebar dependencies. %>
@@ -18,6 +18,18 @@
       <% end %>
     </div>
   <% end %>
+
+  <%# Fulas Bank: «Editar saldos» (AccountBalancesController), every
+      account's balance on one page. %>
+  <div class="flex justify-end mb-1">
+    <%= render DS::Link.new(
+      text: t("accounts.sidebar.edit_balances"),
+      variant: "ghost",
+      size: :sm,
+      href: account_balances_path,
+      icon: "pencil"
+    ) %>
+  </div>
 
   <%= render DS::Tabs.new(active_tab: active_tab, session_key: "account_sidebar_tab", testid: "account-sidebar-tabs") do |tabs| %>
     <% tabs.with_nav do |nav| %>
