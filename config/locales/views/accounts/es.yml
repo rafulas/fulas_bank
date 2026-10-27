@@ -149,6 +149,7 @@ es:
     update:
       success: Cuenta actualizada (%{type})
     sidebar:
+      edit_balances: Editar saldos
       missing_data: Faltan datos históricos
       missing_data_description: "%{product} utiliza proveedores externos para obtener tipos de cambio históricos, precios de valores y más. Estos datos son necesarios para calcular saldos históricos precisos de las cuentas."
       configure_providers: Configura tus proveedores aquí.

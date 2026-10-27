@@ -39,6 +39,12 @@ class AccountBalancesControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /Checking Account/
   end
 
+  test "the accounts side panel links to it" do
+    get root_url
+
+    assert_select "#account-sidebar-tabs a[href=?]", account_balances_path
+  end
+
   test "the accounts page links to it" do
     get accounts_url
 
