@@ -39,12 +39,20 @@ class Forecast::VariableEstimate
           .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
           .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
           .where(Transaction.variable_expense_sql)
-          .where.not(transactions: { category_id: investment_category_ids(family) })
+          .then { |scope| without_investments(scope, family) }
   end
 
   # Fulas Bank: money put into investments, pension plans or savings (the
   # «Inversiones» branch, and Sure's investment contributions category) is
   # not spending, even when it leaves as an ordinary charge.
+  # Uncategorized movements stay: a bare NOT IN would drop them too.
+  def self.without_investments(scope, family)
+    ids = investment_category_ids(family)
+    return scope if ids.empty?
+
+    scope.where("transactions.category_id IS NULL OR transactions.category_id NOT IN (?)", ids)
+  end
+
   def self.investment_category_ids(family)
     names = [ Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME, *Category.all_investment_contributions_names ]
     roots = family.categories.where(parent_id: nil, name: INVESTMENT_ROOT_NAME).select(:id)
