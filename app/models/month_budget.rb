@@ -72,6 +72,20 @@ class MonthBudget
     true
   end
 
+  # Fulas Bank: sets this month's amounts only, leaving the later months as
+  # they are (to write many months at once, each with its own amounts).
+  def save_month!(new_amounts)
+    clean = resolve(new_amounts)
+
+    Budget.transaction do
+      budget = bootstrap(month)
+      apply(budget, clean) if budget
+    end
+
+    @initialized_budget = nil
+    true
+  end
+
   # Every category id a budget can carry: the main ones and their subcategories.
   def category_ids
     categories.map(&:id) + subcategories_by_parent.values.flatten.map(&:id)

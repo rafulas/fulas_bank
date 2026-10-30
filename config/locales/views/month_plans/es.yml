@@ -21,6 +21,8 @@ es:
       over_budget: "%{amount} sobre presupuesto"
       no_budget: "Este mes no tiene presupuesto. Pulsa «Añadir presupuesto» y pon cuánto quieres gastar en cada categoría."
       edit_budget: Editar presupuesto
+      plan_budgets: Crear presupuestos de los próximos 5 años desde la previsión
+      plan_budgets_confirm: "Se crea el presupuesto de cada uno de los próximos 60 meses, con lo que sueles gastar en lo variable ese mes más los recibos de ese mes, por categoría. Sustituye los presupuestos que ya hubiera a partir del mes que viene. ¿Seguir?"
       add_budget: Añadir presupuesto
       recurring: Recurrentes
       paid_so_far: pagado hasta ahora

@@ -808,6 +808,8 @@ Rails.application.routes.draw do
     patch :variable_accounts, path: "gastos-varios/cuentas", to: "forecasts#update_variable_accounts"
     # Fulas Bank: a category left out of "Gastos varios", or planned for a month.
     patch :variable_category, path: "gastos-varios/categoria", to: "forecasts#update_variable_category"
+    # Fulas Bank: the next five years' budgets, from the forecast.
+    post :budgets, path: "presupuestos", to: "forecasts#create_budgets"
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do

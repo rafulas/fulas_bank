@@ -72,6 +72,7 @@ class ForecastsController < ApplicationController
     plan = variable_plan
 
     case params[:op]
+    when "budget" then update_month_budget(category, month)
     when "exclude" then plan.exclude!(category.id)
     when "include" then plan.include!(category.id)
     when "plan" then plan.plan!(month, category.id, planned_amount)
@@ -82,7 +83,28 @@ class ForecastsController < ApplicationController
                 notice: t(".success")
   end
 
+  # Fulas Bank: the budgets of the next five years, each month with its own
+  # amounts, from the forecast (Forecast::BudgetPlanner). From then on the
+  # forecast follows them.
+  def create_budgets
+    months = Forecast::BudgetPlanner.new(Current.family, user: Current.user, accounts: @forecast.variable_accounts).apply!
+    redirect_to month_plan_path(month: Date.current.next_month.strftime("%Y-%m")), notice: t(".success", count: months)
+  end
+
   private
+    # A category with a budget that month: what is typed is its variable part,
+    # so its budget becomes that plus its recurring payments. A breakdown into
+    # subcategories that month gives way to the one amount.
+    def update_month_budget(category, month)
+      main = category.parent || category
+      month_budget = MonthBudget.new(Current.family, user: Current.user, month: month)
+      recurring = Forecast::CategoryRecurring.new(Current.family).for(month).fetch(main.id.to_s, 0)
+      amounts = month_budget.amounts.transform_keys(&:to_s)
+      amounts[main.id.to_s] = (planned_amount + recurring).ceil
+      month_budget.subcategories_of(main).each { |sub| amounts[sub.id.to_s] = 0 }
+      month_budget.save_month!(amounts)
+    end
+
     def variable_plan
       @variable_plan ||= Forecast::VariablePlan.new(Current.family, user: Current.user)
     end

@@ -21,6 +21,8 @@ en:
       over_budget: "%{amount} over budget"
       no_budget: "This month has no budget. Press Add budget and set how much you want to spend on each category."
       edit_budget: Edit budget
+      plan_budgets: Create the next 5 years' budgets from the forecast
+      plan_budgets_confirm: "Each of the next 60 months gets its budget: what you usually spend on variable things that month plus that month's bills, by category. It replaces any budget from next month on. Continue?"
       add_budget: Add budget
       recurring: Recurring
       paid_so_far: paid so far

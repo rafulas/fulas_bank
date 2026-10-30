@@ -15,6 +15,13 @@ en:
     update_columns:
       success: Table updated.
     variable:
+      budget_title: "%{category} budget in %{month}"
+      budget_line: "Budget %{budget} − recurring %{recurring} = %{part} of variable spending expected."
+      budget_hint: "This category has a budget that month, and the budget rules: the forecast uses what it leaves after its bills. Change the variable spending here and the month's budget follows (variable plus its recurring payments)."
+      budget_amount: "Variable spending expected"
+      budget_save: "Change the %{month} budget"
+      budgets: "With a budget in %{month}"
+      budgets_hint: "These categories do not use the average: they count their budget minus their bills that month, which already have their own line."
       title: "Variable spending in %{month}"
       subtitle: How what you usually spend on variable things that month is worked out.
       result: Expected for the month
@@ -52,6 +59,10 @@ en:
       excluded_hint: Their spending counts in no month of the forecast.
       include: Bring back
       planned_pill: "This month: %{amount}"
+    create_budgets:
+      success:
+        one: "Budget created for 1 month from the forecast."
+        other: "Budgets created for %{count} months from the forecast. From now on the Forecast follows them."
     update_variable_accounts:
       success: Variable spending accounts updated.
     update_variable_category:
