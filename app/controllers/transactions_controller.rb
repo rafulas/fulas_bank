@@ -6,7 +6,9 @@ class TransactionsController < ApplicationController
 
   before_action :set_entry_for_unlock, only: :unlock
   before_action :set_entry_for_tags, only: :update_tags
-  before_action :set_entry, only: :move_account
+  # A callback of its own: redeclaring :set_entry would replace the one
+  # EntryableResource sets up for show, update and destroy.
+  before_action :set_entry_for_move, only: :move_account
   before_action :store_params!, only: :index, unless: :next_page_request?
 
   helper_method :new_transaction_idempotency_key
@@ -202,6 +204,11 @@ class TransactionsController < ApplicationController
 
   # Fulas Bank: a movement entered in the wrong account (another card, say)
   # moved to the right one, from its detail.
+  def set_entry_for_move
+    set_entry
+  end
+  private :set_entry_for_move
+
   def move_account
     return head(:forbidden) unless entry_permission.in?(%i[owner full_control])
 
