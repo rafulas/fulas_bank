@@ -103,6 +103,8 @@ es:
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
     move_account:
       moved: "Movimiento pasado a %{account}."
+    mark_all_seen:
+      done: Movimientos nuevos marcados como vistos
     update:
       updated: Transacción actualizada
     new:
@@ -215,6 +217,7 @@ es:
       reject_match: Rechazar coincidencia
       transfer_confirmed: La transferencia está confirmada
     transaction:
+      unseen: Nuevo, sin ver
       pending: Pendiente
       pending_tooltip: Transacción pendiente — puede cambiar al confirmarse
       recurring_tooltip: "Recurrente: %{name}"
@@ -261,6 +264,9 @@ es:
       edit_tags: Editar etiquetas
       import: Importar
     index:
+      mark_all_seen:
+        one: Marcar 1 movimiento nuevo como visto
+        other: "Marcar %{count} movimientos nuevos como vistos"
       title: Transacciones
       transaction: transacción
       transactions: transacciones

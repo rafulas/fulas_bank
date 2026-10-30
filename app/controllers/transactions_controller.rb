@@ -15,7 +15,14 @@ class TransactionsController < ApplicationController
 
   def show
     super
+    @entry.mark_seen!
     assign_mark_recurring_state
+  end
+
+  # Fulas Bank: the blue dot of every imported movement taken off at once.
+  def mark_all_seen
+    Current.accessible_entries.unseen.update_all(seen_at: Time.current)
+    redirect_back_or_to transactions_path, notice: t(".done")
   end
 
   def new
@@ -28,6 +35,7 @@ class TransactionsController < ApplicationController
   def index
     @q = search_params
     @accessible_account_ids = Current.user.accessible_accounts.pluck(:id)
+    @unseen_count = Current.accessible_entries.unseen.count
     @search = Transaction::Search.new(Current.family, filters: @q, accessible_account_ids: @accessible_account_ids)
 
     base_scope = @search.transactions_scope
