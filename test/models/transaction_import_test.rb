@@ -369,6 +369,11 @@ class TransactionImportTest < ActiveSupport::TestCase
 
     @import.generate_rows_from_csv
     @import.reload
+    # Fulas Bank: it looks like the one entered by hand; the user says they
+    # are different.
+    assert_equal [ existing_entry ], @import.possible_duplicates.map(&:entry)
+    @import.rows.first.update!(duplicate_choice: "import")
+    @import.reload
 
     # Should create a new entry because the name is different
     assert_difference -> { Entry.count } => 1,
@@ -378,6 +383,41 @@ class TransactionImportTest < ActiveSupport::TestCase
 
     # Both transactions should exist
     assert_equal 2, account.entries.where(date: Date.new(2024, 1, 1), amount: 100).count
+  end
+
+  test "Fulas Bank: a movement entered by hand with another name is not duplicated, and either name can stay" do
+    account = accounts(:depository)
+    mine = account.entries.create!(date: Date.new(2024, 1, 17), amount: 30, currency: "USD", name: "Cena Urogallo",
+                                   entryable: Transaction.new(category: categories(:food_and_drink)))
+    theirs = account.entries.create!(date: Date.new(2024, 1, 20), amount: 12, currency: "USD", name: "Café",
+                                     entryable: Transaction.new)
+
+    @import.update!(
+      account: account,
+      raw_file_str: "date,name,amount\n01/18/2024,RESTAURANTE UROGALLO POZUELO,30\n01/20/2024,CAFETERIA REAL,12\n01/25/2024,Otra cosa,30\n",
+      date_col_label: "date", amount_col_label: "amount", name_col_label: "name",
+      date_format: "%m/%d/%Y", amount_type_strategy: "signed_amount", signage_convention: "inflows_negative"
+    )
+    @import.generate_rows_from_csv
+    @import.reload
+
+    possible = @import.possible_duplicates
+    assert_equal [ mine, theirs ], possible.map(&:entry), "a day apart at most; the one five days later is new"
+    assert_equal 1, @import.dry_run[:transactions]
+
+    # Keep my name for the dinner (the default), take the bank's for the coffee.
+    @import.rows.find_by(name: "CAFETERIA REAL").update!(duplicate_choice: "file")
+    @import.reload
+
+    assert_difference -> { Entry.count } => 1 do
+      @import.publish
+    end
+
+    assert_equal "Cena Urogallo", mine.reload.name
+    assert_equal categories(:food_and_drink), mine.transaction.category
+    assert_equal "CAFETERIA REAL", theirs.reload.name
+    assert_equal @import.id, mine.import_id
+    assert_not mine.unseen?, "it was already there: no new dot"
   end
 
   # Fulas Bank: the bank's «Traspaso programa Tu Cuenta» and Bilance's

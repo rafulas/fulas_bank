@@ -532,6 +532,8 @@ Rails.application.routes.draw do
 
     resources :rows, only: %i[show update], module: :import
     resources :mappings, only: :update, module: :import
+    # Fulas Bank: the choice for a row that looks like a movement entered by hand.
+    resource :duplicate, only: :update, module: :import
   end
 
   resources :holdings, only: %i[index new show update destroy] do

@@ -72,6 +72,38 @@
     <%= render DS::Alert.new(variant: :info, message: t(".existing_rows_notice", count: existing_rows)) %>
   <% end %>
 
+  <%# Fulas Bank: rows that look like a movement entered by hand with another
+      name. Each is the same movement (keeping one of the two names) or a
+      different one. %>
+  <% possible = import.is_a?(TransactionImport) ? import.possible_duplicates : [] %>
+  <% if possible.any? %>
+    <section id="possible-duplicates" class="space-y-2">
+      <h2 class="text-sm font-medium text-primary"><%= t(".duplicates_title", count: possible.size) %></h2>
+      <p class="text-xs text-secondary"><%= t(".duplicates_hint") %></p>
+      <div class="bg-container shadow-border-xs rounded-xl divide-y divide-divider">
+        <% possible.each do |match| %>
+          <%= form_with url: import_duplicate_path(import), method: :patch, class: "p-4 space-y-2",
+                data: { controller: "auto-submit-form" } do %>
+            <%= hidden_field_tag :row_id, match.row.id %>
+            <div class="flex items-center justify-between gap-3 text-sm">
+              <span class="text-secondary"><%= l(match.entry.date, format: :short) %></span>
+              <span class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(-match.entry.amount, match.entry.currency)) %></span>
+            </div>
+            <% [ [ "mine", t(".duplicates_mine", name: match.entry.name) ],
+                 [ "file", t(".duplicates_file", name: match.row.name) ],
+                 [ "import", t(".duplicates_import") ] ].each do |value, label| %>
+              <label class="flex items-start gap-2 text-sm text-primary cursor-pointer">
+                <%= radio_button_tag :choice, value, match.choice == value, id: "choice_#{match.row.id}_#{value}",
+                      class: "mt-0.5", data: { "auto-submit-form-target": "auto" } %>
+                <span><%= label %></span>
+              </label>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
   <div class="bg-container-inset rounded-xl p-1 space-y-1">
     <div class="flex justify-between items-center text-xs font-medium text-secondary uppercase px-5 py-3">
       <p><%= t(".summary_item_label") %></p>

@@ -7,6 +7,9 @@ class TransactionImport < Import
       updated_entries = []
       skipped_transfers = 0
       claimed_entry_ids = Set.new # Track entries we've already claimed in this import
+      # Fulas Bank: rows that look like a movement entered by hand with
+      # another name, and what the user chose for each.
+      possible = possible_duplicates.to_h { |match| [ match.row.id, match ] }
 
       rows.each_with_index do |row, index|
         mapped_account = if account
@@ -56,6 +59,12 @@ class TransactionImport < Import
           end
         end
 
+        if duplicate_entry.nil? && (match = possible[row.id]) && match.choice != "import" &&
+           !claimed_entry_ids.include?(match.entry.id)
+          duplicate_entry = match.entry
+          duplicate_entry.name = row.name if match.choice == "file"
+        end
+
         if duplicate_entry
           # Update existing transaction instead of creating a new one.
           # Fulas Bank: only what it lacks, so importing the same statement
@@ -67,6 +76,8 @@ class TransactionImport < Import
           duplicate_entry.notes = row.notes if row.notes.present? && duplicate_entry.notes.blank?
           duplicate_entry.import = self
           duplicate_entry.import_locked = true  # Protect from provider sync overwrites
+          # Fulas Bank: it was already there, so no "new" dot.
+          duplicate_entry.seen_at ||= Time.current
           updated_entries << duplicate_entry
           claimed_entry_ids.add(duplicate_entry.id)
         else
@@ -118,7 +129,72 @@ class TransactionImport < Import
   # not counting the rows already in the account (re-importing a statement
   # that overlaps the last one), which are not added again.
   def dry_run
-    super.merge(transactions: [ rows_count - existing_rows_count, 0 ].max)
+    merged = possible_duplicates.count { |match| match.choice != "import" }
+    super.merge(transactions: [ rows_count - existing_rows_count - merged, 0 ].max)
+  end
+
+  # Fulas Bank: a row and the movement it probably is.
+  PossibleDuplicate = Data.define(:row, :entry) do
+    # "mine" (keep the movement's name), "file" (take the row's) or
+    # "import" (they are different). Empty is "mine".
+    def choice
+      row.duplicate_choice.presence || "mine"
+    end
+  end
+
+  CHOICES = %w[mine file import].freeze
+
+  # Fulas Bank: rows that match no movement exactly but look like one the
+  # user entered by hand: same account, currency and amount, a day apart at
+  # most, and another name (what the user wrote against what the bank
+  # wrote) or the same one written differently («Lidl» and «LIDL»).
+  # Each movement goes to one row, the closest in date; movements a row
+  # matches exactly are left to that row.
+  def possible_duplicates
+    @possible_duplicates ||= rows.group_by { |row| account || mappings.accounts.mappable_for(row.account) }.flat_map do |mapped_account, account_rows|
+      next [] if mapped_account.nil?
+
+      dated = account_rows.filter_map { |row| (date = row_date(row)) && [ row, Date.iso8601(date) ] }
+      next [] if dated.empty?
+
+      currency_for = ->(row) { currency_col_label.present? ? row.currency : (mapped_account.currency.presence || family.currency) }
+      # Every movement the import itself would match (an earlier import too),
+      # and among them those entered by hand, which are the candidates.
+      present = mapped_account.entries
+                              .where(entryable_type: "Transaction", external_id: nil)
+                              .where(date: (dated.map(&:last).min - 1)..(dated.map(&:last).max + 1))
+                              .includes(entryable: :category)
+                              .to_a
+      exact = {}
+      dated.each do |row, date|
+        exact[row] = present.find do |entry|
+          !exact.value?(entry) && entry.date == date && entry.amount == row.signed_amount &&
+            entry.currency == currency_for.(row) && entry.name == row.name
+        end
+      end
+      transfer_ids = Transfer.where(inflow_transaction_id: present.map(&:entryable_id)).pluck(:inflow_transaction_id) +
+                     Transfer.where(outflow_transaction_id: present.map(&:entryable_id)).pluck(:outflow_transaction_id)
+      # Transfers are matched by their own rule (transfer_duplicate_for).
+      entries = present.select do |entry|
+        entry.import_id.nil? && transfer_ids.exclude?(entry.entryable_id) && !entry.entryable.category&.special_transfers?
+      end
+      taken = Set.new(exact.values.compact.map(&:id))
+
+      dated.filter_map do |row, date|
+        next if exact[row]
+
+        entry = entries.select do |candidate|
+          !taken.include?(candidate.id) && candidate.amount == row.signed_amount && candidate.currency == currency_for.(row) &&
+            (candidate.date - date).abs <= 1
+        end.min_by { |candidate| (candidate.date - date).abs }
+        next unless entry
+
+        taken << entry.id
+        PossibleDuplicate.new(row: row, entry: entry)
+      end
+    end
+  rescue ArgumentError, TypeError
+    []
   end
 
   # Rows that match a movement already in their account, by the same rule as
