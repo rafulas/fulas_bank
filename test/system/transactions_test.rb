@@ -282,6 +282,34 @@ class TransactionsTest < ApplicationSystemTestCase
   end
 
 
+  test "the calendar changes month without closing and stays inside the window" do
+    investment_account = accounts(:investment)
+    visit account_url(investment_account, tab: "activity")
+    within "[data-testid='activity-menu']" do
+      click_on "New"
+      click_on "New activity"
+    end
+
+    find("button[aria-label='Open the calendar']").click
+    calendar = find("[data-controller='date-field'] [role='dialog']")
+    month = calendar.find("span.font-semibold").text
+
+    calendar.find("button[aria-label='Next month']").click
+    calendar.find("button[aria-label='Next month']").click
+
+    assert_selector "[data-controller='date-field'] [role='dialog']"
+    assert_not_equal month, calendar.find("span.font-semibold").text
+
+    box = page.evaluate_script("(() => { const r = document.querySelector(\"[data-controller='date-field'] [role='dialog']\").getBoundingClientRect(); return [r.top, r.bottom, window.innerHeight]; })()")
+    assert_operator box[0], :>=, 0
+    assert_operator box[1], :<=, box[2], "the calendar is not cut off at the bottom"
+
+    calendar.find("button[aria-label^='15 ']").click
+    assert_no_selector "[data-controller='date-field'] [role='dialog']"
+    target = Date.current.beginning_of_month.next_month(2).change(day: 15)
+    assert_equal target.iso8601, find("input[type='date'][name='model[date]']").value
+  end
+
   test "can create deposit transaction for investment account" do
     investment_account = accounts(:investment)
     investment_account.entries.create!(name: "Investment account", date: Date.current, amount: 1000, currency: "USD", entryable: Transaction.new)

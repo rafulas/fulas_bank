@@ -1,6 +1,11 @@
 ---
 es:
   activerecord:
+    attributes:
+      entry:
+        amount: Importe
+        date: Fecha
+        name: Nombre
     errors:
       models:
         entry:

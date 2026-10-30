@@ -6,6 +6,11 @@ import { Controller } from "@hotwired/stimulus";
 // clicking it, or the calendar button beside it, opens a month with quick
 // choices: today, yesterday and payday. Every StyledFormBuilder#date_field
 // gets it (the markup is built there).
+//
+// The calendar is shown in the browser's top layer (a popover) and placed
+// beside the field with fixed coordinates, so a dialog that scrolls or clips
+// its content cannot cut it, and it opens upwards when there is no room
+// below.
 export default class extends Controller {
   static targets = ["input", "button"];
 
@@ -17,25 +22,33 @@ export default class extends Controller {
     today: String,
   };
 
+  static GAP = 8;
+
   connect() {
     this.input = this.inputTarget;
     this.button = this.buttonTarget;
     this.holder = this.element;
-    this.input.addEventListener("click", this.openFromClick);
+    this.input.addEventListener("mousedown", this.openFromPointer);
     document.addEventListener("click", this.outside);
     document.addEventListener("keydown", this.escape);
   }
 
   disconnect() {
     this.close();
-    this.input.removeEventListener("click", this.openFromClick);
+    this.input.removeEventListener("mousedown", this.openFromPointer);
     document.removeEventListener("click", this.outside);
     document.removeEventListener("keydown", this.escape);
   }
 
-  // A click on the field (not typing into it) opens the calendar.
-  openFromClick = (event) => {
-    if (event.detail > 0) this.open();
+  // A click on the field opens this calendar and not the browser's own (Safari
+  // shows its own on a click, so both appeared). The field still gets the
+  // focus, so the date can be typed.
+  openFromPointer = (event) => {
+    if (event.button !== 0 || this.input.disabled || this.input.readOnly)
+      return;
+    event.preventDefault();
+    this.input.focus({ preventScroll: true });
+    this.panel ? this.close() : this.open();
   };
 
   toggle = (event) => {
@@ -43,12 +56,16 @@ export default class extends Controller {
     this.panel ? this.close() : this.open();
   };
 
+  // The path is taken when the click starts: a month arrow is replaced while
+  // the calendar redraws, and by the time this runs it is no longer inside
+  // the calendar, which used to close it.
   outside = (event) => {
     if (!this.panel) return;
+    const path = event.composedPath();
     if (
-      this.panel.contains(event.target) ||
-      this.button.contains(event.target) ||
-      event.target === this.input
+      path.includes(this.panel) ||
+      path.includes(this.button) ||
+      path.includes(this.input)
     )
       return;
     this.close();
@@ -58,6 +75,10 @@ export default class extends Controller {
     if (event.key === "Escape" && this.panel) this.close();
   };
 
+  reposition = () => {
+    if (this.panel) this.#place();
+  };
+
   open() {
     if (this.panel || this.input.disabled || this.input.readOnly) return;
     const value = this.#parse(this.input.value) || this.#today();
@@ -65,15 +86,47 @@ export default class extends Controller {
 
     this.panel = document.createElement("div");
     this.panel.className =
-      "absolute left-0 top-full mt-2 z-50 w-80 max-w-[90vw] p-3 rounded-xl bg-container shadow-border-lg space-y-3";
+      "fixed z-50 w-80 max-w-[calc(100vw-1rem)] p-3 m-0 border-0 rounded-xl bg-container text-primary shadow-border-lg space-y-3";
     this.panel.setAttribute("role", "dialog");
+    this.panel.style.inset = "auto";
+    const popover = typeof this.panel.showPopover === "function";
+    if (popover) this.panel.setAttribute("popover", "manual");
     this.holder.appendChild(this.panel);
+    if (popover) this.panel.showPopover();
     this.#draw();
+
+    window.addEventListener("scroll", this.reposition, true);
+    window.addEventListener("resize", this.reposition);
   }
 
   close() {
+    window.removeEventListener("scroll", this.reposition, true);
+    window.removeEventListener("resize", this.reposition);
     this.panel?.remove();
     this.panel = null;
+  }
+
+  // Below the field, or above it when it does not fit below; never off the
+  // sides of the window.
+  #place() {
+    const gap = this.constructor.GAP;
+    const field = this.holder.getBoundingClientRect();
+    const width = this.panel.offsetWidth;
+    const height = this.panel.offsetHeight;
+
+    let top = field.bottom + gap;
+    if (
+      top + height > window.innerHeight - gap &&
+      field.top - gap - height >= gap
+    )
+      top = field.top - gap - height;
+    const left = Math.min(
+      Math.max(field.left, gap),
+      Math.max(window.innerWidth - width - gap, gap),
+    );
+
+    this.panel.style.top = `${Math.max(top, gap)}px`;
+    this.panel.style.left = `${left}px`;
   }
 
   #draw() {
@@ -196,6 +249,7 @@ export default class extends Controller {
       grid.appendChild(cell);
     }
     panel.appendChild(grid);
+    this.#place();
   }
 
   #pick(date) {
