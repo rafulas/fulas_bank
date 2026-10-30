@@ -117,7 +117,7 @@ class BudgetTest < ActiveSupport::TestCase
 
   test "next_budget_param returns nil at future cap" do
     travel_to Date.current.beginning_of_month do
-      cap_start = Date.current.beginning_of_month + 2.years
+      cap_start = Date.current.beginning_of_month + Budget::FUTURE_YEARS.years
       budget = Budget.create!(
         family: @family,
         start_date: cap_start,
@@ -133,7 +133,7 @@ class BudgetTest < ActiveSupport::TestCase
     @family.update!(month_start_day: 15)
 
     travel_to Date.current.beginning_of_month do
-      cap_start = @family.current_custom_month_period.start_date + 2.years
+      cap_start = @family.current_custom_month_period.start_date + Budget::FUTURE_YEARS.years
       budget = Budget.create!(
         family: @family,
         start_date: cap_start,
