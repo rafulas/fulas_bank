@@ -45,6 +45,8 @@ en:
         transactions_section: Transactions
     unknown_name: Unknown transaction
     selection_bar:
+      confirm_transfers: Confirm the selected «Auto» transfers
+      reject_transfers: Reject the selected «Auto» transfers
       duplicate: Duplicate
       edit: Edit
       add_to_recurring: Add to recurring
@@ -92,6 +94,8 @@ en:
     create:
       created: Transaction created
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
+    move_account:
+      moved: "Movement moved to %{account}."
     update:
       updated: Transaction updated
     new:

@@ -6,6 +6,9 @@ class TransactionsController < ApplicationController
 
   before_action :set_entry_for_unlock, only: :unlock
   before_action :set_entry_for_tags, only: :update_tags
+  # A callback of its own: redeclaring :set_entry would replace the one
+  # EntryableResource sets up for show, update and destroy.
+  before_action :set_entry_for_move, only: :move_account
   before_action :store_params!, only: :index, unless: :next_page_request?
 
   helper_method :new_transaction_idempotency_key
@@ -197,6 +200,19 @@ class TransactionsController < ApplicationController
     raise unless existing_entry
 
     respond_with_created_entry(existing_entry)
+  end
+
+  # Fulas Bank: a movement entered in the wrong account (another card, say)
+  # moved to the right one, from its detail.
+  def move_account
+    return head(:forbidden) unless entry_permission.in?(%i[owner full_control])
+
+    target = @entry.account_move_targets(Current.accessible_accounts).find_by(id: params[:account_id])
+    return head(:unprocessable_entity) unless target && @entry.movable_to_another_account? &&
+      target.permission_for(Current.user).in?(%i[owner full_control])
+
+    @entry.move_to_account!(target)
+    redirect_back_or_to transactions_path, notice: t(".moved", account: target.name)
   end
 
   def update
@@ -531,6 +547,10 @@ class TransactionsController < ApplicationController
   end
 
   private
+    def set_entry_for_move
+      set_entry
+    end
+
     # Scoped by user (not just family) because Current.accessible_entries is
     # user-scoped for family sharing (see Current#accessible_entries).
     #

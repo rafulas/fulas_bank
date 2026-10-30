@@ -45,6 +45,8 @@ es:
         transactions_section: Transacciones
     unknown_name: Transacción desconocida
     selection_bar:
+      confirm_transfers: Confirmar los traspasos «Auto» seleccionados
+      reject_transfers: Rechazar los traspasos «Auto» seleccionados
       duplicate: Duplicar
       edit: Editar
       add_to_recurring: Añadir a recurrente
@@ -92,6 +94,8 @@ es:
     create:
       created: Transacción creada
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
+    move_account:
+      moved: "Movimiento pasado a %{account}."
     update:
       updated: Transacción actualizada
     new:

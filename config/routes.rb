@@ -579,6 +579,11 @@ Rails.application.routes.draw do
     post :seen, on: :collection
   end
 
+  # Fulas Bank: confirm or reject several paired transfers at once.
+  namespace :transfers do
+    resource :bulk_review, only: :create
+  end
+
   resources :transactions, only: %i[index new create show update destroy] do
     resource :split, only: %i[new create edit update destroy]
     resource :transfer_match, only: %i[new create]
@@ -602,6 +607,8 @@ Rails.application.routes.draw do
       post :dismiss_duplicate
       post :unlock
       patch :tags, action: :update_tags
+      # Fulas Bank: move the movement to another account.
+      patch :account, action: :move_account
     end
   end
 

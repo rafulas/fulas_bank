@@ -108,6 +108,21 @@
             <% end %>
           <% end %>
         <% end %>
+
+        <%# Fulas Bank: the account it is in, which can be changed when it went
+            in the wrong one (another card, say). %>
+        <% move_targets = @entry.movable_to_another_account? && can_edit_entry? ? @entry.account_move_targets(Current.accessible_accounts).to_a : [] %>
+        <% if move_targets.any? %>
+          <%= styled_form_with url: account_transaction_path(@entry), method: :patch,
+                data: { controller: "auto-submit-form", turbo_frame: "_top" } do |form| %>
+            <%= form.select :account_id,
+                  options_for_select([ [ @entry.account.name, @entry.account_id ] ] + move_targets.map { |account| [ account.name, account.id ] }, @entry.account_id),
+                  { label: t(".account_label") },
+                  { data: { "auto-submit-form-target": "auto" } } %>
+          <% end %>
+        <% else %>
+          <p class="text-xs text-secondary px-1"><%= t(".account_label") %>: <span class="text-primary"><%= @entry.account.name %></span></p>
+        <% end %>
       </div>
     <% end %>
     <%# Fulas Bank: the month's budget for this movement's category, and the

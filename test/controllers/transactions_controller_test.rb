@@ -9,6 +9,28 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     @entry = entries(:transaction)
   end
 
+  test "a movement entered in the wrong account is moved to another one from its detail" do
+    entry = create_transaction(account: accounts(:depository), name: "Cena Urogallo", amount: 30, date: Date.current)
+    card = accounts(:credit_card)
+
+    get transaction_url(entry)
+    assert_response :success
+    assert_select "form[action=?] select[name='account_id'] option[value=?]", account_transaction_path(entry), card.id
+
+    patch account_transaction_url(entry), params: { account_id: card.id }
+    assert_redirected_to transactions_url
+    assert_equal card, entry.reload.account
+  end
+
+  test "a movement cannot be moved to an account of another family" do
+    entry = create_transaction(account: accounts(:depository), amount: 30, date: Date.current)
+    other = families(:empty).accounts.create!(name: "Ajena", balance: 0, currency: "USD", accountable: Depository.new)
+
+    patch account_transaction_url(entry), params: { account_id: other.id }
+    assert_response :unprocessable_entity
+    assert_equal accounts(:depository), entry.reload.account
+  end
+
   test "the detail lists similar movements, marking the recurring ones" do
     twin = Entry.create!(account: @entry.account, name: @entry.name, date: @entry.date - 30, amount: @entry.amount,
                          currency: @entry.currency, entryable: Transaction.new(expense_type: "fixed"))

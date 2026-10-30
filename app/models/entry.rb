@@ -342,6 +342,31 @@ class Entry < ApplicationRecord
     external_id.present?
   end
 
+  # Fulas Bank: whether the movement can be moved to another of the family's
+  # accounts (it was entered in the wrong card, say): a plain transaction,
+  # not a transfer, not split and not from a bank connection.
+  def movable_to_another_account?
+    transaction? && !entryable.transfer? && !linked? && !split_parent? && !split_child?
+  end
+
+  # The accounts it can go to: the family's other accounts in its currency
+  # that hold transactions.
+  def account_move_targets(accounts)
+    accounts.where(currency: currency, accountable_type: Account::MOVABLE_TRANSACTION_TYPES).where.not(id: account_id).alphabetically
+  end
+
+  # Moves it to `target`, keeping everything else, and recalculates both
+  # accounts from its date.
+  def move_to_account!(target)
+    raise ArgumentError, "not movable" unless movable_to_another_account?
+    raise ArgumentError, "different family or currency" unless target.family_id == account.family_id && target.currency == currency
+
+    source = account
+    update!(account: target)
+    source.sync_later(window_start_date: date)
+    target.sync_later(window_start_date: date)
+  end
+
   # Reconciliation state, following the Quicken uncleared / cleared / reconciled
   # model. Only the last state is stored -- see AddReconciliationToEntries.
   #
