@@ -1,4 +1,7 @@
 class Budget < ApplicationRecord
+  # How many years ahead a budget can be set (see latest_valid_budget_start_date).
+  FUTURE_YEARS = 5
+
   include Monetizable
 
   PARAM_DATE_FORMAT = "%b-%Y"
@@ -96,11 +99,13 @@ class Budget < ApplicationRecord
         [ two_years_ago, oldest_entry_date ].min
       end
 
+      # Fulas Bank: five years ahead (Sure: two), as far as the forecast goes,
+      # so its budgets can be planned month by month (Forecast::BudgetPlanner).
       def latest_valid_budget_start_date(family)
         if family.uses_custom_month_start?
-          family.current_custom_month_period.start_date + 2.years
+          family.current_custom_month_period.start_date + FUTURE_YEARS.years
         else
-          Date.current.beginning_of_month + 2.years
+          Date.current.beginning_of_month + FUTURE_YEARS.years
         end
       end
   end

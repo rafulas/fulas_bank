@@ -22,7 +22,7 @@ class Forecast::BudgetSourceTest < ActiveSupport::TestCase
     expected = Forecast::CategoryRecurring.new(@family).for(@next_month)
 
     assert_equal BigDecimal("47"), expected[@insurance.id.to_s], "a subcategory counts in its main one"
-    assert_nil expected[@food.id.to_s], "income is not a recurring expense"
+    assert_not expected.key?(@food.id.to_s), "income is not a recurring expense"
   end
 
   test "a category with a budget counts its budget minus its recurring payments, the others their average" do
