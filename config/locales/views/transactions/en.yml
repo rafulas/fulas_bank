@@ -15,6 +15,13 @@ en:
           one: "1 transaction updated"
           other: "%{count} transactions updated"
       new:
+        add_tags_label: Add tags
+        remove_tags_label: Remove tags
+        one_time_label: One-off
+        one_time_on: Mark as one-off
+        one_time_off: No longer one-off
+        loan_label: Loan instalment
+        loan_hint: "The selected expenses are linked as payments of that loan."
         recurring_section: "Recurring and type"
         recurring_label: "Recurring"
         no_change: "(no change)"

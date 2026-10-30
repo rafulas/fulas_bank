@@ -19,7 +19,11 @@ class Transactions::BulkUpdatesController < ApplicationController
       recurring: bulk_update_params[:recurring],
       expense_type: bulk_update_params[:expense_type],
       end_on: bulk_update_params[:end_on],
-      excluded: bulk_update_params[:excluded]
+      excluded: bulk_update_params[:excluded],
+      one_time: bulk_update_params[:one_time],
+      add_tag_ids: bulk_update_params[:add_tag_ids],
+      remove_tag_ids: bulk_update_params[:remove_tag_ids],
+      loan_account_id: bulk_update_params[:loan_account_id]
     )
     updated = [ updated, classification.apply! ].max if classification.any_change?
 
@@ -30,7 +34,7 @@ class Transactions::BulkUpdatesController < ApplicationController
     def bulk_update_params
       params.require(:bulk_update)
             .permit(:date, :notes, :name, :category_id, :merchant_id, :recurring, :expense_type, :end_on, :excluded,
-                    entry_ids: [], tag_ids: [])
+                    :one_time, :loan_account_id, entry_ids: [], tag_ids: [], add_tag_ids: [], remove_tag_ids: [])
     end
 
     # Check if tag_ids was explicitly provided in the request.
