@@ -9,6 +9,8 @@ class TransactionImport < Import
       claimed_entry_ids = Set.new # Track entries we've already claimed in this import
       # Fulas Bank: rows that look like a movement entered by hand with
       # another name, and what the user chose for each.
+      # Worked out afresh: the choices may have changed since the review.
+      @possible_duplicates = nil
       possible = possible_duplicates.to_h { |match| [ match.row.id, match ] }
 
       rows.each_with_index do |row, index|
@@ -143,6 +145,11 @@ class TransactionImport < Import
   end
 
   CHOICES = %w[mine file import].freeze
+
+  def reload(*)
+    @possible_duplicates = nil
+    super
+  end
 
   # Fulas Bank: rows that match no movement exactly but look like one the
   # user entered by hand: same account, currency and amount, a day apart at
