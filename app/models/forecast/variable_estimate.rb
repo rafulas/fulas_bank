@@ -68,15 +68,17 @@ class Forecast::VariableEstimate
           .or(family.categories.where(parent_id: roots)).pluck(:id)
   end
 
-  attr_reader :family, :accounts, :today, :plan
+  attr_reader :family, :accounts, :today, :plan, :budget_source
 
   # `plan` (Forecast::VariablePlan): the categories left out, and those
-  # planned for a month.
-  def initialize(family, accounts:, today: Date.current, plan: nil)
+  # planned for a month. `budget_source` (Forecast::BudgetSource): the
+  # months' budgets, which replace the average of their categories.
+  def initialize(family, accounts:, today: Date.current, plan: nil, budget_source: nil)
     @family = family
     @accounts = accounts
     @today = today
     @plan = plan
+    @budget_source = budget_source
   end
 
   # Expected spending (positive) of `account` in the whole of `month` (any day
@@ -98,11 +100,46 @@ class Forecast::VariableEstimate
   # spent across them each month, averaged the same way. A month counts once
   # any of them has history. The categories planned for the month are left
   # out of the average and their planned amounts added instead.
+  #
+  # Fulas Bank: the budget rules. A category with a budget that month counts
+  # its budget minus its recurring payments (Forecast::BudgetSource) and is
+  # left out of the average; a month plan of such a category is ignored, as
+  # the budget is what is planned.
   def combined_monthly(month)
     month = month.beginning_of_month
-    planned = planned_ids(month)
-    values = combined_sample_months(month).map { |sample| combined_total(sample, without: planned) }
-    TrimmedMonthlyAverage.mean(values) + planned_total(month)
+    covered = budget_covered_ids(month)
+    planned = planned_ids(month) - covered
+    without = planned | covered
+    values = combined_sample_months(month).map { |sample| combined_total(sample, without: without) }
+    TrimmedMonthlyAverage.mean(values) + planned_total(month, except: covered) + budget_total(month)
+  end
+
+  # { main category id => what its budget leaves for variable spending } in
+  # `month`, when the budget rules.
+  def budget_parts(month)
+    budget_source ? budget_source.variable_parts(month) : {}
+  end
+
+  def budget_total(month)
+    budget_parts(month).values.sum.to_d
+  end
+
+  def budget_covered_ids(month)
+    budget_source ? budget_source.covered_ids(month) : []
+  end
+
+  # Fulas Bank: what a main category is expected to spend on variable things
+  # in `month`, by the same trimmed mean as the whole (its own months, the
+  # same samples), its subcategories included. Used to build budgets.
+  def category_monthly(month, main_category_id)
+    ids = category_tree_ids(main_category_id)
+    values = combined_sample_months(month).map do |sample|
+      monthly_totals.sum do |account_id, months|
+        by_category = months[sample.beginning_of_month] || {}
+        in_family_currency(by_category.sum { |id, amount| ids.include?(id.to_s) ? amount : 0 }.to_d, accounts_by_id[account_id])
+      end.to_d
+    end
+    TrimmedMonthlyAverage.mean(values)
   end
 
   # What has already been spent in `month`, counted the way the estimate
@@ -145,8 +182,11 @@ class Forecast::VariableEstimate
     plan ? plan.planned_ids(month) : []
   end
 
-  def planned_total(month)
-    plan ? plan.planned_total(month) : 0.to_d
+  # `except`: categories whose plans do not count (those with a budget).
+  def planned_total(month, except: [])
+    return 0.to_d unless plan
+
+    plan.plans_for(month).reject { |item| except.include?(item.category_id) }.sum(&:amount).to_d
   end
 
   # The months averaged for `month`, newest first.
@@ -155,6 +195,12 @@ class Forecast::VariableEstimate
   end
 
   private
+    def category_tree_ids(main_category_id)
+      @category_trees ||= {}
+      @category_trees[main_category_id.to_s] ||= [ main_category_id.to_s ] +
+        family.categories.where(parent_id: main_category_id).pluck(:id).map(&:to_s)
+    end
+
     def accounts_by_id
       @accounts_by_id ||= accounts.index_by(&:id)
     end

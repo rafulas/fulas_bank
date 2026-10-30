@@ -79,6 +79,12 @@
         <%= icon(plan.budget_rows.any? ? "pencil" : "plus", size: "sm") %>
         <span><%= t(plan.budget_rows.any? ? ".edit_budget" : ".add_budget") %></span>
       <% end %>
+      <%# Fulas Bank: the next five years' budgets from the forecast. %>
+      <%= button_to budgets_forecast_path, method: :post, form: { data: { turbo_confirm: t(".plan_budgets_confirm") } },
+            class: "w-full flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover cursor-pointer" do %>
+        <%= icon("calendar-range", size: "sm") %>
+        <span><%= t(".plan_budgets") %></span>
+      <% end %>
     </div>
   </section>
 

@@ -517,7 +517,8 @@ class Forecast
     def variable_flows
       return [] unless include_variable && main_account
 
-      estimate = Forecast::VariableEstimate.new(family, accounts: variable_accounts, today: today, plan: variable_plan)
+      estimate = Forecast::VariableEstimate.new(family, accounts: variable_accounts, today: today, plan: variable_plan,
+                                                budget_source: Forecast::BudgetSource.for_plan(variable_plan, today: today))
 
       months.filter_map do |month|
         date = month.end_of_month

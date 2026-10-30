@@ -58,33 +58,33 @@ class BudgetTest < ActiveSupport::TestCase
     refute Budget.budget_date_valid?(3.years.ago.beginning_of_month, family: @family)
   end
 
-  test "budget_date_valid? allows future dates up to 2 years ahead" do
+  test "budget_date_valid? allows future dates up to 5 years ahead" do
     travel_to Date.current.beginning_of_month do
       assert Budget.budget_date_valid?(Date.current.beginning_of_month + 1.month, family: @family)
-      assert Budget.budget_date_valid?(Date.current.beginning_of_month + 2.years, family: @family)
+      assert Budget.budget_date_valid?(Date.current.beginning_of_month + 5.years, family: @family)
     end
   end
 
-  test "budget_date_valid? does not allow future dates beyond 2 years ahead" do
+  test "budget_date_valid? does not allow future dates beyond 5 years ahead" do
     travel_to Date.current.beginning_of_month do
-      refute Budget.budget_date_valid?(Date.current.beginning_of_month + 2.years + 1.month, family: @family)
+      refute Budget.budget_date_valid?(Date.current.beginning_of_month + 5.years + 1.month, family: @family)
     end
   end
 
-  test "budget_date_valid? for custom month start allows dates up to 2 years ahead" do
+  test "budget_date_valid? for custom month start allows dates up to 5 years ahead" do
     @family.update!(month_start_day: 15)
 
     travel_to Date.current.beginning_of_month do
-      cap_start = @family.current_custom_month_period.start_date + 2.years
+      cap_start = @family.current_custom_month_period.start_date + 5.years
       assert Budget.budget_date_valid?(cap_start, family: @family)
     end
   end
 
-  test "budget_date_valid? for custom month start does not allow dates beyond 2 years ahead" do
+  test "budget_date_valid? for custom month start does not allow dates beyond 5 years ahead" do
     @family.update!(month_start_day: 15)
 
     travel_to Date.current.beginning_of_month do
-      beyond_cap = @family.current_custom_month_period.start_date + 2.years + 1.month
+      beyond_cap = @family.current_custom_month_period.start_date + 5.years + 1.month
       refute Budget.budget_date_valid?(beyond_cap, family: @family)
     end
   end
@@ -117,7 +117,7 @@ class BudgetTest < ActiveSupport::TestCase
 
   test "next_budget_param returns nil at future cap" do
     travel_to Date.current.beginning_of_month do
-      cap_start = Date.current.beginning_of_month + 2.years
+      cap_start = Date.current.beginning_of_month + Budget::FUTURE_YEARS.years
       budget = Budget.create!(
         family: @family,
         start_date: cap_start,
@@ -133,7 +133,7 @@ class BudgetTest < ActiveSupport::TestCase
     @family.update!(month_start_day: 15)
 
     travel_to Date.current.beginning_of_month do
-      cap_start = @family.current_custom_month_period.start_date + 2.years
+      cap_start = @family.current_custom_month_period.start_date + Budget::FUTURE_YEARS.years
       budget = Budget.create!(
         family: @family,
         start_date: cap_start,
