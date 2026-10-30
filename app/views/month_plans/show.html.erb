@@ -61,7 +61,7 @@
         </div>
 
         <% plan.budget_rows.each do |row| %>
-          <%= link_to edit_month_plan_budget_group_path(row.group, month: plan.month.strftime("%Y-%m")), data: { turbo_frame: :modal },
+          <%= link_to month_plan_budget_group_path(row.group, month: plan.month.strftime("%Y-%m")),
                 class: "block px-4 py-3 border-t border-divider hover:bg-container-hover" do %>
             <%= render "month_plans/budget_row", plan: plan, row: row, currency: currency %>
           <% end %>

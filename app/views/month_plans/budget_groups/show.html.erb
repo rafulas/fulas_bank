@@ -1,0 +1,171 @@
+<% detail = @detail %>
+<% group = @group %>
+<% month = detail.month %>
+<% month_param = month.strftime("%Y-%m") %>
+<% currency = Current.family.currency %>
+<% money = ->(amount, precision: 2) { format_money(Money.new(amount, currency), precision: precision) } %>
+<% category = group.display_category %>
+
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <%= link_to month_plan_path(month: month_param), class: "inline-flex items-center gap-1 text-sm text-secondary hover:text-primary" do %>
+      <%= icon "arrow-left", size: "sm" %><span><%= t(".back") %></span>
+    <% end %>
+    <div class="flex items-center gap-3">
+      <% if category %>
+        <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "md", rounded: true) %>
+      <% end %>
+      <h1 class="text-xl lg:text-3xl font-medium text-primary truncate"><%= group.name %></h1>
+    </div>
+    <p class="text-sm text-secondary"><%= group.category_names.join(", ") %></p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <div class="flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_plan_budget_group_path(group, month: (month << 1).strftime("%Y-%m")), aria: { label: t("month_plans.show.previous") }) %>
+      <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_plan_budget_group_path(group, month: (month >> 1).strftime("%Y-%m")), aria: { label: t("month_plans.show.next") }) %>
+      <span class="text-sm font-medium text-primary first-letter:uppercase"><%= l(month, format: "%B %Y") %></span>
+    </div>
+    <%= render DS::Link.new(text: t(".edit"), icon: "pencil", variant: :outline, size: :sm,
+          href: edit_month_plan_budget_group_path(group, month: month_param), frame: :modal) %>
+  </div>
+
+  <%# ---- The month ---- %>
+  <section class="rounded-xl bg-container shadow-border-xs p-4 space-y-4">
+    <% if detail.limit.positive? %>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-2xl text-primary privacy-sensitive font-amount font-semibold whitespace-nowrap"><%= money.call(detail.spent) %></p>
+          <p class="text-xs text-secondary"><%= t(".spent_of", amount: money.call(detail.limit, precision: 0)) %></p>
+        </div>
+        <%= render DS::ProgressRing.new(percent: detail.share, size: 64, stroke_width: 6, tone: detail.ahead_of_pace? ? :destructive : :success) %>
+        <div class="text-right">
+          <p class="text-2xl privacy-sensitive font-amount font-semibold whitespace-nowrap <%= detail.over? ? "text-destructive" : "text-success" %>"><%= money.call(detail.remaining.abs) %></p>
+          <p class="text-xs text-secondary"><%= t(detail.over? ? ".over" : ".left") %></p>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".no_amount") %></p>
+      <p class="text-2xl text-primary privacy-sensitive font-amount font-semibold"><%= money.call(detail.spent) %></p>
+    <% end %>
+
+    <% if (pace = detail.pace) %>
+      <div class="h-32 w-full" role="img"
+           aria-label="<%= t(".chart_label", spent: money.call(detail.spent), amount: money.call(detail.limit)) %>"
+           data-controller="budget-pace-chart" data-budget-pace-chart-data-value="<%= pace.to_json %>"></div>
+    <% end %>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="rounded-lg bg-container-inset p-3">
+        <p class="text-xs text-secondary"><%= t(".per_day_left") %></p>
+        <p class="text-sm text-primary privacy-sensitive font-amount font-semibold"><%= money.call(detail.remaining_per_day) %></p>
+      </div>
+      <div class="rounded-lg bg-container-inset p-3">
+        <p class="text-xs text-secondary"><%= t(".daily_average") %></p>
+        <p class="text-sm text-primary privacy-sensitive font-amount font-semibold"><%= money.call(detail.daily_average) %></p>
+      </div>
+    </div>
+  </section>
+
+  <%# ---- By category ---- %>
+  <% if detail.by_category.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".by_category") %></h2>
+      <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+        <% detail.by_category.each do |row| %>
+          <div class="px-4 py-3 space-y-1.5">
+            <div class="flex items-center justify-between gap-3 text-sm">
+              <span class="flex items-center gap-2 min-w-0 text-primary">
+                <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
+                <span class="truncate"><%= row.category.name %></span>
+              </span>
+              <span class="privacy-sensitive font-amount text-primary whitespace-nowrap"><%= money.call(row.amount) %></span>
+            </div>
+            <div class="h-1.5 rounded-full bg-surface-inset overflow-hidden">
+              <div class="h-full rounded-full bg-inverse" style="width: <%= (row.share * 100).round(1) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- The last six months ---- %>
+  <section class="space-y-2">
+    <h2 class="text-lg font-medium text-primary"><%= t(".history") %></h2>
+    <% scale = detail.history_scale %>
+    <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+      <% detail.history.each do |row| %>
+        <%= link_to month_plan_budget_group_path(group, month: row.month.strftime("%Y-%m")),
+              class: class_names("block px-4 py-3 space-y-1.5 hover:bg-container-hover", row.month == month ? "bg-container-inset" : nil) do %>
+          <div class="flex items-center justify-between gap-3 text-sm">
+            <span class="text-primary first-letter:uppercase"><%= l(row.month, format: "%B %Y") %></span>
+            <span class="privacy-sensitive font-amount whitespace-nowrap <%= row.over? ? "text-destructive" : "text-primary" %>">
+              <%= money.call(row.spent, precision: 0) %><% if row.limit.positive? %><span class="text-secondary"> / <%= money.call(row.limit, precision: 0) %></span><% end %>
+            </span>
+          </div>
+          <div class="h-1.5 rounded-full bg-surface-inset overflow-hidden">
+            <div class="h-full rounded-full <%= row.over? ? "bg-destructive" : "bg-success" %>" style="width: <%= (row.share(scale) * 100).round(1) %>%"></div>
+          </div>
+        <% end %>
+      <% end %>
+      <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+        <span class="text-secondary"><%= t(".history_average") %></span>
+        <span class="privacy-sensitive font-amount font-semibold text-primary"><%= money.call(detail.history_average, precision: 0) %></span>
+      </div>
+    </div>
+  </section>
+
+  <%# ---- The amounts, each from a month on ---- %>
+  <section class="space-y-2">
+    <h2 class="text-lg font-medium text-primary"><%= t(".limits") %></h2>
+    <p class="text-xs text-secondary"><%= t(".limits_hint") %></p>
+    <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+      <% first_limit = group.limits.first %>
+      <% detail.limits.each do |limit| %>
+        <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+          <span class="text-primary first-letter:uppercase"><%= t(".limit_from", month: l(limit.month, format: "%B %Y")) %></span>
+          <span class="flex items-center gap-2">
+            <span class="privacy-sensitive font-amount text-primary whitespace-nowrap"><%= money.call(limit.amount, precision: 0) %></span>
+            <% unless limit == first_limit %>
+              <%= render DS::Button.new(icon: "x", variant: :icon, size: :sm, href: month_plan_budget_group_limit_path(group, limit, month: month_param),
+                    method: :delete, frame: :_top, aria: { label: t(".remove_limit") }) %>
+            <% end %>
+          </span>
+        </div>
+      <% end %>
+      <%= styled_form_with url: month_plan_budget_group_limits_path(group, month: month_param), method: :post, class: "p-4 space-y-3", data: { turbo_frame: :_top } do |form| %>
+        <p class="text-sm font-medium text-primary"><%= t(".add_limit") %></p>
+        <div class="grid grid-cols-2 gap-3">
+          <%= form.select :limit_month, detail.limit_months.map { |item| [ l(item, format: "%B %Y").capitalize, item.strftime("%Y-%m") ] },
+                { label: t(".limit_month"), selected: (month >> 1).strftime("%Y-%m") } %>
+          <%= form.number_field :amount, label: t(".limit_amount"), min: 0, step: 0.01, required: true %>
+        </div>
+        <%= form.submit t(".add_limit_submit") %>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ---- The month's movements ---- %>
+  <section class="space-y-2">
+    <h2 class="text-lg font-medium text-primary"><%= t(".entries") %></h2>
+    <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+      <% if detail.entries.any? %>
+        <% detail.entries.each do |entry| %>
+          <%= link_to entry_path(entry), data: { turbo_frame: "drawer", turbo_prefetch: false },
+                class: "flex items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-container-hover" do %>
+            <span class="min-w-0">
+              <span class="block truncate text-primary"><%= entry.name %></span>
+              <span class="block truncate text-xs text-secondary"><%= l(entry.date, format: :long) %> · <%= entry.transaction.category&.name %></span>
+            </span>
+            <span class="privacy-sensitive font-amount whitespace-nowrap <%= entry.amount.negative? ? "text-success" : "text-primary" %>"><%= format_money(Money.new(-entry.amount, entry.currency)) %></span>
+          <% end %>
+        <% end %>
+      <% else %>
+        <p class="px-4 py-3 text-sm text-secondary"><%= t(".no_entries") %></p>
+      <% end %>
+    </div>
+  </section>
+</div>

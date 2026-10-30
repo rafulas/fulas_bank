@@ -1,9 +1,15 @@
-# Fulas Bank: one budget of Planes, as in Bilance: its name, the categories
-# and subcategories it groups (of any main category) and its amount from the
-# chosen month on.
+# Fulas Bank: one budget of Planes, as in Bilance: its own screen, and its
+# name, the categories and subcategories it groups (of any main category)
+# and its amount from the chosen month on.
 class MonthPlans::BudgetGroupsController < ApplicationController
   before_action :set_month_budget
-  before_action :set_group, only: %i[edit update destroy]
+  before_action :set_group, only: %i[show edit update destroy]
+
+  # The budget on its own (BudgetGroup::Detail), for the chosen month.
+  def show
+    @detail = BudgetGroup::Detail.new(@group, month_budget: @month_budget)
+    @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("month_plans.show.title"), month_plan_path(month: month_param) ], [ @group.name, nil ] ]
+  end
 
   def new
     @group = Current.family.budget_groups.new

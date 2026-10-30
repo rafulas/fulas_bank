@@ -75,7 +75,37 @@ en:
         submit: Save
       update:
         success: Budget saved.
+    budget_group_limits:
+      create:
+        success: Limit added.
+        invalid_month: Choose a month.
+      destroy:
+        success: Limit removed.
+        first: The first amount cannot be removed; change it or delete the budget.
     budget_groups:
+      show:
+        back: Plans
+        edit: Edit
+        spent_of: "spent of %{amount}"
+        left: left to spend
+        over: over budget
+        no_amount: This month has no amount. Spent
+        chart_label: "Spent %{spent} of %{amount}"
+        per_day_left: Left per day
+        daily_average: Daily average spending
+        by_category: By category
+        history: Last 6 months
+        history_average: Average of the finished months
+        limits: Amounts
+        limits_hint: Each amount holds from its month until the next one you set.
+        limit_from: "%{month} onwards"
+        remove_limit: Remove this amount
+        add_limit: Add a future limit
+        limit_month: From
+        limit_amount: Monthly amount
+        add_limit_submit: Add
+        entries: This month's transactions
+        no_entries: No transactions in this budget this month.
       saved: Budget saved.
       new:
         title: New budget
