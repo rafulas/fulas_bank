@@ -30,9 +30,10 @@ class RecurringOverview
       price_change.present? && price_change.new_amount.abs > price_change.previous_amount.abs
     end
 
-    # Bills and subscriptions can be switched off and on.
+    # Every kind can be switched off and on: a rent left behind after a move
+    # or a loan paid off early stops counting, like a cancelled subscription.
     def switchable?
-      kind != "fixed"
+      true
     end
   end
 

@@ -116,7 +116,7 @@ es:
         unlink: Desvincular
         link: Vincular
         candidates_title: Movimientos que pueden ser cuotas
-        candidates_hint: Cargos desde la formalización con un importe parecido a la cuota. Al vincular uno, el saldo pendiente del préstamo pasa al del cuadro de amortización tras esa cuota.
+        candidates_hint: Cargos desde la formalización con el importe de la cuota, y debajo los más parecidos. Al vincular uno, el saldo pendiente del préstamo pasa al del cuadro de amortización tras esa cuota.
         candidates_empty: No hay cargos sin vincular que se parezcan a la cuota.
       repayment_progress:
         instalment: Cuota %{number} · %{date}

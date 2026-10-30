@@ -60,7 +60,10 @@ class Loan < ApplicationRecord
 
   # Movements this far either side of the expected instalment, in amount, are
   # offered as candidates on the loan's Payments tab.
-  PAYMENT_MATCH_TOLERANCE = BigDecimal("0.25")
+  PAYMENT_MATCH_TOLERANCE = BigDecimal("0.10")
+  # A charge this close to the instalment is almost surely one: all of them
+  # are offered, however many, so no month's instalment is left out.
+  PAYMENT_EXACT_TOLERANCE = BigDecimal("0.01")
   PAYMENT_MATCH_LIMIT = 15
 
   validates :subtype, inclusion: { in: SUBTYPES.keys }, allow_blank: true
@@ -183,11 +186,20 @@ class Loan < ApplicationRecord
     candidates = candidates.where(amount: (amounts.min * (1 - PAYMENT_MATCH_TOLERANCE))..(amounts.max * (1 + PAYMENT_MATCH_TOLERANCE)))
     candidates = candidates.includes(:account).order(date: :desc).limit(500).to_a
 
-    candidates.select do |entry|
+    # How far each charge is from the instalment expected that month, as a
+    # share of it.
+    gaps = candidates.filter_map do |entry|
       expected = (schedule.payment_for(entry.date) || schedule.payments.last)&.payment&.amount
-      expected.present? && expected.positive? &&
-        ((entry.amount - expected).abs / expected) <= PAYMENT_MATCH_TOLERANCE
-    end.first(limit)
+      next unless expected.present? && expected.positive?
+
+      gap = (entry.amount - expected).abs / expected
+      [ entry, gap ] if gap <= PAYMENT_MATCH_TOLERANCE
+    end
+
+    # Charges for the instalment's amount first, all of them and newest
+    # first; then, up to `limit`, the ones merely close to it, closest first.
+    exact, near = gaps.partition { |_, gap| gap <= PAYMENT_EXACT_TOLERANCE }
+    exact.map(&:first) + near.sort_by { |entry, gap| [ gap, -entry.date.jd ] }.first(limit).map(&:first)
   end
 
   # Assets the loan can be linked to: the family's properties, vehicles and

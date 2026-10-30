@@ -59,6 +59,20 @@ class Loan::PaymentLinkTest < ActiveSupport::TestCase
     assert_includes @loan.payment_candidates, early
   end
 
+  test "every charge for the instalment is offered, ahead of merely similar ones" do
+    instalments = (1..20).map do |i|
+      create_transaction(account: accounts(:depository), amount: 1_000, date: Date.new(2026, 1, 15) + (i * 7), name: "Cuota #{i}")
+    end
+    similar = create_transaction(account: accounts(:depository), amount: 1_060, date: Date.new(2026, 9, 1), name: "Compra parecida")
+    unrelated = create_transaction(account: accounts(:depository), amount: 780, date: Date.new(2026, 9, 2), name: "Muebles")
+
+    candidates = @loan.payment_candidates
+
+    instalments.each { |entry| assert_includes candidates, entry }
+    assert_operator candidates.index(similar), :>, candidates.index(instalments.last), "exact amounts first"
+    assert_not_includes candidates, unrelated, "22 % away from the instalment is not one"
+  end
+
   test "correcting the start date re-anchors the linked payments" do
     entry = create_transaction(account: accounts(:depository), amount: 1_000, date: Date.new(2026, 3, 1))
     @loan.link_payment!(entry)

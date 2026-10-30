@@ -17,11 +17,13 @@
 #
 # "Variable" means movements that are neither fixed nor recurring (see
 # Transaction::ExpenseClassifiable), nor transfers, nor one-off purchases, nor
-# in the Excluded or Transfers categories. Only spending counts: income and
+# in the Excluded or Transfers categories, nor money put into investments
+# (the «Inversiones» categories). Only spending counts: income and
 # refunds are left out, so the estimate errs on the side of caution.
 class Forecast::VariableEstimate
   SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
   RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
+  INVESTMENT_ROOT_NAME = "Inversiones".freeze
 
   # The movements that count as variable spending in `accounts` between
   # two dates, joined to their transactions. Forecast::VariableBreakdown
@@ -37,6 +39,26 @@ class Forecast::VariableEstimate
           .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
           .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
           .where(Transaction.variable_expense_sql)
+          .then { |scope| without_investments(scope, family) }
+  end
+
+  # Fulas Bank: money put into investments, pension plans or savings (the
+  # «Inversiones» branch, and Sure's investment contributions category) is
+  # not spending, even when it leaves as an ordinary charge.
+  # Uncategorized movements stay: a bare NOT IN would drop them too.
+  def self.without_investments(scope, family)
+    ids = investment_category_ids(family)
+    return scope if ids.empty?
+
+    scope.where("transactions.category_id IS NULL OR transactions.category_id NOT IN (?)", ids)
+  end
+
+  def self.investment_category_ids(family)
+    names = [ Category::FulasTree::INVESTMENT_CONTRIBUTIONS_NAME, *Category.all_investment_contributions_names ]
+    roots = family.categories.where(parent_id: nil, name: INVESTMENT_ROOT_NAME).select(:id)
+
+    family.categories.where(name: names).or(family.categories.where(id: roots))
+          .or(family.categories.where(parent_id: roots)).pluck(:id)
   end
 
   attr_reader :family, :accounts, :today
@@ -80,7 +102,12 @@ class Forecast::VariableEstimate
     start = history_starts.values.compact.min
     return [] unless start
 
-    sample_months(month.beginning_of_month).select { |sample| sample >= start.beginning_of_month }
+    # A month with no variable spending at all in any account is a month
+    # with no data (an account's single old movement makes it look covered),
+    # not a month in which nothing was spent: it is left out of the average.
+    sample_months(month.beginning_of_month).select do |sample|
+      sample >= start.beginning_of_month && combined_total(sample).positive?
+    end
   end
 
   # What all the accounts together spent on variable things in `month`, in
