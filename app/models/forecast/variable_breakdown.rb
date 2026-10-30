@@ -23,17 +23,18 @@ class Forecast::VariableBreakdown
   # The key that stands for "no category" in a link.
   NONE = "none".freeze
 
-  attr_reader :family, :accounts, :month, :today
+  attr_reader :family, :accounts, :month, :today, :plan
 
-  def initialize(family, accounts:, month:, today: Date.current)
+  def initialize(family, accounts:, month:, today: Date.current, plan: nil)
     @family = family
     @accounts = accounts
     @month = month.beginning_of_month
     @today = today
+    @plan = plan
   end
 
   def estimate
-    @estimate ||= Forecast::VariableEstimate.new(family, accounts: accounts, today: today)
+    @estimate ||= Forecast::VariableEstimate.new(family, accounts: accounts, today: today, plan: plan)
   end
 
   # The result: what the forecast expects to spend in the month.
@@ -43,10 +44,12 @@ class Forecast::VariableBreakdown
 
   # The sample months, newest first, each flagged when it is one of the two
   # left out (there must be at least three, as in TrimmedMonthlyAverage).
+  # Their totals leave out the categories planned for the month.
   def samples
     @samples ||= begin
       months = estimate.combined_sample_months(month)
-      totals = months.index_with { |sample| estimate.combined_total(sample) }
+      planned = estimate.planned_ids(month)
+      totals = months.index_with { |sample| estimate.combined_total(sample, without: planned) }
       dropped = dropped_months(totals)
 
       months.map { |sample| Sample.new(month: sample, total: totals[sample], dropped: dropped.include?(sample)) }
@@ -55,6 +58,36 @@ class Forecast::VariableBreakdown
 
   def sample_months
     samples.map(&:month)
+  end
+
+  # Fulas Bank: the month's plans (Forecast::VariablePlan), added to the
+  # average of the samples.
+  def plans
+    plan ? plan.plans_for(month) : []
+  end
+
+  # The month's plans with their categories: [[plan, category]].
+  def plans_with_categories
+    by_id = family.categories.where(id: plans.map(&:category_id)).index_by { |category| category.id.to_s }
+    plans.filter_map { |plan| [ plan, by_id[plan.category_id] ] if by_id[plan.category_id] }
+  end
+
+  # The plan for a category this month, its own or its parent's.
+  def plan_covering(category)
+    return unless category
+
+    plan_for(category.id) || (category.parent_id && plan_for(category.parent_id))
+  end
+
+  def plan_for(category_id)
+    plan&.plan_for(month, category_id)
+  end
+
+  # The categories left out of the forecast, by name.
+  def excluded_categories
+    return [] unless plan
+
+    family.categories.where(id: plan.excluded_ids).includes(:parent).alphabetically
   end
 
   # The categories the sample months' spending was in, the heaviest first.
@@ -96,7 +129,8 @@ class Forecast::VariableBreakdown
       return Entry.none if sample_months.empty?
 
       scope = Forecast::VariableEstimate.spending_entries(family, accounts: accounts,
-                                                          from: sample_months.min, to: sample_months.max.end_of_month)
+                                                          from: sample_months.min, to: sample_months.max.end_of_month,
+                                                          excluded_category_ids: plan&.excluded_with_children || [])
       scope.where("date_trunc('month', entries.date) IN (?)", sample_months)
     end
 

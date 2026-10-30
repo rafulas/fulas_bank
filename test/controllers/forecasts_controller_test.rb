@@ -143,6 +143,44 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     assert_includes excluded, accounts(:credit_card).id
   end
 
+  test "plans a category for one month and leaves another out of the variable spending" do
+    checking = accounts(:depository)
+    category = categories(:food_and_drink)
+    month = Date.current.next_month.beginning_of_month
+    checking.entries.create!(date: Date.current.prev_month.beginning_of_month + 4, amount: 42, currency: checking.currency,
+                             name: "Cervecería", entryable: Transaction.new(category: category))
+
+    get variable_forecast_url(month: month.iso8601, category: category.id), headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "form[action=?] input[name='amount']", variable_category_forecast_path
+
+    patch variable_category_forecast_url, params: { category_id: category.id, op: "plan", month: month.iso8601, amount: "12,50", return_category: category.id }
+    assert_redirected_to variable_forecast_url(month: month.iso8601, category: category.id)
+    plan = Forecast::VariablePlan.new(@user.family, user: @user.reload).plan_for(month, category.id)
+    assert_equal BigDecimal("12.5"), plan.amount
+
+    patch variable_category_forecast_url, params: { category_id: category.id, op: "unplan", month: month.iso8601 }
+    assert_nil Forecast::VariablePlan.new(@user.family, user: @user.reload).plan_for(month, category.id)
+
+    patch variable_category_forecast_url, params: { category_id: category.id, op: "exclude", month: month.iso8601 }
+    assert Forecast::VariablePlan.new(@user.family, user: @user.reload).excluded?(category.id)
+
+    get variable_forecast_url(month: month.iso8601), headers: { "Turbo-Frame" => "modal" }
+    assert_response :success
+    assert_select "a[href=?]", variable_forecast_path(month: month.iso8601, category: category.id), count: 0
+
+    patch variable_category_forecast_url, params: { category_id: category.id, op: "include", month: month.iso8601 }
+    assert_not Forecast::VariablePlan.new(@user.family, user: @user.reload).excluded?(category.id)
+  end
+
+  test "a category of another family cannot be planned" do
+    other = Category.where.not(family_id: @user.family_id).first
+    skip "no category of another family in the fixtures" unless other
+
+    patch variable_category_forecast_url, params: { category_id: other.id, op: "exclude" }
+    assert_response :not_found
+  end
+
   test "edits the table: hides an account's column and changes where it adds up" do
     checking = accounts(:depository)
     brokerage = accounts(:investment)

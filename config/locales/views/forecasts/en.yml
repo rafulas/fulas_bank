@@ -34,8 +34,28 @@ en:
       accounts: Accounts that count
       accounts_hint: "Leave out pass-through accounts, like the payslip one: money comes in and goes out, and its spending would inflate the forecast. At first, accounts at zero whose money all goes out again are left out on their own."
       save: Save
+      plan_title: "In %{month}"
+      plan_hint: "If you know you will spend something else in this category this month (no travel, say), enter how much. That month your figure is used instead of the average; the other months do not change."
+      plan_amount: "What you expect to spend"
+      plan_scope: Apply to
+      plan_scope_only: "Only %{name}"
+      plan_scope_parent: "All of %{name}"
+      plan_save: "Save for %{month}"
+      planned: "Expected in %{month}: %{amount}"
+      unplan: Back to the average
+      exclude_title: Leave this category out
+      exclude_hint: "For spending that does not repeat (a renovation, a tax payment): it stops counting in every month of the forecast. You can bring it back whenever you like."
+      exclude: "Leave out %{name}"
+      plans: "Adjustments for %{month}"
+      plans_hint: Categories with your own figure this month instead of their average. They are added to the result.
+      excluded: Categories left out
+      excluded_hint: Their spending counts in no month of the forecast.
+      include: Bring back
+      planned_pill: "This month: %{amount}"
     update_variable_accounts:
       success: Variable spending accounts updated.
+    update_variable_category:
+      success: Variable spending forecast updated.
     variable_line: Variable spending %{month}
     overdue_line: "%{name} (due on %{date})"
     loan_line: "%{name} payment"

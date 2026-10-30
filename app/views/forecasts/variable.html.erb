@@ -13,6 +13,52 @@
           <%= icon "arrow-left", size: "sm" %><span><%= t(".back") %></span>
         <% end %>
 
+        <% if (category = @category_row.category) %>
+          <% month_label = l(@month, format: "%B") %>
+          <% planned = @breakdown.plan_covering(category) %>
+          <section class="rounded-xl bg-container-inset p-4 space-y-3">
+            <h3 class="text-sm font-medium text-primary first-letter:uppercase"><%= t(".plan_title", month: month_label) %></h3>
+            <% if planned %>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm text-primary first-letter:uppercase privacy-sensitive"><%= t(".planned", month: month_label, amount: format_money(Money.new(planned.amount, currency))) %></p>
+                <%= render DS::Button.new(text: t(".unplan"), variant: :outline, size: :sm,
+                      href: variable_category_forecast_path(category_id: planned.category_id, op: "unplan", month: @month.iso8601, return_category: @category_row.key),
+                      method: :patch, frame: :modal) %>
+              </div>
+            <% end %>
+            <p class="text-xs text-secondary"><%= t(".plan_hint") %></p>
+            <%= styled_form_with url: variable_category_forecast_path, method: :patch, class: "space-y-3", data: { turbo_frame: :modal } do |form| %>
+              <%= hidden_field_tag :op, "plan" %>
+              <%= hidden_field_tag :month, @month.iso8601 %>
+              <%= hidden_field_tag :return_category, @category_row.key %>
+              <% if category.parent %>
+                <%= form.select :category_id,
+                      [ [ t(".plan_scope_only", name: category.name), category.id ], [ t(".plan_scope_parent", name: category.parent.name), category.parent_id ] ],
+                      { label: t(".plan_scope"), selected: planned&.category_id || category.id }, name: "category_id" %>
+              <% else %>
+                <%= hidden_field_tag :category_id, category.id %>
+              <% end %>
+              <%= form.number_field :amount, label: t(".plan_amount"), min: 0, step: 0.01, value: planned&.amount&.to_s("F") || "0", name: "amount" %>
+              <%= form.submit t(".plan_save", month: month_label) %>
+            <% end %>
+          </section>
+
+          <section class="rounded-xl bg-container shadow-border-xs p-4 space-y-2">
+            <h3 class="text-sm font-medium text-primary"><%= t(".exclude_title") %></h3>
+            <p class="text-xs text-secondary"><%= t(".exclude_hint") %></p>
+            <div class="flex flex-wrap gap-2">
+              <%= render DS::Button.new(text: t(".exclude", name: category.name), variant: :outline, size: :sm,
+                    href: variable_category_forecast_path(category_id: category.id, op: "exclude", month: @month.iso8601),
+                    method: :patch, frame: :modal) %>
+              <% if category.parent %>
+                <%= render DS::Button.new(text: t(".exclude", name: category.parent.name), variant: :outline, size: :sm,
+                      href: variable_category_forecast_path(category_id: category.parent_id, op: "exclude", month: @month.iso8601),
+                      method: :patch, frame: :modal) %>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+
         <% entries = @breakdown.entries_for(@category_row.key) %>
         <% @breakdown.sample_months.each do |sample| %>
           <% list = entries[sample] || [] %>
@@ -73,6 +119,26 @@
           <% end %>
         </section>
 
+        <% if @breakdown.plans.any? %>
+          <section class="space-y-2">
+            <h3 class="text-sm font-medium text-primary first-letter:uppercase"><%= t(".plans", month: l(@month, format: "%B")) %></h3>
+            <p class="text-xs text-secondary"><%= t(".plans_hint") %></p>
+            <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+              <% @breakdown.plans_with_categories.each do |plan, planned_category| %>
+                <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+                  <span class="truncate text-primary"><%= planned_category.name %></span>
+                  <span class="flex items-center gap-2">
+                    <span class="privacy-sensitive font-amount text-primary"><%= format_money(Money.new(plan.amount, currency)) %></span>
+                    <%= render DS::Button.new(text: t(".unplan"), variant: :ghost, size: :sm,
+                          href: variable_category_forecast_path(category_id: plan.category_id, op: "unplan", month: @month.iso8601),
+                          method: :patch, frame: :modal) %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+
         <% if @breakdown.categories.any? %>
           <section class="space-y-2">
             <h3 class="text-sm font-medium text-primary"><%= t(".categories") %></h3>
@@ -82,6 +148,9 @@
                 <%= link_to row.category&.name || t(".no_category"),
                       variable_forecast_path(month: @month.iso8601, category: row.key),
                       class: "text-primary hover:underline", data: { turbo_frame: :modal } %>
+                <% if (planned = @breakdown.plan_covering(row.category)) %>
+                  <%= render DS::Pill.new(label: t(".planned_pill", amount: format_money(Money.new(planned.amount, currency), precision: 0)), tone: :info, marker: false, size: :sm) %>
+                <% end %>
               <% end %>
               <% table.with_column(t(".average"), numeric: true, class: "privacy-sensitive font-medium text-primary bg-info/5") do |row| %>
                 <%= format_money(Money.new(row.average, currency)) %>
@@ -92,6 +161,24 @@
                 <% end %>
               <% end %>
             <% end %>
+          </section>
+        <% end %>
+
+        <% excluded = @breakdown.excluded_categories %>
+        <% if excluded.any? %>
+          <section class="space-y-2">
+            <h3 class="text-sm font-medium text-primary"><%= t(".excluded") %></h3>
+            <p class="text-xs text-secondary"><%= t(".excluded_hint") %></p>
+            <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
+              <% excluded.each do |category| %>
+                <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+                  <span class="truncate text-primary"><%= category.name %></span>
+                  <%= render DS::Button.new(text: t(".include"), variant: :ghost, size: :sm,
+                        href: variable_category_forecast_path(category_id: category.id, op: "include", month: @month.iso8601),
+                        method: :patch, frame: :modal) %>
+                </div>
+              <% end %>
+            </div>
           </section>
         <% end %>
 

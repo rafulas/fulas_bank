@@ -117,12 +117,12 @@ class Forecast
   end
 
   attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups,
-              :variable_excluded_ids
+              :variable_excluded_ids, :variable_plan
 
   # `main_account` is where the monthly variable spending and the card
   # charges are expected (by default the first current account);
   # `card_accounts` are the cards whose spending ends up there.
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {}, variable_excluded_ids: [])
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {}, variable_excluded_ids: [], variable_plan: nil)
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
     @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
@@ -133,6 +133,7 @@ class Forecast
     @debt_plan = debt_plan
     @column_groups = (column_groups || {}).to_h.transform_keys(&:to_s)
     @variable_excluded_ids = Array(variable_excluded_ids).map(&:to_s)
+    @variable_plan = variable_plan
   end
 
   # Fulas Bank: the accounts and cards whose spending makes "Gastos varios":
@@ -516,7 +517,7 @@ class Forecast
     def variable_flows
       return [] unless include_variable && main_account
 
-      estimate = Forecast::VariableEstimate.new(family, accounts: variable_accounts, today: today)
+      estimate = Forecast::VariableEstimate.new(family, accounts: variable_accounts, today: today, plan: variable_plan)
 
       months.filter_map do |month|
         date = month.end_of_month

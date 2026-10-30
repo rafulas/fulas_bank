@@ -80,6 +80,38 @@ class Forecast::VariableEstimateTest < ActiveSupport::TestCase
     assert_equal BigDecimal("300"), estimate.combined_monthly(Date.new(2026, 11, 1))
   end
 
+  test "a category left out of the forecast does not count in any month" do
+    renovation = @family.categories.create!(name: "Reforma prueba", color: "#000000")
+    spend(100, Date.new(2026, 9, 2))
+    spend(3_000, Date.new(2026, 9, 3), category: renovation)
+
+    plan = Forecast::VariablePlan.new(@family, user: users(:family_admin), today: @today)
+    plan.exclude!(renovation.id)
+
+    estimate = Forecast::VariableEstimate.new(@family, accounts: [ @account ], today: @today, plan: plan)
+    assert_equal BigDecimal("100"), estimate.combined_monthly(Date.new(2026, 11, 1))
+  end
+
+  test "a category planned for a month replaces its average that month only" do
+    leisure = @family.categories.create!(name: "Ocio prueba", color: "#000000")
+    trips = @family.categories.create!(name: "Viajes prueba", color: "#000000", parent: leisure)
+    [ 8, 9 ].each do |month|
+      spend(200, Date.new(2026, month, 2))
+      spend(600, Date.new(2026, month, 3), category: trips)
+    end
+
+    plan = Forecast::VariablePlan.new(@family, user: users(:family_admin), today: @today)
+    plan.plan!(Date.new(2026, 11, 1), leisure.id, 0)
+
+    estimate = Forecast::VariableEstimate.new(@family, accounts: [ @account ], today: @today, plan: plan)
+    assert_equal BigDecimal("200"), estimate.combined_monthly(Date.new(2026, 11, 1)), "a parent's plan covers its subcategories"
+    assert_equal BigDecimal("800"), estimate.combined_monthly(Date.new(2026, 12, 1)), "other months keep the average"
+
+    plan.plan!(Date.new(2026, 11, 1), leisure.id, 150)
+    assert_equal BigDecimal("350"),
+                 Forecast::VariableEstimate.new(@family, accounts: [ @account ], today: @today, plan: plan).combined_monthly(Date.new(2026, 11, 1))
+  end
+
   test "a movement of a recurring series marked variable counts" do
     bill = spend(80, Date.new(2026, 9, 9), expense_type: "variable")
     pay_with(bill)
