@@ -283,12 +283,9 @@ class TransactionsTest < ApplicationSystemTestCase
 
 
   test "the calendar changes month without closing and stays inside the window" do
-    investment_account = accounts(:investment)
-    visit account_url(investment_account, tab: "activity")
-    within "[data-testid='activity-menu']" do
-      click_on "New"
-      click_on "New activity"
-    end
+    # The new-transaction page on its own: an account page refreshes itself
+    # (Turbo morph) just after it loads, which would close the calendar.
+    visit new_transaction_path
 
     find("button[aria-label='Open the calendar']").click
     calendar = find("[data-controller='date-field'] [role='dialog']")
@@ -307,7 +304,7 @@ class TransactionsTest < ApplicationSystemTestCase
     calendar.find("button[aria-label^='15 ']").click
     assert_no_selector "[data-controller='date-field'] [role='dialog']"
     target = Date.current.beginning_of_month.next_month(2).change(day: 15)
-    assert_equal target.iso8601, find("input[type='date'][name='model[date]']").value
+    assert_equal target.iso8601, find("input[type='date'][name='entry[date]']").value
   end
 
   test "can create deposit transaction for investment account" do
