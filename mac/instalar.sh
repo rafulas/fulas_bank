@@ -137,7 +137,9 @@ tmp="$(mktemp -d)"
 # Downloaded with curl, the app is not marked as coming from the internet,
 # so macOS opens it without the "unidentified developer" warning.
 if curl -fsSL "$DMG_URL" -o "$tmp/FulasBank.dmg"; then
-  vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
+  # macOS 26 warns that «hdiutil attach» is deprecated: it still works, and
+  # its replacement does not exist on older macOS. Only that warning is hidden.
+  vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" 2> >(grep -vE 'is deprecated|diskutil image attach' >&2) | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
   app="$(find "$vol" -maxdepth 1 -name '*.app' | head -1)"
   if [[ -n "$app" ]]; then
     rm -rf "/Applications/Fulas Bank.app"
