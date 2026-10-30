@@ -204,11 +204,6 @@ class TransactionsController < ApplicationController
 
   # Fulas Bank: a movement entered in the wrong account (another card, say)
   # moved to the right one, from its detail.
-  def set_entry_for_move
-    set_entry
-  end
-  private :set_entry_for_move
-
   def move_account
     return head(:forbidden) unless entry_permission.in?(%i[owner full_control])
 
@@ -552,6 +547,10 @@ class TransactionsController < ApplicationController
   end
 
   private
+    def set_entry_for_move
+      set_entry
+    end
+
     # Scoped by user (not just family) because Current.accessible_entries is
     # user-scoped for family sharing (see Current#accessible_entries).
     #
