@@ -350,4 +350,31 @@ class TransactionTest < ActiveSupport::TestCase
 
     assert_equal [ tags(:one).id, tags(:two).id ].sort, transaction.reload.tag_ids.sort
   end
+
+  test "suggests the categories used before for the same merchant, the most used first" do
+    family = families(:dylan_family)
+    account = accounts(:depository)
+    merchant = family.merchants.create!(name: "Urogallo prueba")
+    bars = family.categories.create!(name: "Cañas prueba", color: "#000000")
+    restaurants = family.categories.create!(name: "Restaurantes prueba", color: "#000000")
+
+    [ bars, bars, restaurants ].each_with_index do |category, i|
+      account.entries.create!(name: "Urogallo #{i}", date: Date.current - i, amount: 20, currency: "USD",
+                              entryable: Transaction.new(category: category, merchant: merchant))
+    end
+    entry = account.entries.create!(name: "Cena Urogallo", date: Date.current, amount: 30, currency: "USD",
+                                    entryable: Transaction.new(merchant: merchant))
+
+    assert_equal [ bars, restaurants ], entry.transaction.suggested_categories
+  end
+
+  test "without a merchant, suggests by the same name" do
+    family = families(:dylan_family)
+    account = accounts(:depository)
+    coffee = family.categories.create!(name: "Café prueba", color: "#000000")
+    account.entries.create!(name: "Real Coffee", date: 2.days.ago.to_date, amount: 5, currency: "USD", entryable: Transaction.new(category: coffee))
+    entry = account.entries.create!(name: "real coffee", date: Date.current, amount: 5, currency: "USD", entryable: Transaction.new)
+
+    assert_equal [ coffee ], entry.transaction.suggested_categories
+  end
 end

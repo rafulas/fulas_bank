@@ -597,6 +597,8 @@ Rails.application.routes.draw do
 
     collection do
       delete :clear_filter
+      # Fulas Bank: take the blue dot off every imported movement.
+      post :mark_all_seen
     end
 
     member do

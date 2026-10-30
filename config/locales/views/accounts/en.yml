@@ -39,6 +39,8 @@ en:
       new_account: New account
       no_accounts: No accounts yet
     form:
+      closed_on_label: Closing date
+      closed_on_hint: "If you no longer use this account (an old bank, a motorbike sold, a loan paid off). It keeps its history, but goes to the end of the list when entering a movement."
       balance: "Balance on date:"
       since_label: Counts since
       since_hint: "The day it starts counting in your net worth: when you bought the house or the car, or signed the loan. Adding it late then does not look like a jump this month."

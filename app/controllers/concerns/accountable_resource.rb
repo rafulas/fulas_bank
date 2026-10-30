@@ -200,7 +200,7 @@ module AccountableResource
     def account_params
       params.require(:account).permit(
         :name, :balance, :subtype, :currency, :accountable_type, :return_to,
-        :opening_balance_date,
+        :opening_balance_date, :closed_on,
         :institution_name, :institution_domain, :notes, :exclude_from_reports,
         :enable_category_matcher,
         accountable_attributes: self.class.permitted_accountable_attributes

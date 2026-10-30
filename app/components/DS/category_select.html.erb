@@ -81,6 +81,14 @@
           </button>
         <% end %>
 
+        <% if suggested.any? %>
+          <p class="px-3 pt-1 text-xs font-medium text-secondary uppercase tracking-wide"><%= t("category.dropdowns.show.suggested") %></p>
+          <% suggested.each do |category| %>
+            <%= render "DS/category_select/option", category: category, selected_id: selected_id, view_helpers: helpers %>
+          <% end %>
+          <hr class="my-1 border-secondary">
+        <% end %>
+
         <%# Fulas Bank: only the main categories; one with subcategories opens
             them when tapped. %>
         <% Category::Group.for(categories).each do |group| %>

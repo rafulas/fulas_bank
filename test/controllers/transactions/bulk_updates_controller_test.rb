@@ -173,4 +173,35 @@ class Transactions::BulkUpdatesControllerTest < ActionDispatch::IntegrationTest
     assert_equal series, first.reload.transaction.recurring_series
     assert_equal series, second.reload.transaction.recurring_series
   end
+
+  test "bulk update adds and removes tags, keeping the others, and marks movements as one-off" do
+    account = accounts(:depository)
+    keep, add, remove = Tag.first, @user.family.tags.create!(name: "Boda bulk"), @user.family.tags.create!(name: "Quitar bulk")
+    entries = 2.times.map do |i|
+      Entry.create!(account: account, name: "Compra #{i}", date: Date.current, amount: 20, currency: "USD",
+                    entryable: Transaction.new(tags: [ keep, remove ]))
+    end
+
+    post transactions_bulk_update_url, params: {
+      bulk_update: { entry_ids: entries.map(&:id), add_tag_ids: [ add.id ], remove_tag_ids: [ remove.id ], one_time: "1" }
+    }
+
+    entries.each do |entry|
+      transaction = entry.reload.transaction
+      assert_equal [ keep.id, add.id ].sort, transaction.tag_ids.sort
+      assert transaction.one_time?
+    end
+  end
+
+  test "bulk update links the selected expenses as payments of a loan" do
+    loan_account = accounts(:loan)
+    loan_account.loan.update!(interest_rate: 0, rate_type: "fixed", term_months: 12, initial_balance: 12_000, start_date: Date.new(2026, 1, 1))
+    payments = [ Date.new(2026, 2, 1), Date.new(2026, 3, 1) ].map do |date|
+      Entry.create!(account: accounts(:depository), name: "Cuota", date: date, amount: 1_000, currency: "USD", entryable: Transaction.new)
+    end
+
+    post transactions_bulk_update_url, params: { bulk_update: { entry_ids: payments.map(&:id), loan_account_id: loan_account.id } }
+
+    payments.each { |entry| assert Loan::PaymentLink.exists?(entry_id: entry.id, loan_id: loan_account.loan.id) }
+  end
 end

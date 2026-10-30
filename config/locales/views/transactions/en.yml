@@ -15,6 +15,13 @@ en:
           one: "1 transaction updated"
           other: "%{count} transactions updated"
       new:
+        add_tags_label: Add tags
+        remove_tags_label: Remove tags
+        one_time_label: One-off
+        one_time_on: Mark as one-off
+        one_time_off: No longer one-off
+        loan_label: Loan instalment
+        loan_hint: "The selected expenses are linked as payments of that loan."
         recurring_section: "Recurring and type"
         recurring_label: "Recurring"
         no_change: "(no change)"
@@ -96,6 +103,8 @@ en:
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
     move_account:
       moved: "Movement moved to %{account}."
+    mark_all_seen:
+      done: New movements marked as seen
     update:
       updated: Transaction updated
     new:
@@ -211,6 +220,7 @@ en:
       reject_match: Reject match
       transfer_confirmed: Transfer is confirmed
     transaction:
+      unseen: New, not seen yet
       pending: Pending
       pending_tooltip: Pending transaction — may change when posted
       recurring_tooltip: "Recurring: %{name}"
@@ -257,6 +267,9 @@ en:
       edit_tags: Edit tags
       import: Import
     index:
+      mark_all_seen:
+        one: Mark 1 new movement as seen
+        other: "Mark %{count} new movements as seen"
       title: "Transactions"
       transaction: transaction
       transactions: transactions

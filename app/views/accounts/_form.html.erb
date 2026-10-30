@@ -69,6 +69,11 @@
               placeholder: account.provider&.institution_domain || t(".institution_domain_placeholder") %>
         <% end %>
 
+        <%# Fulas Bank: closing day; the account stays in the history. %>
+        <% unless account.new_record? %>
+          <%= form.date_field :closed_on, label: t(".closed_on_label"), help_text: t(".closed_on_hint") %>
+        <% end %>
+
         <%= form.text_area :notes,
             label: t(".notes_label"),
             placeholder: t(".notes_placeholder"),

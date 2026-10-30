@@ -1,5 +1,5 @@
 class DS::CategorySelect < DesignSystemComponent
-  attr_reader :form, :categories, :selected_id, :disabled, :auto_submit, :blank_label
+  attr_reader :form, :categories, :selected_id, :disabled, :auto_submit, :blank_label, :suggested
 
   def initialize(
     form:,
@@ -7,7 +7,8 @@ class DS::CategorySelect < DesignSystemComponent
     selected_id: nil,
     disabled: false,
     auto_submit: false,
-    blank_label: nil
+    blank_label: nil,
+    suggested: []
   )
     @form = form
     @categories = categories
@@ -15,6 +16,8 @@ class DS::CategorySelect < DesignSystemComponent
     @disabled = disabled
     @auto_submit = auto_submit
     @blank_label = blank_label
+    # Fulas Bank: categories offered first (Transaction#suggested_categories).
+    @suggested = Array(suggested)
   end
 
   def field_name

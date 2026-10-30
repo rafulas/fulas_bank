@@ -39,6 +39,8 @@ es:
       new_account: Nueva cuenta
       no_accounts: Aún no hay cuentas
     form:
+      closed_on_label: Fecha de baja
+      closed_on_hint: "Si ya no usas esta cuenta (un banco antiguo, una moto vendida, un préstamo pagado). Conserva su historial, pero al apuntar un movimiento sale al final de la lista."
       balance: Saldo actual
       since_label: Cuenta desde
       since_hint: "El día desde el que cuenta en tu patrimonio: cuando compraste la casa o el coche, o firmaste el préstamo. Así darla de alta tarde no parece una subida de este mes."

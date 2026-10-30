@@ -14,5 +14,6 @@ en:
         create_as_subcategory: Add as a subcategory…
         create_error: Couldn't create that category. Please try again.
         no_categories: No categories found
+        suggested: Suggested
         recent: Recent
         search_placeholder: Search

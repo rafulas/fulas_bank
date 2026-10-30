@@ -224,13 +224,14 @@ class TransfersController < ApplicationController
     end
 
     def set_accounts
-      @accounts = accessible_accounts
+      # Fulas Bank: the most recently used first and the closed ones last.
+      @accounts = Account.in_picker_order(accessible_accounts
         .active
         .alphabetically
         .includes(
           :account_providers,
           logo_attachment: :blob
-        )
+        ))
     end
 
     def transfer_update_params

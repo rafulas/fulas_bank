@@ -31,6 +31,23 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal accounts(:depository), entry.reload.account
   end
 
+  test "an imported movement carries a dot until it is opened or all are marked as seen" do
+    import = imports(:transaction)
+    first = create_transaction(account: accounts(:depository), name: "Importado uno", amount: 10, date: Date.current)
+    second = create_transaction(account: accounts(:depository), name: "Importado dos", amount: 11, date: Date.current)
+    Entry.where(id: [ first.id, second.id ]).update_all(import_id: import.id, seen_at: nil)
+
+    get transactions_url
+    assert_select "[data-testid='unseen-dot']", minimum: 2
+
+    get transaction_url(first)
+    assert first.reload.seen_at.present?
+
+    post mark_all_seen_transactions_url
+    assert second.reload.seen_at.present?
+    assert_not second.unseen?
+  end
+
   test "the detail lists similar movements, marking the recurring ones" do
     twin = Entry.create!(account: @entry.account, name: @entry.name, date: @entry.date - 30, amount: @entry.amount,
                          currency: @entry.currency, entryable: Transaction.new(expense_type: "fixed"))

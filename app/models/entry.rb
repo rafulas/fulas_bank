@@ -342,6 +342,18 @@ class Entry < ApplicationRecord
     external_id.present?
   end
 
+  # Fulas Bank: an imported (or synced) movement not yet looked at: the blue
+  # dot in the list. Opening its detail marks it as seen.
+  def unseen?
+    seen_at.nil? && (import_id.present? || external_id.present?)
+  end
+
+  def mark_seen!
+    update_column(:seen_at, Time.current) if unseen?
+  end
+
+  scope :unseen, -> { where(seen_at: nil).where("entries.import_id IS NOT NULL OR entries.external_id IS NOT NULL") }
+
   # Fulas Bank: whether the movement can be moved to another of the family's
   # accounts (it was entered in the wrong card, say): a plain transaction,
   # not a transfer, not split and not from a bank connection.
