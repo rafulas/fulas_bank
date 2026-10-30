@@ -57,11 +57,12 @@ class MonthBudget
     [ group.expanded_category_ids.sum { |id| spending_by_category.fetch(id, 0.to_d) }, 0 ].max
   end
 
-  # { category id => spending } this month (refunds take it down).
-  def spending_by_category
-    @spending_by_category ||= spending_scope(month..month.end_of_month, budgeted_category_ids)
-                                .group("t.category_id").sum(Arel.sql(amount_sql))
-                                .to_h { |id, amount| [ id.to_s, amount.to_d ] }
+  # { category id => spending } this month in the budgeted categories, or
+  # in `category_ids` (refunds take it down).
+  def spending_by_category(category_ids = nil)
+    return category_spending(category_ids) if category_ids
+
+    @spending_by_category ||= category_spending(budgeted_category_ids)
   end
 
   # { date => spending } in the budgeted categories (or `category_ids`),
@@ -70,6 +71,23 @@ class MonthBudget
     spending_scope(month..last_day, category_ids)
       .group(Arel.sql("entries.date")).sum(Arel.sql(amount_sql))
       .to_h { |date, amount| [ date.to_date, amount.to_d ] }
+  end
+
+  # { month => what `group` spent } for each of `months` (firsts of month).
+  def monthly_spending(group, months)
+    return {} if months.empty?
+
+    rows = spending_scope(months.min..months.max.end_of_month, group.expanded_category_ids)
+             .group(Arel.sql("date_trunc('month', entries.date)")).sum(Arel.sql(amount_sql))
+    by_month = rows.to_h { |date, amount| [ date.to_date.beginning_of_month, amount.to_d ] }
+    months.index_with { |item| [ by_month.fetch(item, 0.to_d), 0 ].max }
+  end
+
+  # The month's movements that count in `group`, newest first.
+  def entries_for(group)
+    spending_scope(month..month.end_of_month, group.expanded_category_ids)
+      .includes(:account, entryable: :category)
+      .order(date: :desc, created_at: :desc)
   end
 
   # The categories already in a budget other than `except`: each category
@@ -195,6 +213,12 @@ class MonthBudget
                                          .reject(&:analytics_neutral?)
                                          .sort_by(&:display_sort_key)
                                          .group_by(&:parent_id)
+    end
+
+    def category_spending(category_ids)
+      spending_scope(month..month.end_of_month, category_ids)
+        .group("t.category_id").sum(Arel.sql(amount_sql))
+        .to_h { |id, amount| [ id.to_s, amount.to_d ] }
     end
 
     def budgeted_category_ids

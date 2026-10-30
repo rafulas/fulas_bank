@@ -75,7 +75,37 @@ es:
         submit: Guardar
       update:
         success: Presupuesto guardado.
+    budget_group_limits:
+      create:
+        success: Límite añadido.
+        invalid_month: Elige un mes.
+      destroy:
+        success: Límite quitado.
+        first: El primer importe no se puede quitar; cámbialo o elimina el presupuesto.
     budget_groups:
+      show:
+        back: Planes
+        edit: Editar
+        spent_of: "gastado de %{amount}"
+        left: para gastar
+        over: sobre presupuesto
+        no_amount: Este mes no tiene importe. Gastado
+        chart_label: "Gastado %{spent} de %{amount}"
+        per_day_left: Restante al día
+        daily_average: Gasto medio diario
+        by_category: Por categoría
+        history: Últimos 6 meses
+        history_average: Media de los meses cerrados
+        limits: Importes
+        limits_hint: Cada importe vale desde su mes hasta el siguiente que pongas.
+        limit_from: "%{month} y posteriores"
+        remove_limit: Quitar este importe
+        add_limit: Añadir límite futuro
+        limit_month: Desde
+        limit_amount: Importe al mes
+        add_limit_submit: Añadir
+        entries: Movimientos del mes
+        no_entries: Este mes no hay movimientos en este presupuesto.
       saved: Presupuesto guardado.
       new:
         title: Nuevo presupuesto

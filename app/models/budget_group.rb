@@ -54,6 +54,23 @@ class BudgetGroup < ApplicationRecord
     limits.reset
   end
 
+  # A future limit («Añadir límite futuro»): `amount` from `month` until
+  # the next limit already set.
+  def add_limit!(month, amount)
+    write_limit!(month.to_date.beginning_of_month, amount)
+    limits.reset
+  end
+
+  # Takes a limit away; the months it covered take the one before it. The
+  # first limit stays, as it starts the budget.
+  def remove_limit!(limit)
+    return false if limit == limits.first
+
+    limit.destroy!
+    limits.reset
+    true
+  end
+
   # Each month's amount from `first` on ({ month => amount }): what is there
   # from `first` on is replaced, and only the changes are kept as limits.
   def replace_limits_from!(first, amounts)
