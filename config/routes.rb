@@ -509,6 +509,8 @@ Rails.application.routes.draw do
     member do
       post :mark_as_recurring
       patch :tags, action: :update_tags
+      # Fulas Bank: move the movement to another account.
+      patch :account, action: :move_account
     end
   end
 

@@ -45,6 +45,8 @@ class Account < ApplicationRecord
 
   VISIBLE_STATUSES = %w[draft active].freeze
   HISTORICAL_STATUSES = (VISIBLE_STATUSES + %w[disabled]).freeze
+  # Fulas Bank: the accounts a movement can be moved to from its detail.
+  MOVABLE_TRANSACTION_TYPES = %w[Depository CreditCard].freeze
 
   scope :visible, -> { where(status: VISIBLE_STATUSES) }
   scope :historical, -> { where(status: HISTORICAL_STATUSES) }

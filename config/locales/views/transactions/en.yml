@@ -92,6 +92,8 @@ en:
     create:
       created: Transaction created
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
+    move_account:
+      moved: "Movement moved to %{account}."
     update:
       updated: Transaction updated
     new:

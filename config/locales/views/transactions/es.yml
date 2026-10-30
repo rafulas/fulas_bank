@@ -92,6 +92,8 @@ es:
     create:
       created: Transacción creada
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
+    move_account:
+      moved: "Movimiento pasado a %{account}."
     update:
       updated: Transacción actualizada
     new:
