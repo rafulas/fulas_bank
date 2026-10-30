@@ -28,7 +28,15 @@ class Forecast::VariableEstimate
   # The movements that count as variable spending in `accounts` between
   # two dates, joined to their transactions. Forecast::VariableBreakdown
   # lists them, so both always agree.
-  def self.spending_entries(family, accounts:, from:, to:)
+  def self.spending_entries(family, accounts:, from:, to:, excluded_category_ids: [])
+    scope = without_investments(base_spending_entries(family, accounts: accounts, from: from, to: to), family)
+    return scope if excluded_category_ids.blank?
+
+    # Fulas Bank: the categories left out in «Ver cálculo» (Forecast::VariablePlan).
+    scope.where("transactions.category_id IS NULL OR transactions.category_id NOT IN (?)", excluded_category_ids)
+  end
+
+  def self.base_spending_entries(family, accounts:, from:, to:)
     family.entries
           .excluding_split_parents
           .where(account_id: accounts.map(&:id), entryable_type: "Transaction", excluded: false, date: from..to)
@@ -39,7 +47,6 @@ class Forecast::VariableEstimate
           .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
           .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
           .where(Transaction.variable_expense_sql)
-          .then { |scope| without_investments(scope, family) }
   end
 
   # Fulas Bank: money put into investments, pension plans or savings (the
@@ -61,19 +68,22 @@ class Forecast::VariableEstimate
           .or(family.categories.where(parent_id: roots)).pluck(:id)
   end
 
-  attr_reader :family, :accounts, :today
+  attr_reader :family, :accounts, :today, :plan
 
-  def initialize(family, accounts:, today: Date.current)
+  # `plan` (Forecast::VariablePlan): the categories left out, and those
+  # planned for a month.
+  def initialize(family, accounts:, today: Date.current, plan: nil)
     @family = family
     @accounts = accounts
     @today = today
+    @plan = plan
   end
 
   # Expected spending (positive) of `account` in the whole of `month` (any day
   # of it), in the account's currency. Zero without history.
   def monthly(account, month)
     values = sample_months(month.beginning_of_month).filter_map do |sample|
-      monthly_totals.dig(account.id, sample) || 0 if covered?(account, sample)
+      account_total(account, sample) if covered?(account, sample)
     end
     TrimmedMonthlyAverage.mean(values)
   end
@@ -81,19 +91,29 @@ class Forecast::VariableEstimate
   # What `account` has already spent on variable things in `month`, to know
   # how much of this month's estimate is still to come.
   def spent(account, month)
-    (monthly_totals.dig(account.id, month.beginning_of_month) || 0).to_d
+    account_total(account, month.beginning_of_month)
   end
 
   # The same estimate for all the accounts together, as one figure: what is
   # spent across them each month, averaged the same way. A month counts once
-  # any of them has history.
+  # any of them has history. The categories planned for the month are left
+  # out of the average and their planned amounts added instead.
   def combined_monthly(month)
-    values = combined_sample_months(month).map { |sample| combined_total(sample) }
-    TrimmedMonthlyAverage.mean(values)
+    month = month.beginning_of_month
+    planned = planned_ids(month)
+    values = combined_sample_months(month).map { |sample| combined_total(sample, without: planned) }
+    TrimmedMonthlyAverage.mean(values) + planned_total(month)
   end
 
+  # What has already been spent in `month`, counted the way the estimate
+  # is: a planned category counts up to its planned amount.
   def combined_spent(month)
-    combined_total(month.beginning_of_month)
+    month = month.beginning_of_month
+    planned = planned_ids(month)
+    return combined_total(month) if planned.empty?
+
+    in_planned = combined_total(month) - combined_total(month, without: planned)
+    combined_total(month, without: planned) + [ in_planned, planned_total(month) ].min
   end
 
   # The months that go into the combined estimate for `month`, newest first:
@@ -113,10 +133,20 @@ class Forecast::VariableEstimate
   # What all the accounts together spent on variable things in `month`, in
   # the family's currency (an account in another currency is converted at
   # today's rate, or added as is when there is no rate).
-  def combined_total(month)
+  #
+  # `without`: category ids whose spending is left out.
+  def combined_total(month, without: [])
     monthly_totals.sum do |account_id, months|
-      in_family_currency(months[month.beginning_of_month] || 0, accounts_by_id[account_id])
+      in_family_currency(sum_categories(months[month.beginning_of_month], without), accounts_by_id[account_id])
     end.to_d
+  end
+
+  def planned_ids(month)
+    plan ? plan.planned_ids(month) : []
+  end
+
+  def planned_total(month)
+    plan ? plan.planned_total(month) : 0.to_d
   end
 
   # The months averaged for `month`, newest first.
@@ -154,18 +184,32 @@ class Forecast::VariableEstimate
                                 .minimum(:date)
     end
 
-    # { account_id => { month => variable spending } } since the oldest month
-    # any sample can reach: the same month three finished years back.
+    def account_total(account, month)
+      sum_categories(monthly_totals.dig(account.id, month), [])
+    end
+
+    # A month's spending in one account, without the categories in `without`.
+    def sum_categories(by_category, without)
+      return 0.to_d if by_category.blank?
+
+      by_category.sum { |category_id, amount| without.include?(category_id.to_s) ? 0 : amount }.to_d
+    end
+
+    # { account_id => { month => { category_id => variable spending } } }
+    # since the oldest month any sample can reach: the same month three
+    # finished years back. The categories left out of the forecast are not
+    # in it.
     def monthly_totals
       @monthly_totals ||= begin
         from = current_month << (12 * SAME_MONTH_YEARS)
 
-        rows = self.class.spending_entries(family, accounts: accounts, from: from, to: today.end_of_month)
-                   .group(:account_id, Arel.sql("date_trunc('month', entries.date)"))
+        rows = self.class.spending_entries(family, accounts: accounts, from: from, to: today.end_of_month,
+                                           excluded_category_ids: plan&.excluded_with_children || [])
+                   .group(:account_id, Arel.sql("date_trunc('month', entries.date)"), "transactions.category_id")
                    .sum(:amount)
 
-        rows.each_with_object(Hash.new { |hash, key| hash[key] = {} }) do |((account_id, month), amount), totals|
-          totals[account_id][month.to_date] = amount.to_d
+        rows.each_with_object(Hash.new { |hash, key| hash[key] = Hash.new { |inner, month| inner[month] = {} } }) do |((account_id, month, category_id), amount), totals|
+          totals[account_id][month.to_date][category_id.to_s] = amount.to_d
         end
       end
     end

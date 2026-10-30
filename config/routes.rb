@@ -795,6 +795,8 @@ Rails.application.routes.draw do
     # Fulas Bank: «Ver cálculo» of "Gastos varios" and the accounts it counts.
     get :variable, path: "gastos-varios"
     patch :variable_accounts, path: "gastos-varios/cuentas", to: "forecasts#update_variable_accounts"
+    # Fulas Bank: a category left out of "Gastos varios", or planned for a month.
+    patch :variable_category, path: "gastos-varios/categoria", to: "forecasts#update_variable_category"
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do

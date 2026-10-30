@@ -11,7 +11,7 @@ class ForecastsController < ApplicationController
   # Fulas Bank: each loan's instalment, kept in step with the loan (and a
   # loan paid twice, by its own movement and by one from the bank, merged).
   before_action :sync_loan_installments, only: %i[show table]
-  before_action :build_forecast, except: %i[update_columns update_variable_accounts]
+  before_action :build_forecast, except: %i[update_columns update_variable_accounts update_variable_category]
 
   def show
   end
@@ -47,7 +47,8 @@ class ForecastsController < ApplicationController
   # movements; and which accounts count.
   def variable
     @month = variable_month
-    @breakdown = Forecast::VariableBreakdown.new(Current.family, accounts: @forecast.variable_accounts, month: @month)
+    @breakdown = Forecast::VariableBreakdown.new(Current.family, accounts: @forecast.variable_accounts, month: @month,
+                                                 plan: variable_plan)
     @category_row = @breakdown.category_row(params[:category]) if params[:category].present?
     @variable_candidates = @forecast.counted_accounts + @forecast.card_accounts
   end
@@ -63,7 +64,38 @@ class ForecastsController < ApplicationController
     redirect_back_or_to forecast_path, notice: t(".success")
   end
 
+  # Fulas Bank: from «Ver cálculo», a category left out of "Gastos varios"
+  # or brought back, or planned for one month (or its plan removed).
+  def update_variable_category
+    category = Current.family.categories.find(params[:category_id])
+    month = variable_month
+    plan = variable_plan
+
+    case params[:op]
+    when "exclude" then plan.exclude!(category.id)
+    when "include" then plan.include!(category.id)
+    when "plan" then plan.plan!(month, category.id, planned_amount)
+    when "unplan" then plan.unplan!(month, category.id)
+    end
+
+    redirect_to variable_forecast_path(month: month.iso8601, category: params[:return_category].presence),
+                notice: t(".success")
+  end
+
   private
+    def variable_plan
+      @variable_plan ||= Forecast::VariablePlan.new(Current.family, user: Current.user)
+    end
+
+    # An amount typed as «1.234,56» or «1234.56».
+    def planned_amount
+      raw = params[:amount].to_s.strip.delete(" €")
+      raw = raw.delete(".").tr(",", ".") if raw.include?(",")
+      BigDecimal(raw.presence || "0").abs
+    rescue ArgumentError
+      0.to_d
+    end
+
     def build_forecast
       @accounts = forecast_accounts
       @period = params[:until].present? ? nil : (PERIODS.key?(params[:period]) ? params[:period] : DEFAULT_PERIOD)
@@ -77,7 +109,8 @@ class ForecastsController < ApplicationController
                                main_account: @main_account, card_accounts: card_accounts,
                                debt_plan: Current.family.debt_plan&.forecast_feed(Current.user),
                                column_groups: Current.user.preferences&.dig(Forecast::COLUMN_GROUPS_PREFERENCE) || {},
-                               variable_excluded_ids: Forecast.variable_excluded_ids(Current.user, Current.family, @accounts + card_accounts))
+                               variable_excluded_ids: Forecast.variable_excluded_ids(Current.user, Current.family, @accounts + card_accounts),
+                               variable_plan: variable_plan)
       @hidden_columns = Array(Current.user.preferences&.dig(Forecast::HIDDEN_COLUMNS_PREFERENCE))
     end
 

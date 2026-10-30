@@ -34,8 +34,28 @@ es:
       accounts: Cuentas que cuentan
       accounts_hint: "Quita las cuentas de paso, como la de la nómina: su dinero entra y sale, y sus gastos inflarían la previsión. Al principio se quitan solas las que están a cero y todo lo que entra vuelve a salir."
       save: Guardar
+      plan_title: "En %{month}"
+      plan_hint: "Si sabes que este mes vas a gastar otra cosa en esta categoría (no vas a viajar, por ejemplo), pon cuánto. Ese mes se usa tu cifra en vez de la media; los demás meses no cambian."
+      plan_amount: "Lo que prevés gastar"
+      plan_scope: Aplicar a
+      plan_scope_only: "Solo %{name}"
+      plan_scope_parent: "Todo %{name}"
+      plan_save: "Guardar para %{month}"
+      planned: "Previsto en %{month}: %{amount}"
+      unplan: Volver a la media
+      exclude_title: No prever esta categoría
+      exclude_hint: "Para gastos que no se repiten (una reforma, un pago de impuestos): dejan de contar en todos los meses de la previsión. Puedes volver a preverla cuando quieras."
+      exclude: "No prever %{name}"
+      plans: "Ajustes de %{month}"
+      plans_hint: Categorías con una cifra tuya este mes, en lugar de su media. Se suman al resultado.
+      excluded: Categorías que no se prevén
+      excluded_hint: Su gasto no cuenta en ningún mes de la previsión.
+      include: Volver a prever
+      planned_pill: "Este mes: %{amount}"
     update_variable_accounts:
       success: Cuentas de los gastos varios actualizadas.
+    update_variable_category:
+      success: Previsión de gastos varios actualizada.
     variable_line: Gastos varios %{month}
     overdue_line: "%{name} (vencía el %{date})"
     loan_line: "Cuota %{name}"
