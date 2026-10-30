@@ -461,6 +461,13 @@ es:
       finalize_upload: Por favor, finaliza la subida de tu archivo.
       finalize_mappings: Por favor, finaliza tus mapeos antes de continuar.
     ready:
+      duplicates_title:
+        one: "1 movimiento que quizá ya tienes"
+        other: "%{count} movimientos que quizá ya tienes"
+      duplicates_hint: "Tienen el mismo importe, en la misma cuenta y con un día de diferencia como mucho, que un movimiento que apuntaste a mano con otro nombre. Si es el mismo, se une al tuyo (sin duplicarlo) y eliges qué nombre se queda."
+      duplicates_mine: "Es el mismo: quedarme con «%{name}»"
+      duplicates_file: "Es el mismo: usar «%{name}»"
+      duplicates_import: Son distintos, importarlo
       existing_rows_notice:
         one: 1 movimiento del archivo ya estaba en la cuenta y no se añade otra vez (si le faltaba categoría, comercio o notas, se completan con las del archivo).
         other: "%{count} movimientos del archivo ya estaban en la cuenta y no se añaden otra vez (si les faltaba categoría, comercio o notas, se completan con las del archivo)."

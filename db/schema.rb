@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1389,6 +1389,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_121000) do
     t.datetime "created_at", null: false
     t.string "currency"
     t.string "date"
+    t.string "duplicate_choice"
     t.string "effective_date"
     t.string "entity_type"
     t.string "exchange_operating_mic"

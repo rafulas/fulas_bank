@@ -475,6 +475,13 @@ en:
       finalize_upload: Please finalize your file upload.
       finalize_mappings: Please finalize your mappings before proceeding.
     ready:
+      duplicates_title:
+        one: "1 movement you may already have"
+        other: "%{count} movements you may already have"
+      duplicates_hint: "Same amount, same account and a day apart at most from a movement you entered by hand with another name. If it is the same one, it joins yours (no duplicate) and you choose which name stays."
+      duplicates_mine: "It is the same: keep «%{name}»"
+      duplicates_file: "It is the same: use «%{name}»"
+      duplicates_import: They are different, import it
       existing_rows_notice:
         one: 1 row of the file was already in the account and is not added again (a missing category, merchant or notes are filled in from the file).
         other: "%{count} rows of the file were already in the account and are not added again (missing categories, merchants or notes are filled in from the file)."
