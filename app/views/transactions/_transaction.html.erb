@@ -159,7 +159,8 @@
 
                 <div class="text-secondary text-xs font-normal">
                   <% if transaction.transfer? %>
-                    <span class="text-secondary">
+                    <%# Fulas Bank: both accounts in full, on a second line if need be. %>
+                    <span class="text-secondary whitespace-normal break-words">
                       <%= transaction.loan_payment? ? t("transactions.show.loan_payment") : t("transactions.show.transfer") %> •
                       <% if transaction.transfer.present? %>
                         <% counterpart = transaction.transfer_as_outflow.present? ? transaction.transfer.to_account : transaction.transfer.from_account %>

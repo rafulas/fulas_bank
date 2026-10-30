@@ -37,6 +37,7 @@ en:
       mark_recurring_subtitle: Track this transfer as a recurring pattern in the upcoming
         feed and recurring page.
       mark_recurring_title: Mark transfer as recurring
+      name_label: Name
       note_label: Notes
       note_placeholder: Add a note to this transfer
       overview: Overview
