@@ -166,6 +166,26 @@ class Transaction < ApplicationRecord
   # Fulas Bank: whether this transaction counts as income or expense by its
   # kind (see ANALYTICS_EXCLUDED_KINDS). A transfer leg that does is shown
   # with its category, which can be changed.
+  # Fulas Bank: the categories this movement's merchant, or a movement with
+  # the same name, has had before, the most used first (as Bilance suggests
+  # them when the category is changed). Not the one it has now.
+  def suggested_categories(limit: 3)
+    return [] unless entry
+
+    family = entry.account.family
+    others = Transaction.joins(:entry).where(entries: { account_id: family.accounts.select(:id) })
+                        .where.not(id: id).where.not(category_id: [ nil, category_id ].compact)
+    same = if merchant_id
+      others.where(merchant_id: merchant_id)
+    else
+      others.where("LOWER(entries.name) = ?", entry.name.to_s.downcase.strip)
+    end
+
+    ids = same.group(:category_id).order(Arel.sql("COUNT(*) DESC")).limit(limit).pluck(:category_id)
+    by_id = family.categories.where(id: ids).includes(:parent).index_by(&:id)
+    ids.filter_map { |category_id| by_id[category_id] }
+  end
+
   def counts_by_kind?
     ANALYTICS_EXCLUDED_KINDS.exclude?(kind) || investment_withdrawal?
   end

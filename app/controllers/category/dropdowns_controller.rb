@@ -3,7 +3,9 @@ class Category::DropdownsController < ApplicationController
 
   def show
     @categories = categories_scope.to_a.excluding(@selected_category).prepend(@selected_category).compact
-    @recent_categories = Category.recently_used_for(family: Current.family, excluding: @selected_category).to_a
+    # Fulas Bank: those used before for the same merchant or name.
+    @suggested_categories = @transaction ? @transaction.suggested_categories : []
+    @recent_categories = Category.recently_used_for(family: Current.family, excluding: @selected_category).to_a - @suggested_categories
   end
 
   private

@@ -62,6 +62,15 @@
           <% end %>
           <p class="hidden px-2 pb-1 text-xs text-destructive" role="alert" data-category-quick-create-target="error"></p>
         <% end %>
+        <% if @suggested_categories.any? %>
+          <div data-list-filter-target="recentSection">
+            <p class="pl-2 pb-1 text-xs font-medium text-secondary uppercase tracking-wide"><%= t(".suggested") %></p>
+            <% @suggested_categories.each do |category| %>
+              <%= render "category/dropdowns/row", category: category, id_prefix: "suggested_category_option" %>
+            <% end %>
+            <%= render "shared/ruler", classes: "my-2" %>
+          </div>
+        <% end %>
         <% if @recent_categories.any? %>
           <div data-list-filter-target="recentSection">
             <p class="pl-2 pb-1 text-xs font-medium text-secondary uppercase tracking-wide"><%= t(".recent") %></p>
