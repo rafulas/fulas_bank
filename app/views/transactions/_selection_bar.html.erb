@@ -33,6 +33,16 @@
       <%= icon "repeat", class: "group-hover/recurring:text-inverse" %>
     <% end %>
 
+    <%# Fulas Bank: confirm or reject the selected «Auto» transfers at once. %>
+    <% [ [ "confirmed", "check-check", t("transactions.selection_bar.confirm_transfers") ], [ "rejected", "unlink", t("transactions.selection_bar.reject_transfers") ] ].each do |status, icon_name, title| %>
+      <%= form_with url: transfers_bulk_review_path, data: { turbo_frame: "_top" } do %>
+        <%= hidden_field_tag "bulk_transfer[status]", status %>
+        <button type="button" data-bulk-select-scope-param="bulk_transfer" data-action="bulk-select#submitBulkRequest" class="p-1.5 group/transfer hover:bg-inverse flex items-center justify-center rounded-md" title="<%= title %>">
+          <%= icon icon_name, class: "group-hover/transfer:text-inverse" %>
+        </button>
+      <% end %>
+    <% end %>
+
     <%= form_with url: transactions_bulk_deletion_path, data: { turbo_confirm: true, turbo_frame: "_top" } do %>
       <button type="button" data-bulk-select-scope-param="bulk_delete" data-action="bulk-select#submitBulkRequest" class="p-1.5 group/delete hover:bg-inverse flex items-center justify-center rounded-md" title="Delete">
         <%= icon "trash-2", class: "group-hover/delete:text-inverse" %>

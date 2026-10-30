@@ -1,6 +1,14 @@
 ---
 en:
   transfers:
+    bulk_reviews:
+      create:
+        confirmed:
+          one: 1 transfer confirmed
+          other: "%{count} transfers confirmed"
+        rejected:
+          one: 1 match rejected
+          other: "%{count} matches rejected"
     create:
       success: Transfer created
       exchange_rate_unavailable: Exchange rate unavailable for selected currencies and date

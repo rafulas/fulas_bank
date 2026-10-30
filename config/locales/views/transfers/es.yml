@@ -1,6 +1,14 @@
 ---
 es:
   transfers:
+    bulk_reviews:
+      create:
+        confirmed:
+          one: 1 traspaso confirmado
+          other: "%{count} traspasos confirmados"
+        rejected:
+          one: 1 emparejamiento rechazado
+          other: "%{count} emparejamientos rechazados"
     create:
       success: Transferencia creada
       exchange_rate_unavailable: No hay tipo de cambio para las monedas y la fecha seleccionadas

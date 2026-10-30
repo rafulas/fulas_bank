@@ -45,6 +45,8 @@ es:
         transactions_section: Transacciones
     unknown_name: Transacción desconocida
     selection_bar:
+      confirm_transfers: Confirmar los traspasos «Auto» seleccionados
+      reject_transfers: Rechazar los traspasos «Auto» seleccionados
       duplicate: Duplicar
       edit: Editar
       add_to_recurring: Añadir a recurrente
