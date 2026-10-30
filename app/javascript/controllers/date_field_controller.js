@@ -28,6 +28,18 @@ export default class extends Controller {
     this.input = this.inputTarget;
     this.button = this.buttonTarget;
     this.holder = this.element;
+    // (A page restored from Turbo's cache keeps the lock set below.)
+    this.lockedByPage =
+      this.input.readOnly && this.input.dataset.safariLock !== "true";
+    // Safari opens its own calendar whenever the field takes the focus from a
+    // click or a tap, whatever the page does, so both calendars appeared.
+    // There the field is read-only (it is still sent with the form) and the
+    // date is chosen in this calendar.
+    this.safari = this.constructor.isSafari();
+    if (this.safari && !this.lockedByPage) {
+      this.input.readOnly = true;
+      this.input.dataset.safariLock = "true";
+    }
     this.input.addEventListener("mousedown", this.openFromPointer);
     document.addEventListener("click", this.outside);
     document.addEventListener("keydown", this.escape);
@@ -40,16 +52,32 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.escape);
   }
 
-  // A click on the field opens this calendar and not the browser's own (Safari
-  // shows its own on a click, so both appeared). The field still gets the
-  // focus, so the date can be typed.
+  // A click on the field opens this calendar and not the browser's own. The
+  // field still gets the focus, so the date can be typed (not in Safari, see
+  // connect).
   openFromPointer = (event) => {
-    if (event.button !== 0 || this.input.disabled || this.input.readOnly)
-      return;
+    if (event.button !== 0 || this.unavailable()) return;
     event.preventDefault();
-    this.input.focus({ preventScroll: true });
+    if (!this.safari) this.input.focus({ preventScroll: true });
+    // The click that follows this press must not close the calendar it
+    // opens: if the calendar covers the field, the click lands on whatever
+    // holds them both, which counts as outside.
+    this.pressedField = true;
     this.panel ? this.close() : this.open();
   };
+
+  static isSafari() {
+    const agent = navigator.userAgent;
+    return (
+      /Safari\//.test(agent) &&
+      !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(agent)
+    );
+  }
+
+  // Disabled, or read-only by the page itself (not by the Safari lock).
+  unavailable() {
+    return this.input.disabled || this.lockedByPage;
+  }
 
   toggle = (event) => {
     event.preventDefault();
@@ -60,6 +88,10 @@ export default class extends Controller {
   // the calendar redraws, and by the time this runs it is no longer inside
   // the calendar, which used to close it.
   outside = (event) => {
+    if (this.pressedField) {
+      this.pressedField = false;
+      return;
+    }
     if (!this.panel) return;
     const path = event.composedPath();
     if (
@@ -80,7 +112,7 @@ export default class extends Controller {
   };
 
   open() {
-    if (this.panel || this.input.disabled || this.input.readOnly) return;
+    if (this.panel || this.unavailable()) return;
     const value = this.#parse(this.input.value) || this.#today();
     this.month = new Date(value.getFullYear(), value.getMonth(), 1);
 
