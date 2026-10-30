@@ -98,6 +98,8 @@ module BankChargeLinkable
 
     linker = AssetLinker.new(family)
     candidates.select! { |entry| linker.charge_fits?(entry, asset_account) }
+    # Fulas Bank: a refuel is only offered petrol stations.
+    candidates.select! { |entry| linker.fuel_charge?(entry) } if fuel_record?
     return [] if candidates.empty?
 
     target = amount.to_d
@@ -110,6 +112,10 @@ module BankChargeLinkable
   end
 
   private
+    def fuel_record?
+      respond_to?(:fuel?) && fuel?
+    end
+
     # Purchases only: transfers between the family's own accounts (paying off
     # the card, moving savings) are never a cost of the asset. Property
     # expenses also accept loan payments, for the mortgage.

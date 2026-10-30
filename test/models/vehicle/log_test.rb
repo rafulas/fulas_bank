@@ -49,7 +49,7 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     candidates = log.candidate_entries
 
     assert_equal match, candidates.first
-    assert_includes candidates, supermarket
+    assert_not_includes candidates, supermarket, "a refuel is only offered petrol stations"
     assert_not_includes candidates, old
     assert_not_includes candidates, refund
     assert_not_includes candidates, entries(:transfer_out), "paying off the card is not a vehicle cost"
@@ -76,10 +76,31 @@ class Vehicle::LogTest < ActiveSupport::TestCase
 
     candidates = @vehicle.logs.new(kind: "fuel", date: 5.days.ago.to_date, amount: 70).candidate_entries
 
-    assert_equal [ repsol, shell, uncategorized, cepsa ], candidates
+    assert_equal [ repsol, shell, cepsa ], candidates
+    assert_not_includes candidates, uncategorized, "with no category, only a petrol station's name counts"
     assert_not_includes candidates, supermarket
     assert_not_includes candidates, for_the_bmw, "a charge tagged with the other vehicle is that one's"
     assert_includes other_car.vehicle.logs.new(kind: "fuel", date: 2.days.ago.to_date, amount: 70).candidate_entries, for_the_bmw
+  end
+
+  test "a refuel is offered uncategorized petrol stations; a workshop log keeps every vehicle cost" do
+    family = accounts(:vehicle).family
+    parking = family.categories.find_by(name: "Aparcamiento") || family.categories.create!(name: "Aparcamiento", color: "#506cd8")
+
+    station = create_transaction(name: "E.S. Pozuelo", date: 2.days.ago.to_date, amount: 40)
+    waylet = create_transaction(name: "Waylet Madrid", date: 3.days.ago.to_date, amount: 41)
+    beach = create_transaction(name: "Compra La Manga", date: 1.day.ago.to_date, amount: 28)
+    car_park = create_transaction(name: "Telpark", date: 1.day.ago.to_date, amount: 3, category: parking)
+
+    refuel = @vehicle.logs.new(kind: "fuel", date: Date.current, amount: 40).candidate_entries
+    assert_includes refuel, station
+    assert_includes refuel, waylet
+    assert_not_includes refuel, beach
+    assert_not_includes refuel, car_park
+
+    expense = @vehicle.logs.new(kind: "expense", category: "parking", date: Date.current, amount: 3).candidate_entries
+    assert_includes expense, car_park
+    assert_includes expense, beach, "other costs keep the uncategorized charges"
   end
 
   test "does not offer a bank charge already linked to another log" do
