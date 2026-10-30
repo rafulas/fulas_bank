@@ -15,8 +15,10 @@ en:
           one: "1 transaction updated"
           other: "%{count} transactions updated"
       new:
-        add_tags_label: Add tags
-        remove_tags_label: Remove tags
+        tags_hint: "Tap a tag to add it (+), again to remove it (−) and once more to leave it as it is. Each movement's other tags stay."
+        tags_search: Search tags
+        tags_add: Add
+        tags_remove: Remove
         one_time_label: One-off
         one_time_on: Mark as one-off
         one_time_off: No longer one-off
