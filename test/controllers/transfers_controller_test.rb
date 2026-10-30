@@ -580,6 +580,15 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ tag.id ], transfer.inflow_transaction.tag_ids
   end
 
+  test "renames a transfer on both of its movements" do
+    transfer = transfers(:one)
+
+    patch transfer_url(transfer), params: { transfer: { name: "Traspaso redondeo tarjeta", notes: "" } }
+
+    assert_equal "Traspaso redondeo tarjeta", transfer.outflow_transaction.entry.reload.name
+    assert_equal "Traspaso redondeo tarjeta", transfer.inflow_transaction.entry.reload.name
+  end
+
   test "can update transfer tags on both sides" do
     transfer = transfers(:one)
     tag = tags(:one)

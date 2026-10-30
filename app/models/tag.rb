@@ -25,11 +25,16 @@ class Tag < ApplicationRecord
 
   scope :alphabetically, -> { order(:name, :id) }
 
-  # Tags ordered by the last time they were put on a transaction (newest first).
+  # Tags ordered by the date of the newest transaction they are on (newest
+  # first). Fulas Bank: by the transaction's date, not by when the tag was
+  # put on it, so tagging a movement of two years ago does not make its tag
+  # a recent one. Ties go to the tag put on last.
   scope :recently_used, -> {
     joins(:taggings)
+      .joins("INNER JOIN entries ON entries.entryable_type = 'Transaction' AND entries.entryable_id = taggings.taggable_id")
+      .where(taggings: { taggable_type: "Transaction" })
       .group("tags.id")
-      .reorder(Arel.sql("MAX(taggings.created_at) DESC"), "tags.name")
+      .reorder(Arel.sql("MAX(entries.date) DESC"), Arel.sql("MAX(taggings.created_at) DESC"), "tags.name")
   }
 
   class << self

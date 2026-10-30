@@ -164,6 +164,23 @@ class AssetLinker
     rule.present? && !rule.needs_tag
   end
 
+  # Fulas Bank: whether a charge can be a refuel: in the fuel category, or
+  # with no category and the name of a petrol station. A refuel's list of
+  # bank charges offers only these (parking, workshops or a supermarket are
+  # costs of the car, but never its fuel).
+  # «E.S.» (estación de servicio) only as the bank writes it, in capitals, so
+  # an ordinary «Es la compra» is not taken for one.
+  FUEL_PREFIX = /\A\s*(?:E\.\s?S\.?|ES)\s/
+  FUEL_NAME = /estaci[oó]n de servicio|gasolin|carburante|repsol|waylet|cepsa|moeve|\bbp\b|shell|galp|petronor|campsa|plenoil|ballenoil|petroprix|esclatoil|\bavia\b|\bdisa\b|meroil|bonarea|\btamoil\b|\bq8\b|\besso\b/i
+
+  def fuel_charge?(entry)
+    transaction = entry.entryable
+    rule = category_rule(VEHICLE_RULES, transaction)
+    return rule.kind == "fuel" if rule
+
+    transaction.category.nil? && [ entry.name, transaction.merchant&.name ].compact.any? { |name| name.match?(FUEL_PREFIX) || name.match?(FUEL_NAME) }
+  end
+
   # The record of `account` a charge the user links by hand should go to
   # instead of a new one: same kind, a few days away, and either with no
   # charge yet or with one the app only suggested. The user's choice beats the

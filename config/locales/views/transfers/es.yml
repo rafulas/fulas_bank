@@ -35,6 +35,7 @@ es:
       mark_recurring: Marcar como recurrente
       mark_recurring_subtitle: Haz seguimiento de esta transferencia como un patrón recurrente en el feed de próximos movimientos y en la página de recurrentes.
       mark_recurring_title: Marcar transferencia como recurrente
+      name_label: Nombre
       note_label: Notas
       note_placeholder: Añade una nota a esta transferencia
       overview: Resumen

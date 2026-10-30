@@ -234,7 +234,7 @@ class TransfersController < ApplicationController
     end
 
     def transfer_update_params
-      params.require(:transfer).permit(:notes, :status, :category_id, :amount, :source_fee_amount, :destination_fee_amount)
+      params.require(:transfer).permit(:notes, :status, :category_id, :amount, :source_fee_amount, :destination_fee_amount, :name)
     end
 
     def update_transfer_status
@@ -248,6 +248,21 @@ class TransfersController < ApplicationController
     def update_transfer_details
       @transfer.outflow_transaction.update!(category_id: transfer_update_params[:category_id])
       @transfer.update!(notes: transfer_update_params[:notes])
+      rename_transfer(transfer_update_params[:name]) if transfer_update_params.key?(:name)
+    end
+
+    # Fulas Bank: the transfer's name, on both of its movements. Locked, so a
+    # later import or sync keeps it.
+    def rename_transfer(name)
+      name = name.to_s.strip
+      return if name.blank?
+
+      [ @transfer.outflow_transaction.entry, @transfer.inflow_transaction.entry ].each do |entry|
+        next if entry.name == name
+
+        entry.update!(name: name)
+        entry.lock_attr!(:name)
+      end
     end
 
     def update_transfer_fees_and_amount
