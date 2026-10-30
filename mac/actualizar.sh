@@ -112,7 +112,9 @@ echo "▶ Actualizando la app de Aplicaciones"
 tmp="$(mktemp -d)"
 if curl -fsSL "$DMG_URL" -o "$tmp/FulasBank.dmg"; then
   osascript -e 'quit app "Fulas Bank"' 2> /dev/null || true
-  vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
+  # macOS 26 warns that «hdiutil attach» is deprecated: it still works, and
+  # its replacement does not exist on older macOS. Only that warning is hidden.
+  vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" 2> >(grep -vE 'is deprecated|diskutil image attach' >&2) | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
   app="$(find "$vol" -maxdepth 1 -name '*.app' | head -1)"
   if [[ -n "$app" ]]; then
     rm -rf "/Applications/Fulas Bank.app"
