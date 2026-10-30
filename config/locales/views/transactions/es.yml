@@ -15,8 +15,10 @@ es:
           one: "1 movimiento actualizado"
           other: "%{count} movimientos actualizados"
       new:
-        add_tags_label: Añadir etiquetas
-        remove_tags_label: Quitar etiquetas
+        tags_hint: "Toca una para añadirla (+), otra vez para quitarla (−) y otra más para dejarla como está. Las demás etiquetas de cada movimiento no cambian."
+        tags_search: Buscar etiqueta
+        tags_add: Añadir
+        tags_remove: Quitar
         one_time_label: Gasto puntual
         one_time_on: Marcar como puntual
         one_time_off: Quitar puntual
