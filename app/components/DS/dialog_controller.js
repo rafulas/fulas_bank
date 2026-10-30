@@ -40,10 +40,13 @@ export default class extends Controller {
     this.element.removeEventListener("close", this._onClose);
   }
 
-  // If the user clicks anywhere outside of the visible content, close the dialog
+  // If the user clicks anywhere outside of the visible content, close the dialog.
+  // Fulas Bank: by the click's path, taken when it starts. A control that
+  // redraws itself on click (the calendar's month arrows) is gone from the
+  // page by the time the click gets here, and used to close the dialog.
   clickOutside(e) {
     if (this.disableClickOutsideValue) return;
-    if (!this.contentTarget.contains(e.target)) {
+    if (!e.composedPath().includes(this.contentTarget)) {
       this.close();
     }
   }
