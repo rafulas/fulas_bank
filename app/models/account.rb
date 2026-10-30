@@ -70,6 +70,25 @@ class Account < ApplicationRecord
     manual.where.not(status: :pending_deletion)
   }
 
+  # Fulas Bank: an account with a closing day that has passed (see the
+  # closed_on column).
+  def closed?(today: Date.current)
+    closed_on.present? && closed_on < today
+  end
+
+  # Fulas Bank: `accounts` in the order the pickers show them when entering
+  # a movement: the most recently used first (by the date of their newest
+  # movement), then those never used, and the closed ones last.
+  def self.in_picker_order(accounts, today: Date.current)
+    accounts = accounts.to_a
+    last_used = Entry.where(account_id: accounts.map(&:id)).group(:account_id).maximum(:date)
+
+    accounts.sort_by do |account|
+      used = last_used[account.id]
+      [ account.closed?(today: today) ? 1 : 0, used ? -used.jd : 0, used ? 0 : 1, account.name.to_s.downcase ]
+    end
+  end
+
   # All accounts a user can access (owned + shared with them)
   scope :accessible_by, ->(user) {
     left_joins(:account_shares)

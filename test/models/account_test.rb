@@ -978,4 +978,19 @@ class AccountTest < ActiveSupport::TestCase
 
     assert_equal 2_920, account.reload.balance
   end
+
+  test "pickers list the most recently used accounts first and the closed ones last" do
+    family = families(:dylan_family)
+    old = family.accounts.create!(name: "Banco antiguo", balance: 0, currency: "USD", accountable: Depository.new, closed_on: 1.year.ago.to_date)
+    recent = family.accounts.create!(name: "Zeta reciente", balance: 0, currency: "USD", accountable: Depository.new)
+    quiet = family.accounts.create!(name: "Alfa sin uso", balance: 0, currency: "USD", accountable: Depository.new)
+    [ [ old, 2.years.ago ], [ recent, 1.day.ago ] ].each do |account, date|
+      account.entries.create!(name: "Mov", date: date.to_date, amount: 10, currency: "USD", entryable: Transaction.new)
+    end
+
+    ordered = Account.in_picker_order([ old, quiet, recent ])
+    assert_equal [ recent, quiet, old ], ordered
+    assert old.closed?
+    assert_not recent.closed?
+  end
 end

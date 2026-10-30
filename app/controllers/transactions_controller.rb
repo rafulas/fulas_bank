@@ -773,12 +773,12 @@ class TransactionsController < ApplicationController
       accessible_accounts_scope = accessible_accounts
 
       @account_currencies = accessible_accounts_scope.pluck(:id, :currency).to_h
-      @manual_accounts = accessible_accounts_scope
+      # Fulas Bank: the most recently used first and the closed ones last.
+      @manual_accounts = Account.in_picker_order(accessible_accounts_scope
         .manual
         .active
         .alphabetically
-        .includes(:account_providers, logo_attachment: :blob)
-        .to_a
+        .includes(:account_providers, logo_attachment: :blob))
       @categories = Current.family.categories.alphabetically_by_hierarchy.to_a
       @merchants = Current.family.available_merchants_for(Current.user).alphabetically.to_a
       @tags = Current.family.tags.alphabetically.to_a
