@@ -1,12 +1,14 @@
 <%# locals: (plan:, row:, currency:) %>
-<%# One budgeted category of Planes (a main category or one of its subcategories):
-    its amount, what was spent, what is left and the bar. %>
+<%# One budget of Planes (the categories it groups): its amount, what was
+    spent, what is left and the bar. %>
 <% red = plan.ahead_of_pace?(row) %>
 <div class="space-y-1.5">
   <div class="flex items-center justify-between gap-3">
     <span class="flex items-center gap-2 min-w-0 text-sm font-medium text-primary">
-      <%= render DS::FilledIcon.new(variant: :solid, icon: row.category.lucide_icon, hex_color: row.category.color, size: "sm", rounded: true) %>
-      <span class="truncate"><%= row.category.name %></span>
+      <% if (category = row.category) %>
+        <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+      <% end %>
+      <span class="truncate"><%= row.name %></span>
     </span>
     <span class="text-sm text-primary privacy-sensitive font-amount font-semibold whitespace-nowrap"><%= format_money(Money.new(row.budgeted, currency), precision: 0) %></span>
   </div>

@@ -1,8 +1,6 @@
 # Fulas Bank: the "Planes" screen (see MonthPlan), one month at a time.
 class MonthPlansController < ApplicationController
   def show
-    # A month without a budget of its own takes the latest one before it.
-    MonthBudget.new(Current.family, user: Current.user, month: selected_month).ensure!
     # Fulas Bank: each loan's instalment, kept in step with the loan.
     Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
     @plan = MonthPlan.new(Current.family, user: Current.user, month: selected_month)

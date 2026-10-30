@@ -84,29 +84,23 @@ class Forecast::VariableBreakdown
     plan&.plan_for(month, category_id)
   end
 
-  # Fulas Bank: the categories whose budget rules this month: [[category,
-  # budget, recurring, variable part]], the largest first.
+  # Fulas Bank: the budgets that rule this month: [[budget, amount,
+  # recurring, variable part]], the largest first.
   def budget_rows
     source = estimate.budget_source
     return [] unless source
 
-    parts = source.variable_parts(month)
-    return [] if parts.empty?
-
-    budgets = source.budgets(month)
-    recurring = source.recurring.for(month)
-    by_id = family.categories.where(id: parts.keys).index_by { |category| category.id.to_s }
-    parts.filter_map do |id, part|
-      next unless by_id[id]
-
-      [ by_id[id], budgets[id], recurring.fetch(id, 0.to_d), part ]
+    @budget_rows ||= source.variable_parts(month).filter_map do |id, part|
+      group = source.find_group(id)
+      [ group, source.budgets(month)[id], source.recurring_of(group, month), part ] if group
     end.sort_by { |row| -row[1] }
   end
 
-  # The budget row of a category's main one, when its budget rules this month.
+  # The budget row a category counts in, when its budget rules this month.
   def budget_row_for(category)
-    main_id = (category.parent_id || category.id).to_s
-    budget_rows.find { |row| row.first.id.to_s == main_id }
+    source = estimate.budget_source
+    group = source&.group_for(category)
+    group && budget_rows.find { |row| row.first == group }
   end
 
   # The categories left out of the forecast, by name.

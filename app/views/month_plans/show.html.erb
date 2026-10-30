@@ -61,15 +61,10 @@
         </div>
 
         <% plan.budget_rows.each do |row| %>
-          <div class="px-4 py-3 border-t border-divider space-y-2">
+          <%= link_to edit_month_plan_budget_group_path(row.group, month: plan.month.strftime("%Y-%m")), data: { turbo_frame: :modal },
+                class: "block px-4 py-3 border-t border-divider hover:bg-container-hover" do %>
             <%= render "month_plans/budget_row", plan: plan, row: row, currency: currency %>
-            <%# Fulas Bank: the subcategories given their own amount. %>
-            <% row.children.each do |child| %>
-              <div class="pl-8">
-                <%= render "month_plans/budget_row", plan: plan, row: child, currency: currency %>
-              </div>
-            <% end %>
-          </div>
+          <% end %>
         <% end %>
       <% else %>
         <p class="p-4 text-sm text-secondary"><%= t(".no_budget") %></p>

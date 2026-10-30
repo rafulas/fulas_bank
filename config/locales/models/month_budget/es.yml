@@ -1,0 +1,12 @@
+---
+es:
+  activerecord:
+    models:
+      budget_group: Presupuesto
+    attributes:
+      budget_group:
+        name: Nombre
+  month_budget:
+    errors:
+      no_categories: Elige al menos una categoría.
+      taken: "%{category} ya está en el presupuesto «%{budget}»."

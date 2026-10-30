@@ -92,17 +92,15 @@ class ForecastsController < ApplicationController
   end
 
   private
-    # A category with a budget that month: what is typed is its variable part,
-    # so its budget becomes that plus its recurring payments. A breakdown into
-    # subcategories that month gives way to the one amount.
+    # A category in a budget with an amount that month: what is typed is the
+    # budget's variable part, so that month's amount becomes it plus the
+    # recurring payments of the budget's categories.
     def update_month_budget(category, month)
-      main = category.parent || category
-      month_budget = MonthBudget.new(Current.family, user: Current.user, month: month)
-      recurring = Forecast::CategoryRecurring.new(Current.family).for(month).fetch(main.id.to_s, 0)
-      amounts = month_budget.amounts.transform_keys(&:to_s)
-      amounts[main.id.to_s] = (planned_amount + recurring).ceil
-      month_budget.subcategories_of(main).each { |sub| amounts[sub.id.to_s] = 0 }
-      month_budget.save_month!(amounts)
+      source = Forecast::BudgetSource.for_plan(variable_plan)
+      group = source.find_group(params[:budget_group_id]) || source.group_for(category)
+      return unless group
+
+      group.set_month_limit!(month, (planned_amount + source.recurring_of(group, month)).ceil)
     end
 
     def variable_plan

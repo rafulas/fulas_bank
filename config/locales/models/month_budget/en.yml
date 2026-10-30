@@ -1,0 +1,12 @@
+---
+en:
+  activerecord:
+    models:
+      budget_group: Budget
+    attributes:
+      budget_group:
+        name: Name
+  month_budget:
+    errors:
+      no_categories: Choose at least one category.
+      taken: "%{category} is already in the budget “%{budget}”."

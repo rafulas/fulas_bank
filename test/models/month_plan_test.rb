@@ -46,7 +46,7 @@ class MonthPlanTest < ActiveSupport::TestCase
   end
 
   test "spending ahead of the month's pace shows in red" do
-    row = MonthPlan::BudgetRow.new(category: @family.categories.new(name: "Gasolina"), budgeted: 300, spent: 177)
+    row = MonthPlan::BudgetRow.new(group: @family.budget_groups.new(name: "Gasolina"), budgeted: 300, spent: 177)
 
     assert plan.ahead_of_pace?(row), "59% spent with 45% of the month gone"
     assert_not plan.ahead_of_pace?(row.with(spent: 100))
@@ -58,7 +58,9 @@ class MonthPlanTest < ActiveSupport::TestCase
     @account.entries.create!(date: Date.new(2026, 10, 2), amount: 100, currency: "USD", name: "Súper",
                              entryable: Transaction.new(category: food))
     current = plan
-    current.stubs(:budget_rows).returns([ MonthPlan::BudgetRow.new(category: food, budgeted: 310, spent: 100, children: []) ])
+    group = @family.budget_groups.create!(name: "Comida plan")
+    group.group_categories.create!(category: food)
+    current.stubs(:budget_rows).returns([ MonthPlan::BudgetRow.new(group: group, budgeted: 310, spent: 100) ])
 
     pace = current.budget_pace
     assert_equal 31, pace[:days]
@@ -71,7 +73,6 @@ class MonthPlanTest < ActiveSupport::TestCase
   end
 
   test "no budget, no budget rows" do
-    assert_nil plan.budget
     assert_empty plan.budget_rows
     assert_nil plan.budget_pace
   end

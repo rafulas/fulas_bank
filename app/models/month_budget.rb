@@ -1,97 +1,195 @@
-# Fulas Bank: the budget as Bilance does it. One amount a month for each
-# category, repeated every month until it is changed; the total is the sum.
+# Fulas Bank: the budgets of a month, as Bilance does them (see BudgetGroup):
+# each one a name, the categories it groups and an amount from a month on.
+# The month's total is the sum of its budgets.
 #
-# Underneath it uses the app's monthly budgets (Budget and BudgetCategory),
-# so nothing is lost, but without their steps: no total typed first, no
-# "copy last month", no rollover or moving money between categories.
+# What a budget has spent is what went out in its categories that month,
+# minus what came back (refunds), never below zero. Left out, as in the
+# rest of the budget: transfers, one-off purchases ("Transacción puntual"),
+# movements excluded by hand and accounts left out of reports.
 #
-# - A month with no budget of its own takes the amounts of the latest month
-#   before it that has one (`ensure!`).
-# - Saving a month's amounts applies them to that month and to the later
-#   months already created, never to earlier ones.
-# - Amounts go on main categories; each covers its subcategories' spending.
-#   A main category can be broken down into its subcategories: then its
-#   amount is the sum of theirs, and each subcategory has its own limit.
+# The budgets kept month by month until now are turned into one-category
+# budgets the first time (BudgetGroup::Conversion).
 class MonthBudget
   attr_reader :family, :user, :month
+
+  # The owner of the budgets: nobody (the household's), unless the family
+  # keeps personal budgets.
+  def self.owner_id(family, user)
+    family.personal_budgets? && user ? user.id : nil
+  end
 
   def initialize(family, user:, month: Date.current)
     @family = family
     @user = user
-    @month = month.beginning_of_month
+    @month = month.to_date.beginning_of_month
   end
 
-  # The main categories a budget can be given, in the user's order.
+  # Every budget, with an amount this month or not, in the user's order.
+  def groups
+    @groups ||= begin
+      BudgetGroup::Conversion.ensure!(family)
+      family.budget_groups.where(user_id: owner_id).ordered
+            .includes(:limits, group_categories: :category).to_a
+    end
+  end
+
+  # The budgets with an amount this month.
+  def budgeted_groups
+    groups.select { |group| group.limit_for(month).positive? }
+  end
+
+  # { budget id => amount } this month, positive amounts only.
+  def amounts
+    budgeted_groups.to_h { |group| [ group.id, group.limit_for(month) ] }
+  end
+
+  def find_group(id)
+    groups.find { |group| group.id == id.to_s }
+  end
+
+  # The budget a movement of `category` counts in, if any.
+  def group_for(category)
+    groups.find { |group| group.covers?(category) }
+  end
+
+  # What a budget has spent this month.
+  def spent(group)
+    [ group.expanded_category_ids.sum { |id| spending_by_category.fetch(id, 0.to_d) }, 0 ].max
+  end
+
+  # { category id => spending } this month (refunds take it down).
+  def spending_by_category
+    @spending_by_category ||= spending_scope(month..month.end_of_month, budgeted_category_ids)
+                                .group("t.category_id").sum(Arel.sql(amount_sql))
+                                .to_h { |id, amount| [ id.to_s, amount.to_d ] }
+  end
+
+  # { date => spending } in the budgeted categories (or `category_ids`),
+  # from the first of the month to `last_day`, for the pace chart.
+  def daily_spending(last_day, category_ids = budgeted_category_ids)
+    spending_scope(month..last_day, category_ids)
+      .group(Arel.sql("entries.date")).sum(Arel.sql(amount_sql))
+      .to_h { |date, amount| [ date.to_date, amount.to_d ] }
+  end
+
+  # The categories already in a budget other than `except`: each category
+  # goes in one budget at most.
+  def taken_ids(except: nil)
+    groups.reject { |group| group == except }.flat_map(&:expanded_category_ids).to_set
+  end
+
+  # «Este mes y posteriores»: { budget id => amount } from this month on.
+  # A budget left out keeps its amounts.
+  def save!(new_amounts)
+    BudgetGroup.transaction do
+      new_amounts.to_h.each do |id, value|
+        group = find_group(id)
+        next unless group
+
+        amount = parse(value)
+        group.set_limit_from!(month, amount) unless amount == group.limit_for(month) && group.limits.none? { |limit| limit.month > month }
+      end
+    end
+    reset!
+    true
+  end
+
+  # A budget for each main category given an amount ({ category id =>
+  # amount }), named as the category, from this month on.
+  def create_for_categories!(new_amounts)
+    free = categories.reject { |category| taken_ids.include?(category.id.to_s) }.index_by { |category| category.id.to_s }
+    BudgetGroup.transaction do
+      new_amounts.to_h.each do |id, value|
+        category = free[id.to_s]
+        amount = parse(value)
+        next unless category && amount.positive?
+
+        group = family.budget_groups.new(user_id: owner_id, name: category.name, position: next_position)
+        group.group_categories.build(category: category)
+        group.save!
+        group.set_limit_from!(month, amount)
+      end
+    end
+    reset!
+  end
+
+  # Saves a budget's name, categories and amount from this month on.
+  # A main category chosen takes in its subcategories, so they are not kept
+  # apart; a category already in another budget is refused.
+  #
+  # @return [Boolean] false with the errors on the budget
+  def assign(group, name:, category_ids:, amount:)
+    group.name = name.to_s.strip
+    chosen = normalize(category_ids)
+    taken = taken_ids(except: group)
+    clash = chosen.flat_map { |category| [ category, *subcategories_of(category) ] }.find { |category| taken.include?(category.id.to_s) }
+
+    problems = []
+    problems << I18n.t("month_budget.errors.no_categories") if chosen.empty?
+    problems << I18n.t("month_budget.errors.taken", category: clash.name, budget: group_for(clash)&.name) if clash
+    valid = group.valid?
+    problems.each { |problem| group.errors.add(:base, problem) }
+    return false unless valid && problems.empty?
+
+    BudgetGroup.transaction do
+      group.position = next_position if group.new_record?
+      group.user_id = owner_id if group.new_record?
+      group.save!
+      group.group_categories.where.not(category_id: chosen.map(&:id)).delete_all
+      (chosen.map(&:id) - group.group_categories.reload.map(&:category_id)).each do |id|
+        group.group_categories.create!(category_id: id)
+      end
+      group.group_categories.reset
+      group.reload
+      amount = parse(amount)
+      group.set_limit_from!(month, amount) if amount != group.limit_for(month) || group.limits.none?
+    end
+    reset!
+    true
+  end
+
+  # The main categories a budget can group, in the user's order.
   def categories
     @categories ||= family.categories.roots.reject(&:analytics_neutral?).sort_by(&:display_sort_key)
   end
 
-  # The subcategories of a main category that can be given their own amount.
+  # The subcategories of a main category.
   def subcategories_of(category)
     subcategories_by_parent.fetch(category.id, [])
   end
 
-  # { category_id => amount } for the month, main categories and
-  # subcategories: its own, or else the latest earlier month's.
-  def amounts
-    source = initialized_budget || previous_budget
-    return {} unless source
-
-    source.budget_categories.to_h { |row| [ row.category_id, row[:budgeted_spending].to_d ] }
-  end
-
-  # Gives a month without a budget the amounts of the latest earlier month
-  # that has one. Returns the month's budget, or nil when there is nothing
-  # to carry forward.
-  def ensure!
-    return initialized_budget if initialized_budget
-
-    source = previous_budget
-    return unless source
-
-    budget = bootstrap(month)
-    return unless budget
-
-    budget.copy_from!(source)
-    @initialized_budget = budget
-  end
-
-  # Sets the month's amounts ({ category_id => amount }) and those of the
-  # later months already created. A main category with any subcategory
-  # amount gets the sum of those; otherwise its own, and its subcategories
-  # none (they share the main category's).
-  def save!(new_amounts)
-    clean = resolve(new_amounts)
-
-    Budget.transaction do
-      budgets = [ bootstrap(month), *later_budgets ].compact.uniq
-      budgets.each { |budget| apply(budget, clean) }
-    end
-
-    @initialized_budget = nil
-    true
-  end
-
-  # Fulas Bank: sets this month's amounts only, leaving the later months as
-  # they are (to write many months at once, each with its own amounts).
-  def save_month!(new_amounts)
-    clean = resolve(new_amounts)
-
-    Budget.transaction do
-      budget = bootstrap(month)
-      apply(budget, clean) if budget
-    end
-
-    @initialized_budget = nil
-    true
-  end
-
-  # Every category id a budget can carry: the main ones and their subcategories.
+  # Every category a budget can group: the main ones and their subcategories.
   def category_ids
     categories.map(&:id) + subcategories_by_parent.values.flatten.map(&:id)
   end
 
   private
+    def owner_id
+      self.class.owner_id(family, user)
+    end
+
+    def reset!
+      @groups = @spending_by_category = nil
+    end
+
+    def next_position
+      (groups.map(&:position).max || -1) + 1
+    end
+
+    def parse(value)
+      [ value.to_s.strip.delete(" €").then { |raw| raw.include?(",") ? raw.delete(".").tr(",", ".") : raw }.to_d, 0 ].max
+    end
+
+    # The chosen categories that can be grouped, a subcategory dropped when
+    # its main category is chosen too.
+    def normalize(ids)
+      wanted = Array(ids).map(&:to_s).to_set
+      allowed = categories + subcategories_by_parent.values.flatten
+      chosen = allowed.select { |category| wanted.include?(category.id.to_s) }
+      main_ids = chosen.reject(&:parent_id).map(&:id).to_set
+      chosen.reject { |category| category.parent_id && main_ids.include?(category.parent_id) }
+    end
+
     def subcategories_by_parent
       @subcategories_by_parent ||= family.categories.where(parent_id: categories.map(&:id))
                                          .reject(&:analytics_neutral?)
@@ -99,63 +197,34 @@ class MonthBudget
                                          .group_by(&:parent_id)
     end
 
-    def resolve(new_amounts)
-      typed = new_amounts.to_h.transform_keys(&:to_s)
-                         .transform_values { |value| [ value.to_s.tr(",", ".").to_d, 0 ].max }
+    def budgeted_category_ids
+      budgeted_groups.flat_map(&:expanded_category_ids).uniq
+    end
 
-      categories.each_with_object({}) do |category, result|
-        subs = subcategories_of(category).to_h { |sub| [ sub.id, typed.fetch(sub.id, 0.to_d) ] }
-
-        if subs.values.any?(&:positive?)
-          result.merge!(subs)
-          result[category.id] = subs.values.sum
-        else
-          subs.each_key { |id| result[id] = 0.to_d }
-          result[category.id] = typed[category.id] if typed.key?(category.id)
-        end
+    def report_account_ids
+      @report_account_ids ||= begin
+        accounts = family.accounts.included_in_reports
+        accounts = accounts.accessible_by(user) if user
+        accounts.pluck(:id)
       end
     end
 
-    def owner_scope
-      family.budgets.where(user_id: bootstrap_owner_id)
+    def amount_sql
+      "entries.amount * COALESCE(budget_rates.rate, 1)"
     end
 
-    # The owner the app gives the budgets it creates for this user (nobody,
-    # the shared one, unless the family keeps personal budgets).
-    def bootstrap_owner_id
-      family.personal_budgets? ? user&.id : nil
-    end
+    def spending_scope(range, category_ids)
+      return Entry.none if category_ids.empty?
 
-    def initialized_budget
-      return @initialized_budget if defined?(@initialized_budget) && @initialized_budget
-
-      @initialized_budget = owner_scope.where(start_date: period_start).where.not(budgeted_spending: nil).first
-    end
-
-    def previous_budget
-      owner_scope.where(start_date: ...period_start).where.not(budgeted_spending: nil).order(start_date: :desc).first
-    end
-
-    def later_budgets
-      owner_scope.where("start_date > ?", period_start).order(:start_date).to_a
-    end
-
-    def period_start
-      Budget.period_for(month, family: family).first
-    end
-
-    def bootstrap(date)
-      Budget.find_or_bootstrap(family, start_date: date, user: user, household: false)
-    end
-
-    def apply(budget, amounts)
-      rows = budget.budget_categories.includes(:category).to_a
-      rows.each do |row|
-        amount = amounts.fetch(row.category_id, row[:budgeted_spending].to_d)
-        row.update!(budgeted_spending: amount) if row[:budgeted_spending].to_d != amount
-      end
-
-      budget.update!(budgeted_spending: rows.reject(&:subcategory?).sum { |row| row[:budgeted_spending].to_d },
-                     expected_income: budget.expected_income || 0)
+      family.entries
+            .excluding_split_parents
+            .where(account_id: report_account_ids, entryable_type: "Transaction", excluded: false, date: range)
+            .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+            .joins(ActiveRecord::Base.sanitize_sql_array([
+              "LEFT JOIN exchange_rates budget_rates ON (budget_rates.date = entries.date AND budget_rates.from_currency = entries.currency AND budget_rates.to_currency = ?)",
+              family.currency
+            ]))
+            .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::BUDGET_EXCLUDED_KINDS)
+            .where("t.category_id IN (?)", category_ids)
     end
 end

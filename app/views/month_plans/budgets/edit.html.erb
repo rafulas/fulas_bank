@@ -1,8 +1,10 @@
 <% month_budget = @month_budget %>
+<% month_param = month_budget.month.strftime("%Y-%m") %>
+<% currency = Current.family.currency %>
 <%= render DS::Dialog.new do |dialog| %>
   <% dialog.with_header(title: t(".title", month: l(month_budget.month, format: "%B %Y"))) %>
   <% dialog.with_body do %>
-    <%= styled_form_with url: month_plan_budget_path(month: month_budget.month.strftime("%Y-%m")), method: :patch, class: "space-y-4",
+    <%= styled_form_with url: month_plan_budget_path(month: month_param), method: :patch, class: "space-y-4",
           data: { turbo_frame: :_top, controller: "month-budget" } do |form| %>
       <p class="text-sm text-secondary"><%= t(".hint") %></p>
 
@@ -21,51 +23,57 @@
         <% end %>
       </div>
 
-      <div class="space-y-3">
-        <% month_budget.categories.each do |category| %>
-          <% subcategories = month_budget.subcategories_of(category) %>
-          <div class="space-y-1" data-month-budget-target="group">
-            <div class="flex items-center gap-3">
-              <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+      <%= render DS::Link.new(text: t(".new_group"), icon: "plus", variant: :outline, size: :sm, full_width: true,
+            href: new_month_plan_budget_group_path(month: month_param), frame: :modal) %>
+
+      <% if @groups.any? %>
+        <section class="space-y-3">
+          <h3 class="text-sm font-medium text-primary"><%= t(".groups") %></h3>
+          <% @groups.each do |group| %>
+            <% category = group.display_category %>
+            <div class="flex items-center gap-3" data-month-budget-target="group">
+              <% if category %>
+                <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+              <% end %>
               <div class="min-w-0 grow">
-                <p class="text-sm text-primary truncate"><%= category.name %></p>
-                <% if (average = @estimate[category.id]) %>
-                  <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, Current.family.currency), precision: 0)) %></p>
+                <%= link_to group.name, edit_month_plan_budget_group_path(group, month: month_param), data: { turbo_frame: :modal },
+                      class: "block text-sm text-primary truncate hover:underline" %>
+                <p class="text-xs text-secondary truncate"><%= group.category_names.join(", ") %></p>
+                <% if (average = @group_estimates[group.id]) && average.positive? %>
+                  <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, currency), precision: 0)) %></p>
                 <% end %>
               </div>
               <div class="w-32 shrink-0">
-                <%= render "month_plans/budgets/amount_field", category: category, amount: @amounts[category.id], suggested: @estimate[category.id], target: "main" %>
+                <%= render "month_plans/budgets/amount_field", name: "amounts[#{group.id}]", label: t(".amount_for", category: group.name),
+                      amount: @amounts[group.id], suggested: @group_estimates[group.id] %>
               </div>
             </div>
+          <% end %>
+        </section>
+      <% end %>
 
-            <% if subcategories.any? %>
-              <% broken_down = subcategories.any? { |sub| @amounts[sub.id]&.positive? } %>
-              <%= render DS::Disclosure.new(variant: :inline, open: broken_down, body_class: "mt-1 space-y-1 pl-9") do |disclosure| %>
-                <% disclosure.with_summary_content do %>
-                  <span class="inline-flex items-center gap-1 pl-9 text-xs text-secondary hover:text-primary">
-                    <%= icon "chevron-right", size: "xs", class: "group-open:rotate-90 motion-safe:transition-transform" %>
-                    <%= t(".break_down", count: subcategories.size) %>
-                  </span>
+      <% if @free_categories.any? %>
+        <section class="space-y-3">
+          <h3 class="text-sm font-medium text-primary"><%= t(".free_categories") %></h3>
+          <p class="text-xs text-secondary"><%= t(".free_categories_hint") %></p>
+          <% @free_categories.each do |category| %>
+            <% average = @estimate[category.id.to_s] %>
+            <div class="flex items-center gap-3" data-month-budget-target="group">
+              <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+              <div class="min-w-0 grow">
+                <p class="text-sm text-primary truncate"><%= category.name %></p>
+                <% if average %>
+                  <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, currency), precision: 0)) %></p>
                 <% end %>
-                <% subcategories.each do |sub| %>
-                  <div class="flex items-center gap-3">
-                    <div class="min-w-0 grow">
-                      <p class="text-sm text-primary truncate"><%= sub.name %></p>
-                      <% if (average = @estimate[sub.id]) %>
-                        <p class="text-xs text-secondary privacy-sensitive"><%= t(".average", amount: format_money(Money.new(average, Current.family.currency), precision: 0)) %></p>
-                      <% end %>
-                    </div>
-                    <div class="w-32 shrink-0">
-                      <%= render "month_plans/budgets/amount_field", category: sub, amount: @amounts[sub.id], suggested: @estimate[sub.id], target: "sub" %>
-                    </div>
-                  </div>
-                <% end %>
-                <p class="text-xs text-secondary"><%= t(".break_down_hint") %></p>
-              <% end %>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
+              </div>
+              <div class="w-32 shrink-0">
+                <%= render "month_plans/budgets/amount_field", name: "new_amounts[#{category.id}]", label: t(".amount_for", category: category.name),
+                      amount: (average if @prefilled), suggested: average %>
+              </div>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
 
       <%= form.submit t(".submit") %>
     <% end %>
