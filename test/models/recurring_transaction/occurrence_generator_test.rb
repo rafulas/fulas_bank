@@ -35,6 +35,17 @@ class RecurringTransaction::OccurrenceGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  test "an end date set after a payment fell due drops that unpaid payment" do
+    travel_to Date.new(2026, 10, 13) do
+      Generator.new(@series).generate!
+      overdue = @series.recurring_occurrences.find_by!(due_on: Date.new(2026, 10, 5))
+
+      @series.update!(end_mode: "on_date", end_on: Date.new(2025, 6, 30))
+
+      assert_not RecurringOccurrence.exists?(overdue.id), "a payment after the series ended is not owed"
+    end
+  end
+
   test "regenerate_future! respects closed and allocated rows" do
     travel_to Date.new(2026, 8, 13) do
       Generator.new(@series).generate!

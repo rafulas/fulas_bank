@@ -30,6 +30,7 @@ class RecurringTransaction
 
       through ||= default_horizon(schedule)
 
+      prune_past_end!
       upsert_window(from, through)
     end
 
@@ -41,8 +42,23 @@ class RecurringTransaction
             .where("due_on >= ?", Date.current)
             .where.not(id: RecurringAllocation.select(:recurring_occurrence_id))
             .delete_all
+      prune_past_end!
 
       generate!(through: through)
+    end
+
+    # Fulas Bank: unpaid rows dated after the series' end date. An end date set
+    # after a payment had already fallen due (a rent ended in June, edited in
+    # October) left that month showing as overdue in Planes. Rows carrying a
+    # payment are history and stay.
+    def prune_past_end!
+      return 0 unless series.ends_on_date? && series.end_on.present?
+
+      series.recurring_occurrences
+            .open_status
+            .where("due_on > ?", series.end_on)
+            .where.not(id: RecurringAllocation.select(:recurring_occurrence_id))
+            .delete_all
     end
 
     # Materializes a past window (catch-up/backfill). The caller decides what

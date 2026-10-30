@@ -55,6 +55,31 @@ class Forecast::VariableEstimateTest < ActiveSupport::TestCase
     assert_equal BigDecimal("170"), estimate.spent(@account, Date.new(2026, 9, 1))
   end
 
+  test "money put into investments is not variable spending" do
+    root = @family.categories.find_by(name: "Inversiones", parent_id: nil) ||
+           @family.categories.create!(name: "Inversiones", color: "#a448d8")
+    funds = @family.categories.find_by(name: "Inversiones financieras") ||
+            @family.categories.create!(name: "Inversiones financieras", color: "#a448d8", parent: root)
+    pension = @family.categories.create!(name: "Plan pensiones prueba", color: "#a448d8", parent: root)
+
+    spend(100, Date.new(2026, 9, 2))
+    spend(280, Date.new(2026, 9, 3), category: funds)
+    spend(500, Date.new(2026, 9, 4), category: pension)
+
+    assert_equal BigDecimal("100"), estimate.monthly(@account, Date.new(2026, 10, 1))
+  end
+
+  test "all accounts together leave out months with no spending at all" do
+    # An old movement that is not variable spending makes the account look
+    # covered from 2024, but those months have no data.
+    spend(-50, Date.new(2024, 3, 1))
+    spend(400, Date.new(2026, 8, 3))
+    spend(200, Date.new(2026, 9, 3))
+
+    assert_equal [ Date.new(2026, 9, 1), Date.new(2026, 8, 1) ], estimate.combined_sample_months(Date.new(2026, 11, 1))
+    assert_equal BigDecimal("300"), estimate.combined_monthly(Date.new(2026, 11, 1))
+  end
+
   test "a movement of a recurring series marked variable counts" do
     bill = spend(80, Date.new(2026, 9, 9), expense_type: "variable")
     pay_with(bill)

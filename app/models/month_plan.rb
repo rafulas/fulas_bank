@@ -340,6 +340,16 @@ class MonthPlan
             .where.not(status: "skipped")
             .includes(recurring_transaction: [ :merchant, :category ])
             .to_a
+            .reject { |occurrence| past_series_end?(occurrence) }
+    end
+
+    # Fulas Bank: a payment dated after its series ended (an unpaid row left
+    # from before the end date was set) is not owed.
+    def past_series_end?(occurrence)
+      return false if occurrence.paid?
+
+      series = occurrence.recurring_transaction
+      series.ends_on_date? && series.end_on.present? && occurrence.effective_due_on > series.end_on
     end
 
     # :paid, :today, :overdue (its date passed without payment) or :expected.
