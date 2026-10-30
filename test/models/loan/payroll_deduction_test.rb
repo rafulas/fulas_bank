@@ -65,4 +65,43 @@ class Loan::PayrollDeductionTest < ActiveSupport::TestCase
     assert_equal 2, @loan.payment_links.joins(:entry).where(entries: { date: dates }).count
     assert_empty Loan::PayrollDeduction.new(@loan.reload).pairs_elsewhere(since: dates.first.beginning_of_month)
   end
+
+  test "one payslip line covering two staff loans is shared between them" do
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+    master_account = @family.accounts.create!(
+      name: "Préstamo Master", balance: 5_000, currency: "USD",
+      accountable: Loan.new(initial_balance: 8_000, interest_rate: 0, rate_type: "fixed", term_months: 60,
+                            start_date: Date.current - 2.years, payment_day: 19)
+    )
+    master = master_account.loan
+    master.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+
+    reforma_deduction = Loan::PayrollDeduction.new(@loan.reload)
+    master_deduction = Loan::PayrollDeduction.new(master.reload)
+    date = (Date.current << 1).change(day: 19)
+    reforma_part = reforma_deduction.instalment_on(date)
+    master_part = master_deduction.instalment_on(date)
+
+    income = @fake.entries.create!(name: "BBVA Nómina Préstamos", date: date, amount: -(reforma_part + master_part), currency: "USD",
+                                   entryable: Transaction.new(category: @nomina))
+    @fake.entries.create!(name: "Préstamo Reforma", date: date, amount: reforma_part, currency: "USD", entryable: Transaction.new(category: @reforma))
+    @fake.entries.create!(name: "Préstamo Master", date: date, amount: master_part, currency: "USD", entryable: Transaction.new(category: @reforma))
+
+    pairs = reforma_deduction.pairs_elsewhere(since: date.beginning_of_month)
+    assert_equal 1, pairs.size
+    assert pairs.first.shared
+    reforma_deduction.move!(pairs)
+
+    assert_equal(-master_part, income.reload.amount, "the rest of the payslip line stays for the other loan")
+    assert_equal(-reforma_part, @loan_account.entries.joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
+                                             .where("entries.amount < 0").where(date: date).sum(:amount))
+
+    master_pairs = Loan::PayrollDeduction.new(master.reload).pairs_elsewhere(since: date.beginning_of_month)
+    assert_equal [ income ], master_pairs.map(&:income)
+    assert_not master_pairs.first.shared
+    Loan::PayrollDeduction.new(master).move!(master_pairs)
+
+    assert_equal 0, @fake.entries.count, "the made-up account is left empty"
+    assert_equal 1, master.payment_links.count
+  end
 end

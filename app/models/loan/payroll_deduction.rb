@@ -22,7 +22,10 @@ class Loan::PayrollDeduction
   # How far a pair's amount may be from the instalment, as a share of it.
   AMOUNT_TOLERANCE = BigDecimal("0.01")
 
-  Pair = Data.define(:date, :income, :expense) do
+  # `shared`: the income covers this instalment and others of that day (one
+  # payslip line for several staff loans); moving takes only this
+  # instalment's part of it.
+  Pair = Data.define(:date, :income, :expense, :shared) do
     def amount
       expense.amount
     end
@@ -101,19 +104,32 @@ class Loan::PayrollDeduction
   # Fake»): on the same day, in the same account, money in and the same money
   # out, about this loan's instalment. Not those already linked to another
   # loan. Oldest first.
+  #
+  # Fulas Bank: one income can also cover several instalments of that day
+  # (427,54 € in, 303,57 € and 123,97 € out for two staff loans), when it is
+  # exactly what goes out of that account that day. The pair then shares it.
   def pairs_elsewhere(since:)
-    expenses = candidate_entries(since).select { |entry| entry.amount.positive? && instalment_like?(entry) }
-    incomes = candidate_entries(since).select { |entry| entry.amount.negative? }.group_by { |entry| [ entry.account_id, entry.date ] }
+    entries = candidate_entries(since)
+    expenses = entries.select { |entry| entry.amount.positive? && instalment_like?(entry) }
+    incomes = entries.select { |entry| entry.amount.negative? }.group_by { |entry| [ entry.account_id, entry.date ] }
+    spent = entries.select { |entry| entry.amount.positive? }.group_by { |entry| [ entry.account_id, entry.date ] }
+                   .transform_values { |list| list.sum(&:amount) }
     taken = Set.new
 
     expenses.sort_by(&:date).filter_map do |expense|
-      income = Array(incomes[[ expense.account_id, expense.date ]]).find do |entry|
-        !taken.include?(entry.id) && entry.amount.abs == expense.amount
+      key = [ expense.account_id, expense.date ]
+      candidates = Array(incomes[key]).reject { |entry| taken.include?(entry.id) }
+
+      if (income = candidates.find { |entry| entry.amount.abs == expense.amount })
+        taken << income.id
+        next Pair.new(date: expense.date, income: income, expense: expense, shared: false)
       end
+
+      income = candidates.find { |entry| entry.amount.abs > expense.amount && entry.amount.abs == spent[key] }
       next unless income
 
       taken << income.id
-      Pair.new(date: expense.date, income: income, expense: expense)
+      Pair.new(date: expense.date, income: income, expense: expense, shared: true)
     end
   end
 
@@ -124,7 +140,11 @@ class Loan::PayrollDeduction
 
     count = Entry.transaction do
       pairs.count do |pair|
-        pair.income.update!(account: account)
+        if pair.shared
+          take_share!(pair)
+        else
+          pair.income.update!(account: account)
+        end
         pair.expense.update!(account: account)
         loan.link_payment!(pair.expense) unless Loan::PaymentLink.exists?(entry_id: pair.expense.id)
         link_to_series(pair.expense)
@@ -153,8 +173,22 @@ class Loan::PayrollDeduction
         )
         loan.link_payment!(expense)
         link_to_series(expense)
-        Pair.new(date: date, income: income, expense: expense)
+        Pair.new(date: date, income: income, expense: expense, shared: false)
       end
+    end
+
+    # This instalment's part of an income that covers several: a copy of the
+    # income for that amount goes to the loan, and the rest stays where it was
+    # (the other loans' part, which they take the same way).
+    def take_share!(pair)
+      income = pair.income
+      part = pair.expense.amount
+
+      account.entries.create!(
+        name: income.name, date: income.date, amount: -part, currency: income.currency, notes: income.notes,
+        entryable: Transaction.new(category: income.entryable.category, merchant: income.entryable.merchant)
+      )
+      income.update!(amount: income.amount + part)
     end
 
     def paid_in_month?(date)
