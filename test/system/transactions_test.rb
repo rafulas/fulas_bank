@@ -287,22 +287,22 @@ class TransactionsTest < ApplicationSystemTestCase
     # (Turbo morph) just after it loads, which would close the calendar.
     visit new_transaction_path
 
+    calendar = "[data-controller='date-field'] [role='dialog']"
     find("button[aria-label='Open the calendar']").click
-    calendar = find("[data-controller='date-field'] [role='dialog']")
-    month = calendar.find("span.font-semibold").text
+    month = find("#{calendar} span.font-semibold").text
 
-    calendar.find("button[aria-label='Next month']").click
-    calendar.find("button[aria-label='Next month']").click
+    find("#{calendar} button[aria-label='Next month']").click
+    find("#{calendar} button[aria-label='Next month']").click
 
-    assert_selector "[data-controller='date-field'] [role='dialog']"
-    assert_not_equal month, calendar.find("span.font-semibold").text
+    assert_selector calendar
+    assert_no_selector "#{calendar} span.font-semibold", text: month, exact_text: true
 
     box = page.evaluate_script("(() => { const r = document.querySelector(\"[data-controller='date-field'] [role='dialog']\").getBoundingClientRect(); return [r.top, r.bottom, window.innerHeight]; })()")
     assert_operator box[0], :>=, 0
     assert_operator box[1], :<=, box[2], "the calendar is not cut off at the bottom"
 
-    calendar.find("button[aria-label^='15 ']").click
-    assert_no_selector "[data-controller='date-field'] [role='dialog']"
+    find("#{calendar} button[aria-label^='15 ']").click
+    assert_no_selector calendar
     target = Date.current.beginning_of_month.next_month(2).change(day: 15)
     assert_equal target.iso8601, find("input[type='date'][name='entry[date]']").value
   end

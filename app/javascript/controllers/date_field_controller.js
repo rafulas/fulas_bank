@@ -89,6 +89,11 @@ export default class extends Controller {
       "fixed z-50 w-80 max-w-[calc(100vw-1rem)] p-3 m-0 border-0 rounded-xl bg-container text-primary shadow-border-lg space-y-3";
     this.panel.setAttribute("role", "dialog");
     this.panel.style.inset = "auto";
+    // A Turbo page refresh (morph) would remove the open calendar, which is
+    // not in the server's HTML: keep it until it is closed.
+    this.panel.addEventListener("turbo:before-morph-element", (event) =>
+      event.preventDefault(),
+    );
     const popover = typeof this.panel.showPopover === "function";
     if (popover) this.panel.setAttribute("popover", "manual");
     this.holder.appendChild(this.panel);
