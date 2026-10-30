@@ -3,15 +3,11 @@ class Transactions::BulkUpdatesController < ApplicationController
   end
 
   def create
-    # Skip split parents from bulk update - update children instead.
-    # Fulas Bank: transfers can now be selected (to confirm the «Auto» ones
-    # at once) but are not edited here.
+    # Skip split parents from bulk update - update children instead
     entries = Current.family
                      .entries
                      .excluding_split_parents
                      .where(id: bulk_update_params[:entry_ids])
-                     .where.not(entryable_id: Transfer.select(:inflow_transaction_id))
-                     .where.not(entryable_id: Transfer.select(:outflow_transaction_id))
                      .includes(:entryable)
 
     updated = entries.bulk_update!(bulk_update_params, update_tags: tags_provided?)
