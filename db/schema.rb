@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -384,6 +384,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_130000) do
     t.index ["budget_id"], name: "index_budget_categories_on_budget_id"
     t.index ["category_id"], name: "index_budget_categories_on_category_id"
     t.check_constraint "rolled_over_amount >= 0::numeric", name: "chk_budget_categories_rolled_over_amount_non_negative"
+  end
+
+  create_table "budget_group_categories", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "budget_group_id", null: false
+    t.uuid "category_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["budget_group_id", "category_id"], name: "index_budget_group_categories_unique", unique: true
+    t.index ["budget_group_id"], name: "index_budget_group_categories_on_budget_group_id"
+    t.index ["category_id"], name: "index_budget_group_categories_on_category_id"
+  end
+
+  create_table "budget_group_limits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.uuid "budget_group_id", null: false
+    t.datetime "created_at", null: false
+    t.date "month", null: false
+    t.datetime "updated_at", null: false
+    t.index ["budget_group_id", "month"], name: "index_budget_group_limits_on_budget_group_id_and_month", unique: true
+    t.index ["budget_group_id"], name: "index_budget_group_limits_on_budget_group_id"
+  end
+
+  create_table "budget_groups", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id"
+    t.index ["family_id"], name: "index_budget_groups_on_family_id"
+    t.index ["user_id"], name: "index_budget_groups_on_user_id"
   end
 
   create_table "budget_shares", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -914,6 +945,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_130000) do
     t.string "assistant_type", default: "builtin", null: false
     t.boolean "auto_sync_on_login", default: true, null: false
     t.string "bills_feed_token"
+    t.datetime "budget_groups_converted_at"
     t.decimal "categorization_confidence_threshold", precision: 3, scale: 2, default: "0.7", null: false
     t.string "categorization_provider", default: "llm", null: false
     t.decimal "categorization_shadow_rate", precision: 3, scale: 2, default: "0.0", null: false
@@ -3217,6 +3249,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_130000) do
   add_foreign_key "brex_items", "families"
   add_foreign_key "budget_categories", "budgets", on_delete: :cascade
   add_foreign_key "budget_categories", "categories"
+  add_foreign_key "budget_group_categories", "budget_groups", on_delete: :cascade
+  add_foreign_key "budget_group_categories", "categories", on_delete: :cascade
+  add_foreign_key "budget_group_limits", "budget_groups", on_delete: :cascade
+  add_foreign_key "budget_groups", "families"
+  add_foreign_key "budget_groups", "users", on_delete: :cascade
   add_foreign_key "budget_shares", "users", column: "owner_id"
   add_foreign_key "budget_shares", "users", column: "viewer_id"
   add_foreign_key "budgets", "families"

@@ -23,11 +23,13 @@ class Forecast::BudgetSourceTest < ActiveSupport::TestCase
 
     assert_equal BigDecimal("47"), expected[@insurance.id.to_s], "a subcategory counts in its main one"
     assert_not expected.key?(@food.id.to_s), "income is not a recurring expense"
+    assert_equal BigDecimal("47"), Forecast::CategoryRecurring.new(@family).total(@next_month, [ sub.id ])
+    assert_equal 0, Forecast::CategoryRecurring.new(@family).total(@next_month, [ @insurance.id ])
   end
 
   test "a category with a budget counts its budget minus its recurring payments, the others their average" do
     series(name: "Mapfre", amount: 47, category: @insurance)
-    MonthBudget.new(@family, user: @user, month: @next_month).save!(@insurance.id => "100")
+    group = budget_group("Seguros", [ @insurance ], 100)
     other = @family.categories.create!(name: "Otro prueba", color: "#000000")
     [ 2, 3 ].each do |back|
       month = @today.beginning_of_month << back
@@ -36,7 +38,8 @@ class Forecast::BudgetSourceTest < ActiveSupport::TestCase
     end
 
     source = Forecast::BudgetSource.new(@family, user: @user, today: @today)
-    assert_equal({ @insurance.id.to_s => BigDecimal("53") }, source.variable_parts(@next_month).slice(@insurance.id.to_s))
+    assert_equal({ group.id => BigDecimal("53") }, source.variable_parts(@next_month))
+    assert_equal({}, source.variable_parts(@today), "this month keeps the average")
 
     estimate = Forecast::VariableEstimate.new(@family, accounts: [ @account ], today: @today, budget_source: source)
     # The insurance's own history (900) gives way to its budget: 200 + 53.
@@ -58,7 +61,38 @@ class Forecast::BudgetSourceTest < ActiveSupport::TestCase
     assert_equal 60, planner.months.size
   end
 
+  test "a budget that groups several categories counts their spending and bills together" do
+    car = @family.categories.create!(name: "Coche prueba", color: "#000000")
+    fuel = @family.categories.create!(name: "Gasolina prueba", color: "#000000", parent: car)
+    series(name: "Mapfre", amount: 47, category: @insurance)
+    [ 2, 3 ].each do |back|
+      month = @today.beginning_of_month << back
+      create_transaction(account: @account, name: "Repsol", amount: 60, date: month + 4, category: fuel)
+      create_transaction(account: @account, name: "Seguro raro", amount: 20, date: month + 5, category: @insurance)
+    end
+    group = budget_group("Coche y seguros", [ fuel, @insurance ], 0)
+
+    planner = Forecast::BudgetPlanner.new(@family, user: @user, accounts: [ @account ], today: @today)
+    assert_equal BigDecimal("127"), planner.amounts_for(@next_month)[group.id], "60 + 20 of variable spending plus the 47 bill"
+    assert_not planner.amounts_for(@next_month).key?(car.id.to_s), "the car is in a budget through its subcategory"
+
+    planner.apply!
+    assert_equal BigDecimal("127"), group.reload.limit_for(@next_month)
+    assert_equal 0, group.limit_for(@today), "this month stays as it was"
+
+    source = Forecast::BudgetSource.new(@family, user: @user, today: @today)
+    assert_equal BigDecimal("80"), source.variable_parts(@next_month)[group.id]
+    assert_equal [ fuel.id.to_s, @insurance.id.to_s ].sort, source.covered_ids(@next_month).sort
+  end
+
   private
+    def budget_group(name, categories, amount)
+      group = @family.budget_groups.create!(name: name)
+      categories.each { |category| group.group_categories.create!(category: category) }
+      group.set_limit_from!(@next_month, amount)
+      group
+    end
+
     def series(name:, amount:, category:)
       day = 10
       @family.recurring_transactions.create!(

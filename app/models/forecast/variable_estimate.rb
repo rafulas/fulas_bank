@@ -132,7 +132,14 @@ class Forecast::VariableEstimate
   # in `month`, by the same trimmed mean as the whole (its own months, the
   # same samples), its subcategories included. Used to build budgets.
   def category_monthly(month, main_category_id)
-    ids = category_tree_ids(main_category_id)
+    categories_monthly(month, category_tree_ids(main_category_id))
+  end
+
+  # The same for a set of categories together (`ids`, as strings).
+  def categories_monthly(month, ids)
+    ids = ids.map(&:to_s).to_set
+    return 0.to_d if ids.empty?
+
     values = combined_sample_months(month).map do |sample|
       monthly_totals.sum do |account_id, months|
         by_category = months[sample.beginning_of_month] || {}

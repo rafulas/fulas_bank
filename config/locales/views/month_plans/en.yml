@@ -19,10 +19,10 @@ en:
       spent: "%{amount} spent"
       left_to_spend: "%{amount} left to spend"
       over_budget: "%{amount} over budget"
-      no_budget: "This month has no budget. Press Add budget and set how much you want to spend on each category."
+      no_budget: "This month has no budget. Press Add budget: set one per category or create budgets that group several, such as “Restaurants and bars”."
       edit_budget: Edit budget
       plan_budgets: Create the next 5 years' budgets from the forecast
-      plan_budgets_confirm: "Each of the next 60 months gets its budget: what you usually spend on variable things that month plus that month's bills, by category. It replaces any budget from next month on. Continue?"
+      plan_budgets_confirm: "Each of the next 60 months gets its budget: what you usually spend on variable things that month plus that month's bills, by budget (and a new one for each main category in none). It replaces any budget from next month on. Continue?"
       add_budget: Add budget
       recurring: Recurring
       paid_so_far: paid so far
@@ -61,17 +61,36 @@ en:
         expected: Pending
     budgets:
       edit:
-        title: "Budget from %{month}"
-        hint: "How much you want to spend each month on each category. It repeats every month until you change it; earlier months stay as they were. Leave empty what you do not want to budget."
+        title: "Budgets from %{month}"
+        hint: "How much you want to spend each month on each budget. It repeats every month until you change it; earlier months stay as they were. Leave empty what you do not want to budget."
         average: "You usually spend %{amount} a month"
         amount_for: "%{category} budget"
         prefilled: "This is your first budget: it comes filled in with what you usually spend on each category. Change anything before saving."
         total: "Monthly total:"
         suggest: Fill in with what you usually spend
-        break_down:
-          one: Break down by its subcategory
-          other: "Break down by its %{count} subcategories"
-        break_down_hint: Once a subcategory has an amount, the main category becomes the sum of them all.
+        new_group: New budget (group any categories)
+        groups: Your budgets
+        free_categories: Categories without a budget
+        free_categories_hint: Type an amount and the category gets a budget of its own, with its subcategories.
         submit: Save
       update:
         success: Budget saved.
+    budget_groups:
+      saved: Budget saved.
+      new:
+        title: New budget
+      edit:
+        title: Edit budget
+      destroy:
+        success: Budget deleted.
+      form:
+        name: Name
+        name_placeholder: "For example, Restaurants and bars"
+        amount: "Monthly amount from %{month}"
+        amount_hint: It repeats every month until you change it; earlier months stay as they were.
+        categories: Categories
+        categories_hint: Tick the categories or subcategories it covers, from one or several main categories. A main category includes all its subcategories. Each category can be in one budget only.
+        in_budget: "In “%{name}”"
+        submit: Save
+        delete: Delete budget
+        delete_confirm: "Delete the budget “%{name}”? Its transactions do not change."

@@ -16,15 +16,16 @@
         <% if (category = @category_row.category) && (budget_row = @breakdown.budget_row_for(category)) %>
           <%# Fulas Bank: the budget rules this category; what is typed is its
               variable part, and its budget becomes that plus its recurring payments. %>
-          <% main, budget, recurring, part = budget_row %>
+          <% group, budget, recurring, part = budget_row %>
           <section class="rounded-xl bg-container-inset p-4 space-y-3">
-            <h3 class="text-sm font-medium text-primary first-letter:uppercase"><%= t(".budget_title", category: main.name, month: l(@month, format: "%B")) %></h3>
+            <h3 class="text-sm font-medium text-primary first-letter:uppercase"><%= t(".budget_title", category: group.name, month: l(@month, format: "%B")) %></h3>
             <p class="text-sm text-primary privacy-sensitive"><%= t(".budget_line", budget: format_money(Money.new(budget, currency)), recurring: format_money(Money.new(recurring, currency)), part: format_money(Money.new(part, currency))) %></p>
             <p class="text-xs text-secondary"><%= t(".budget_hint") %></p>
             <%= styled_form_with url: variable_category_forecast_path, method: :patch, class: "space-y-3", data: { turbo_frame: :modal } do |form| %>
               <%= hidden_field_tag :op, "budget" %>
               <%= hidden_field_tag :month, @month.iso8601 %>
-              <%= hidden_field_tag :category_id, main.id %>
+              <%= hidden_field_tag :category_id, category.id %>
+              <%= hidden_field_tag :budget_group_id, group.id %>
               <%= hidden_field_tag :return_category, @category_row.key %>
               <%= form.number_field :amount, label: t(".budget_amount"), min: 0, step: 1, value: part.to_i, name: "amount" %>
               <%= form.submit t(".budget_save", month: l(@month, format: "%B")) %>
@@ -142,9 +143,9 @@
             <h3 class="text-sm font-medium text-primary first-letter:uppercase"><%= t(".budgets", month: l(@month, format: "%B")) %></h3>
             <p class="text-xs text-secondary"><%= t(".budgets_hint") %></p>
             <div class="rounded-xl bg-container shadow-border-xs divide-y divide-divider">
-              <% budget_rows.each do |main, budget, recurring, part| %>
+              <% budget_rows.each do |group, budget, recurring, part| %>
                 <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                  <span class="truncate text-primary"><%= main.name %></span>
+                  <span class="truncate text-primary"><%= group.name %></span>
                   <span class="text-xs text-secondary privacy-sensitive whitespace-nowrap"><%= format_money(Money.new(budget, currency), precision: 0) %> − <%= format_money(Money.new(recurring, currency), precision: 0) %> =</span>
                   <span class="privacy-sensitive font-amount text-primary whitespace-nowrap"><%= format_money(Money.new(part, currency), precision: 0) %></span>
                 </div>

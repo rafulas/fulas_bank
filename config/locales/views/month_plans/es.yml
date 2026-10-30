@@ -19,10 +19,10 @@ es:
       spent: "%{amount} gastado"
       left_to_spend: "%{amount} para gastar"
       over_budget: "%{amount} sobre presupuesto"
-      no_budget: "Este mes no tiene presupuesto. Pulsa «Añadir presupuesto» y pon cuánto quieres gastar en cada categoría."
+      no_budget: "Este mes no tiene presupuesto. Pulsa «Añadir presupuesto»: puedes ponerlo por categoría o crear presupuestos que agrupen varias, como «Restaurantes y bares»."
       edit_budget: Editar presupuesto
       plan_budgets: Crear presupuestos de los próximos 5 años desde la previsión
-      plan_budgets_confirm: "Se crea el presupuesto de cada uno de los próximos 60 meses, con lo que sueles gastar en lo variable ese mes más los recibos de ese mes, por categoría. Sustituye los presupuestos que ya hubiera a partir del mes que viene. ¿Seguir?"
+      plan_budgets_confirm: "Se crea el presupuesto de cada uno de los próximos 60 meses, con lo que sueles gastar en lo variable ese mes más los recibos de ese mes, por presupuesto (y uno nuevo para cada categoría principal que no esté en ninguno). Sustituye los presupuestos que ya hubiera a partir del mes que viene. ¿Seguir?"
       add_budget: Añadir presupuesto
       recurring: Recurrentes
       paid_so_far: pagado hasta ahora
@@ -61,17 +61,36 @@ es:
         expected: Pendiente
     budgets:
       edit:
-        title: "Presupuesto desde %{month}"
-        hint: "Cuánto quieres gastar al mes en cada categoría. Se repite cada mes hasta que lo cambies; los meses anteriores no cambian. Deja vacío lo que no quieras presupuestar."
+        title: "Presupuestos desde %{month}"
+        hint: "Cuánto quieres gastar al mes en cada presupuesto. Se repite cada mes hasta que lo cambies; los meses anteriores no cambian. Deja vacío lo que no quieras presupuestar."
         average: "Sueles gastar %{amount} al mes"
         amount_for: "Presupuesto de %{category}"
         prefilled: "Este es tu primer presupuesto: viene relleno con lo que sueles gastar en cada categoría. Cambia lo que quieras antes de guardar."
         total: "Total al mes:"
         suggest: Rellenar con lo que sueles gastar
-        break_down:
-          one: Detallar por su subcategoría
-          other: "Detallar por sus %{count} subcategorías"
-        break_down_hint: Si pones importe en alguna subcategoría, la categoría principal pasa a ser la suma de todas.
+        new_group: Nuevo presupuesto (agrupa las categorías que quieras)
+        groups: Tus presupuestos
+        free_categories: Categorías sin presupuesto
+        free_categories_hint: Pon un importe y la categoría tendrá su propio presupuesto, con sus subcategorías.
         submit: Guardar
       update:
         success: Presupuesto guardado.
+    budget_groups:
+      saved: Presupuesto guardado.
+      new:
+        title: Nuevo presupuesto
+      edit:
+        title: Editar presupuesto
+      destroy:
+        success: Presupuesto eliminado.
+      form:
+        name: Nombre
+        name_placeholder: "Por ejemplo, Restaurantes y bares"
+        amount: "Importe al mes desde %{month}"
+        amount_hint: Se repite cada mes hasta que lo cambies; los meses anteriores no cambian.
+        categories: Categorías
+        categories_hint: Marca las categorías o subcategorías que entran, de una o de varias categorías principales. Una categoría principal incluye todas sus subcategorías. Cada categoría solo puede estar en un presupuesto.
+        in_budget: "En «%{name}»"
+        submit: Guardar
+        delete: Eliminar presupuesto
+        delete_confirm: "¿Eliminar el presupuesto «%{name}»? Sus movimientos no cambian."

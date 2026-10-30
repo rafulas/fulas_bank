@@ -814,6 +814,8 @@ Rails.application.routes.draw do
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do
     resource :budget, only: %i[edit update], module: :month_plans
+    # Fulas Bank: budgets that group several categories, as in Bilance.
+    resources :budget_groups, only: %i[new create edit update destroy], module: :month_plans, path: "presupuestos"
   end
   resource :loans_overview, only: :show, path: "prestamos"
   resource :debt_plan, only: %i[show update], path: "prestamos/plan" do

@@ -15,13 +15,13 @@ es:
     update_columns:
       success: Tabla actualizada.
     variable:
-      budget_title: "Presupuesto de %{category} en %{month}"
+      budget_title: "Presupuesto «%{category}» en %{month}"
       budget_line: "Presupuesto %{budget} − recurrentes %{recurring} = %{part} de gasto variable previsto."
-      budget_hint: "Esta categoría tiene presupuesto ese mes, y el presupuesto manda: la previsión usa lo que deja después de sus recibos. Cambia aquí el gasto variable y el presupuesto del mes se pone al día (lo variable más sus recurrentes)."
+      budget_hint: "Esta categoría está en un presupuesto con importe ese mes, y el presupuesto manda: la previsión usa lo que deja después de los recibos de sus categorías. Cambia aquí el gasto variable y el presupuesto del mes se pone al día (lo variable más sus recurrentes)."
       budget_amount: "Gasto variable previsto"
       budget_save: "Cambiar el presupuesto de %{month}"
       budgets: "Con presupuesto en %{month}"
-      budgets_hint: "Estas categorías no usan la media: cuentan su presupuesto menos sus recibos de ese mes, que ya van en su propia línea."
+      budgets_hint: "Las categorías de estos presupuestos no usan la media: cuentan el presupuesto menos sus recibos de ese mes, que ya van en su propia línea."
       title: "Gastos varios de %{month}"
       subtitle: Cómo se calcula lo que sueles gastar en lo variable ese mes.
       result: Previsión del mes

@@ -1,0 +1,44 @@
+<%# locals: (month_budget:, group:, chosen:, taken:, amount:) %>
+<%# Fulas Bank: a budget's name, the categories it groups and its amount
+    from the chosen month on. A main category takes in its subcategories;
+    a category already in another budget cannot be chosen. %>
+<% month = month_budget.month %>
+<% month_param = month.strftime("%Y-%m") %>
+<%= styled_form_with model: group, scope: :budget_group, class: "space-y-4",
+      url: group.persisted? ? month_plan_budget_group_path(group, month: month_param) : month_plan_budget_groups_path(month: month_param),
+      method: group.persisted? ? :patch : :post do |form| %>
+  <% if group.errors.any? %>
+    <%= render DS::Alert.new(message: group.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true, autofocus: group.new_record? %>
+  <%= form.number_field :amount, label: t(".amount", month: l(month, format: "%B %Y")), value: amount, min: 0, step: 0.01, placeholder: "0" %>
+  <p class="text-xs text-secondary"><%= t(".amount_hint") %></p>
+
+  <fieldset class="space-y-2">
+    <legend class="text-sm font-medium text-primary"><%= t(".categories") %></legend>
+    <p class="text-xs text-secondary"><%= t(".categories_hint") %></p>
+    <div class="max-h-80 overflow-y-auto rounded-lg border border-secondary divide-y divide-divider">
+      <% month_budget.categories.each do |category| %>
+        <div class="px-3 py-2 space-y-1">
+          <%= render "month_plans/budget_groups/category_option", category: category, chosen: chosen, taken: taken, month_budget: month_budget, sub: false %>
+          <% month_budget.subcategories_of(category).each do |sub| %>
+            <div class="pl-7">
+              <%= render "month_plans/budget_groups/category_option", category: sub, chosen: chosen, taken: taken, month_budget: month_budget, sub: true %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if group.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(text: t(".delete"), icon: "trash-2", variant: :outline_destructive, size: :sm, full_width: true,
+          href: month_plan_budget_group_path(group, month: month_param), method: :delete, frame: :_top,
+          confirm: t(".delete_confirm", name: group.name)) %>
+  </div>
+<% end %>

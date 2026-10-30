@@ -1,0 +1,14 @@
+<%# locals: (category:, chosen:, taken:, month_budget:, sub:) %>
+<% id = category.id.to_s %>
+<% in_other = taken.include?(id) %>
+<label class="flex items-center gap-3 min-w-0 <%= in_other ? "opacity-50 cursor-not-allowed" : "cursor-pointer" %>">
+  <%= check_box_tag "budget_group[category_ids][]", id, chosen.include?(id),
+        id: "budget_group_category_#{id}", disabled: in_other, class: "checkbox checkbox--light shrink-0" %>
+  <% unless sub %>
+    <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
+  <% end %>
+  <span class="min-w-0 grow truncate text-sm <%= sub ? "text-secondary" : "text-primary" %>"><%= category.name %></span>
+  <% if in_other && (other = month_budget.group_for(category)) %>
+    <span class="shrink-0 text-xs text-secondary"><%= t("month_plans.budget_groups.form.in_budget", name: other.name) %></span>
+  <% end %>
+</label>

@@ -37,13 +37,15 @@ class Transaction::MonthSummary
     [ ((income.amount - spent.amount) / income.amount * 100).round, 0 ].max
   end
 
-  # How much the month's spending went over its budget (positive) or stayed
-  # under it (negative), or nil when the month has no budget set.
+  # How much the month's spending in its budgets went over them (positive)
+  # or stayed under (negative), or nil when the month has no budget set.
+  # The same figures as Planes (MonthPlan).
   def budget_difference
     return @budget_difference if defined?(@budget_difference)
 
-    @budget_difference = if budget && budget.budgeted_spending.to_d.positive?
-      Money.new(budget.actual_spending.to_d - budget.budgeted_spending.to_d, budget.currency)
+    @budget_difference = begin
+      rows = MonthPlan.new(family, user: user, month: month).budget_rows
+      Money.new(rows.sum(&:spent) - rows.sum(&:budgeted), family.currency) if rows.any?
     end
   end
 
@@ -69,19 +71,5 @@ class Transaction::MonthSummary
 
         { expense: row[0].to_d, income: row[1].to_d }
       end
-    end
-
-    # The household budget of the period the month starts in, or the user's
-    # own when budgets are personal. Never created here: a list does not
-    # start budgets.
-    def budget
-      return @budget if defined?(@budget)
-
-      start_date, = Budget.period_for(month, family: family)
-      candidates = family.budgets.where(start_date: start_date).to_a
-      @budget = candidates.find { |candidate| candidate.user_id.nil? } || candidates.find { |candidate| candidate.user_id == user&.id }
-      @budget&.current_user = user
-      @budget = nil if @budget && !@budget.initialized?
-      @budget
     end
 end

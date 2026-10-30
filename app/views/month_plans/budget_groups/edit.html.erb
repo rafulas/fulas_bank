@@ -1,0 +1,6 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= render "month_plans/budget_groups/form", month_budget: @month_budget, group: @group, chosen: @chosen_ids, taken: @taken_ids, amount: @amount %>
+  <% end %>
+<% end %>

@@ -183,19 +183,21 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
 
   test "creates the next five years' budgets from the forecast, and a budget set from «Ver cálculo» keeps its bills" do
     month = Date.current.next_month.beginning_of_month
+    category = categories(:food_and_drink)
+    group = @user.family.budget_groups.create!(name: "Comida")
+    group.group_categories.create!(category: category)
 
-    assert_difference -> { @user.family.budgets.where("start_date > ?", Date.current.end_of_month).count }, 60 do
-      post budgets_forecast_url
-    end
+    post budgets_forecast_url
     assert_redirected_to month_plan_url(month: month.strftime("%Y-%m"))
 
-    category = categories(:food_and_drink)
-    MonthBudget.new(@user.family, user: @user, month: month).save_month!(category.id => "250")
+    group.set_limit_from!(month, 250)
     get variable_forecast_url(month: month.iso8601, category: category.id), headers: { "Turbo-Frame" => "modal" }
     assert_response :success
 
-    patch variable_category_forecast_url, params: { category_id: category.id, op: "budget", month: month.iso8601, amount: "180" }
-    assert_equal BigDecimal("180"), MonthBudget.new(@user.family, user: @user, month: month).amounts[category.id]
+    patch variable_category_forecast_url, params: { category_id: category.id, budget_group_id: group.id, op: "budget", month: month.iso8601, amount: "180" }
+    group.reload
+    assert_equal BigDecimal("180"), group.limit_for(month)
+    assert_equal BigDecimal("250"), group.limit_for(month.next_month), "only that month changes"
   end
 
   test "edits the table: hides an account's column and changes where it adds up" do
