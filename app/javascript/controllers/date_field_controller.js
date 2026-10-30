@@ -111,8 +111,8 @@ export default class extends Controller {
     this.panel = null;
   }
 
-  // Below the field, or above it when it does not fit below; never off the
-  // sides of the window.
+  // Below the field, or above it when it does not fit below; always whole
+  // inside the window, so nothing has to scroll to reach it.
   #place() {
     const gap = this.constructor.GAP;
     const field = this.holder.getBoundingClientRect();
@@ -120,11 +120,14 @@ export default class extends Controller {
     const height = this.panel.offsetHeight;
 
     let top = field.bottom + gap;
-    if (
-      top + height > window.innerHeight - gap &&
-      field.top - gap - height >= gap
-    )
-      top = field.top - gap - height;
+    if (top + height > window.innerHeight - gap) {
+      // Above the field when it fits there; otherwise as low as it can go
+      // while staying whole in the window.
+      top =
+        field.top - gap - height >= gap
+          ? field.top - gap - height
+          : window.innerHeight - gap - height;
+    }
     const left = Math.min(
       Math.max(field.left, gap),
       Math.max(window.innerWidth - width - gap, gap),
