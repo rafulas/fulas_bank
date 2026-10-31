@@ -56,6 +56,8 @@
       data: { transaction_form_target: "date", action: "change->transaction-form#checkCurrencyDifference" } %>
     <%# Fulas Bank: a later date is allowed; it is saved as an expected movement. %>
     <p class="text-xs text-secondary -mt-2"><%= t(".date_future_hint") %></p>
+    <%# Fulas Bank: an optional time; without one it counts as 00:00. %>
+    <%= f.time_field :time_of_day, label: t(".time"), value: f.object.time_of_day&.strftime("%H:%M") %>
 
     <% convert_input = capture do %>
       <%= f.fields_for :entryable do |ef| %>

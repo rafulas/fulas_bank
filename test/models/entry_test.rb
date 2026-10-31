@@ -23,6 +23,20 @@ class EntryTest < ActiveSupport::TestCase
     assert_equal entry_ids.sort.reverse, Entry.where(id: entry_ids).reverse_chronological.pluck(:id)
   end
 
+  test "within a day: latest time first, then the largest amount as the list shows it" do
+    account = accounts(:depository)
+    day = Date.new(2026, 10, 19)
+    at_three = create_transaction(account: account, name: "A las 15:00", date: day, amount: -100, time_of_day: "15:00")
+    expense = create_transaction(account: account, name: "Sin hora, gasto", date: day, amount: 400)
+    income = create_transaction(account: account, name: "Sin hora, ingreso", date: day, amount: -500)
+    ids = [ at_three, expense, income ].map(&:id)
+
+    assert_equal [ at_three, income, expense ].map(&:id), Entry.where(id: ids).reverse_chronological.pluck(:id)
+    assert_equal [ expense, income, at_three ].map(&:id), Entry.where(id: ids).chronological.pluck(:id)
+    assert_equal "15:00", at_three.reload.display_time
+    assert_nil expense.display_time
+  end
+
   test "bulk_update! touches the assigned category's last_used_at" do
     entry = create_transaction(account: accounts(:depository))
     category = categories(:income)

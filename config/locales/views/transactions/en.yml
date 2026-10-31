@@ -74,6 +74,7 @@ en:
       create_category_error: Could not create category
       date: Date
       date_future_hint: A date after today saves it as an expected movement (shown in Upcoming and in the Forecast) that does not change the balance until you import the statement.
+      time: Time (optional)
       description: Description
       description_placeholder: Describe transaction
       expense: Expense
@@ -138,6 +139,7 @@ en:
       amount: Amount
       category_label: Category
       date_label: Date
+      time_label: Time (optional)
       delete: Delete
       delete_subtitle: This permanently deletes the transaction, affects your historical
         balances, and cannot be undone.

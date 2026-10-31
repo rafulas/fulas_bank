@@ -76,6 +76,7 @@ class TransactionImport < Import
           existing.tags = tags if tags.any? && existing.tags.empty?
           existing.merchant = merchant if merchant.present? && existing.merchant_id.nil?
           duplicate_entry.notes = row.notes if row.notes.present? && duplicate_entry.notes.blank?
+          duplicate_entry.time_of_day ||= row.time_of_day
           duplicate_entry.import = self
           duplicate_entry.import_locked = true  # Protect from provider sync overwrites
           # Fulas Bank: it was already there, so no "new" dot.
@@ -92,6 +93,7 @@ class TransactionImport < Import
             entry: Entry.new(
               account: mapped_account,
               date: row.date_iso,
+              time_of_day: row.time_of_day,
               amount: row.signed_amount,
               name: row.name,
               currency: effective_currency,

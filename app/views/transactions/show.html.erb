@@ -68,6 +68,12 @@
                 max: Date.current,
                 disabled: @entry.linked? || split_locked || edit_locked,
                 "data-auto-submit-form-target": "auto" %>
+          <%# Fulas Bank: an optional time; without one it counts as 00:00. %>
+          <%= f.time_field :time_of_day,
+                label: t(".time_label"),
+                value: @entry.time_of_day&.strftime("%H:%M"),
+                disabled: split_locked || edit_locked,
+                "data-auto-submit-form-target": "auto" %>
           <% if !@entry.transaction.transfer? %>
             <div class="flex items-center gap-2">
               <%= f.select :nature,
