@@ -61,15 +61,19 @@ class Entry < ApplicationRecord
 
   # Fulas Bank: within a day, by time (none counts as 00:00) and then by
   # amount as the list shows it (money in above money out, the largest
-  # first; stored amounts are negative for money in).
+  # first; stored amounts are negative for money in). Only transactions go
+  # by amount: trades and valuations keep the order they were entered in,
+  # which the holdings calculation follows (a sale to zero and a purchase on
+  # the same day).
   TIME_OF_DAY_SQL = "COALESCE(entries.time_of_day, TIME '00:00')".freeze
+  LIST_AMOUNT_SQL = "CASE WHEN entries.entryable_type = 'Transaction' THEN entries.amount END".freeze
 
   scope :chronological, -> {
     order(
       date: :asc,
       Arel.sql("CASE WHEN entries.entryable_type = 'Valuation' THEN 1 ELSE 0 END") => :asc,
       Arel.sql(TIME_OF_DAY_SQL) => :asc,
-      amount: :desc,
+      Arel.sql(LIST_AMOUNT_SQL) => :desc,
       created_at: :asc,
       id: :asc
     )
@@ -80,7 +84,7 @@ class Entry < ApplicationRecord
       date: :desc,
       Arel.sql("CASE WHEN entries.entryable_type = 'Valuation' THEN 1 ELSE 0 END") => :desc,
       Arel.sql(TIME_OF_DAY_SQL) => :desc,
-      amount: :asc,
+      Arel.sql(LIST_AMOUNT_SQL) => :asc,
       created_at: :desc,
       id: :desc
     )
