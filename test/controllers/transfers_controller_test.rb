@@ -687,6 +687,18 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "rejecting a match from the list puts both movements back in place, without leaving the page" do
+    transfer = transfers(:one)
+    entries = [ transfer.inflow_transaction.entry, transfer.outflow_transaction.entry ]
+
+    patch transfer_url(transfer), params: { transfer: { status: "rejected" } }, as: :turbo_stream
+
+    assert_response :success
+    entries.each do |entry|
+      assert_select "turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(entry)}']"
+    end
+  end
+
   test "mark_as_recurring creates a recurring transfer" do
     transfer = transfers(:one)
     family = users(:family_admin).family

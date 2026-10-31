@@ -94,6 +94,10 @@ class TransfersController < ApplicationController
     outflow_account = @transfer.outflow_transaction.entry.account
     return unless require_account_permission!(outflow_account, redirect_path: transactions_url)
 
+    # Fulas Bank: the two movements, to show them again as ordinary ones in
+    # the list once a rejected match is gone.
+    @entries = [ @transfer.inflow_transaction&.entry, @transfer.outflow_transaction&.entry ].compact
+
     Transfer.transaction do
       update_transfer_status
       update_transfer_fees_and_amount

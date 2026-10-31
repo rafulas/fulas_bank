@@ -26,3 +26,12 @@
                           partial: "transactions/transfer_match",
                           locals: { transaction: @transfer.outflow_transaction } %>
 <% end %>
+
+<%# Fulas Bank: a rejected match is gone; its two movements stay in the list,
+    where they were, as ordinary movements (no reload, so the list keeps its
+    place). %>
+<% if @transfer.destroyed? %>
+  <% @entries.each do |entry| %>
+    <%= turbo_stream.replace entry.reload %>
+  <% end %>
+<% end %>
