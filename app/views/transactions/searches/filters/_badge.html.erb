@@ -66,6 +66,12 @@
       <%= icon(param_value == "current" ? "sparkles" : "history", size: "sm") %>
       <p><%= t(".ai_#{param_value}") %></p>
     </div>
+  <% elsif param_key == "unseen" %>
+    <%# Fulas Bank: the new movements only. %>
+    <div class="flex items-center gap-2 px-1">
+      <span class="size-2 shrink-0 rounded-full bg-info"></span>
+      <p><%= t(".unseen") %></p>
+    </div>
   <% elsif param_key == "attachment_status" %>
     <div class="flex items-center gap-2 px-1">
       <%= icon("paperclip", size: "sm") %>

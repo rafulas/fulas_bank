@@ -830,7 +830,7 @@ class TransactionsController < ApplicationController
       cleaned_params = params.fetch(:q, {})
               .permit(
                 :start_date, :end_date, :search, :amount,
-                :amount_operator, :active_accounts_only,
+                :amount_operator, :active_accounts_only, :unseen,
                 accounts: [], account_ids: [],
                 categories: [], merchants: [], types: [], tags: [], status: [], ai_status: [],
                 attachment_status: []
@@ -839,6 +839,7 @@ class TransactionsController < ApplicationController
               .compact_blank
 
       cleaned_params.delete(:amount_operator) unless cleaned_params[:amount].present?
+      cleaned_params.delete(:unseen) unless cleaned_params[:unseen] == "1"
 
       if cleaned_params[:ai_status]
         cleaned_params[:ai_status] &= Transaction::Search::AI_STATUSES

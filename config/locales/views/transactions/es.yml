@@ -274,6 +274,9 @@ es:
       edit_tags: Editar etiquetas
       import: Importar
     index:
+      show_unseen:
+        one: "Nuevas (1)"
+        other: "Nuevas (%{count})"
       mark_all_seen:
         one: Marcar 1 movimiento nuevo como visto
         other: "Marcar %{count} movimientos nuevos como vistos"
@@ -414,6 +417,7 @@ es:
           ai_history: Historial de IA
           attachment_with: Con adjunto
           attachment_without: Sin adjunto
+          unseen: Nuevas
         attachment_filter:
           with: Con adjunto
           without: Sin adjunto
