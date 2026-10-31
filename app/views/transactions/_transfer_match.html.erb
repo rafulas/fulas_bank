@@ -26,7 +26,6 @@
 
     <%= button_to transfer_path(transaction.transfer, transfer: { status: "rejected" }),
                     method: :patch,
-                    data: { turbo: false },
                     class: "text-secondary hover:text-primary flex items-center justify-center cursor-pointer",
                     title: t("transactions.transfer_match.reject_match") do %>
       <%= icon "x", size: "sm", class: "text-subdued hover:text-primary" %>
