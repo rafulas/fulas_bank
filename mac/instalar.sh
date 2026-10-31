@@ -61,11 +61,11 @@ echo "Docker Desktop en marcha."
 paso "Preparando la carpeta $DIR"
 mkdir -p "$DIR"
 cd "$DIR"
-for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh; do
+for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" || fallo "No se ha podido descargar $f."
   mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh
+chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh
 
 # Passwords are created once. Later runs keep them: the database was
 # created with them, and backups need the same SECRET_KEY_BASE.
@@ -97,6 +97,11 @@ cat > "Hacer copia ahora.command" <<EOF
 "$DIR/copia.sh"
 echo; read -n 1 -s -r -p "Pulsa una tecla para cerrar."
 EOF
+cat > "Usar en iPhone, iPad y Windows.command" <<EOF
+#!/bin/bash
+"$DIR/otros-aparatos.sh"
+echo; read -n 1 -s -r -p "Pulsa una tecla para cerrar."
+EOF
 chmod +x ./*.command
 
 # -------------------------------------------------- 3. Download and start
@@ -124,6 +129,9 @@ for _ in $(seq 1 120); do
 done
 $listo || fallo "Fulas Bank no responde. Mira qué pasa con: cd ~/FulasBank && docker compose logs web"
 echo "Fulas Bank en marcha en http://localhost:$PORT"
+# If Tailscale is already set up on this Mac, the other devices can come in
+# straight away; if not, nothing happens (see otros-aparatos.sh).
+"$DIR/otros-aparatos.sh" --callado || true
 
 # ------------------------------------------------------------ 4. Backup
 if [[ -n "$BACKUP" ]]; then

@@ -93,10 +93,10 @@ fi
 set_pinned_image ""
 
 echo "▶ Descargando la versión nueva"
-for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh; do
+for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh
+chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh
 docker compose pull
 
 echo "▶ Reiniciando"
@@ -132,6 +132,16 @@ echo
 read -n 1 -s -r -p "Pulsa una tecla para cerrar."
 EOF
 chmod +x "$DIR/Volver a la versión anterior.command"
+
+# Shortcut to open Fulas Bank to the iPhone, iPad or a Windows PC through
+# Tailscale (also for installs made before it existed).
+cat > "$DIR/Usar en iPhone, iPad y Windows.command" <<EOF
+#!/bin/bash
+"$DIR/otros-aparatos.sh"
+echo
+read -n 1 -s -r -p "Pulsa una tecla para cerrar."
+EOF
+chmod +x "$DIR/Usar en iPhone, iPad y Windows.command"
 
 docker image prune -f > /dev/null 2>&1 || true
 rm -f "$DIR/registros/aviso-pospuesto"
