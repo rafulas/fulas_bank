@@ -22,6 +22,20 @@ class Transactions::BulkDeletionsControllerTest < ActionDispatch::IntegrationTes
     assert_equal "#{delete_count} transactions deleted", flash[:notice]
   end
 
+  test "deleting a transfer from the list deletes both of its movements" do
+    transfer = transfers(:one)
+    transfer.update!(status: "confirmed")
+    outflow = transfer.outflow_transaction.entry
+    inflow = transfer.inflow_transaction.entry
+
+    assert_difference -> { Entry.count }, -2 do
+      post transactions_bulk_deletion_url, params: { bulk_delete: { entry_ids: [ outflow.id ] } }
+    end
+
+    assert_not Entry.exists?(inflow.id)
+    assert_not Transfer.exists?(transfer.id)
+  end
+
   test "bulk delete with rejected transfers" do
     entry = entries(:transaction)
     other_entry = entries(:transfer_out)
