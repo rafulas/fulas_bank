@@ -54,6 +54,7 @@ es:
         transactions_section: Transacciones
     unknown_name: Transacción desconocida
     selection_bar:
+      mark_seen: Marcar como vistas
       confirm_transfers: Confirmar los traspasos «Auto» seleccionados
       reject_transfers: Rechazar los traspasos «Auto» seleccionados
       duplicate: Duplicar
@@ -105,6 +106,11 @@ es:
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
     move_account:
       moved: "Movimiento pasado a %{account}."
+    mark_seen:
+      done:
+        zero: Ninguno de los seleccionados era nuevo
+        one: 1 movimiento marcado como visto
+        other: "%{count} movimientos marcados como vistos"
     mark_all_seen:
       done: Movimientos nuevos marcados como vistos
     update:

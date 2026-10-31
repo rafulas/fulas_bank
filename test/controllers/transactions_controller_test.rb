@@ -31,6 +31,22 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal accounts(:depository), entry.reload.account
   end
 
+  test "the selected new movements are marked as seen, a transfer with both of its movements" do
+    import = imports(:transaction)
+    picked = create_transaction(account: accounts(:depository), name: "Nuevo elegido", amount: 10, date: Date.current)
+    other = create_transaction(account: accounts(:depository), name: "Nuevo sin elegir", amount: 11, date: Date.current)
+    transfer = transfers(:one)
+    legs = [ transfer.outflow_transaction.entry, transfer.inflow_transaction.entry ]
+    Entry.where(id: [ picked.id, other.id, *legs.map(&:id) ]).update_all(import_id: import.id, seen_at: nil)
+
+    post mark_seen_transactions_url, params: { bulk_seen: { entry_ids: [ picked.id, legs.first.id ] } }
+
+    assert_redirected_to transactions_url
+    assert picked.reload.seen_at.present?
+    assert legs.all? { |entry| entry.reload.seen_at.present? }
+    assert_nil other.reload.seen_at
+  end
+
   test "an imported movement carries a dot until it is opened or all are marked as seen" do
     import = imports(:transaction)
     first = create_transaction(account: accounts(:depository), name: "Importado uno", amount: 10, date: Date.current)

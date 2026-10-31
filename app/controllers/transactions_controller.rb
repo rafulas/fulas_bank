@@ -25,6 +25,19 @@ class TransactionsController < ApplicationController
     redirect_back_or_to transactions_path, notice: t(".done")
   end
 
+  # Fulas Bank: the blue dot taken off the selected movements (a transfer,
+  # one row in the list, takes it off both of its movements).
+  def mark_seen
+    ids = Array(params.dig(:bulk_seen, :entry_ids)).map(&:to_s)
+    transaction_ids = Current.accessible_entries.where(id: ids, entryable_type: "Transaction").pluck(:entryable_id)
+    legs = Transfer.where(inflow_transaction_id: transaction_ids).or(Transfer.where(outflow_transaction_id: transaction_ids))
+                   .pluck(:inflow_transaction_id, :outflow_transaction_id).flatten
+    ids |= Current.accessible_entries.where(entryable_type: "Transaction", entryable_id: legs).pluck(:id).map(&:to_s)
+
+    count = Current.accessible_entries.unseen.where(id: ids).update_all(seen_at: Time.current)
+    redirect_back_or_to transactions_path, notice: t(".done", count: count)
+  end
+
   def new
     prefill_params_from_duplicate!
     super

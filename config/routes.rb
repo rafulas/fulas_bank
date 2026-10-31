@@ -601,6 +601,8 @@ Rails.application.routes.draw do
       delete :clear_filter
       # Fulas Bank: take the blue dot off every imported movement.
       post :mark_all_seen
+      # Fulas Bank: take it off the selected movements.
+      post :mark_seen
     end
 
     member do

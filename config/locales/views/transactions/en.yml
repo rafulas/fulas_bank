@@ -54,6 +54,7 @@ en:
         transactions_section: Transactions
     unknown_name: Unknown transaction
     selection_bar:
+      mark_seen: Mark as seen
       confirm_transfers: Confirm the selected «Auto» transfers
       reject_transfers: Reject the selected «Auto» transfers
       duplicate: Duplicate
@@ -105,6 +106,11 @@ en:
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
     move_account:
       moved: "Movement moved to %{account}."
+    mark_seen:
+      done:
+        zero: None of the selected movements was new
+        one: 1 movement marked as seen
+        other: "%{count} movements marked as seen"
     mark_all_seen:
       done: New movements marked as seen
     update:
