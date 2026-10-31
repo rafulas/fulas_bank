@@ -40,7 +40,7 @@ class CashCushion
 
       (1..RECENT_MONTHS).map { |back| today.beginning_of_month << back }
                         .select { |month| start && month >= start.beginning_of_month }
-                        .map { |month| statement.totals(date_range: month..month.end_of_month).expense_money.amount.to_d }
+                        .map { |month| month_expense(statement, month) }
     end
   end
 
@@ -65,6 +65,14 @@ class CashCushion
   end
 
   private
+    # The month's spending, counted as the Resumen counts it. The scope
+    # filters the month (`date_range` alone does not).
+    def month_expense(statement, month)
+      period = Period.custom(start_date: month, end_date: month.end_of_month)
+      scope = family.transactions.visible.excluding_pending.in_period(period)
+      statement.totals(transactions_scope: scope, date_range: period.date_range).expense_money.amount.to_d
+    end
+
     # The first movement in the user's accounts: months before it are not
     # months without spending, just months without data.
     def history_start
