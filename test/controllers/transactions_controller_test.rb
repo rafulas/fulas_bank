@@ -38,7 +38,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     Entry.where(id: [ first.id, second.id ]).update_all(import_id: import.id, seen_at: nil)
 
     get transactions_url
-    assert_select "[data-testid='unseen-dot']", minimum: 2
+    assert_select "[data-testid='unseen-dot'][data-clickable-row-target='unseen']", minimum: 2
 
     get transaction_url(first)
     assert first.reload.seen_at.present?
