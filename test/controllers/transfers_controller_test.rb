@@ -5,6 +5,17 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:family_admin)
   end
 
+  test "opening an imported transfer takes the blue dot off both movements" do
+    transfer = transfers(:one)
+    entry_ids = [ transfer.inflow_transaction.entry.id, transfer.outflow_transaction.entry.id ]
+    Entry.where(id: entry_ids).update_all(import_id: imports(:transaction).id, seen_at: nil)
+
+    get transfer_url(transfer)
+
+    assert_response :success
+    assert Entry.where(id: entry_ids).all? { |entry| entry.seen_at.present? }
+  end
+
   test "should get new" do
     get new_transfer_url
     assert_response :success

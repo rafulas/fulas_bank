@@ -5,8 +5,17 @@ import { Controller } from "@hotwired/stimulus";
 // looks and behaves as clickable rather than only the exact link text.
 // Clicks on real interactive descendants (checkbox, category menu, account
 // link, kebab menu, etc.) are left alone so they keep handling themselves.
+//
+// Fulas Bank: opening the row takes its blue "not seen yet" dot off at once
+// (`seen`, on the link's click). The server marks the movement seen when it
+// opens, but the list behind the drawer, and the page Turbo keeps for going
+// back, would otherwise still show the dot.
 export default class extends Controller {
-  static targets = ["link"];
+  static targets = ["link", "unseen"];
+
+  seen() {
+    for (const dot of this.unseenTargets) dot.remove();
+  }
 
   open(event) {
     if (event.target.closest("a, button, input, select, textarea, label")) return;

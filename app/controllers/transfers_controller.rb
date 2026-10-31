@@ -26,6 +26,10 @@ class TransfersController < ApplicationController
       !Current.family.recurring_transactions_disabled? &&
       endpoint_ids.size == 2 &&
       writable_endpoint_count == 2
+
+    # Fulas Bank: opening a transfer takes the blue dot off both of its
+    # movements, as opening a transaction does.
+    [ @transfer.inflow_transaction, @transfer.outflow_transaction ].compact.each { |transaction| transaction.entry&.mark_seen! }
   end
 
   def create
