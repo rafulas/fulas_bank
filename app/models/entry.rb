@@ -59,10 +59,17 @@ class Entry < ApplicationRecord
     joins(:account).where(accounts: { status: [ "draft", "active" ] })
   }
 
+  # Fulas Bank: within a day, by time (none counts as 00:00) and then by
+  # amount as the list shows it (money in above money out, the largest
+  # first; stored amounts are negative for money in).
+  TIME_OF_DAY_SQL = "COALESCE(entries.time_of_day, TIME '00:00')".freeze
+
   scope :chronological, -> {
     order(
       date: :asc,
       Arel.sql("CASE WHEN entries.entryable_type = 'Valuation' THEN 1 ELSE 0 END") => :asc,
+      Arel.sql(TIME_OF_DAY_SQL) => :asc,
+      amount: :desc,
       created_at: :asc,
       id: :asc
     )
@@ -72,6 +79,8 @@ class Entry < ApplicationRecord
     order(
       date: :desc,
       Arel.sql("CASE WHEN entries.entryable_type = 'Valuation' THEN 1 ELSE 0 END") => :desc,
+      Arel.sql(TIME_OF_DAY_SQL) => :desc,
+      amount: :asc,
       created_at: :desc,
       id: :desc
     )
@@ -346,6 +355,15 @@ class Entry < ApplicationRecord
   # dot in the list. Opening its detail marks it as seen.
   def unseen?
     seen_at.nil? && (import_id.present? || external_id.present?)
+  end
+
+  # Fulas Bank: "15:30", or nil when the movement has no time (or 00:00,
+  # which is the same).
+  def display_time
+    return if time_of_day.nil?
+
+    formatted = time_of_day.strftime("%H:%M")
+    formatted unless formatted == "00:00"
   end
 
   def mark_seen!

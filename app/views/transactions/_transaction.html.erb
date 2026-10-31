@@ -163,6 +163,10 @@
                 </div>
 
                 <div class="text-secondary text-xs font-normal">
+                  <%# Fulas Bank: the time, when the movement has one. %>
+                  <% if (time = entry.display_time) %>
+                    <span class="tabular-nums"><%= time %> •</span>
+                  <% end %>
                   <% if transaction.transfer? %>
                     <%# Fulas Bank: both accounts in full, on a second line if need be. %>
                     <span class="text-secondary whitespace-normal break-words">

@@ -23,6 +23,19 @@ class Import::Row < ApplicationRecord
     Date.strptime(date, import.date_format).iso8601
   end
 
+  # Fulas Bank: the time written after the date ("2026-10-19 15:30:00.000",
+  # as Bilance exports it), as "15:30"; nil without one or at 00:00.
+  def time_of_day
+    match = date.to_s.match(/[ T](\d{1,2}):(\d{2})/)
+    return unless match
+
+    hours = match[1].to_i
+    minutes = match[2].to_i
+    return if hours > 23 || minutes > 59 || (hours.zero? && minutes.zero?)
+
+    format("%02d:%02d", hours, minutes)
+  end
+
   def signed_amount
     if import.type == "TradeImport"
       price.to_d * apply_trade_signage_convention(qty.to_d)

@@ -73,6 +73,7 @@ es:
       create_category_error: No se pudo crear la categoría
       date: Fecha
       date_future_hint: Con una fecha posterior a hoy se guarda como movimiento previsto (sale en Próximos y en el Forecast) y no cambia el saldo hasta que importes el extracto.
+      time: Hora (opcional)
       description: Descripción
       description_placeholder: Describe la transacción
       expense: Gasto
@@ -132,6 +133,7 @@ es:
       amount: Importe
       category_label: Categoría
       date_label: Fecha
+      time_label: Hora (opcional)
       delete: Eliminar
       delete_subtitle: Esto eliminará permanentemente la transacción, afectará tus saldos históricos y no se podrá deshacer.
       delete_title: Eliminar transacción

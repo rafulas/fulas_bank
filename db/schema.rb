@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -824,6 +824,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_140000) do
     t.uuid "reconciled_by_statement_id"
     t.datetime "seen_at"
     t.string "source"
+    t.time "time_of_day"
     t.datetime "updated_at", null: false
     t.boolean "user_modified", default: false, null: false
     t.index "lower((name)::text)", name: "index_entries_on_lower_name"
