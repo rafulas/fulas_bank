@@ -31,6 +31,21 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal accounts(:depository), entry.reload.account
   end
 
+  test "the New button shows only the new movements" do
+    import = imports(:transaction)
+    fresh = create_transaction(account: accounts(:depository), name: "Recién importado", amount: 10, date: Date.current)
+    Entry.where(id: fresh.id).update_all(import_id: import.id, seen_at: nil)
+    seen = create_transaction(account: accounts(:depository), name: "Ya visto", amount: 11, date: Date.current)
+
+    get transactions_url
+    assert_select "a[href*='unseen']"
+
+    get transactions_url(q: { unseen: "1" })
+    assert_response :success
+    assert_match "Recién importado", response.body
+    assert_no_match seen.name, response.body
+  end
+
   test "the selected new movements are marked as seen, a transfer with both of its movements" do
     import = imports(:transaction)
     picked = create_transaction(account: accounts(:depository), name: "Nuevo elegido", amount: 10, date: Date.current)

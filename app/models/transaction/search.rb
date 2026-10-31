@@ -22,6 +22,8 @@ class Transaction::Search
   attribute :ai_status, array: true
   attribute :attachment_status, array: true
   attribute :active_accounts_only, :boolean, default: true
+  # Fulas Bank: only the new movements (imported and not looked at yet).
+  attribute :unseen, :boolean
 
   attr_reader :family, :accessible_account_ids
 
@@ -49,6 +51,7 @@ class Transaction::Search
       query = apply_tag_filter(query, tags)
       query = apply_ai_status_filter(query, ai_status)
       query = apply_attachment_status_filter(query, attachment_status)
+      query = apply_unseen_filter(query, unseen)
       query = apply_text_search(query, search)
       query = EntrySearch.apply_date_filters(query, start_date, end_date)
       query = EntrySearch.apply_amount_filter(query, amount, amount_operator)
@@ -306,6 +309,13 @@ class Transaction::Search
       sql = "EXISTS (SELECT 1 FROM data_enrichments de WHERE de.enrichable_type = 'Transaction' AND de.enrichable_id = transactions.id AND de.attribute_name = 'category_id' AND de.source IN (:sources)"
       sql += " AND #{extra_condition}" if extra_condition
       sql + ")"
+    end
+
+    # Fulas Bank: the movements with the blue dot (Entry#unseen?).
+    def apply_unseen_filter(query, unseen)
+      return query unless unseen
+
+      query.where(entries: { seen_at: nil }).where("entries.import_id IS NOT NULL OR entries.external_id IS NOT NULL")
     end
 
     # EXISTS, not a join: several files on one transaction would duplicate

@@ -277,6 +277,9 @@ en:
       edit_tags: Edit tags
       import: Import
     index:
+      show_unseen:
+        one: "New (1)"
+        other: "New (%{count})"
       mark_all_seen:
         one: Mark 1 new movement as seen
         other: "Mark %{count} new movements as seen"
@@ -417,6 +420,7 @@ en:
           ai_history: AI history
           attachment_with: With attachment
           attachment_without: Without attachment
+          unseen: New
         attachment_filter:
           with: With attachment
           without: Without attachment
