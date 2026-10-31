@@ -15,8 +15,9 @@
          data-action="click->clickable-row#open">
 
       <div class="pr-4 lg:pr-10 flex items-center gap-3 lg:gap-4 col-span-5 min-w-0 max-md:flex-1">
+        <%# Fulas Bank: confirmed transfers can be selected too (to delete them,
+            both movements, from the list). %>
         <%= check_box_tag dom_id(entry, "selection"),
-            disabled: transaction.transfer.present? && !transaction.transfer.pending?,
             class: "checkbox checkbox--light hidden lg:block",
             data: {
               id: entry.id,
