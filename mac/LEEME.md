@@ -8,7 +8,7 @@ Instalación de una sola vez. Después, Fulas Bank arranca solo al encender el M
 - **La app «Fulas Bank»** en Aplicaciones: una ventana de Mac con el logo FB que se conecta al motor (`http://localhost:3000`).
 - **Una copia diaria y cifrada** a las 13:00 en **iCloud Drive → Fulas Bank → Copias**. Se guardan las 30 últimas.
 - **Un aviso** cuando haya una versión nueva. Tú decides cuándo actualizar.
-- La carpeta **`~/FulasBank`** (en tu carpeta de usuario), con las contraseñas (`.env`) y accesos directos: **Actualizar Fulas Bank**, **Hacer copia ahora**, **Ver frase de las copias** y, tras la primera actualización, **Volver a la versión anterior**.
+- La carpeta **`~/FulasBank`** (en tu carpeta de usuario), con las contraseñas (`.env`) y accesos directos: **Actualizar Fulas Bank**, **Hacer copia ahora**, **Ver frase de las copias**, **Usar en iPhone, iPad y Windows** y, tras la primera actualización, **Volver a la versión anterior**.
 
 ## Instalar
 
@@ -67,11 +67,24 @@ Para probar una solicitud de cambios **antes de unirla**:
 
    y en el de verdad, doble clic en **Actualizar Fulas Bank** cuando termine el robot «Imagen Fulas Bank».
 
-## Solo desde este Mac
+## En el iPhone, el iPad y Windows (con Tailscale)
 
-Fulas Bank solo se abre desde el propio Mac (`localhost`). Ni otro ordenador ni un móvil conectados a la misma wifi pueden llegar a él, ni siquiera a la pantalla de entrada: así, en una wifi ajena (una cafetería, un hotel) o con invitados en casa, nadie ve que existe.
+En el Mac, Fulas Bank sigue abriéndose como siempre (app de Aplicaciones o `http://localhost:3000`). Para los demás aparatos hay una sola puerta: **Tailscale**.
 
-Si algún día quieres usarlo desde el móvil, se puede abrir a propósito (en `compose.yml`, quitando `127.0.0.1:` de la línea del puerto), pero lo recomendable sería hacerlo con Tailscale, que solo deja entrar a tus dispositivos. Pídelo y se prepara.
+**Por qué así.** Fulas Bank solo escucha dentro del propio Mac: ni otro ordenador ni un móvil conectados a la misma wifi pueden llegar a él, ni siquiera a la pantalla de entrada. Tailscale crea una red privada solo con los aparatos en los que has entrado con tu cuenta, y le pasa al Mac lo que llega de ellos. Además le da a Fulas Bank una dirección fija con **HTTPS**, así que la contraseña viaja cifrada, también con datos móviles o en una wifi ajena.
+
+**Ponerlo en marcha (una vez):**
+
+1. Instala **Tailscale** en el Mac (App Store o [tailscale.com/download](https://tailscale.com/download)), ábrelo y entra con tu cuenta.
+2. Instálalo en el iPhone, el iPad o el Windows y entra con **la misma cuenta**.
+3. En el Mac, doble clic en **`~/FulasBank/Usar en iPhone, iPad y Windows`**. Te enseña la dirección, del estilo `https://macbook-pro-de-rafa.tail2503e9.ts.net`, y la deja copiada. La primera vez puede salir un enlace para activar «Serve» o HTTPS: ábrelo, actívalo y repite este paso.
+4. En el iPhone y el iPad, abre esa dirección en Safari y pulsa **Compartir → Añadir a pantalla de inicio**: queda un icono que se abre como una app. En Windows, ábrela en el navegador y guárdala en favoritos.
+
+**Para que funcione, el Mac tiene que estar encendido y sin dormir.** Si es un portátil, déjalo enchufado y, en **Ajustes del Sistema → Batería → Opciones** (o **Pantalla bloqueada**, según la versión), activa que no entre en reposo automáticamente con el adaptador conectado. Con la tapa cerrada se duerme, salvo que tenga una pantalla externa. Cuando Fulas Bank pase a un servidor, ese servidor se une a la misma red de Tailscale y deja de hacer falta el Mac.
+
+**Una sola base de datos.** Lo que apuntes en el iPhone lo ves al momento en el Mac y en el iPad: todos usan el mismo Fulas Bank.
+
+El ajuste de Tailscale se guarda solo y sobrevive a reinicios. Si algún día deja de abrir desde fuera, vuelve a hacer doble clic en el acceso directo del paso 3.
 
 ## Copias de seguridad
 
@@ -113,5 +126,6 @@ Si algún día quieres usarlo desde el móvil, se puede abrir a propósito (en `
 | `copia.sh` | Hace la copia diaria, cifrada |
 | `aviso.sh` | Cada hora mira si hay versión nueva y, si la hay, te pregunta |
 | `restaurar.sh` | Carga una copia y comprueba que ha llegado entera |
+| `otros-aparatos.sh` | Abre Fulas Bank a tus otros aparatos con Tailscale (`tailscale serve`) |
 
 La «imagen» de Fulas Bank (la app ya preparada, lista para Docker) la fabrica GitHub después de cada merge a `main`, solo si antes pasan todas las pruebas: `.github/workflows/fulas-imagen.yml`, para Mac con chip Apple y con Intel. La app de Aplicaciones (carpeta `desktop/`) la fabrica `.github/workflows/fulas-app-mac.yml` y queda en la release «app-mac» del repositorio.
