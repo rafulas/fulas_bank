@@ -689,6 +689,10 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     previous_month = (selected_month - 1.month).beginning_of_month
 
     travel_to selected_month.end_of_month do
+      # The fixtures are dated relative to the real day the tests run; early
+      # in a month they fall into the previous month compared here. Moved
+      # out of the way so only this test's movements count.
+      Entry.where(account_id: @family.accounts.select(:id)).update_all(date: 3.years.ago.to_date)
       account = @family.accounts.create!(name: "Spending Trend Final Day Checking", currency: @family.currency, balance: 0, accountable: Depository.new)
 
       create_transaction(account: account, name: "Prev early", amount: 111, date: previous_month)
