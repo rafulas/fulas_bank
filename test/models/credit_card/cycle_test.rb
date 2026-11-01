@@ -32,6 +32,20 @@ class CreditCard::CycleTest < ActiveSupport::TestCase
     assert_equal [ late, weekend ].map(&:id).sort, cycle.statement(Date.new(2026, 11, 1)).entries.map(&:id).sort
   end
 
+  test "money sent out of the card (a Revolut top-up) is charged; a payment into it is not a purchase" do
+    revolut = @family.accounts.create!(name: "Revolut", balance: 0, currency: "EUR", accountable: Depository.new)
+    spend(40, Date.new(2026, 10, 7))
+    Transfer::Creator.new(family: @family, source_account_id: @card.id, destination_account_id: revolut.id,
+                          date: Date.new(2026, 10, 23), amount: 10).create
+    Transfer::Creator.new(family: @family, source_account_id: @bank.id, destination_account_id: @card.id,
+                          date: Date.new(2026, 10, 12), amount: 25).create
+
+    statement = cycle.statement(Date.new(2026, 10, 1))
+
+    assert_equal BigDecimal("50"), statement.purchases
+    assert_equal 2, statement.entries.size
+  end
+
   test "consolidation days move late purchases to the next statement" do
     @card.credit_card.update!(consolidation_days: 2)
     spend(30, Date.new(2026, 10, 29)) # Thursday: booked Monday 2 November

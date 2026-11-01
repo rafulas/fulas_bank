@@ -159,8 +159,11 @@ class CreditCard::Cycle
   end
 
   private
-    # The card's purchases and refunds that can fall in those statements:
-    # transfers in or out of the card (paying it off) are not purchases.
+    # The card's purchases and refunds that can fall in those statements.
+    # Money paid into the card (a transfer into it) is not a purchase: it
+    # pays the card (see advances_for). Fulas Bank: money sent out of the
+    # card (a top-up of Revolut paid with it) is charged like a purchase,
+    # whether or not it is paired as a transfer.
     def movements_for(months)
       from = closing_date(months.first.prev_month) - 20
       to = closing_date(months.last) + 1
@@ -168,9 +171,8 @@ class CreditCard::Cycle
       account.entries.where(entryable_type: "Transaction", date: from..to)
              .excluding_split_parents
              .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
-             .where.not(transactions: { kind: Transaction::TRANSFER_KINDS })
+             .where("transactions.kind NOT IN (?) OR entries.amount > 0", Transaction::TRANSFER_KINDS)
              .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
-             .where.not(transactions: { id: Transfer.select(:outflow_transaction_id) })
              .includes(:entryable)
              .to_a
              .select { |entry| months.include?(statement_month_for(entry.date, next_statement: entry.entryable.next_card_statement)) }
