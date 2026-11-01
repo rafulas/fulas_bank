@@ -36,6 +36,15 @@ class Transactions::BulkDeletionsControllerTest < ActionDispatch::IntegrationTes
     assert_not Transfer.exists?(transfer.id)
   end
 
+  test "bulk delete from the list removes the rows in place" do
+    entry = entries(:transaction)
+
+    post transactions_bulk_deletion_url, params: { bulk_delete: { entry_ids: [ entry.id ] } }, as: :turbo_stream
+
+    assert_response :success
+    assert_select "turbo-stream[action='remove'][target='#{ActionView::RecordIdentifier.dom_id(entry)}']"
+  end
+
   test "bulk delete with rejected transfers" do
     entry = entries(:transaction)
     other_entry = entries(:transfer_out)

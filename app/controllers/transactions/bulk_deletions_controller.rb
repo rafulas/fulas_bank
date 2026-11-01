@@ -8,7 +8,16 @@ class Transactions::BulkDeletionsController < ApplicationController
                       .where(parent_entry_id: nil)
     destroyed = entries_scope.destroy_by(id: with_transfer_partners(bulk_delete_params[:entry_ids]))
     destroyed.map(&:account).uniq.each(&:sync_later)
-    redirect_back_or_to transactions_url, notice: "#{destroyed.count} transaction#{destroyed.count == 1 ? "" : "s"} deleted"
+    flash[:notice] = "#{destroyed.count} transaction#{destroyed.count == 1 ? "" : "s"} deleted"
+
+    # Fulas Bank: the deleted rows go out of the list where it is, without
+    # loading the page again (which went back up the list).
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [ *destroyed.map { |entry| turbo_stream.remove(helpers.dom_id(entry)) }, *flash_notification_stream_items ]
+      end
+      format.html { redirect_back_or_to transactions_url }
+    end
   end
 
   private

@@ -19,6 +19,25 @@ class TransactionsController < ApplicationController
     assign_mark_recurring_state
   end
 
+  # Fulas Bank: deleting from the drawer takes the row out of the list and
+  # closes the drawer, without loading the page again, so the list stays
+  # where it was (a reload went back up, past the blocks loaded by
+  # scrolling).
+  def destroy
+    return unless require_account_permission!(@entry.account)
+
+    @entry.destroy!
+    @entry.sync_account_later
+    flash[:notice] = t("account.entries.destroy.success")
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [ turbo_stream.remove(dom_id(@entry)), turbo_stream.update("drawer", ""), *flash_notification_stream_items ]
+      end
+      format.html { redirect_back_or_to account_path(@entry.account) }
+    end
+  end
+
   # Fulas Bank: the blue dot of every imported movement taken off at once.
   def mark_all_seen
     Current.accessible_entries.unseen.update_all(seen_at: Time.current)
