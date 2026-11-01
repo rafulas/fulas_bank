@@ -4,7 +4,7 @@
 # reload brings only the first block of the list, so the blocks loaded by
 # scrolling went away and the list jumped back up.
 #
-# A plain request (no Turbo) still goes back to the page it came from.
+# Any other request (no Turbo) still goes back to the page it came from.
 module ListRowStreams
   extend ActiveSupport::Concern
 
@@ -21,7 +21,8 @@ module ListRowStreams
           streams << turbo_stream.update("bulk_transaction_edit_drawer", "")
           render turbo_stream: streams + flash_notification_stream_items
         end
-        format.html { redirect_back_or_to fallback }
+        # Any other request (a plain form, JSON) goes back, as it always did.
+        format.any { redirect_back_or_to fallback }
       end
     end
 end

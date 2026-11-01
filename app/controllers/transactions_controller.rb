@@ -35,7 +35,7 @@ class TransactionsController < ApplicationController
       format.turbo_stream do
         render turbo_stream: [ turbo_stream.remove(dom_id(@entry)), turbo_stream.update("drawer", ""), *flash_notification_stream_items ]
       end
-      format.html { redirect_back_or_to account_path(@entry.account) }
+      format.any { redirect_back_or_to account_path(@entry.account) }
     end
   end
 
