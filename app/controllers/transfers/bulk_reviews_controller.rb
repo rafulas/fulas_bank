@@ -1,17 +1,21 @@
 # Fulas Bank: the transfers the app paired on its own («Auto»), confirmed or
 # rejected several at a time from the movements list, instead of one by one.
 class Transfers::BulkReviewsController < ApplicationController
+  include ListRowStreams
+
   def create
     status = params.dig(:bulk_transfer, :status).to_s
     return head(:unprocessable_entity) unless %w[confirmed rejected].include?(status)
 
     transfers = pending_transfers
+    entries = transfers.flat_map { |transfer| [ transfer.inflow_transaction.entry, transfer.outflow_transaction.entry ] }
     Transfer.transaction do
       transfers.each { |transfer| status == "confirmed" ? transfer.confirm! : transfer.reject! }
     end
     transfers.each(&:sync_account_later) if status == "rejected"
 
-    redirect_back_or_to transactions_url, notice: t(".#{status}", count: transfers.size)
+    flash[:notice] = t(".#{status}", count: transfers.size)
+    respond_with_list_rows(changed: entries, fallback: transactions_url)
   end
 
   private

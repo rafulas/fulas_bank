@@ -1,4 +1,6 @@
 class Transactions::BulkDeletionsController < ApplicationController
+  include ListRowStreams
+
   def create
     # Exclude split children from bulk delete - they must be deleted via unsplit on parent
     # Only allow deletion from accounts where user has owner or full_control permission
@@ -10,14 +12,8 @@ class Transactions::BulkDeletionsController < ApplicationController
     destroyed.map(&:account).uniq.each(&:sync_later)
     flash[:notice] = "#{destroyed.count} transaction#{destroyed.count == 1 ? "" : "s"} deleted"
 
-    # Fulas Bank: the deleted rows go out of the list where it is, without
-    # loading the page again (which went back up the list).
-    respond_to do |format|
-      format.turbo_stream do
-        render turbo_stream: [ *destroyed.map { |entry| turbo_stream.remove(helpers.dom_id(entry)) }, *flash_notification_stream_items ]
-      end
-      format.html { redirect_back_or_to transactions_url }
-    end
+    # Fulas Bank: the deleted rows go out of the list where it is.
+    respond_with_list_rows(removed: destroyed, fallback: transactions_url)
   end
 
   private

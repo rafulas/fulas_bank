@@ -66,9 +66,10 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     legs = [ transfer.outflow_transaction.entry, transfer.inflow_transaction.entry ]
     Entry.where(id: [ picked.id, other.id, *legs.map(&:id) ]).update_all(import_id: import.id, seen_at: nil)
 
-    post mark_seen_transactions_url, params: { bulk_seen: { entry_ids: [ picked.id, legs.first.id ] } }
+    post mark_seen_transactions_url, params: { bulk_seen: { entry_ids: [ picked.id, legs.first.id ] } }, as: :turbo_stream
 
-    assert_redirected_to transactions_url
+    assert_response :success
+    assert_select "turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(picked)}']"
     assert picked.reload.seen_at.present?
     assert legs.all? { |entry| entry.reload.seen_at.present? }
     assert_nil other.reload.seen_at

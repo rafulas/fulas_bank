@@ -1,5 +1,6 @@
 class TransactionsController < ApplicationController
   include EntryableResource
+  include ListRowStreams
 
   # Fulas Bank: how far ahead the "Upcoming" tab looks for recurring payments.
   UPCOMING_DAYS = 45
@@ -53,8 +54,10 @@ class TransactionsController < ApplicationController
                    .pluck(:inflow_transaction_id, :outflow_transaction_id).flatten
     ids |= Current.accessible_entries.where(entryable_type: "Transaction", entryable_id: legs).pluck(:id).map(&:to_s)
 
-    count = Current.accessible_entries.unseen.where(id: ids).update_all(seen_at: Time.current)
-    redirect_back_or_to transactions_path, notice: t(".done", count: count)
+    changed = Current.accessible_entries.unseen.where(id: ids).to_a
+    count = Entry.where(id: changed.map(&:id)).update_all(seen_at: Time.current)
+    flash[:notice] = t(".done", count: count)
+    respond_with_list_rows(changed: changed)
   end
 
   def new

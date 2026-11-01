@@ -20,9 +20,9 @@
         <% end %>
 
         <%# Fulas Bank: only the new movements, to go through them at once. %>
-        <% if @unseen_count.to_i > 0 && @q[:unseen].blank? %>
+        <% if @q[:unseen].blank? %>
           <%= render DS::Link.new(
-            text: t(".show_unseen", count: @unseen_count),
+            text: t(".show_unseen", count: @unseen_count.to_i),
             icon: "eye",
             variant: "outline",
             href: transactions_path(q: @q.merge(unseen: "1"))

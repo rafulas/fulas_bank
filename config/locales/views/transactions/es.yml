@@ -275,6 +275,7 @@ es:
       import: Importar
     index:
       show_unseen:
+        zero: Nuevas
         one: "Nuevas (1)"
         other: "Nuevas (%{count})"
       mark_all_seen:

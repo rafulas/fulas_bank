@@ -278,6 +278,7 @@ en:
       import: Import
     index:
       show_unseen:
+        zero: New
         one: "New (1)"
         other: "New (%{count})"
       mark_all_seen:

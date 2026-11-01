@@ -1,4 +1,6 @@
 class Transactions::BulkUpdatesController < ApplicationController
+  include ListRowStreams
+
   def new
   end
 
@@ -27,7 +29,8 @@ class Transactions::BulkUpdatesController < ApplicationController
     )
     updated = [ updated, classification.apply! ].max if classification.any_change?
 
-    redirect_back_or_to transactions_path, notice: t(".success", count: updated)
+    flash[:notice] = t(".success", count: updated)
+    respond_with_list_rows(changed: entries.to_a)
   end
 
   private
