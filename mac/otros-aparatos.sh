@@ -11,7 +11,7 @@
 # private network of the devices signed in with your account, and
 # «tailscale serve» passes what arrives from them to localhost:3000 inside
 # this Mac. On the way it gives the app a fixed address with a real HTTPS
-# certificate, e.g. https://macbook-pro-de-rafa.tail2503e9.ts.net, so the
+# certificate, e.g. https://mi-mac.tail1234ab.ts.net, so the
 # password travels encrypted. The setting is kept by Tailscale itself
 # («--bg»): it survives closing Terminal and restarting the Mac.
 #

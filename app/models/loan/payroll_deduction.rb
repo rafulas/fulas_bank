@@ -106,7 +106,7 @@ class Loan::PayrollDeduction
   # loan. Oldest first.
   #
   # Fulas Bank: one income can also cover several instalments of that day
-  # (427,54 € in, 303,57 € and 123,97 € out for two staff loans), when it is
+  # (400,00 € in, 300,00 € and 100,00 € out for two staff loans), when it is
   # exactly what goes out of that account that day. The pair then shares it.
   def pairs_elsewhere(since:)
     entries = candidate_entries(since)

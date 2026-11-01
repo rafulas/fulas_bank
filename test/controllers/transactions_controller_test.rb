@@ -10,7 +10,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "a movement entered in the wrong account is moved to another one from its detail" do
-    entry = create_transaction(account: accounts(:depository), name: "Cena Urogallo", amount: 30, date: Date.current)
+    entry = create_transaction(account: accounts(:depository), name: "Cena La Tasca", amount: 30, date: Date.current)
     card = accounts(:credit_card)
 
     get transaction_url(entry)

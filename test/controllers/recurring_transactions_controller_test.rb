@@ -355,18 +355,18 @@ class RecurringTransactionsControllerTest < ActionDispatch::IntegrationTest
   test "Fulas Bank: a suggestion that is a series under another name is merged into it" do
     account = accounts(:depository)
     loan = @family.recurring_transactions.create!(
-      name: "Préstamo Reforma Vivienda", account: account, amount: 344.21, currency: "USD",
+      name: "Préstamo Reforma Cocina", account: account, amount: 350.00, currency: "USD",
       dedup_scope: "reforma", bill_type: "installment", expected_day_of_month: (Date.current - 2).day,
       anchor_date: Date.current, last_occurrence_date: Date.current, next_expected_date: Date.current,
       status: "active", manual: true
     )
     suggestion = @family.recurring_transactions.create!(
-      name: "Préstamo RRHH Reforma", account: account, amount: 344.21, currency: "USD",
+      name: "Préstamo RRHH Reforma", account: account, amount: 350.00, currency: "USD",
       dedup_scope: "rrhh", expected_day_of_month: (Date.current - 3).day, last_occurrence_date: Date.current - 3,
       next_expected_date: Date.current.next_month, status: "suggested", occurrence_count: 3
     )
     payments = 3.times.map do |i|
-      account.entries.create!(date: Date.current - 3 - i.months, amount: 344.21, currency: "USD",
+      account.entries.create!(date: Date.current - 3 - i.months, amount: 350.00, currency: "USD",
                               name: "Préstamo RRHH Reforma", entryable: Transaction.create!)
     end
 

@@ -174,8 +174,8 @@ class ForecastTest < ActiveSupport::TestCase
 
   test "a loan already paid by a recurring movement is not expected twice" do
     today = Date.new(2026, 10, 20)
-    create_account("Préstamo social", Loan.new(payment_amount: 1_218.16, payment_day: 16), balance: 250_000)
-    create_series(@account, name: "Pago Préstamo social Vivienda", amount: 1_218.16)
+    create_account("Préstamo empresa", Loan.new(payment_amount: 1_150.00, payment_day: 16), balance: 250_000)
+    create_series(@account, name: "Pago Préstamo empresa", amount: 1_150.00)
 
     forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
 
@@ -198,7 +198,7 @@ class ForecastTest < ActiveSupport::TestCase
 
   test "splits the total into cash and savings, and leaves out the accounts set apart" do
     savings = create_account("Fondo", Investment.new, balance: 3_000)
-    apart = create_account("Cuenta Rafa", Depository.new, balance: 200)
+    apart = create_account("Cuenta personal", Depository.new, balance: 200)
 
     forecast = Forecast.new(@family, accounts: [ @account, savings, apart ], through: Date.current + 10, include_variable: false,
                             column_groups: { apart.id => "none" })

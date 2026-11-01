@@ -2,7 +2,7 @@
 #
 #   Título,Fecha,Importe,Categoría,Subcategoría,Etiquetas,Concepto,Comercio,Cuentas
 #   Repsol Waylet,2026-10-07 00:00:00.000,-75.29€,Transporte,Combustible,Cupra,,,Tarjeta Repsol
-#   Adeudo mensual de tarjeta,2026-10-05 00:00:00.000,-449.97€,Traspasos,,,…,,de BBVA Mar&Me a Tarjeta Repsol
+#   Adeudo mensual de tarjeta,2026-10-05 00:00:00.000,-449.97€,Traspasos,,,…,,de Cuenta común a Tarjeta Repsol
 #
 # Two things need more than a column mapping:
 #
@@ -190,7 +190,7 @@ class Import::BilanceExport
     end
 
     # [origin, destination] for a transfer row, nil otherwise. Account names
-    # may contain " a " themselves ("Casa a medias"), so when there is more
+    # may contain " a " themselves ("Mano a mano"), so when there is more
     # than one way to split, the one naming a known account wins.
     def transfer_accounts(csv_row)
       return if one_side_account(csv_row[header("cuentas")])

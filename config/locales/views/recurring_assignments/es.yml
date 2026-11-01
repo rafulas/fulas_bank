@@ -20,7 +20,7 @@ es:
         empty: Aún no tienes recurrentes. Crea el primero.
         back: Volver a la lista
         name: Nombre
-        name_placeholder: Nómina Rafa BBVA
+        name_placeholder: Nómina empresa
         frequency: Selecciona frecuencia
         create: Crear y añadir
       create:

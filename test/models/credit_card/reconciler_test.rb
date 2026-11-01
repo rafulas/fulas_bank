@@ -5,8 +5,8 @@ class CreditCard::ReconcilerTest < ActiveSupport::TestCase
 
   setup do
     @family = families(:empty)
-    @bank = @family.accounts.create!(name: "BBVA Rafa", balance: 5_000, currency: "EUR", accountable: Depository.new)
-    @card = @family.accounts.create!(name: "Tarjeta BBVA Rafa", balance: 0, currency: "EUR",
+    @bank = @family.accounts.create!(name: "Banco principal", balance: 5_000, currency: "EUR", accountable: Depository.new)
+    @card = @family.accounts.create!(name: "Tarjeta principal", balance: 0, currency: "EUR",
                                      accountable: CreditCard.new(statement_closing_day: 31, payment_day: 5, payment_account: @bank))
     @fees = @family.categories.create!(name: "Comisiones", color: "#506cd8", lucide_icon: "shapes")
     @today = Date.new(2026, 10, 15)

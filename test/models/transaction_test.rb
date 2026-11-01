@@ -354,15 +354,15 @@ class TransactionTest < ActiveSupport::TestCase
   test "suggests the categories used before for the same merchant, the most used first" do
     family = families(:dylan_family)
     account = accounts(:depository)
-    merchant = family.merchants.create!(name: "Urogallo prueba")
+    merchant = family.merchants.create!(name: "La Tasca prueba")
     bars = family.categories.create!(name: "Cañas prueba", color: "#000000")
     restaurants = family.categories.create!(name: "Restaurantes prueba", color: "#000000")
 
     [ bars, bars, restaurants ].each_with_index do |category, i|
-      account.entries.create!(name: "Urogallo #{i}", date: Date.current - i, amount: 20, currency: "USD",
+      account.entries.create!(name: "La Tasca #{i}", date: Date.current - i, amount: 20, currency: "USD",
                               entryable: Transaction.new(category: category, merchant: merchant))
     end
-    entry = account.entries.create!(name: "Cena Urogallo", date: Date.current, amount: 30, currency: "USD",
+    entry = account.entries.create!(name: "Cena La Tasca", date: Date.current, amount: 30, currency: "USD",
                                     entryable: Transaction.new(merchant: merchant))
 
     assert_equal [ bars, restaurants ], entry.transaction.suggested_categories
