@@ -10,6 +10,7 @@ class DuplicateCharges
   LOOKBACK_DAYS = 60
   MAX_GAP_DAYS = 1
   PREFERENCE_KEY = "dismissed_duplicate_charges".freeze
+  MAX_DISMISSED = 2000
 
   Pair = Data.define(:first, :second) do
     def key
@@ -37,11 +38,13 @@ class DuplicateCharges
     @today = today
   end
 
+  # `key`: one pair key or several (the list's «No son duplicados»,
+  # Transaction::DuplicateFinder, keeps them here too).
   def self.dismiss!(user, key)
     user.with_lock do
       preferences = (user.preferences || {}).deep_dup
       keys = Array(preferences[PREFERENCE_KEY])
-      preferences[PREFERENCE_KEY] = (keys | [ key.to_s ]).last(500)
+      preferences[PREFERENCE_KEY] = (keys | Array(key).map(&:to_s)).last(MAX_DISMISSED)
       user.update!(preferences: preferences)
     end
   end

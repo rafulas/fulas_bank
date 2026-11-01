@@ -603,6 +603,8 @@ Rails.application.routes.draw do
       post :mark_all_seen
       # Fulas Bank: take it off the selected movements.
       post :mark_seen
+      # Fulas Bank: the selected possible duplicates are fine.
+      post :dismiss_duplicates
     end
 
     member do

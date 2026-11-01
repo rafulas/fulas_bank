@@ -39,6 +39,19 @@ class TransactionsController < ApplicationController
     end
   end
 
+  # Fulas Bank: «No son duplicados» from the «Duplicados» filter: the pairs
+  # among the selected movements are fine and are not shown again. Those
+  # left without a pair go out of the list.
+  def dismiss_duplicates
+    ids = Array(params.dig(:bulk_duplicates, :entry_ids)).map(&:to_s)
+    account_ids = Current.user.accessible_accounts.pluck(:id)
+    count = Transaction::DuplicateFinder.new(Current.family, account_ids: account_ids, user: Current.user).dismiss!(ids)
+
+    still = Transaction::DuplicateFinder.new(Current.family, account_ids: account_ids, user: Current.user.reload).entry_ids.to_set
+    flash[:notice] = t(".done", count: count)
+    respond_with_list_rows(removed: Current.accessible_entries.where(id: ids).reject { |entry| still.include?(entry.id.to_s) })
+  end
+
   # Fulas Bank: the blue dot of every imported movement taken off at once.
   def mark_all_seen
     Current.accessible_entries.unseen.update_all(seen_at: Time.current)
@@ -71,7 +84,7 @@ class TransactionsController < ApplicationController
     @q = search_params
     @accessible_account_ids = Current.user.accessible_accounts.pluck(:id)
     @unseen_count = Current.accessible_entries.unseen.count
-    @search = Transaction::Search.new(Current.family, filters: @q, accessible_account_ids: @accessible_account_ids)
+    @search = Transaction::Search.new(Current.family, filters: @q, accessible_account_ids: @accessible_account_ids, user: Current.user)
 
     base_scope = @search.transactions_scope
                        .reverse_chronological
@@ -852,7 +865,7 @@ class TransactionsController < ApplicationController
       cleaned_params = params.fetch(:q, {})
               .permit(
                 :start_date, :end_date, :search, :amount,
-                :amount_operator, :active_accounts_only, :unseen,
+                :amount_operator, :active_accounts_only, :unseen, :duplicates,
                 accounts: [], account_ids: [],
                 categories: [], merchants: [], types: [], tags: [], status: [], ai_status: [],
                 attachment_status: []
@@ -862,6 +875,7 @@ class TransactionsController < ApplicationController
 
       cleaned_params.delete(:amount_operator) unless cleaned_params[:amount].present?
       cleaned_params.delete(:unseen) unless cleaned_params[:unseen] == "1"
+      cleaned_params.delete(:duplicates) unless cleaned_params[:duplicates] == "1"
 
       if cleaned_params[:ai_status]
         cleaned_params[:ai_status] &= Transaction::Search::AI_STATUSES

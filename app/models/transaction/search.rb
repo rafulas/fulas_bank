@@ -24,13 +24,19 @@ class Transaction::Search
   attribute :active_accounts_only, :boolean, default: true
   # Fulas Bank: only the new movements (imported and not looked at yet).
   attribute :unseen, :boolean
+  # Fulas Bank: only the movements that may be there twice
+  # (Transaction::DuplicateFinder).
+  attribute :duplicates, :boolean
 
-  attr_reader :family, :accessible_account_ids
+  attr_reader :family, :accessible_account_ids, :user
 
-  # Initialize a transaction search with optional filters and accessible accounts
-  def initialize(family, filters: {}, accessible_account_ids: nil)
+  # Initialize a transaction search with optional filters and accessible accounts.
+  # Fulas Bank: `user`, whose dismissed duplicate pairs the «Duplicados»
+  # filter leaves out.
+  def initialize(family, filters: {}, accessible_account_ids: nil, user: nil)
     @family = family
     @accessible_account_ids = accessible_account_ids
+    @user = user
     super(filters)
   end
 
@@ -52,6 +58,7 @@ class Transaction::Search
       query = apply_ai_status_filter(query, ai_status)
       query = apply_attachment_status_filter(query, attachment_status)
       query = apply_unseen_filter(query, unseen)
+      query = apply_duplicates_filter(query, duplicates)
       query = apply_text_search(query, search)
       query = EntrySearch.apply_date_filters(query, start_date, end_date)
       query = EntrySearch.apply_amount_filter(query, amount, amount_operator)
@@ -309,6 +316,13 @@ class Transaction::Search
       sql = "EXISTS (SELECT 1 FROM data_enrichments de WHERE de.enrichable_type = 'Transaction' AND de.enrichable_id = transactions.id AND de.attribute_name = 'category_id' AND de.source IN (:sources)"
       sql += " AND #{extra_condition}" if extra_condition
       sql + ")"
+    end
+
+    def apply_duplicates_filter(query, duplicates)
+      return query unless duplicates
+
+      account_ids = accessible_account_ids || family.accounts.pluck(:id)
+      query.where(entries: { id: Transaction::DuplicateFinder.new(family, account_ids: account_ids, user: user).entry_ids })
     end
 
     # Fulas Bank: the movements with the blue dot (Entry#unseen?).

@@ -15,6 +15,9 @@
   <% if @q[:unseen].present? %>
     <%= hidden_field_tag "q[unseen]", "1", id: nil %>
   <% end %>
+  <% if @q[:duplicates].present? %>
+    <%= hidden_field_tag "q[duplicates]", "1", id: nil %>
+  <% end %>
 
   <div class="flex gap-2 mb-3">
     <div class="grow">
@@ -94,6 +97,30 @@
           size: :sm,
           href: transactions_filter_path(@q, unseen: (unseen_on ? nil : "1")),
           aria: { pressed: unseen_on }
+        ) %>
+
+    <%# Fulas Bank: the movements without a category, on and off. %>
+    <% uncategorized_on = Array(@q[:categories]) == [ Category::UNCATEGORIZED_FILTER_VALUE ] %>
+    <%= render DS::Link.new(
+          id: "transaction-uncategorized-button",
+          text: t(".uncategorized", count: @uncategorized_count.to_i),
+          icon: "tag",
+          variant: (uncategorized_on ? "secondary" : "outline"),
+          size: :sm,
+          href: transactions_filter_path(@q, categories: (uncategorized_on ? nil : [ Category::UNCATEGORIZED_FILTER_VALUE ])),
+          aria: { pressed: uncategorized_on }
+        ) %>
+
+    <%# Fulas Bank: the movements that may be there twice, on and off. %>
+    <% duplicates_on = @q[:duplicates].present? %>
+    <%= render DS::Link.new(
+          id: "transaction-duplicates-button",
+          text: t(".duplicates"),
+          icon: "copy",
+          variant: (duplicates_on ? "secondary" : "outline"),
+          size: :sm,
+          href: transactions_filter_path(@q, duplicates: (duplicates_on ? nil : "1")),
+          aria: { pressed: duplicates_on }
         ) %>
 
     <%# Everything else %>
