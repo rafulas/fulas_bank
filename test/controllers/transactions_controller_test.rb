@@ -43,6 +43,27 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-stream[action='update'][target='drawer']"
   end
 
+  test "the filter bar finds possible duplicates and movements without a category" do
+    day = Date.new(2025, 3, 10)
+    first = create_transaction(account: accounts(:depository), name: "Repetido uno", amount: 33.3, date: day, category: categories(:food_and_drink))
+    second = create_transaction(account: accounts(:depository), name: "Repetido dos", amount: 33.3, date: day + 1, category: categories(:food_and_drink))
+
+    get transactions_url
+    assert_select "#transaction-duplicates-button"
+    assert_select "#transaction-uncategorized-button"
+
+    get transactions_url(q: { duplicates: "1" })
+    assert_response :success
+    assert_match "Repetido uno", response.body
+    assert_match "Repetido dos", response.body
+
+    post dismiss_duplicates_transactions_url, params: { bulk_duplicates: { entry_ids: [ first.id, second.id ] } }, as: :turbo_stream
+    assert_select "turbo-stream[action='remove'][target='#{ActionView::RecordIdentifier.dom_id(first)}']"
+
+    get transactions_url(q: { duplicates: "1" })
+    assert_no_match "Repetido uno", response.body
+  end
+
   test "the New button shows only the new movements" do
     import = imports(:transaction)
     fresh = create_transaction(account: accounts(:depository), name: "Recién importado", amount: 10, date: Date.current)
@@ -919,7 +940,7 @@ end
       transfer_outflow_money: Money.new(0, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: {}, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: {}, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     # Fulas Bank: without filters the panel shows and the totals of the
     # whole history are not worked out.
     search.expects(:totals).never
@@ -946,7 +967,7 @@ end
       transfer_outflow_money: Money.new(0, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: { "categories" => [ "Food" ], "types" => [ "expense" ] }, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: { "categories" => [ "Food" ], "types" => [ "expense" ] }, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     search.expects(:totals).once.returns(totals)
 
     get transactions_url(q: { categories: [ "Food" ], types: [ "expense" ] })
@@ -969,7 +990,7 @@ end
       transfer_outflow_money: Money.new(3000, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: { "types" => [ "transfer" ] }, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: { "types" => [ "transfer" ] }, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     search.expects(:totals).once.returns(totals)
 
     get transactions_url(q: { types: [ "transfer" ] })

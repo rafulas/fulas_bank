@@ -54,6 +54,7 @@ en:
         transactions_section: Transactions
     unknown_name: Unknown transaction
     selection_bar:
+      not_duplicates: Not duplicates
       mark_seen: Mark as seen
       confirm_transfers: Confirm the selected «Auto» transfers
       reject_transfers: Reject the selected «Auto» transfers
@@ -107,6 +108,11 @@ en:
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."
     move_account:
       moved: "Movement moved to %{account}."
+    dismiss_duplicates:
+      done:
+        zero: No duplicates among the selected movements
+        one: Marked as not a duplicate
+        other: "%{count} pairs marked as not duplicates"
     mark_seen:
       done:
         zero: None of the selected movements was new
@@ -418,6 +424,7 @@ en:
           attachment_with: With attachment
           attachment_without: Without attachment
           unseen: New
+          duplicates: Possible duplicates
         attachment_filter:
           with: With attachment
           without: Without attachment
@@ -454,6 +461,11 @@ en:
         search_placeholder: "Search by description, merchant, category or amount"
         filter: "Filter"
         more_filters: More filters
+        uncategorized:
+          zero: Uncategorized
+          one: "Uncategorized (1)"
+          other: "Uncategorized (%{count})"
+        duplicates: Possible duplicates
         unseen:
           zero: New
           one: "New (1)"

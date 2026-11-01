@@ -54,6 +54,7 @@ es:
         transactions_section: Transacciones
     unknown_name: Transacción desconocida
     selection_bar:
+      not_duplicates: No son duplicados
       mark_seen: Marcar como vistas
       confirm_transfers: Confirmar los traspasos «Auto» seleccionados
       reject_transfers: Rechazar los traspasos «Auto» seleccionados
@@ -107,6 +108,11 @@ es:
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."
     move_account:
       moved: "Movimiento pasado a %{account}."
+    dismiss_duplicates:
+      done:
+        zero: Entre los seleccionados no había duplicados
+        one: Marcado como no duplicado
+        other: "%{count} parejas marcadas como no duplicadas"
     mark_seen:
       done:
         zero: Ninguno de los seleccionados era nuevo
@@ -415,6 +421,7 @@ es:
           attachment_with: Con adjunto
           attachment_without: Sin adjunto
           unseen: Nuevas
+          duplicates: Posibles duplicados
         attachment_filter:
           with: Con adjunto
           without: Sin adjunto
@@ -451,6 +458,11 @@ es:
         search_placeholder: Buscar por concepto, comercio, categoría o importe
         filter: Filtrar
         more_filters: Más filtros
+        uncategorized:
+          zero: Sin categoría
+          one: "Sin categoría (1)"
+          other: "Sin categoría (%{count})"
+        duplicates: Posibles duplicados
         unseen:
           zero: Nuevas
           one: "Nuevas (1)"

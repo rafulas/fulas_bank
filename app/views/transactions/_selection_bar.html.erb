@@ -33,6 +33,15 @@
       <%= icon "repeat", class: "group-hover/recurring:text-inverse" %>
     <% end %>
 
+    <%# Fulas Bank: under «Duplicados», the selected ones are fine. %>
+    <% if @q.respond_to?(:[]) && @q[:duplicates].present? %>
+      <%= form_with url: dismiss_duplicates_transactions_path, data: { turbo_frame: "_top" } do %>
+        <button type="button" data-bulk-select-scope-param="bulk_duplicates" data-action="bulk-select#submitBulkRequest" class="p-1.5 group/dup hover:bg-inverse flex items-center justify-center rounded-md" title="<%= t("transactions.selection_bar.not_duplicates") %>">
+          <%= icon "copy-check", class: "group-hover/dup:text-inverse" %>
+        </button>
+      <% end %>
+    <% end %>
+
     <%# Fulas Bank: take the blue dot off the selected movements. %>
     <%= form_with url: mark_seen_transactions_path, data: { turbo_frame: "_top" } do %>
       <button type="button" data-bulk-select-scope-param="bulk_seen" data-action="bulk-select#submitBulkRequest" class="p-1.5 group/seen hover:bg-inverse flex items-center justify-center rounded-md" title="<%= t("transactions.selection_bar.mark_seen") %>">

@@ -66,6 +66,12 @@
       <%= icon(param_value == "current" ? "sparkles" : "history", size: "sm") %>
       <p><%= t(".ai_#{param_value}") %></p>
     </div>
+  <% elsif param_key == "duplicates" %>
+    <%# Fulas Bank: the possible duplicates only. %>
+    <div class="flex items-center gap-2 px-1">
+      <%= icon("copy", size: "sm") %>
+      <p><%= t(".duplicates") %></p>
+    </div>
   <% elsif param_key == "unseen" %>
     <%# Fulas Bank: the new movements only. %>
     <div class="flex items-center gap-2 px-1">
