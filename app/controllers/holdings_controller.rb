@@ -1,8 +1,8 @@
 class HoldingsController < ApplicationController
   include StreamExtensions
 
-  before_action :set_holding, only: %i[show update destroy unlock_cost_basis remap_security reset_security sync_prices update_price]
-  before_action :require_holding_write_permission!, only: %i[update destroy unlock_cost_basis remap_security reset_security sync_prices update_price]
+  before_action :set_holding, only: %i[show update destroy unlock_cost_basis remap_security reset_security sync_prices update_price adjust_shares]
+  before_action :require_holding_write_permission!, only: %i[update destroy unlock_cost_basis remap_security reset_security sync_prices update_price adjust_shares]
 
   def index
     @account = accessible_accounts.find(params[:account_id])
@@ -113,6 +113,27 @@ class HoldingsController < ApplicationController
       flash[:notice] = t(".success")
     else
       flash[:alert] = t(".error")
+    end
+
+    redirect_to account_path(@holding.account, tab: "holdings")
+  end
+
+  # Fulas Bank: the number of shares set by hand (Holding::ShareAdjustment).
+  def adjust_shares
+    adjustment = Holding::ShareAdjustment.new(
+      @holding,
+      shares: params.dig(:holding, :shares),
+      date: parse_price_date(params.dig(:holding, :shares_date)),
+      price: params.dig(:holding, :shares_price)
+    )
+    entry = adjustment.apply!
+
+    if adjustment.errors.any?
+      flash[:alert] = t(".error")
+    elsif entry
+      flash[:notice] = t(".success", difference: entry.trade.qty.to_d.to_s("F").sub(/\.0+\z/, ""))
+    else
+      flash[:notice] = t(".unchanged")
     end
 
     redirect_to account_path(@holding.account, tab: "holdings")

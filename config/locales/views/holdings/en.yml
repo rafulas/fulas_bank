@@ -21,6 +21,12 @@ en:
       unavailable: The provider could not find this security. Check the ticker and its market (for example BBVA.MC) or type the price by hand with the pencil next to "Current Market Price".
       back_online: Security found. It now gets prices; the account is being recalculated.
       provider_error: Could not fetch latest prices. Please try again in a few minutes.
+    adjust_shares:
+      success: "Shares adjusted (%{difference}). The account is being recalculated."
+      unchanged: It already had that number of shares; nothing changed.
+      error: Type a number of shares and a price that are not negative, and a date that is not in the future.
+    share_adjustment:
+      name: "Share adjustment %{ticker} (%{difference})"
     update_price:
       success: Price saved. The account is being recalculated.
       error: Enter a price above zero and a date that is not in the future.
@@ -109,6 +115,12 @@ en:
       unlock_confirm_title: Unlock cost basis?
       unlock_confirm_body: This will allow the cost basis to be updated by provider syncs or trade calculations.
       shares_label: Shares
+      edit_shares: Change the number of shares
+      shares_hint: Type the shares you really hold. The difference is recorded as an operation of its own ("Share adjustment") on the date you choose. If they were given to you, leave the price empty (0); if you paid for them, type what each one cost.
+      shares_new_label: Shares you hold
+      shares_date_label: Date
+      shares_price_label: "Price per share (%{currency}, optional)"
+      save_shares: Save shares
       book_value_label: Book Value
       market_value_label: Market Value
       market_data_label: Market data

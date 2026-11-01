@@ -21,6 +21,12 @@ es:
       unavailable: Yahoo Finance no encuentra este valor. Comprueba el ticker con su mercado (por ejemplo BBVA.MC) o escribe el precio a mano con el lápiz de «Precio de mercado actual».
       back_online: Valor encontrado. Ya recibe precios; la cuenta se está recalculando.
       provider_error: No se pudieron obtener los precios más recientes. Inténtalo de nuevo en unos minutos.
+    adjust_shares:
+      success: "Acciones ajustadas (%{difference}). La cuenta se está recalculando."
+      unchanged: Ya tenía ese número de acciones; no ha cambiado nada.
+      error: Escribe un número de acciones y un precio que no sean negativos, y una fecha que no sea futura.
+    share_adjustment:
+      name: "Ajuste de acciones %{ticker} (%{difference})"
     update_price:
       success: Precio guardado. La cuenta se está recalculando.
       error: Escribe un precio mayor que cero y una fecha que no sea futura.
@@ -107,6 +113,12 @@ es:
       unlock_confirm_title: ¿Desbloquear base de costes?
       unlock_confirm_body: Esto permitirá que la base de costes se actualice mediante las sincronizaciones del proveedor o los cálculos de operaciones.
       shares_label: Acciones
+      edit_shares: Cambiar el número de acciones
+      shares_hint: Escribe las acciones que tienes de verdad. La diferencia se apunta como una operación propia («Ajuste de acciones»), en la fecha que elijas. Si te las dieron, deja el precio vacío (0); si las pagaste, pon lo que costó cada una.
+      shares_new_label: Acciones que tienes
+      shares_date_label: Fecha
+      shares_price_label: "Precio por acción (%{currency}, opcional)"
+      save_shares: Guardar acciones
       book_value_label: Valor en libros
       market_value_label: Valor de mercado
       market_data_label: Datos de mercado
