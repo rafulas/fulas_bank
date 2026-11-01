@@ -277,10 +277,6 @@ en:
       edit_tags: Edit tags
       import: Import
     index:
-      show_unseen:
-        zero: New
-        one: "New (1)"
-        other: "New (%{count})"
       mark_all_seen:
         one: Mark 1 new movement as seen
         other: "Mark %{count} new movements as seen"
@@ -458,6 +454,10 @@ en:
         search_placeholder: "Search by description, merchant, category or amount"
         filter: "Filter"
         more_filters: More filters
+        unseen:
+          zero: New
+          one: "New (1)"
+          other: "New (%{count})"
         apply: Apply
         cancel: Cancel
         clear_filters: Clear

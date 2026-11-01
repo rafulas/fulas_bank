@@ -12,6 +12,9 @@
   <% Array(@q[:types]).each do |type| %>
     <%= hidden_field_tag "q[types][]", type, id: nil %>
   <% end %>
+  <% if @q[:unseen].present? %>
+    <%= hidden_field_tag "q[unseen]", "1", id: nil %>
+  <% end %>
 
   <div class="flex gap-2 mb-3">
     <div class="grow">
@@ -80,6 +83,18 @@
         </div>
       <% end %>
     <% end %>
+
+    <%# Fulas Bank: only the new movements (blue dot), on and off. %>
+    <% unseen_on = @q[:unseen].present? %>
+    <%= render DS::Link.new(
+          id: "transaction-unseen-button",
+          text: t(".unseen", count: @unseen_count.to_i),
+          icon: "eye",
+          variant: (unseen_on ? "secondary" : "outline"),
+          size: :sm,
+          href: transactions_filter_path(@q, unseen: (unseen_on ? nil : "1")),
+          aria: { pressed: unseen_on }
+        ) %>
 
     <%# Everything else %>
     <% more = %i[status amount tags merchants ai_status].count { |key| @q[key].present? } %>
