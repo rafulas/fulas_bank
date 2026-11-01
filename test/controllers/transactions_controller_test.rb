@@ -940,7 +940,7 @@ end
       transfer_outflow_money: Money.new(0, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: {}, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: {}, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     # Fulas Bank: without filters the panel shows and the totals of the
     # whole history are not worked out.
     search.expects(:totals).never
@@ -967,7 +967,7 @@ end
       transfer_outflow_money: Money.new(0, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: { "categories" => [ "Food" ], "types" => [ "expense" ] }, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: { "categories" => [ "Food" ], "types" => [ "expense" ] }, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     search.expects(:totals).once.returns(totals)
 
     get transactions_url(q: { categories: [ "Food" ], types: [ "expense" ] })
@@ -990,7 +990,7 @@ end
       transfer_outflow_money: Money.new(3000, "USD")
     )
 
-    Transaction::Search.expects(:new).with(family, filters: { "types" => [ "transfer" ] }, accessible_account_ids: [ account.id ]).returns(search)
+    Transaction::Search.expects(:new).with(family, filters: { "types" => [ "transfer" ] }, accessible_account_ids: [ account.id ], user: users(:empty)).returns(search)
     search.expects(:totals).once.returns(totals)
 
     get transactions_url(q: { types: [ "transfer" ] })
