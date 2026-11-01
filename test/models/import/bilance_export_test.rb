@@ -110,6 +110,32 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
     assert_equal 5, rows.size
   end
 
+  test "leaves out what the app already has: a closed account and payroll loan instalments" do
+    fake = @family.accounts.create!(name: "Cuenta Fake Nómina", owner: users(:family_admin), balance: 0, currency: "USD",
+                                    accountable: Depository.new, closed_on: Date.new(2025, 12, 31))
+    @family.accounts.create!(name: "Póliza Ahorro", owner: users(:family_admin), balance: 0, currency: "USD", accountable: Depository.new)
+    loan = accounts(:loan)
+    loan.update!(name: "Préstamo Reforma")
+    loan.accountable.update!(payroll_deducted: true, payroll_deducted_since: Date.new(2026, 1, 1),
+                             payroll_expense_category: categories(:food_and_drink))
+
+    @csv = <<~CSV
+      Título,Fecha,Importe,Categoría,Subcategoría,Etiquetas,Concepto,Comercio,Cuentas
+      Nómina Prest,2026-10-19 15:00:00.000,133.99€,Ingresos,,,,,#{fake.name}
+      Pago Préstamo,2026-10-19 16:00:00.000,-133.99€,Hogar,,,,,de #{fake.name} a Préstamo Reforma
+      Inversión póliza,2026-10-19 16:00:00.000,-358.54€,Traspasos,,,,,de #{fake.name} a Póliza Ahorro
+      Antiguo,2025-06-19 00:00:00.000,50.00€,Ingresos,,,,,#{fake.name}
+      Café,2026-10-19 00:00:00.000,-1.50€,Comida,,,,,Póliza Ahorro
+    CSV
+
+    rows = configured_import.rows.ordered
+
+    assert_equal [ "Antiguo", "Café", "Inversión póliza" ], rows.map(&:name).sort
+    policy = rows.find { |row| row.name == "Inversión póliza" }
+    assert_equal "Póliza Ahorro", policy.account
+    assert_equal BigDecimal("-358.54"), policy.signed_amount, "money in"
+  end
+
   private
     def configured_import(account: nil)
       import = @family.imports.create!(type: "TransactionImport", raw_file_str: @csv, col_sep: ",", account: account)

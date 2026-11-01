@@ -60,36 +60,42 @@ class Import::BilanceExport
   end
 
   # Adjusts the rows built from the CSV (Import#generate_rows_from_csv):
-  # subcategories and both sides of each transfer.
+  # subcategories, both sides of each transfer, and the movements the app
+  # already has another way left out (#keep?).
   # Rows are numbered again at the end: a row number is unique per import,
   # and a transfer's second side is an extra row.
   def adjust(mapped_rows, csv_rows)
     adjusted = mapped_rows.zip(csv_rows).flat_map do |row, csv_row|
       row = row.merge(category: category_for(row, csv_row), notes: notes_for(row, csv_row))
+      date = row_date(row)
 
       side_account = one_side_account(csv_row[header("cuentas")])
       if side_account
         row = row.merge(account: side_account) if import.account.nil? && import.account_col_label.present?
-        next [ row ]
+        next keep?(side_account, side_partner(csv_row), date) ? [ row ] : []
       end
 
       origin, destination = transfer_accounts(csv_row)
-      next [ row ] if origin.nil? || row[:amount].blank?
+      if origin.nil? || row[:amount].blank?
+        next keep?(plain_account(row), nil, date) ? [ row ] : []
+      end
 
       amount = BigDecimal(row[:amount]).abs
 
-      if import.account.nil? && import.account_col_label.present?
+      sides = if import.account.nil? && import.account_col_label.present?
         [
-          row.merge(account: origin, amount: (-amount).to_s("F")),
-          row.merge(account: destination, amount: amount.to_s("F"))
+          [ row.merge(account: origin, amount: (-amount).to_s("F")), origin, destination ],
+          [ row.merge(account: destination, amount: amount.to_s("F")), destination, origin ]
         ]
       elsif home?(destination)
-        [ row.merge(amount: amount.to_s("F")) ]
+        [ [ row.merge(amount: amount.to_s("F")), destination, origin ] ]
       elsif home?(origin)
-        [ row.merge(amount: (-amount).to_s("F")) ]
+        [ [ row.merge(amount: (-amount).to_s("F")), origin, destination ] ]
       else
-        [ row ]
+        [ [ row, nil, nil ] ]
       end
+
+      sides.filter_map { |side_row, side, partner| side_row if side.nil? || keep?(side, partner, date) }
     end
 
     adjusted.each.with_index(1).map { |row, index| row.merge(source_row_number: index) }
@@ -100,6 +106,71 @@ class Import::BilanceExport
 
     def header(key)
       @headers[key]
+    end
+
+    # Fulas Bank: what the app already has another way stays out.
+    #
+    # - A closed account takes nothing after its closing date. The «Cuenta
+    #   Fake» Bilance keeps for what is taken out of the payslip is closed
+    #   once the loans book it themselves: its movements would be there twice.
+    # - A transfer from such an account into a loan that is taken out of the
+    #   payslip is left out on both sides: the loan books that instalment
+    #   itself (Loan::PayrollDeduction). Into any other account (the savings
+    #   policy) that side is kept.
+    def keep?(side, partner, date)
+      return true if date.nil?
+      return false if retired?(side, date)
+
+      !(partner && retired?(partner, date) && payroll_loan?(side, date))
+    end
+
+    def retired?(name, date)
+      account = account_named(name)
+      account.present? && account.closed_on.present? && date > account.closed_on
+    end
+
+    def payroll_loan?(name, date)
+      account = account_named(name)
+      return false unless account&.accountable_type == "Loan"
+
+      loan = account.accountable
+      loan.payroll_deducted? && loan.payroll_deducted_since.present? && date >= loan.payroll_deducted_since
+    end
+
+    def account_named(name)
+      return if name.blank?
+
+      @accounts_by_name ||= import.family.accounts.includes(:accountable).index_by { |account| comparable(account.name) }
+      @accounts_by_name[comparable(name)]
+    end
+
+    # The account of an ordinary row: its own column, or the import's.
+    def plain_account(row)
+      import.account.nil? && import.account_col_label.present? ? row[:account] : import.account&.name
+    end
+
+    def row_date(row)
+      Date.strptime(row[:date].to_s, import.date_format)
+    rescue ArgumentError, TypeError
+      nil
+    end
+
+    # The other side of a transfer written as two rows ("de X" going out, "a
+    # Y" coming in): the row with the same title, date and amount.
+    def side_partner(csv_row)
+      @side_rows ||= import.csv_rows.filter_map do |other|
+        match = other[header("cuentas")].to_s.strip.match(ONE_SIDE)
+        next unless match && one_side_account(other[header("cuentas")])
+
+        [ side_key(other), match[1], match[2].strip ]
+      end
+
+      direction = csv_row[header("cuentas")].to_s.strip.match(ONE_SIDE)[1]
+      @side_rows.find { |key, other_direction, _| key == side_key(csv_row) && other_direction != direction }&.last
+    end
+
+    def side_key(csv_row)
+      [ csv_row[header("titulo")].to_s.strip, csv_row[header("fecha")].to_s[0, 10], csv_row[header("importe")].to_s.delete("-+ ") ]
     end
 
     def category_for(row, csv_row)
