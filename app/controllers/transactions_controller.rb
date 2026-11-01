@@ -1,5 +1,6 @@
 class TransactionsController < ApplicationController
   include EntryableResource
+  include ListRowStreams
 
   # Fulas Bank: how far ahead the "Upcoming" tab looks for recurring payments.
   UPCOMING_DAYS = 45
@@ -19,6 +20,25 @@ class TransactionsController < ApplicationController
     assign_mark_recurring_state
   end
 
+  # Fulas Bank: deleting from the drawer takes the row out of the list and
+  # closes the drawer, without loading the page again, so the list stays
+  # where it was (a reload went back up, past the blocks loaded by
+  # scrolling).
+  def destroy
+    return unless require_account_permission!(@entry.account)
+
+    @entry.destroy!
+    @entry.sync_account_later
+    flash[:notice] = t("account.entries.destroy.success")
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [ turbo_stream.remove(dom_id(@entry)), turbo_stream.update("drawer", ""), *flash_notification_stream_items ]
+      end
+      format.any { redirect_back_or_to account_path(@entry.account) }
+    end
+  end
+
   # Fulas Bank: the blue dot of every imported movement taken off at once.
   def mark_all_seen
     Current.accessible_entries.unseen.update_all(seen_at: Time.current)
@@ -34,8 +54,10 @@ class TransactionsController < ApplicationController
                    .pluck(:inflow_transaction_id, :outflow_transaction_id).flatten
     ids |= Current.accessible_entries.where(entryable_type: "Transaction", entryable_id: legs).pluck(:id).map(&:to_s)
 
-    count = Current.accessible_entries.unseen.where(id: ids).update_all(seen_at: Time.current)
-    redirect_back_or_to transactions_path, notice: t(".done", count: count)
+    changed = Current.accessible_entries.unseen.where(id: ids).to_a
+    count = Entry.where(id: changed.map(&:id)).update_all(seen_at: Time.current)
+    flash[:notice] = t(".done", count: count)
+    respond_with_list_rows(changed: changed)
   end
 
   def new

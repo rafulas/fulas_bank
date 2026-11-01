@@ -43,6 +43,15 @@ export default class extends Controller {
       `${scope}[entry_ids][]`,
       this.selectedIdsValue,
     );
+    // Fulas Bank: an action answered in place (deleting removes the rows
+    // without a reload) leaves nothing selected.
+    form.addEventListener(
+      "turbo:submit-end",
+      (event) => {
+        if (event.detail.success) this.deselectAll();
+      },
+      { once: true },
+    );
     form.requestSubmit();
   }
 

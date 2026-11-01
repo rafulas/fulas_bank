@@ -1,4 +1,6 @@
 class Transactions::BulkDeletionsController < ApplicationController
+  include ListRowStreams
+
   def create
     # Exclude split children from bulk delete - they must be deleted via unsplit on parent
     # Only allow deletion from accounts where user has owner or full_control permission
@@ -8,7 +10,10 @@ class Transactions::BulkDeletionsController < ApplicationController
                       .where(parent_entry_id: nil)
     destroyed = entries_scope.destroy_by(id: with_transfer_partners(bulk_delete_params[:entry_ids]))
     destroyed.map(&:account).uniq.each(&:sync_later)
-    redirect_back_or_to transactions_url, notice: "#{destroyed.count} transaction#{destroyed.count == 1 ? "" : "s"} deleted"
+    flash[:notice] = "#{destroyed.count} transaction#{destroyed.count == 1 ? "" : "s"} deleted"
+
+    # Fulas Bank: the deleted rows go out of the list where it is.
+    respond_with_list_rows(removed: destroyed, fallback: transactions_url)
   end
 
   private

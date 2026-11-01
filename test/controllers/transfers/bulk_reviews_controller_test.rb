@@ -15,6 +15,16 @@ class Transfers::BulkReviewsControllerTest < ActionDispatch::IntegrationTest
     assert @transfer.reload.confirmed?
   end
 
+  test "from the list, both movements are drawn again in place" do
+    post transfers_bulk_review_url, params: { bulk_transfer: { status: "confirmed", entry_ids: [ @entry.id ] } }, as: :turbo_stream
+
+    assert_response :success
+    [ @transfer.outflow_transaction.entry, @transfer.inflow_transaction.entry ].each do |entry|
+      assert_select "turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(entry)}']"
+    end
+    assert_select "turbo-stream[action='update'][target='bulk_transaction_edit_drawer']"
+  end
+
   test "rejects them, unpairing the movements" do
     post transfers_bulk_review_url, params: { bulk_transfer: { status: "rejected", entry_ids: [ @entry.id ] } }
 

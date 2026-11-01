@@ -31,6 +31,18 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal accounts(:depository), entry.reload.account
   end
 
+  test "deleting from the drawer takes the row out of the list without reloading it" do
+    entry = create_transaction(account: accounts(:depository), name: "Para borrar", amount: 12, date: Date.current)
+
+    assert_difference -> { Entry.count }, -1 do
+      delete transaction_url(entry), as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_select "turbo-stream[action='remove'][target='#{ActionView::RecordIdentifier.dom_id(entry)}']"
+    assert_select "turbo-stream[action='update'][target='drawer']"
+  end
+
   test "the New button shows only the new movements" do
     import = imports(:transaction)
     fresh = create_transaction(account: accounts(:depository), name: "Recién importado", amount: 10, date: Date.current)
@@ -54,9 +66,10 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     legs = [ transfer.outflow_transaction.entry, transfer.inflow_transaction.entry ]
     Entry.where(id: [ picked.id, other.id, *legs.map(&:id) ]).update_all(import_id: import.id, seen_at: nil)
 
-    post mark_seen_transactions_url, params: { bulk_seen: { entry_ids: [ picked.id, legs.first.id ] } }
+    post mark_seen_transactions_url, params: { bulk_seen: { entry_ids: [ picked.id, legs.first.id ] } }, as: :turbo_stream
 
-    assert_redirected_to transactions_url
+    assert_response :success
+    assert_select "turbo-stream[action='replace'][target='#{ActionView::RecordIdentifier.dom_id(picked)}']"
     assert picked.reload.seen_at.present?
     assert legs.all? { |entry| entry.reload.seen_at.present? }
     assert_nil other.reload.seen_at

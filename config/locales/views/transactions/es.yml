@@ -274,9 +274,6 @@ es:
       edit_tags: Editar etiquetas
       import: Importar
     index:
-      show_unseen:
-        one: "Nuevas (1)"
-        other: "Nuevas (%{count})"
       mark_all_seen:
         one: Marcar 1 movimiento nuevo como visto
         other: "Marcar %{count} movimientos nuevos como vistos"
@@ -454,6 +451,10 @@ es:
         search_placeholder: Buscar por concepto, comercio, categoría o importe
         filter: Filtrar
         more_filters: Más filtros
+        unseen:
+          zero: Nuevas
+          one: "Nuevas (1)"
+          other: "Nuevas (%{count})"
         apply: Aplicar
         cancel: Cancelar
         clear_filters: Limpiar
