@@ -5,10 +5,10 @@ class Import::DuplicatesControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:family_admin)
     @import = imports(:transaction)
     account = accounts(:depository)
-    account.entries.create!(date: Date.new(2024, 1, 17), amount: 30, currency: "USD", name: "Cena Urogallo", entryable: Transaction.new)
+    account.entries.create!(date: Date.new(2024, 1, 17), amount: 30, currency: "USD", name: "Cena La Tasca", entryable: Transaction.new)
     @import.update!(
       account: account,
-      raw_file_str: "date,name,amount\n01/18/2024,RESTAURANTE UROGALLO POZUELO,30\n",
+      raw_file_str: "date,name,amount\n01/18/2024,RESTAURANTE LA TASCA CENTRO,30\n",
       date_col_label: "date", amount_col_label: "amount", name_col_label: "name",
       date_format: "%m/%d/%Y", amount_type_strategy: "signed_amount", signage_convention: "inflows_negative"
     )

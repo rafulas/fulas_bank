@@ -87,7 +87,7 @@ class Vehicle::LogTest < ActiveSupport::TestCase
     family = accounts(:vehicle).family
     parking = family.categories.find_by(name: "Aparcamiento") || family.categories.create!(name: "Aparcamiento", color: "#506cd8")
 
-    station = create_transaction(name: "E.S. Pozuelo", date: 2.days.ago.to_date, amount: 40)
+    station = create_transaction(name: "E.S. Centro", date: 2.days.ago.to_date, amount: 40)
     waylet = create_transaction(name: "Waylet Madrid", date: 3.days.ago.to_date, amount: 41)
     beach = create_transaction(name: "Compra La Manga", date: 1.day.ago.to_date, amount: 28)
     car_park = create_transaction(name: "Telpark", date: 1.day.ago.to_date, amount: 3, category: parking)

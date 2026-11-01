@@ -4,7 +4,7 @@
 #
 # It is also how a payment the app did not recognise gets its series: the
 # bank writes «Préstamo RRHH Reforma» and the series is called «Préstamo
-# Reforma Vivienda», so the matcher leaves it alone until the user links it.
+# Reforma Cocina», so the matcher leaves it alone until the user links it.
 #
 # Two charges from the same shop can be two subscriptions (Apple Music at
 # 10,99 € and iCloud 2 TB at 2,99 €): each is its own series, and the app's

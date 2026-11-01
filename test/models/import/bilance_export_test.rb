@@ -39,7 +39,7 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
 
     transfers = import.rows.select { |row| row.name == "Adeudo mensual de tarjeta" }.sort_by(&:account)
 
-    assert_equal [ [ "BBVA Casa a medias", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ],
+    assert_equal [ [ "Cuenta Mano a mano", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ],
                  transfers.map { |row| [ row.account, row.signed_amount ] }
     assert_equal 6, import.rows.count
   end
@@ -86,10 +86,10 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
   test "reads the October 2026 export: spaces before quoted values and transfers as two rows" do
     csv = <<~CSV
       Título, Fecha, Importe, Categoría, Subcategoría, Etiquetas, Concepto, Comercio, Cuentas, Nota
-      "Mapfre España SA", 2026-10-23 00:00:00.000, -79.60€, "Gastos financieros", "Seguros", , "PAGO CON TARJETA DE TASA, SEGUROS, IMPUESTOS", , "BBVA Casa a medias",
-      "Traspaso redondeo tarjeta", 2026-10-22 00:00:00.000, -0.60€, "Traspasos", , , "TRASPASO A CUENTA", , "de BBVA Casa a medias",
+      "Mapfre España SA", 2026-10-23 00:00:00.000, -79.60€, "Gastos financieros", "Seguros", , "PAGO CON TARJETA DE TASA, SEGUROS, IMPUESTOS", , "Cuenta Mano a mano",
+      "Traspaso redondeo tarjeta", 2026-10-22 00:00:00.000, -0.60€, "Traspasos", , , "TRASPASO A CUENTA", , "de Cuenta Mano a mano",
       "Traspaso redondeo tarjeta", 2026-10-22 00:00:00.000, 0.60€, "Traspasos", , , "TRASPASO DESDE CUENTA", , "a Tarjeta Repsol",
-      "Adeudo mensual de tarjeta", 2026-10-05 00:00:00.000, -449.97€, "Traspasos", , , , , "de BBVA Casa a medias a Tarjeta Repsol",
+      "Adeudo mensual de tarjeta", 2026-10-05 00:00:00.000, -449.97€, "Traspasos", , , , , "de Cuenta Mano a mano a Tarjeta Repsol",
     CSV
     import = @family.imports.create!(type: "TransactionImport", raw_file_str: csv, col_sep: ",")
     Import::BankPreset.apply(import)
@@ -98,15 +98,15 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
 
     mapfre = rows.find { |row| row.name == "Mapfre España SA" }
     assert_equal "Gastos financieros:Seguros", mapfre.category
-    assert_equal "BBVA Casa a medias", mapfre.account
+    assert_equal "Cuenta Mano a mano", mapfre.account
     assert_equal "PAGO CON TARJETA DE TASA, SEGUROS, IMPUESTOS", mapfre.notes
 
     sides = rows.select { |row| row.name == "Traspaso redondeo tarjeta" }.map { |row| [ row.account, row.signed_amount ] }.sort
     # signed_amount is the entry's sign: money out of an account is positive.
-    assert_equal [ [ "BBVA Casa a medias", BigDecimal("0.60") ], [ "Tarjeta Repsol", BigDecimal("-0.60") ] ], sides
+    assert_equal [ [ "Cuenta Mano a mano", BigDecimal("0.60") ], [ "Tarjeta Repsol", BigDecimal("-0.60") ] ], sides
 
     adeudo = rows.select { |row| row.name == "Adeudo mensual de tarjeta" }.map { |row| [ row.account, row.signed_amount ] }.sort
-    assert_equal [ [ "BBVA Casa a medias", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ], adeudo
+    assert_equal [ [ "Cuenta Mano a mano", BigDecimal("449.97") ], [ "Tarjeta Repsol", BigDecimal("-449.97") ] ], adeudo
     assert_equal 5, rows.size
   end
 
@@ -121,9 +121,9 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
 
     @csv = <<~CSV
       Título,Fecha,Importe,Categoría,Subcategoría,Etiquetas,Concepto,Comercio,Cuentas
-      Nómina Prest,2026-10-19 15:00:00.000,133.99€,Ingresos,,,,,#{fake.name}
-      Pago Préstamo,2026-10-19 16:00:00.000,-133.99€,Hogar,,,,,de #{fake.name} a Préstamo Reforma
-      Inversión póliza,2026-10-19 16:00:00.000,-358.54€,Traspasos,,,,,de #{fake.name} a Póliza Ahorro
+      Nómina Prest,2026-10-19 15:00:00.000,140.00€,Ingresos,,,,,#{fake.name}
+      Pago Préstamo,2026-10-19 16:00:00.000,-140.00€,Hogar,,,,,de #{fake.name} a Préstamo Reforma
+      Inversión póliza,2026-10-19 16:00:00.000,-300.00€,Traspasos,,,,,de #{fake.name} a Póliza Ahorro
       Antiguo,2025-06-19 00:00:00.000,50.00€,Ingresos,,,,,#{fake.name}
       Café,2026-10-19 00:00:00.000,-1.50€,Comida,,,,,Póliza Ahorro
     CSV
@@ -133,7 +133,7 @@ class Import::BilanceExportTest < ActiveSupport::TestCase
     assert_equal [ "Antiguo", "Café", "Inversión póliza" ], rows.map(&:name).sort
     policy = rows.find { |row| row.name == "Inversión póliza" }
     assert_equal "Póliza Ahorro", policy.account
-    assert_equal BigDecimal("-358.54"), policy.signed_amount, "money in"
+    assert_equal BigDecimal("-300.00"), policy.signed_amount, "money in"
   end
 
   private

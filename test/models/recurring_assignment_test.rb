@@ -21,11 +21,11 @@ class RecurringAssignmentTest < ActiveSupport::TestCase
   test "creates a new monthly series with its name and makes every payslip one of its payments" do
     entries = payslips
 
-    assignment = RecurringAssignment.new(family: @family, entries: entries, series_id: "new", name: "Nómina Rafa BBVA", frequency: "monthly")
+    assignment = RecurringAssignment.new(family: @family, entries: entries, series_id: "new", name: "Nómina empresa", frequency: "monthly")
 
     assert_equal 3, assignment.apply!
     series = assignment.series
-    assert_equal "Nómina Rafa BBVA", series.name
+    assert_equal "Nómina empresa", series.name
     assert_equal "income", series.bill_type
     assert_equal "monthly", RecurringTransaction::FrequencyPreset.detect(series).key
     assert_equal entries.map(&:id).sort, paid_by(series).sort

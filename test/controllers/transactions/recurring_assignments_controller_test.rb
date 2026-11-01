@@ -21,12 +21,12 @@ class Transactions::RecurringAssignmentsControllerTest < ActionDispatch::Integra
 
     assert_difference -> { RecurringTransaction.count }, 1 do
       post transactions_recurring_assignment_url, params: { recurring_assignment: {
-        series_id: "new", name: "Nómina Rafa BBVA", frequency: "monthly", entry_ids: entries.map(&:id)
+        series_id: "new", name: "Nómina empresa", frequency: "monthly", entry_ids: entries.map(&:id)
       } }
     end
 
     assert_redirected_to transactions_url
-    assert_equal "Nómina Rafa BBVA", RecurringTransaction.order(:created_at).last.name
+    assert_equal "Nómina empresa", RecurringTransaction.order(:created_at).last.name
   end
 
   test "the movement's detail offers it" do

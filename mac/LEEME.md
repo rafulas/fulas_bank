@@ -77,7 +77,7 @@ En el Mac, Fulas Bank sigue abriéndose como siempre (app de Aplicaciones o `htt
 
 1. Instala **Tailscale** en el Mac (App Store o [tailscale.com/download](https://tailscale.com/download)), ábrelo y entra con tu cuenta.
 2. Instálalo en el iPhone, el iPad o el Windows y entra con **la misma cuenta**.
-3. En el Mac, doble clic en **`~/FulasBank/Usar en iPhone, iPad y Windows`**. Te enseña la dirección, del estilo `https://macbook-pro-de-rafa.tail2503e9.ts.net`, y la deja copiada. La primera vez puede salir un enlace para activar «Serve» o HTTPS: ábrelo, actívalo y repite este paso.
+3. En el Mac, doble clic en **`~/FulasBank/Usar en iPhone, iPad y Windows`**. Te enseña la dirección, del estilo `https://mi-mac.tail1234ab.ts.net`, y la deja copiada. La primera vez puede salir un enlace para activar «Serve» o HTTPS: ábrelo, actívalo y repite este paso.
 4. En el iPhone y el iPad, abre esa dirección en Safari y pulsa **Compartir → Añadir a pantalla de inicio**: queda un icono que se abre como una app. En Windows, ábrela en el navegador y guárdala en favoritos.
 
 **Para que funcione, el Mac tiene que estar encendido y sin dormir.** Si es un portátil, déjalo enchufado y, en **Ajustes del Sistema → Batería → Opciones** (o **Pantalla bloqueada**, según la versión), activa que no entre en reposo automáticamente con el adaptador conectado. Con la tapa cerrada se duerme, salvo que tenga una pantalla externa. Cuando Fulas Bank pase a un servidor, ese servidor se une a la misma red de Tailscale y deja de hacer falta el Mac.

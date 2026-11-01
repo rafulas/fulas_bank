@@ -25,14 +25,14 @@ class InsurancesControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { @family.insurances.count } => 1 do
       post insurances_url, params: { insurance: {
-        name: " Seguro Nine T ", kind: "motorcycle", account_id: @vehicle.id, insurer: "Mutua",
+        name: " Seguro moto ", kind: "motorcycle", account_id: @vehicle.id, insurer: "Mutua",
         premium: "180.50", payment_frequency: "annual", renewal_date: "2026-11-02"
       } }
     end
     assert_redirected_to insurances_url
 
     insurance = @family.insurances.order(:created_at).last
-    assert_equal [ "Seguro Nine T", @vehicle, BigDecimal("180.5") ], [ insurance.name, insurance.account, insurance.premium ]
+    assert_equal [ "Seguro moto", @vehicle, BigDecimal("180.5") ], [ insurance.name, insurance.account, insurance.premium ]
 
     get edit_insurance_url(insurance)
     assert_response :success

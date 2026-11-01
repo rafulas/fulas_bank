@@ -1,7 +1,7 @@
 class RecurringTransaction
   # Fulas Bank: a suggestion that is a series the user already has under
   # another name. The bank writes «Préstamo RRHH Reforma» and the series is
-  # «Préstamo Reforma Vivienda»: the matcher only links movements whose name
+  # «Préstamo Reforma Cocina»: the matcher only links movements whose name
   # it knows, so it left them alone and detection offered them again as new.
   #
   # Two series look alike when they go the same way (both money in or both

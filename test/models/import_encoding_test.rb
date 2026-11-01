@@ -92,7 +92,7 @@ class ImportEncodingTest < ActiveSupport::TestCase
 
   test "a Spanish family's UTF-8 file uploaded as raw bytes stays UTF-8" do
     @family.update_columns(locale: "es", country: "ES")
-    csv_content = "Título,Fecha,Importe\nWaylet,2026-10-26,-10.72€\nNómina,2026-10-19,1402.20€\n".b
+    csv_content = "Título,Fecha,Importe\nWaylet,2026-10-26,-10.72€\nNómina,2026-10-19,1500.00€\n".b
     assert_equal Encoding::ASCII_8BIT, csv_content.encoding
 
     import = @family.imports.create!(type: "TransactionImport", account: @account, date_format: "%Y-%m-%d",
