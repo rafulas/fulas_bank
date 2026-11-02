@@ -49,6 +49,11 @@ class Transaction::Search
       # Scope to accessible accounts when provided (including an empty array, which should yield no results)
       query = query.where(entries: { account_id: accessible_account_ids }) unless accessible_account_ids.nil?
 
+      # Fulas Bank: the «Ajuste de saldo» movements (Account::BalanceAdjuster)
+      # are left out of the list of movements; they are seen in each
+      # account's own activity.
+      query = query.where("NOT (transactions.extra @> ?)", { Account::BalanceAdjuster::MARKER => true }.to_json)
+
       query = apply_active_accounts_filter(query, active_accounts_only)
       query = apply_category_filter(query, categories)
       query = apply_type_filter(query, types)
