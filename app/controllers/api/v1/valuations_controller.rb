@@ -95,9 +95,12 @@ class Api::V1::ValuationsController < Api::V1::BaseController
       existing_write = account.entries.valuations.exists?(date: valuation_params[:date]) if requested_upsert
 
       # upsert=true only affects response status; reconciliation owns write behavior.
+      # Fulas Bank: the API writes the dated value it is asked for, also on a
+      # current account (not an «Ajuste de saldo», see Account::BalanceAdjuster).
       result = account.create_reconciliation(
         balance: valuation_params[:amount],
-        date: valuation_params[:date]
+        date: valuation_params[:date],
+        as_adjustment: false
       )
 
       unless result.success?
