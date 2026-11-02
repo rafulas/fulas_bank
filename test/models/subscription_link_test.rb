@@ -66,6 +66,23 @@ class SubscriptionLinkTest < ActiveSupport::TestCase
     assert_equal series, SubscriptionLink.new(charge.reload).current
   end
 
+  test "Fulas Bank: a new recurring payment from a movement repeats as often as chosen" do
+    charge = create_transaction(account: @account, name: "SEGURO HOGAR", amount: 240, date: Date.current - 2)
+
+    series = SubscriptionLink.new(charge).create!(name: "Seguro hogar", kind: "bill", frequency: "yearly")
+
+    assert_equal "annual", RecurringTransaction::FrequencyPreset.detect(series.reload).key
+    assert_equal series, SubscriptionLink.new(charge.reload).current
+  end
+
+  test "Fulas Bank: an unknown frequency makes it monthly" do
+    charge = create_transaction(account: @account, name: "GIMNASIO", amount: 39.9, date: Date.current - 1)
+
+    series = SubscriptionLink.new(charge).create!(name: "Gimnasio", frequency: "every_now_and_then")
+
+    assert_equal "monthly", RecurringTransaction::FrequencyPreset.detect(series.reload).key
+  end
+
   test "the page adds them up a month, a year and in five years, and what dropping one saves" do
     SubscriptionsOverview.toggle_could_drop!(@user, @music.id, true)
 

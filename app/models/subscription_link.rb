@@ -52,13 +52,22 @@ class SubscriptionLink
   end
 
   # A new series made from the movement, of `kind` (by default the one its
-  # name and category suggest), and the movement linked to it.
-  def create!(name: nil, kind: "subscription")
+  # name and category suggest) and repeating every `frequency` (one of
+  # RecurringAssignment::FREQUENCIES, monthly by default), counted from the
+  # movement's day; and the movement linked to it.
+  def create!(name: nil, kind: "subscription", frequency: nil)
     series = RecurringTransaction.transaction(requires_new: true) do
       RecurringTransaction.create_from_transaction(entry.transaction)
     end
     kind = RecurringTransaction::Kind::KINDS.include?(kind.to_s) ? kind.to_s : RecurringTransaction::Kind.guess(series)
-    series.update!(bill_type: RecurringTransaction::Kind.bill_type_for(kind, series), name: name.presence || series.name)
+    series.assign_attributes(bill_type: RecurringTransaction::Kind.bill_type_for(kind, series), name: name.presence || series.name)
+    frequency = RecurringAssignment::FREQUENCIES.key?(frequency.to_s) ? frequency.to_s : RecurringAssignment::DEFAULT_FREQUENCY
+    options = RecurringAssignment::FREQUENCIES.fetch(frequency)
+    RecurringTransaction::FrequencyPreset.apply(
+      series, preset: options[:preset], interval: options[:interval], interval_unit: options[:interval_unit],
+      weekday: entry.date.wday, day_of_month: entry.date.day, month_of_year: entry.date.month
+    )
+    series.save!
     link!(series)
     series
   end
