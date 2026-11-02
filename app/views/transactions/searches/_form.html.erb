@@ -31,15 +31,20 @@
       </div>
     </div>
 
+    <%# Fulas Bank: on an iPhone or iPad the rows have no checkboxes until
+        «Seleccionar» is pressed (checkbox_toggle_controller.js); it then
+        reads «Listo». %>
     <%= button_tag type: "button",
         id: "toggle-checkboxes-button",
-        aria: { label: t(".toggle_selection_checkboxes") },
+        aria: { label: t(".toggle_selection_checkboxes"), pressed: "false" },
         class: "lg:hidden font-medium whitespace-nowrap inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-primary border border-secondary hover:bg-surface-hover",
         data: {
           action: "click->checkbox-toggle#toggle",
           checkbox_toggle_target: "toggleButton"
         } do %>
       <%= icon("list-todo") %>
+      <span data-checkbox-toggle-target="labelOff"><%= t(".select") %></span>
+      <span data-checkbox-toggle-target="labelOn" class="hidden"><%= t(".select_done") %></span>
     <% end %>
   </div>
 

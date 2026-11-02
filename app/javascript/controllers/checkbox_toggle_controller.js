@@ -1,22 +1,19 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Shows or hides the selection checkboxes of a list on small screens, where
+// they are hidden by default (they are always shown from the lg breakpoint).
+// Fulas Bank: the button reads «Seleccionar» and, while selecting, «Listo»,
+// as in Apple's apps; rows that arrive later (the next page, loaded while
+// scrolling) follow the current mode.
 export default class extends Controller {
-  static targets = ["selectionEntry", "toggleButton"]
+  static targets = ["selectionEntry", "toggleButton", "labelOff", "labelOn"]
 
   toggle() {
-    if (this.selectionEntryTargets.length === 0) return
+    this.selecting = !this.selecting
 
-    const shouldShow = this.selectionEntryTargets[0].classList.contains("hidden")
+    this.selectionEntryTargets.forEach((el) => this.#apply(el))
 
-    this.selectionEntryTargets.forEach((el) => {
-      if (shouldShow) {
-        el.classList.remove("hidden")
-      } else {
-        el.classList.add("hidden")
-      }
-    })
-
-    if (!shouldShow) {
+    if (!this.selecting) {
       const bulkSelectElement =
         this.element.querySelector("[data-controller~='bulk-select']") ||
         this.element.closest("[data-controller~='bulk-select']") ||
@@ -33,7 +30,18 @@ export default class extends Controller {
     }
 
     if (this.hasToggleButtonTarget) {
-      this.toggleButtonTarget.classList.toggle("bg-surface", shouldShow)
+      this.toggleButtonTarget.classList.toggle("bg-surface", this.selecting)
+      this.toggleButtonTarget.setAttribute("aria-pressed", this.selecting ? "true" : "false")
     }
+    this.labelOffTargets.forEach((el) => el.classList.toggle("hidden", this.selecting))
+    this.labelOnTargets.forEach((el) => el.classList.toggle("hidden", !this.selecting))
+  }
+
+  selectionEntryTargetConnected(el) {
+    this.#apply(el)
+  }
+
+  #apply(el) {
+    el.classList.toggle("hidden", !this.selecting)
   }
 }

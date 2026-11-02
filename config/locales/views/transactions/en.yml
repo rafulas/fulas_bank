@@ -457,6 +457,8 @@ en:
         greater_than: greater than
         less_than: less than
       form:
+        select: Select
+        select_done: Done
         toggle_selection_checkboxes: Toggle all checkboxes
         search_placeholder: "Search by description, merchant, category or amount"
         filter: "Filter"

@@ -71,6 +71,19 @@
           <%= render "entries/selection_bar" %>
         </div>
 
+        <%# Fulas Bank: on an iPhone or iPad, the rows' checkboxes come out
+            with «Seleccionar», as in the list of movements. %>
+        <div class="flex justify-end mb-2 lg:hidden">
+          <%= button_tag type: "button",
+              class: "font-medium whitespace-nowrap inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-primary border border-secondary hover:bg-surface-hover",
+              aria: { pressed: "false" },
+              data: { action: "click->checkbox-toggle#toggle", checkbox_toggle_target: "toggleButton" } do %>
+            <%= icon("list-todo") %>
+            <span data-checkbox-toggle-target="labelOff"><%= t("transactions.searches.form.select") %></span>
+            <span data-checkbox-toggle-target="labelOn" class="hidden"><%= t("transactions.searches.form.select_done") %></span>
+          <% end %>
+        </div>
+
         <div class="grid bg-container-inset rounded-xl grid-cols-12 items-center uppercase text-xs font-medium text-secondary px-5 py-3 mb-4">
           <div class="pl-0.5 col-span-8 flex items-center gap-4">
             <%= check_box_tag "selection_entry",
