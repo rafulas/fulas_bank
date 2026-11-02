@@ -454,6 +454,8 @@ es:
         greater_than: mayor que
         less_than: menor que
       form:
+        select: Seleccionar
+        select_done: Listo
         toggle_selection_checkboxes: Alternar todas las casillas
         search_placeholder: Buscar por concepto, comercio, categoría o importe
         filter: Filtrar
