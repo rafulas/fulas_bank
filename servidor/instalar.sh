@@ -35,6 +35,11 @@ RAW="https://raw.githubusercontent.com/$REPO/$REF"
 PORT=3000
 BACKUP="${1:-}"
 
+# The Mac sends its language (es_ES.UTF-8), which the server does not have:
+# without this, every program warns about it. C.UTF-8 is always there.
+export LC_ALL=C.UTF-8 LANG=C.UTF-8
+unset LANGUAGE
+
 paso() { printf '\n\033[1;32m▶ %s\033[0m\n' "$1"; }
 aviso() { printf '\033[1;33m⚠ %s\033[0m\n' "$1"; }
 fallo() { printf '\n\033[1;31m✗ %s\033[0m\n' "$1" >&2; exit 1; }
@@ -72,7 +77,10 @@ export DEBIAN_FRONTEND=noninteractive
 # cutting the very session this runs on. List only: the 04:30 restart below
 # takes care of anything still running old code.
 export NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1
-APT=(sudo -E apt-get -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
+# sudo on Ubuntu does not pass «-E» (the whole environment) through, so the
+# settings above go in explicitly with «env».
+APT=(sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1
+  apt-get -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
 sudo timedatectl set-timezone Europe/Madrid || aviso "No he podido poner la hora de Madrid."
 "${APT[@]}" update > /dev/null
 "${APT[@]}" upgrade > /dev/null
