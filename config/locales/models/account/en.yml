@@ -1,5 +1,8 @@
 ---
 en:
+  account:
+    balance_adjuster:
+      name: Balance adjustment
   account_order:
     balance_asc:
       label: Balance (Low to High)

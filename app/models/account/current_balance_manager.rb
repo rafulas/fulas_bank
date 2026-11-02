@@ -74,6 +74,16 @@ class Account::CurrentBalanceManager
     #
     # For more documentation on these auto-update strategies, see the test cases.
     def set_current_balance_for_manual_account(balance)
+      # Fulas Bank: a current account or a card with movements gets an
+      # «Ajuste de saldo» movement for the difference, as in Bilance, so
+      # whatever is entered afterwards keeps moving the balance (see
+      # Account::BalanceAdjuster). One with no movements yet just has its
+      # opening balance changed, as below.
+      if Account::BalanceAdjuster.applies_to?(account) && account.entries.where.not(entryable_type: "Valuation").exists?
+        result = Account::BalanceAdjuster.new(account).adjust_to(balance: balance, date: Date.current)
+        return Result.new(success?: result.success?, changes_made?: true, error: result.error_message)
+      end
+
       # If we're dealing with a cash account that has no reconciliations, use "Transaction adjustment" strategy (update opening balance to "back in" to the desired current balance)
       if account.balance_type == :cash && account.valuations.reconciliation.empty?
         adjust_opening_balance_with_delta(new_balance: balance, old_balance: account.balance)

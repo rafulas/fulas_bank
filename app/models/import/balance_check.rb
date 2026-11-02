@@ -103,6 +103,17 @@ class Import::BalanceCheck
     @checks = nil
   end
 
+  # The account's latest «Ajuste de saldo» (Account::BalanceAdjuster) dated
+  # on or after the oldest movement this import brought to it, if any. The
+  # balance it set may already have counted those movements, which now
+  # count again: the check below says whether the balance still matches.
+  def adjustment_after_import(account)
+    oldest = import.entries.where(account_id: account.id).minimum(:date)
+    return unless oldest
+
+    Account::BalanceAdjuster.adjustments_for(account).where(date: oldest..).order(date: :desc).first
+  end
+
   # Sets the account to the bank's balance on that day, as a balance update
   # would. Returns whether it was done.
   def adjust!(account)

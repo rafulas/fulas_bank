@@ -77,21 +77,15 @@ class Account::CurrentBalanceManagerTest < ActiveSupport::TestCase
     end
   end
 
-  # Scope: Depository, CreditCard only (i.e. all-cash accounts)
-  #
-  # If a user has an opening balance (valuation) for their manual *Depository* or *CreditCard* account and has 1+ transactions, the intent of
-  # "updating current balance" typically means that their start balance is incorrect. We follow that user intent
-  # by default and find the delta required, and update the opening balance so that the timeline reflects this current balance
-  #
-  # The purpose of this is so we're not cluttering up their timeline with "balance reconciliations" that reset the balance
-  # on the current date. Our goal is to keep the timeline with as few "Valuations" as possible.
-  #
-  # If we ever build a UI that gives user options, this test expectation may require some updates, but for now this
-  # is the least surprising outcome.
-  test "when no reconciliations exist on cash accounts, adjust opening balance with delta until it gets us to the desired balance" do
+  # Fulas Bank: a manual current account or card with movements keeps a
+  # running balance, as in Bilance. Updating its balance writes an «Ajuste de
+  # saldo» movement for the difference today (Account::BalanceAdjuster)
+  # instead of moving the opening balance or fixing today's balance, so the
+  # history stays as it was and anything entered later keeps adding up.
+  test "Fulas Bank: updating a current account with movements writes a balance adjustment for the difference" do
     account = @family.accounts.create!(
       name: "Test",
-      balance: 900, # the balance after opening valuation + transaction have "synced" (1000 - 100 = 900)
+      balance: 900, # opening 1000 - expense 100
       cash_balance: 900,
       currency: "USD",
       accountable: Depository.new
@@ -113,33 +107,23 @@ class Account::CurrentBalanceManagerTest < ActiveSupport::TestCase
       entryable: Transaction.new
     )
 
-    # What we're asserting here:
-    # 1. User creates the account with an opening balance of 1000
-    # 2. User creates a transaction of 100, which then reduces the balance to 900 (the current balance value on account above)
-    # 3. User requests "current balance update" back to 1000, which was their intention
-    # 4. We adjust the opening balance by the delta (100) to 1100, which is the new opening balance, so that the transaction
-    #    of 100 reduces it down to 1000, which is the current balance they intended.
-    assert_equal 1, account.valuations.count
-    assert_equal 1, account.transactions.count
-
-    # No new valuation is appended; we're just adjusting the opening valuation anchor
-    assert_no_difference "account.entries.count" do
-      manager = Account::CurrentBalanceManager.new(account)
-      manager.set_current_balance(1000)
+    assert_difference "account.entries.count", 1 do
+      Account::CurrentBalanceManager.new(account).set_current_balance(1000)
     end
 
-    opening_valuation = account.valuations.find_by(kind: "opening_anchor")
-
-    assert_equal 1100, opening_valuation.entry.amount
+    adjustment = Account::BalanceAdjuster.adjustments_for(account).sole
+    assert_equal Date.current, adjustment.date
+    assert_equal(-100, adjustment.amount, "money in raises an asset's balance")
+    assert adjustment.excluded?, "an adjustment is neither income nor expense"
+    assert_equal 1000, account.valuations.find_by(kind: "opening_anchor").entry.amount, "the opening balance is left alone"
+    assert_empty account.valuations.reconciliation, "no fixed balance today"
     assert_equal 1000, account.balance
   end
 
-  # (SEE ABOVE TEST FOR MORE DETAILED EXPLANATION)
-  # Same assertions as the test above, but Credit Card accounts are liabilities, which means expenses increase balance; not decrease
-  test "when no reconciliations exist on credit card accounts, adjust opening balance with delta until it gets us to the desired balance" do
+  test "Fulas Bank: updating a credit card with movements writes a balance adjustment for the difference" do
     account = @family.accounts.create!(
       name: "Test",
-      balance: 1100, # the balance after opening valuation + transaction have "synced" (1000 + 100 = 1100) (expenses increase balance)
+      balance: 1100, # opening 1000 + expense 100 (expenses increase a card's balance)
       cash_balance: 1100,
       currency: "USD",
       accountable: CreditCard.new
@@ -161,18 +145,36 @@ class Account::CurrentBalanceManagerTest < ActiveSupport::TestCase
       entryable: Transaction.new
     )
 
-    assert_equal 1, account.valuations.count
-    assert_equal 1, account.transactions.count
+    Account::CurrentBalanceManager.new(account).set_current_balance(1000)
+
+    adjustment = Account::BalanceAdjuster.adjustments_for(account).sole
+    assert_equal(-100, adjustment.amount, "lowering a debt is money in")
+    assert_equal 1000, account.valuations.find_by(kind: "opening_anchor").entry.amount
+    assert_equal 1000, account.balance
+  end
+
+  test "Fulas Bank: a current account with no movements yet just changes its opening balance" do
+    account = @family.accounts.create!(
+      name: "Test",
+      balance: 1000,
+      cash_balance: 1000,
+      currency: "USD",
+      accountable: Depository.new
+    )
+
+    account.entries.create!(
+      date: 1.year.ago.to_date,
+      name: "Test opening valuation",
+      amount: 1000,
+      currency: "USD",
+      entryable: Valuation.new(kind: "opening_anchor")
+    )
 
     assert_no_difference "account.entries.count" do
-      manager = Account::CurrentBalanceManager.new(account)
-      manager.set_current_balance(1000)
+      Account::CurrentBalanceManager.new(account).set_current_balance(1200)
     end
 
-    opening_valuation = account.valuations.find_by(kind: "opening_anchor")
-
-    assert_equal 900, opening_valuation.entry.amount
-    assert_equal 1000, account.balance
+    assert_equal 1200, account.valuations.find_by(kind: "opening_anchor").entry.amount
   end
 
   # -------------------------------------------------------------------------------------------------

@@ -34,6 +34,8 @@ en:
       balance: balance
       "on": "on"
       to: "to"
+      adjustment_none: "It already has that balance: no adjustment is needed."
+      adjustment_notice: "A «Balance adjustment» movement of %{amount} will be recorded that day. Whatever you enter afterwards keeps adding up."
       recalculate_notice: "All future transactions and balances will be recalculated based on this %{change_or_update}."
       change: change
       update: update

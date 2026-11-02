@@ -3,6 +3,7 @@ es:
   import:
     balance_checks:
       balance_check:
+        adjustment_after_import: "Esta cuenta tiene un «Ajuste de saldo» el %{date}, posterior a movimientos que acabas de importar. Si ese ajuste ya los contaba, ahora cuentan dos veces: compara el saldo con el del banco y pulsa «Ajustar» si no cuadra."
         title: "¿Cuadran los saldos?"
         hint: "Compara lo que tiene cada cuenta en Fulas Bank con lo que dice el banco. Si no cuadra, falta un movimiento, sobra uno o alguno tiene otro importe."
         status:

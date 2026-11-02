@@ -43,7 +43,8 @@ class Import::BalanceChecksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "adjusts the account to the statement's balance" do
-    assert_difference -> { @account.entries.where(entryable_type: "Valuation").count } => 1 do
+    # Fulas Bank: a current account gets an «Ajuste de saldo» movement.
+    assert_difference -> { Account::BalanceAdjuster.adjustments_for(@account).count } => 1 do
       post adjust_import_balance_check_url(@import, account_id: @account.id)
     end
 

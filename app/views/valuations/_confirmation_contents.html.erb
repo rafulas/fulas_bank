@@ -47,5 +47,15 @@
     </p>
   <% end %>
 
-  <p><%= t(".recalculate_notice", change_or_update: is_update ? t(".change") : t(".update")) %></p>
+  <%# Fulas Bank: a current account or a card gets an «Ajuste de saldo»
+      movement (Account::BalanceAdjuster), not a fixed balance. %>
+  <% if reconciliation_dry_run.is_a?(Account::BalanceAdjuster::Result) %>
+    <% if reconciliation_dry_run.adjustment_amount.to_d.zero? %>
+      <p><%= t(".adjustment_none") %></p>
+    <% else %>
+      <p><%= t(".adjustment_notice", amount: Money.new(reconciliation_dry_run.adjustment_amount, account.currency).format) %></p>
+    <% end %>
+  <% else %>
+    <p><%= t(".recalculate_notice", change_or_update: is_update ? t(".change") : t(".update")) %></p>
+  <% end %>
 </div>
