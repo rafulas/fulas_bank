@@ -48,6 +48,24 @@ class HoldingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "##{dom_id(holding)} p", text: "0.000000000000000148 shares"
   end
 
+  test "sets the number of shares by hand, recording the difference as an operation" do
+    current = @holding.qty.to_d
+
+    assert_difference -> { @account.entries.where(entryable_type: "Trade").count }, 1 do
+      patch adjust_shares_holding_url(@holding), params: { holding: { shares: (current + 5).to_s, shares_date: Date.current.iso8601 } }
+    end
+    assert_redirected_to account_path(@account, tab: "holdings")
+
+    trade = @account.entries.where(entryable_type: "Trade").order(:created_at).last.trade
+    assert_equal BigDecimal("5"), trade.qty
+    assert_equal 0, trade.price.to_d, "shares that were given cost nothing"
+    assert_equal @holding.security, trade.security
+
+    assert_no_difference -> { Entry.count } do
+      patch adjust_shares_holding_url(@holding), params: { holding: { shares: current.to_s } }
+    end
+  end
+
   test "destroys holding and associated entries" do
     assert_difference -> { Holding.count } => -1,
                       -> { Entry.count } => -1 do

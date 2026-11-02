@@ -107,9 +107,30 @@
               <% end %>
             </div>
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <dt class="text-secondary"><%= t(".shares_label") %></dt>
-            <dd id="<%= dom_id(@holding, :shares) %>" class="text-primary"><%= format_quantity(@holding.qty, exact: true) %></dd>
+          <%# Fulas Bank: the number of shares can be set by hand; the difference
+              becomes an operation of its own (Holding::ShareAdjustment). %>
+          <div data-controller="holding-security-remap">
+            <div class="flex items-center justify-between text-sm">
+              <dt class="text-secondary"><%= t(".shares_label") %></dt>
+              <dd class="text-primary flex items-center gap-2">
+                <span id="<%= dom_id(@holding, :shares) %>"><%= format_quantity(@holding.qty, exact: true) %></span>
+                <button type="button" data-action="click->holding-security-remap#toggle" class="text-secondary hover:text-primary" aria-label="<%= t(".edit_shares") %>">
+                  <%= icon "pencil", size: "xs" %>
+                </button>
+              </dd>
+            </div>
+            <div data-holding-security-remap-target="form" class="hidden mt-3 space-y-3">
+              <%= styled_form_with url: adjust_shares_holding_path(@holding), method: :patch, scope: :holding, class: "space-y-3", data: { turbo: false } do |f| %>
+                <p class="text-xs text-secondary"><%= t(".shares_hint") %></p>
+                <%= f.number_field :shares, label: t(".shares_new_label"), step: "any", min: 0, required: true, value: @holding.qty.to_d.to_s("F").sub(/\.0+\z/, "") %>
+                <%= f.date_field :shares_date, label: t(".shares_date_label"), value: Date.current, max: Date.current %>
+                <%= f.number_field :shares_price, label: t(".shares_price_label", currency: @holding.currency), step: "any", min: 0, placeholder: "0" %>
+                <div class="flex justify-end gap-2">
+                  <%= render DS::Button.new(text: t(".cancel"), variant: :outline, data: { action: "click->holding-security-remap#toggle" }) %>
+                  <%= f.submit t(".save_shares") %>
+                </div>
+              <% end %>
+            </div>
           </div>
           <div class="flex items-center justify-between text-sm">
             <dt class="text-secondary"><%= t(".portfolio_weight_label") %></dt>

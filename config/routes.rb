@@ -543,6 +543,8 @@ Rails.application.routes.draw do
       post :reset_security
       post :sync_prices
       patch :update_price
+      # Fulas Bank: the number of shares set by hand.
+      patch :adjust_shares
     end
   end
   # Fulas Bank: import any file and let the app tell what it is and where it goes.
