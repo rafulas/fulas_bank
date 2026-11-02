@@ -56,6 +56,7 @@ es:
       none: Ninguno
       new_name: Nombre del recurrente nuevo
       new_kind: Tipo
+      new_frequency: Frecuencia
       create: Crear recurrente
     subscriptions:
       update:

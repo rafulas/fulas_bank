@@ -15,7 +15,11 @@ class Transactions::SubscriptionsController < ApplicationController
   end
 
   def create
-    series = SubscriptionLink.new(@entry).create!(name: params.dig(:subscription, :name), kind: params.dig(:subscription, :kind).presence || "subscription")
+    series = SubscriptionLink.new(@entry).create!(
+      name: params.dig(:subscription, :name),
+      kind: params.dig(:subscription, :kind).presence || "subscription",
+      frequency: params.dig(:subscription, :frequency)
+    )
 
     redirect_back_or_to transaction_path(@entry), notice: t(".success", name: series.display_name)
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound

@@ -56,6 +56,7 @@ en:
       none: None
       new_name: New recurring payment's name
       new_kind: Kind
+      new_frequency: Frequency
       create: Create recurring payment
     subscriptions:
       update:

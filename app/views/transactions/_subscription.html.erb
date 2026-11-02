@@ -30,14 +30,17 @@
       <%= styled_form_with scope: :subscription, url: transaction_subscription_path(entry), method: :post,
             class: "space-y-2", data: { turbo_frame: :_top } do |form| %>
         <%= form.text_field :name, value: entry.name, label: t(".new_name") %>
-        <div class="flex items-end gap-2">
-          <div class="grow">
-            <%= form.select :kind,
-                  RecurringTransaction::Kind::KINDS.map { |kind| [ kind_label.call(kind), kind ] },
-                  { label: t(".new_kind"), selected: entry.amount.negative? ? "fixed" : "subscription" } %>
-          </div>
-          <%= form.submit t(".create") %>
+        <%# How often it repeats sits next to the kind, the button below on
+            its own line, so both fit on an iPhone. %>
+        <div class="grid grid-cols-2 gap-2">
+          <%= form.select :kind,
+                RecurringTransaction::Kind::KINDS.map { |kind| [ kind_label.call(kind), kind ] },
+                { label: t(".new_kind"), selected: entry.amount.negative? ? "fixed" : "subscription" } %>
+          <%= form.select :frequency,
+                RecurringAssignment::FREQUENCIES.keys.map { |key| [ t("transactions.recurring_assignments.frequencies.#{key}"), key ] },
+                { label: t(".new_frequency"), selected: RecurringAssignment::DEFAULT_FREQUENCY } %>
         </div>
+        <%= form.submit t(".create") %>
       <% end %>
     <% end %>
   <% end %>
