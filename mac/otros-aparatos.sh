@@ -30,6 +30,25 @@ fi
 
 say() { $quiet || echo "$@"; }
 
+# With a server (mac/pasar-a-servidor.sh), the server is the one your
+# devices open: its installer already published it through Tailscale.
+SERVIDOR="$(grep '^FULAS_SERVIDOR=' "$DIR/.env" 2> /dev/null | tail -1 | cut -d= -f2- || true)"
+if [[ -n "$SERVIDOR" ]]; then
+  $quiet && exit 0
+  host="$(ssh -o ConnectTimeout=20 -o BatchMode=yes "$SERVIDOR" 'cat FulasBank/direccion.txt' 2> /dev/null || true)"
+  if [[ -z "$host" ]]; then
+    echo "No llego al servidor ($SERVIDOR). ¿Está Tailscale conectado en este Mac?"
+    exit 1
+  fi
+  printf "%s" "https://$host" | pbcopy || true
+  echo "Fulas Bank está en el servidor. En el iPhone, el iPad o el Windows (con Tailscale), abre:"
+  echo
+  echo "   https://$host"
+  echo
+  echo "La dirección está copiada en el portapapeles."
+  exit 0
+fi
+
 # The command-line tool comes inside the Mac app (App Store or
 # tailscale.com); Homebrew installs it on the PATH instead.
 ts=""

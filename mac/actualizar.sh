@@ -29,6 +29,55 @@ mkdir -p "$DIR/registros"
 date '+%s' > "$LOCK"
 trap 'rm -f "$LOCK"' EXIT
 
+# The «Fulas Bank» app in Applications, from the release «app-mac».
+actualizar_app_mac() {
+  echo "▶ Actualizando la app de Aplicaciones"
+  tmp="$(mktemp -d)"
+  if curl -fsSL "$DMG_URL" -o "$tmp/FulasBank.dmg"; then
+    osascript -e 'quit app "Fulas Bank"' 2> /dev/null || true
+    # macOS 26 warns that «hdiutil attach» is deprecated: it still works, and
+    # its replacement does not exist on older macOS. Only that warning is hidden.
+    vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" 2> >(grep -vE 'is deprecated|diskutil image attach' >&2) | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
+    app="$(find "$vol" -maxdepth 1 -name '*.app' | head -1)"
+    if [[ -n "$app" ]]; then
+      rm -rf "/Applications/Fulas Bank.app"
+      ditto "$app" "/Applications/Fulas Bank.app"
+    fi
+    hdiutil detach -quiet "$vol" || true
+  fi
+  rm -rf "$tmp"
+}
+
+# Server mode (mac/pasar-a-servidor.sh): Fulas Bank runs on a server reached
+# through Tailscale. This Mac updates its own scripts and app, and the server
+# updates itself (servidor/actualizar.sh, which makes its copy first).
+SERVIDOR="$(grep '^FULAS_SERVIDOR=' .env 2> /dev/null | tail -1 | cut -d= -f2- || true)"
+if [[ -n "$SERVIDOR" ]]; then
+  if [[ "${1:-}" != "--volver" ]]; then
+    echo "▶ Actualizando los scripts de este Mac"
+    for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
+      curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
+    done
+    chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh
+  fi
+  echo "▶ Fulas Bank en el servidor ($SERVIDOR)"
+  ssh -t -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "$SERVIDOR" "FulasBank/actualizar.sh ${1:-}"
+  if [[ "${1:-}" != "--volver" ]]; then
+    actualizar_app_mac
+    cat > "$DIR/Volver a la versión anterior.command" <<EOF
+#!/bin/bash
+"$DIR/actualizar.sh" --volver
+echo
+read -n 1 -s -r -p "Pulsa una tecla para cerrar."
+EOF
+    chmod +x "$DIR/Volver a la versión anterior.command"
+    rm -f "$DIR/registros/aviso-pospuesto"
+    "$DIR/aviso.sh" --instalar || true
+    [[ -d "/Applications/Fulas Bank.app" ]] && open "/Applications/Fulas Bank.app"
+  fi
+  exit 0
+fi
+
 PORT="$(grep '^PORT=' .env | cut -d= -f2)"
 PORT="${PORT:-3000}"
 IMAGE="ghcr.io/rafulas/fulas_bank"
@@ -108,21 +157,7 @@ done
 curl -fs "http://localhost:$PORT/up" > /dev/null 2>&1 \
   || { echo "Fulas Bank no responde. Mira: cd ~/FulasBank && docker compose logs web" >&2; exit 1; }
 
-echo "▶ Actualizando la app de Aplicaciones"
-tmp="$(mktemp -d)"
-if curl -fsSL "$DMG_URL" -o "$tmp/FulasBank.dmg"; then
-  osascript -e 'quit app "Fulas Bank"' 2> /dev/null || true
-  # macOS 26 warns that «hdiutil attach» is deprecated: it still works, and
-  # its replacement does not exist on older macOS. Only that warning is hidden.
-  vol="$(hdiutil attach -nobrowse -readonly "$tmp/FulasBank.dmg" 2> >(grep -vE 'is deprecated|diskutil image attach' >&2) | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)"
-  app="$(find "$vol" -maxdepth 1 -name '*.app' | head -1)"
-  if [[ -n "$app" ]]; then
-    rm -rf "/Applications/Fulas Bank.app"
-    ditto "$app" "/Applications/Fulas Bank.app"
-  fi
-  hdiutil detach -quiet "$vol" || true
-fi
-rm -rf "$tmp"
+actualizar_app_mac
 
 # Shortcut to undo this update if something does not look right.
 cat > "$DIR/Volver a la versión anterior.command" <<EOF

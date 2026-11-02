@@ -30,6 +30,22 @@ copy="${1:-}"
 [[ -n "$copy" && -f "$copy" ]] || { echo "Uso: restaurar.sh <copia.tar>" >&2; exit 1; }
 copy="$(cd "$(dirname "$copy")" && pwd)/$(basename "$copy")"
 
+# Server mode (mac/pasar-a-servidor.sh): Fulas Bank runs on a server
+# reached through Tailscale, and this Mac only drives it. FULAS_SERVIDOR in
+# .env says which one (ubuntu@fulasbank).
+SERVIDOR="$(grep '^FULAS_SERVIDOR=' "$DIR/.env" 2> /dev/null | tail -1 | cut -d= -f2- || true)"
+
+# With a server, the copy is sent there and loaded by servidor/restaurar.sh,
+# which asks before replacing anything.
+if [[ -n "$SERVIDOR" ]]; then
+  name="$(basename "$copy")"
+  echo "▶ Enviando $name al servidor"
+  scp -q -o ConnectTimeout=20 "$copy" "$SERVIDOR:$name"
+  status=0
+  ssh -t -o ConnectTimeout=20 "$SERVIDOR" "FulasBank/restaurar.sh $($ask || echo --sin-preguntar) '$name'; s=\$?; rm -f '$name'; exit \$s" || status=$?
+  exit $status
+fi
+
 KEYCHAIN_SERVICE="Fulas Bank copias"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
