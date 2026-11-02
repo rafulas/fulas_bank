@@ -3,6 +3,7 @@ en:
   import:
     balance_checks:
       balance_check:
+        adjustment_after_import: "This account has a «Balance adjustment» on %{date}, after movements you have just imported. If that adjustment already counted them, they now count twice: compare the balance with the bank's and press «Adjust» if it does not match."
         title: Do the balances match?
         hint: "Compares what each account holds in the app with what the bank says. If they differ, a movement is missing, repeated or has another amount."
         status:

@@ -13,6 +13,18 @@ class Transaction::SearchTest < ActiveSupport::TestCase
     @family.accounts.each { |account| account.entries.delete_all }
   end
 
+  test "Fulas Bank: balance adjustments are left out of the list of movements" do
+    coffee = create_transaction(account: @checking_account, name: "Café", amount: 2)
+    Account::BalanceAdjuster.new(@checking_account).adjust_to(balance: 1234, date: Date.current)
+    adjustment = Account::BalanceAdjuster.adjustments_for(@checking_account).sole
+
+    ids = Transaction::Search.new(@family).transactions_scope.pluck("entries.id")
+
+    assert_includes ids, coffee.id
+    assert_not_includes ids, adjustment.id
+    assert_includes @checking_account.entries.pluck(:id), adjustment.id, "still in the account's own activity"
+  end
+
   test "search filters by transaction types using kind enum" do
     # Create different types of transactions using the helper method
     standard_entry = create_transaction(

@@ -92,10 +92,23 @@ class Import::BalanceCheckTest < ActiveSupport::TestCase
     balance_check = Import::BalanceCheck.new(import, user: @user)
     balance_check.record!(@account, BigDecimal("1234.56"))
 
-    assert_difference -> { @account.entries.where(entryable_type: "Valuation").count } => 1 do
-      assert balance_check.adjust!(@account)
+    # Fulas Bank: a current account gets an «Ajuste de saldo» movement for
+    # the difference (Account::BalanceAdjuster), not a fixed balance.
+    assert_no_difference -> { @account.entries.where(entryable_type: "Valuation").count } do
+      assert_difference -> { Account::BalanceAdjuster.adjustments_for(@account).count } => 1 do
+        assert balance_check.adjust!(@account)
+      end
     end
-    assert_equal BigDecimal("1234.56"), @account.entries.where(entryable_type: "Valuation", date: Date.current).sole.amount
+    assert_equal BigDecimal("1234.56"), Account::BalanceAdjuster.new(@account.reload).balance_on(Date.current)
+  end
+
+  test "Fulas Bank: says when an adjustment comes after movements just imported" do
+    import = completed_import
+    assert_nil Import::BalanceCheck.new(import, user: @user).adjustment_after_import(@account)
+
+    Account::BalanceAdjuster.new(@account).adjust_to(balance: 777, date: Date.current)
+
+    assert_equal Date.current, Import::BalanceCheck.new(import, user: @user).adjustment_after_import(@account).date
   end
 
   private

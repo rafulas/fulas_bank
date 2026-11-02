@@ -34,6 +34,8 @@ es:
       balance: el saldo
       'on': el
       to: a
+      adjustment_none: "Ya tiene ese saldo: no hace falta ningún ajuste."
+      adjustment_notice: "Se apuntará un movimiento «Ajuste de saldo» de %{amount} ese día. Lo que apuntes después seguirá sumando y restando."
       recalculate_notice: Todas las transacciones y saldos futuros se recalcularán en función de este %{change_or_update}.
       change: cambio
       update: actualización

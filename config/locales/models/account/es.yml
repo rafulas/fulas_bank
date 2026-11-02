@@ -1,5 +1,8 @@
 ---
 es:
+  account:
+    balance_adjuster:
+      name: Ajuste de saldo
   account_order:
     balance_asc:
       label: Saldo (de menor a mayor)

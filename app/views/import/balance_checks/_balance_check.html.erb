@@ -24,6 +24,10 @@
           <% end %>
         </div>
 
+        <% if (adjustment = balance_check.adjustment_after_import(check.account)) %>
+          <p class="text-xs text-warning"><%= t(".adjustment_after_import", date: l(adjustment.date, format: :short)) %></p>
+        <% end %>
+
         <% if check.checked? %>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <div>

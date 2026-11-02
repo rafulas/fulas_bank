@@ -69,6 +69,7 @@ class RecurringTransaction
         .where("entries.date >= ?", lookback.ago.to_date)
         .where("entries.amount < 0")
         .where.not("transactions.kind": Transaction::TRANSFER_KINDS)
+        .where("NOT (transactions.extra @> ?)", { Account::BalanceAdjuster::MARKER => true }.to_json) # Fulas Bank: not a payment
         .includes(:entryable)
         .to_a
 
@@ -241,6 +242,8 @@ class RecurringTransaction
           .where("accounts.accountable_type IS NULL OR accounts.accountable_type NOT IN (?)", NON_BILLABLE_ACCOUNTABLE_TYPES)
           .where("entries.date >= ?", three_months_ago)
           .where.not("transactions.kind": Transaction::TRANSFER_KINDS)
+          # Fulas Bank: «Ajuste de saldo» movements are not payments.
+          .where("NOT (transactions.extra @> ?)", { Account::BalanceAdjuster::MARKER => true }.to_json)
           .includes(:entryable)
           .to_a
 

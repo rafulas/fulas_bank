@@ -1,8 +1,17 @@
 module Account::Reconcileable
   extend ActiveSupport::Concern
 
-  def create_reconciliation(balance:, date:, dry_run: false)
-    result = reconciliation_manager.reconcile_balance(balance: balance, date: date, dry_run: dry_run)
+  # Fulas Bank: on a current account or a card, «Nuevo saldo» and the
+  # import's «Ajustar» write an «Ajuste de saldo» on that day instead of
+  # fixing the balance there (see Account::BalanceAdjuster). `as_adjustment:
+  # false` writes the dated value anyway (the API, which asks for one).
+  def create_reconciliation(balance:, date:, dry_run: false, as_adjustment: true)
+    result =
+      if as_adjustment && Account::BalanceAdjuster.applies_to?(self)
+        Account::BalanceAdjuster.new(self).adjust_to(balance: balance, date: date, dry_run: dry_run)
+      else
+        reconciliation_manager.reconcile_balance(balance: balance, date: date, dry_run: dry_run)
+      end
     sync_later if result.success? && !dry_run
     result
   end
