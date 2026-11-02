@@ -86,6 +86,10 @@ En el Mac, Fulas Bank sigue abriéndose como siempre (app de Aplicaciones o `htt
 
 El ajuste de Tailscale se guarda solo y sobrevive a reinicios. Si algún día deja de abrir desde fuera, vuelve a hacer doble clic en el acceso directo del paso 3.
 
+## Pasar a un servidor
+
+Si quieres usar Fulas Bank sin tener el Mac encendido, se puede mover a un servidor que esté siempre en marcha. El Mac sigue siendo el mando: avisa de versiones nuevas, actualiza y guarda las copias en iCloud. Los pasos están en [`servidor/LEEME.md`](../servidor/LEEME.md); en el Mac se reduce a un comando, `mac/pasar-a-servidor.sh`.
+
 ## Copias de seguridad
 
 - Cada copia es un único archivo, `fulasbank-AAAA-MM-DD_HHMM.tar.enc`, con la base de datos, los archivos subidos (extractos, facturas) y la clave para leer los campos cifrados.
@@ -126,6 +130,7 @@ El ajuste de Tailscale se guarda solo y sobrevive a reinicios. Si algún día de
 | `copia.sh` | Hace la copia diaria, cifrada |
 | `aviso.sh` | Cada hora mira si hay versión nueva y, si la hay, te pregunta |
 | `restaurar.sh` | Carga una copia y comprueba que ha llegado entera |
+| `pasar-a-servidor.sh` | Mueve Fulas Bank a un servidor y deja el Mac como mando (se lanza con `curl`, no se guarda en `~/FulasBank`) |
 | `otros-aparatos.sh` | Abre Fulas Bank a tus otros aparatos con Tailscale (`tailscale serve`) |
 
 La «imagen» de Fulas Bank (la app ya preparada, lista para Docker) la fabrica GitHub después de cada merge a `main`, solo si antes pasan todas las pruebas: `.github/workflows/fulas-imagen.yml`, para Mac con chip Apple y con Intel. La app de Aplicaciones (carpeta `desktop/`) la fabrica `.github/workflows/fulas-app-mac.yml` y queda en la release «app-mac» del repositorio.

@@ -98,8 +98,58 @@ EOF
   chmod +x "$DIR/Ver frase de las copias.command"
 fi
 
+# Server mode (mac/pasar-a-servidor.sh): Fulas Bank runs on a server
+# reached through Tailscale, and this Mac only drives it. FULAS_SERVIDOR in
+# .env says which one (ubuntu@fulasbank).
+SERVIDOR="$(grep '^FULAS_SERVIDOR=' "$DIR/.env" 2> /dev/null | tail -1 | cut -d= -f2- || true)"
+# Never waits forever (e.g. if Tailscale asks to confirm it is you): perl's
+# alarm, kept across exec, stops it after 10 minutes. macOS has no «timeout».
+LIMIT=(perl -e 'alarm shift; exec @ARGV' 600)
+SSH=("${LIMIT[@]}" ssh -o ConnectTimeout=20 -o BatchMode=yes -o StrictHostKeyChecking=accept-new)
+
 cd "$DIR"
 echo "[$(date '+%Y-%m-%d %H:%M')] Copia de Fulas Bank"
+
+if [[ -n "$SERVIDOR" ]]; then
+  # The server makes its own copy every day at 13:00 (servidor/copia.sh) and
+  # keeps the last 14. Here they are brought to $DEST, so one also lives
+  # outside the server. A fresh one is asked for when run by hand (from
+  # Terminal or the app's menu) or when the server has none from the last
+  # 20 hours.
+  recent="$("${SSH[@]}" "$SERVIDOR" 'find FulasBank/copias -name "fulasbank-*.tar.enc" -mmin -1200 | head -1' 2> /dev/null)" || {
+    echo "No llego al servidor ($SERVIDOR). ¿Está Tailscale conectado en este Mac?" >&2
+    exit 1
+  }
+  if [[ -t 1 || -z "$recent" ]]; then
+    "${SSH[@]}" "$SERVIDOR" 'FulasBank/copia.sh' || { echo "El servidor no ha podido hacer la copia." >&2; exit 1; }
+  fi
+  mkdir -p "$DEST"
+  traidas=0
+  while read -r remote; do
+    [[ -n "$remote" ]] || continue
+    if [[ ! -f "$DEST/$remote" ]]; then
+      # Copied aside and moved in at the end, so iCloud never uploads half a file.
+      if "${LIMIT[@]}" scp -q -o ConnectTimeout=20 -o BatchMode=yes "$SERVIDOR:FulasBank/copias/$remote" "$DEST/.$remote.parcial"; then
+        mv "$DEST/.$remote.parcial" "$DEST/$remote"
+        traidas=$((traidas + 1))
+      else
+        rm -f "$DEST/.$remote.parcial"
+        echo "No se ha podido traer $remote." >&2
+      fi
+    fi
+  done < <("${SSH[@]}" "$SERVIDOR" 'cd FulasBank/copias && ls -1 fulasbank-*.tar.enc 2> /dev/null')
+  latest="$(ls -1t "$DEST"/fulasbank-*.tar.enc 2> /dev/null | head -1)"
+  mkdir -p "$DIR/registros"
+  [[ -n "$latest" ]] && echo "$latest" > "$DIR/registros/ultima-copia"
+  shopt -s nullglob
+  copies=("$DEST"/fulasbank-*.tar "$DEST"/fulasbank-*.tar.enc)
+  shopt -u nullglob
+  if [[ ${#copies[@]} -gt $KEEP ]]; then
+    ls -1t "${copies[@]}" | tail -n +"$((KEEP + 1))" | while read -r old; do rm -f "$old"; done
+  fi
+  echo "Copias del servidor traídas a $DEST: $traidas nueva(s). La última: $(basename "${latest:-ninguna}")"
+  exit 0
+fi
 
 if ! docker compose ps --status running --services 2> /dev/null | grep -qx db; then
   echo "Fulas Bank no está en marcha (¿Docker cerrado?): no se hace copia." >&2

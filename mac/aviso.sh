@@ -24,6 +24,15 @@ STATE="$DIR/registros/aviso-pospuesto"
 API="https://api.github.com/repos/$REPO"
 cd "$DIR" || exit 0
 
+# Server mode (mac/pasar-a-servidor.sh): Fulas Bank runs on a server
+# reached through Tailscale, and this Mac only drives it. FULAS_SERVIDOR in
+# .env says which one (ubuntu@fulasbank).
+SERVIDOR="$(grep '^FULAS_SERVIDOR=' "$DIR/.env" 2> /dev/null | tail -1 | cut -d= -f2- || true)"
+# Never waits forever (e.g. if Tailscale asks to confirm it is you): perl's
+# alarm, kept across exec, stops it after 10 minutes. macOS has no «timeout».
+LIMIT=(perl -e 'alarm shift; exec @ARGV' 600)
+SSH=("${LIMIT[@]}" ssh -o ConnectTimeout=20 -o BatchMode=yes -o StrictHostKeyChecking=accept-new)
+
 if [[ "${1:-}" == "--instalar" ]]; then
   plist="$HOME/Library/LaunchAgents/es.fulasbank.aviso.plist"
   mkdir -p "$(dirname "$plist")" "$DIR/registros"
@@ -70,9 +79,18 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 # The version this Mac runs: the commit the running image was built from.
-local_sha="$(docker compose exec -T web printenv BUILD_COMMIT_SHA 2> /dev/null | tr -d '[:space:]')"
-if [[ -z "$local_sha" ]]; then   # Fulas Bank or Docker not running: try later
-  tell "No puedo comprobarlo ahora: Fulas Bank no está en marcha. Abre Docker Desktop y vuelve a probar."
+# With a server, the version the server runs.
+if [[ -n "$SERVIDOR" ]]; then
+  local_sha="$("${SSH[@]}" "$SERVIDOR" 'FulasBank/version.sh' 2> /dev/null | tr -d '[:space:]')"
+else
+  local_sha="$(docker compose exec -T web printenv BUILD_COMMIT_SHA 2> /dev/null | tr -d '[:space:]')"
+fi
+if [[ -z "$local_sha" ]]; then   # Fulas Bank, Docker or the server not reachable: try later
+  if [[ -n "$SERVIDOR" ]]; then
+    tell "No puedo comprobarlo ahora: no llego al servidor. Mira que Tailscale esté conectado en este Mac."
+  else
+    tell "No puedo comprobarlo ahora: Fulas Bank no está en marcha. Abre Docker Desktop y vuelve a probar."
+  fi
   exit 0
 fi
 

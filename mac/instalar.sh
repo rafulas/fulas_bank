@@ -61,6 +61,9 @@ echo "Docker Desktop en marcha."
 paso "Preparando la carpeta $DIR"
 mkdir -p "$DIR"
 cd "$DIR"
+if grep -q '^FULAS_SERVIDOR=' .env 2> /dev/null; then
+  fallo "Este Mac usa Fulas Bank en el servidor ($(grep '^FULAS_SERVIDOR=' .env | tail -1 | cut -d= -f2-)). Para actualizar, usa «Actualizar Fulas Bank». Para volver a tenerlo en el Mac, quita la línea FULAS_SERVIDOR de ~/FulasBank/.env."
+fi
 for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
   curl -fsSL "$RAW/$f" -o "$f.nuevo" || fallo "No se ha podido descargar $f."
   mv "$f.nuevo" "$f"
