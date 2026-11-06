@@ -22,6 +22,21 @@ class OverviewsTest < ActiveSupport::TestCase
     assert_in_delta 0.25, overview.total_paid_ratio, 0.001
   end
 
+  test "loans: the paid-off ones are kept apart and out of the totals" do
+    @family.accounts.create!(name: "Hipoteca", balance: 150_000, currency: "USD",
+                             accountable: Loan.new(initial_balance: 200_000, interest_rate: 2.5, term_months: 300, rate_type: "fixed"))
+    boda = @family.accounts.create!(name: "Préstamo Boda", balance: 0, currency: "USD",
+                                    accountable: Loan.new(initial_balance: 26_800, interest_rate: 0, term_months: 84, rate_type: "fixed",
+                                                          payment_amount: 303.57))
+
+    overview = LoansOverview.new(@family, user: @user)
+
+    assert_equal [ "Hipoteca" ], overview.rows.map { |row| row.account.name }
+    assert_equal [ boda ], overview.paid_off_rows.map(&:account)
+    assert_equal Money.new(200_000, "USD"), overview.total_borrowed
+    assert_not overview.empty?
+  end
+
   test "investments: value, money put in, gain and return" do
     fund = @family.accounts.create!(name: "Fondo", balance: 6_445, currency: "USD", accountable: Investment.new)
     @family.accounts.create!(name: "Acciones", balance: 1_000, currency: "USD", accountable: Investment.new)

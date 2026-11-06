@@ -33,7 +33,7 @@ class Loan::InstallmentSync
     series = family.recurring_transactions.find_by(loan_account_id: loan_account.id)
     payment = instalment(loan)
 
-    if payment.nil? || loan.finished?(as_of: today) || !loan_account.active?
+    if payment.nil? || loan.paid_off?(as_of: today) || !loan_account.active?
       series.update!(status: "ended", cancelled_on: today) if series&.active?
       # A staff loan paid off long ago still has its past months to book.
       book_payroll(loan_account)
