@@ -1,0 +1,10 @@
+<%# Fulas Bank: the 90-day balance chart of the movements panel, for its
+    frame in «Análisis» (transactions/_panel). %>
+<%= turbo_frame_tag "transactions_panel_balance" do %>
+  <% if @series %>
+    <div class="bg-container rounded-xl shadow-border-xs p-3 space-y-2">
+      <p class="text-xs text-secondary"><%= t("transactions.panel.balance_title", days: Transaction::Panel::BALANCE_DAYS) %></p>
+      <div class="h-32 w-full" data-controller="time-series-chart" data-time-series-chart-data-value="<%= @series.to_json %>"></div>
+    </div>
+  <% end %>
+<% end %>

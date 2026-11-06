@@ -9,7 +9,8 @@
 # It writes as a warning, so it shows with the usual log level. The times of
 # the pieces include the pieces inside them. Code can also name a step of
 # its own work with a "part.fulas" notification (see Forecast#measure),
-# listed apart under "pasos".
+# listed apart under "pasos". Components (DS::Pill...) are listed with the
+# partials, by class name, when the app booted with FULAS_PERF_LOG set.
 module PerformanceLog
   extend ActiveSupport::Concern
 
@@ -42,6 +43,11 @@ module PerformanceLog
 
           pieces[performance_piece_name(event.payload[:identifier])] += event.duration
         end,
+        ActiveSupport::Notifications.subscribe("render.view_component") do |event|
+          next unless Thread.current == thread
+
+          pieces[event.payload[:name].to_s] += event.duration
+        end,
         ActiveSupport::Notifications.subscribe("part.fulas") do |event|
           next unless Thread.current == thread
 
@@ -62,6 +68,12 @@ module PerformanceLog
         line += " · pasos: #{steps.map { |name, ms| "#{name} #{ms.round}ms" }.join(", ")}" if steps.any?
         Rails.logger.warn(line)
       end
+    end
+
+    # Names a step of an action's own work for the [perf] line ("pasos").
+    # Without FULAS_PERF_LOG nobody listens, and it only runs the block.
+    def performance_step(name, &block)
+      ActiveSupport::Notifications.instrument("part.fulas", part: name, &block)
     end
 
     # "app/views/transactions/_transaction.html.erb" from the full path.

@@ -31,6 +31,17 @@ class PerformanceLogTest < ActionDispatch::IntegrationTest
     assert_match(/forecast\.grafica \d+ms/, line)
   end
 
+  test "names the steps of the movements list" do
+    messages = []
+    Rails.logger.stubs(:warn).with { |message| messages << message.to_s }
+
+    with_env_overrides(FULAS_PERF_LOG: "1") { get transactions_url }
+
+    line = messages.find { |message| message.start_with?("[perf] GET /transactions") }
+    assert line, "expected a [perf] line, got #{messages.inspect}"
+    assert_match(/pasos: .*transacciones\.paginar \d+ms/, line)
+  end
+
   test "writes nothing without FULAS_PERF_LOG" do
     messages = []
     Rails.logger.stubs(:warn).with { |message| messages << message.to_s }
