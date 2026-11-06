@@ -43,6 +43,8 @@ en:
       sign_in: Sign in
       sign_up: Create account
     shared:
+      drawer_placeholder:
+        loading: Opening…
       footer:
         based_on: "(based on Sure, a community fork of Maybe Finance)"
         privacy_policy: Privacy Policy

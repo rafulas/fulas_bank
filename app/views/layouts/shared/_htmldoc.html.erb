@@ -25,6 +25,9 @@
 
     <%= turbo_frame_tag "modal" %>
     <%= turbo_frame_tag "drawer" %>
+    <%# Fulas Bank: what the drawer shows at once while a movement's detail
+        loads (see application.js). %>
+    <template id="drawer-placeholder"><%= render "layouts/shared/drawer_placeholder" %></template>
 
     <%# Custom overrides for browser's confirm API  %>
     <%= render "layouts/shared/confirm_dialog" %>

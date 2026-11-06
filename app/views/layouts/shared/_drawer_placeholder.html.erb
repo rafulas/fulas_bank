@@ -1,0 +1,15 @@
+<%# Fulas Bank: the drawer as it opens, the moment a movement is tapped: its
+    name (put in by application.js) and grey blocks where the detail goes,
+    until the detail arrives from the server and takes its place. It is the
+    same dialog as the detail's (transactions/show), so it opens in the
+    same place and size. %>
+<%= render DS::Dialog.new(frame: "drawer", responsive: true, disable_frame: true, data: { drawer_placeholder: true }) do |dialog| %>
+  <% dialog.with_header(title: t(".loading")) %>
+  <% dialog.with_body do %>
+    <div class="space-y-3 animate-pulse" aria-hidden="true">
+      <% %w[h-8 h-10 h-10 h-24 h-16].each do |height| %>
+        <div class="<%= height %> rounded-lg bg-container-inset"></div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
