@@ -119,7 +119,7 @@ es:
         amount: "Importe al mes desde %{month}"
         amount_hint: Se repite cada mes hasta que lo cambies; los meses anteriores no cambian.
         categories: Categorías
-        categories_hint: Marca las categorías o subcategorías que entran, de una o de varias categorías principales. Una categoría principal incluye todas sus subcategorías. Cada categoría solo puede estar en un presupuesto.
+        categories_hint: "Marca las categorías o subcategorías que entran, de una o de varias categorías principales. Una categoría principal incluye sus subcategorías, menos las que estén en otro presupuesto. Si marcas una que ya está en otro presupuesto, pasa a este y sale del otro."
         in_budget: "En «%{name}»"
         submit: Guardar
         delete: Eliminar presupuesto

@@ -136,15 +136,17 @@ class MonthBudget
   # apart; a category already in another budget is refused.
   #
   # @return [Boolean] false with the errors on the budget
+  #
+  # A category already in another budget moves to this one, so no spending
+  # counts twice. A subcategory chosen here leaves the other budget's main
+  # category, which keeps its own movements and its other subcategories. A
+  # budget left with no category is removed.
   def assign(group, name:, category_ids:, amount:)
     group.name = name.to_s.strip
     chosen = normalize(category_ids)
-    taken = taken_ids(except: group)
-    clash = chosen.flat_map { |category| [ category, *subcategories_of(category) ] }.find { |category| taken.include?(category.id.to_s) }
 
     problems = []
     problems << I18n.t("month_budget.errors.no_categories") if chosen.empty?
-    problems << I18n.t("month_budget.errors.taken", category: clash.name, budget: group_for(clash)&.name) if clash
     valid = group.valid?
     problems.each { |problem| group.errors.add(:base, problem) }
     return false unless valid && problems.empty?
@@ -153,6 +155,7 @@ class MonthBudget
       group.position = next_position if group.new_record?
       group.user_id = owner_id if group.new_record?
       group.save!
+      release!(chosen, keep: group)
       group.group_categories.where.not(category_id: chosen.map(&:id)).delete_all
       (chosen.map(&:id) - group.group_categories.reload.map(&:category_id)).each do |id|
         group.group_categories.create!(category_id: id)
@@ -184,6 +187,23 @@ class MonthBudget
   private
     def owner_id
       self.class.owner_id(family, user)
+    end
+
+    # Takes the categories in `chosen` out of every budget but `keep` that
+    # chose them too. A subcategory chosen here while another budget has its
+    # main category needs nothing: it counts here (BudgetGroup#expanded_category_ids).
+    # A budget left with no category is removed.
+    def release!(chosen, keep:)
+      ids = chosen.map(&:id)
+      groups.reject { |other| other == keep }.each do |other|
+        items = other.group_categories.select { |item| ids.include?(item.category_id) }
+        next if items.empty?
+
+        items.each(&:destroy!)
+        other.group_categories.reset
+        other.reload
+        other.destroy! if other.group_categories.none?
+      end
     end
 
     def reset!
