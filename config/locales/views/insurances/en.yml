@@ -16,6 +16,8 @@ en:
       other: "%{count} instalments"
     next_installment: "next on %{date}: %{amount}"
     payments:
+      options_hint: "This charge could pay one of your insurance policies. Link it so the policy counts it as paid."
+      link_insurance: "Link to %{name} · instalment of %{date} (%{amount})"
       title: Instalment charges
       hint: The last year and the next instalment. The app looks for the charge of each one in your movements; confirm it, choose another or mark it paid.
       section: Insurance instalment

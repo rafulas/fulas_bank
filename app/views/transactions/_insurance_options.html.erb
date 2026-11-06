@@ -1,0 +1,19 @@
+<%# locals: (entry:, options:) %>
+<%# Fulas Bank: the insurance instalments this charge could pay, to link it
+    from the movement itself, as the car and the house are linked. %>
+<div class="px-3 py-2 space-y-2">
+  <p class="text-xs text-secondary"><%= t("insurances.payments.options_hint") %></p>
+  <div class="flex flex-wrap items-center gap-2">
+    <% options.each do |insurance, date, amount| %>
+      <%= render DS::Button.new(
+            text: t("insurances.payments.link_insurance", name: insurance.name, date: l(date, format: "%d/%m/%Y"), amount: format_money(amount)),
+            icon: "link",
+            variant: :outline,
+            size: :sm,
+            href: link_insurance_payment_path(insurance, date.iso8601, entry_id: entry.id),
+            method: :post,
+            frame: :_top
+          ) %>
+    <% end %>
+  </div>
+</div>
