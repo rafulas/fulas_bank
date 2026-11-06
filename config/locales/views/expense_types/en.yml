@@ -4,6 +4,7 @@ en:
     show:
       expense_type: Variable, fixed, bill or subscription
     expense_type:
+      change_link: Change
       current: "This movement is: %{type}."
       automatic_series: The app decided it because it belongs to a recurring series.
       automatic_default: The app decided it because it does not belong to any recurring series.

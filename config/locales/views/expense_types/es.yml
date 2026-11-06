@@ -4,6 +4,7 @@ es:
     show:
       expense_type: Variable, fijo, recibo o suscripción
     expense_type:
+      change_link: Cambiar
       current: "Este movimiento es: %{type}."
       automatic_series: Lo ha decidido la app porque va con un recurrente.
       automatic_default: Lo ha decidido la app porque no va con ningún recurrente.
