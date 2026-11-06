@@ -50,6 +50,7 @@ en:
     show:
       subscription: Recurring
     subscription:
+      change_link: Change
       linked: "Goes with %{name}, %{kind} of %{amount}."
       not_linked: Not part of any recurring payment.
       change: This movement's recurring payment

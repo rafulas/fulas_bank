@@ -1,0 +1,8 @@
+<%# locals: (title:) %>
+<%# Fulas Bank: a block of a movement's detail that is always in sight (the
+    sketch's «Detalles», «Cómo cuenta», «Similares»...): its title over its
+    content, no arrow to fold it. Used as a layout: render layout: ... do. %>
+<section class="space-y-2">
+  <h3 class="px-1 text-xs font-medium uppercase text-secondary"><%= title %></h3>
+  <%= yield %>
+</section>

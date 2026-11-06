@@ -118,17 +118,18 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     show = ->(key) { I18n.t("transactions.show.#{key}", locale: @user.locale.presence || I18n.default_locale) }
-    sections = css_select("details > summary").map { |summary| summary.text.squish }
-    # Details (merchant, tags, notes) open; how it counts after; the rest last.
-    assert_select "details[open] > summary", text: /#{Regexp.escape(show.call(:details))}/
-    assert_includes sections.join("|"), show.call(:how_it_counts)
+    # Details and how it counts are always in sight: a title, nothing to fold.
+    assert_select "section > h3", text: show.call(:details)
+    assert_select "section > h3", text: show.call(:how_it_counts)
+    assert_select "details > summary", text: /#{Regexp.escape(show.call(:details))}\z/, count: 0
+    # The rest, folded under «Más opciones», with the time and deleting in it.
     more = css_select("details").find { |node| node.at_css("> summary")&.text.to_s.include?(show.call(:more_options)) }
     assert more, "expected a «#{show.call(:more_options)}» section"
     assert_not more.key?("open")
-    # Deleting is in «Más opciones», not in sight.
-    assert more.at_css("a[href='#{entry_path(@entry)}'][data-turbo-method='delete'], form[action='#{entry_path(@entry)}']"),
-           "delete should be inside «#{show.call(:more_options)}»"
-    # The account is next to the date, and not twice in the form.
+    assert more.at_css("input[name='entry[time_of_day]']"), "the time should be inside «#{show.call(:more_options)}»"
+    assert more.at_css("form[action='#{entry_path(@entry)}']"), "delete should be inside «#{show.call(:more_options)}»"
+    # Category and date side by side; the account next to the date, and not twice.
+    assert_select ".grid input[name='entry[date]']"
     assert_select "##{dom_id(@entry, :header)}", text: /#{Regexp.escape(@entry.account.name)}/
     assert_select "select[name='entry[account]']", count: 0
   end
