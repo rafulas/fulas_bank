@@ -72,6 +72,62 @@ document.addEventListener("turbo:before-fetch-request", (event) => {
 document.addEventListener("turbo:before-fetch-response", frameLoadFinished);
 document.addEventListener("turbo:fetch-request-error", frameLoadFinished);
 
+// Fulas Bank: a movement's detail opens the moment it is tapped, as in a
+// native app: the drawer shows at once with the movement's name and grey
+// blocks (layouts/shared/_drawer_placeholder), and the detail takes their
+// place when it arrives from the server. Only when the drawer is closed: a
+// link inside an open drawer just loads, with the progress bar.
+let drawerTitle = null;
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const link = event.target.closest?.("[data-drawer-title]");
+    drawerTitle = link?.dataset.drawerTitle ?? null;
+  },
+  true,
+);
+
+document.addEventListener("turbo:before-fetch-request", (event) => {
+  const frame = event.target;
+  if (frame?.tagName !== "TURBO-FRAME" || frame.id !== "drawer") return;
+  if (frame.querySelector("dialog[open]")) return;
+
+  const template = document.getElementById("drawer-placeholder");
+  if (!template) return;
+
+  const placeholder = template.content.cloneNode(true);
+  const title = placeholder.querySelector("header h1, header h2, header h3");
+  if (title && drawerTitle) title.textContent = drawerTitle;
+  drawerTitle = null;
+  frame.replaceChildren(placeholder);
+});
+
+const drawerPlaceholder = (frame) =>
+  frame?.id === "drawer" &&
+  frame.querySelector("dialog[data-drawer-placeholder]");
+
+// Closed before the detail came: it does not open after all.
+document.addEventListener("turbo:before-frame-render", (event) => {
+  const placeholder = drawerPlaceholder(event.target);
+  if (!placeholder || placeholder.open) return;
+
+  event.detail.render = () => {};
+  event.target.replaceChildren();
+});
+
+// The detail could not be loaded (no connection, or an error page): the
+// drawer does not stay waiting.
+for (const failed of ["turbo:fetch-request-error", "turbo:frame-missing"]) {
+  document.addEventListener(failed, (event) => {
+    if (drawerPlaceholder(event.target)) event.target.replaceChildren();
+  });
+}
+document.addEventListener("turbo:before-fetch-response", (event) => {
+  if (event.detail.fetchResponse?.succeeded) return;
+  if (drawerPlaceholder(event.target)) event.target.replaceChildren();
+});
+
 Turbo.StreamActions.redirect = function () {
   // Use "replace" to avoid adding form submission to browser history
   Turbo.visit(this.target, { action: "replace" });

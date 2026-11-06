@@ -43,6 +43,8 @@ es:
       sign_in: Iniciar sesión
       sign_up: Crear cuenta
     shared:
+      drawer_placeholder:
+        loading: Abriendo…
       footer:
         based_on: "(basado en Sure, una versión comunitaria de Maybe Finance)"
         privacy_policy: Política de privacidad

@@ -279,6 +279,14 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "a movement's detail can open at once, with its name, while it loads" do
+    get transactions_url
+
+    assert_response :success
+    assert_select "template#drawer-placeholder"
+    assert_select "a[data-turbo-frame='drawer'][data-drawer-title='#{@entry.name}']"
+  end
+
   test "creates with transaction details" do
     assert_difference [ "Entry.count", "Transaction.count" ], 1 do
       post transactions_url, params: {
