@@ -1,0 +1,34 @@
+<%# locals: (entry:) %>
+<%# Fulas Bank: one movement in «Similares» (transactions/_similar). %>
+<% transaction = entry.transaction %>
+<% category = transaction.category %>
+<li>
+  <%= link_to entry_path(entry), data: { turbo_frame: "drawer", turbo_prefetch: false },
+        class: "flex items-center gap-3 px-3 py-2 hover:bg-container-hover rounded-lg" do %>
+    <%= render DS::FilledIcon.new(variant: :solid,
+                                  icon: category&.lucide_icon || "circle-dashed",
+                                  hex_color: category&.color || Category::UNCATEGORIZED_COLOR,
+                                  size: "sm", rounded: true) %>
+    <div class="min-w-0 flex-1">
+      <p class="flex items-center gap-1.5 text-sm text-primary">
+        <span class="truncate"><%= entry.name %></span>
+        <% if (recurring_title = entry_recurring_tooltip(entry)) %>
+          <span class="text-secondary shrink-0" title="<%= recurring_title %>"><%= icon "repeat", size: "xs", color: "current" %></span>
+        <% end %>
+      </p>
+      <p class="text-xs text-secondary truncate">
+        <%= [ l(entry.date, format: :long), category&.name ].compact.join(" · ") %>
+      </p>
+      <% if transaction.tags.any? %>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+          <% transaction.tags.each do |tag| %>
+            <%= render DS::ColorLabel.new(label: tag.name, color: tag.color, mark: :dot, size: :sm) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <span class="text-sm privacy-sensitive shrink-0 <%= entry.amount.negative? ? "text-success" : "text-primary" %>">
+      <%= format_money(-entry.amount_money) %>
+    </span>
+  <% end %>
+</li>

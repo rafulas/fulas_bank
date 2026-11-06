@@ -124,7 +124,13 @@ es:
       updated: Transacción actualizada
     new:
       new_transaction: Nueva transacción
+    similar:
+      show_all:
+        one: Ver el otro
+        other: "Ver los %{count}"
     show:
+      how_it_counts: Cómo cuenta
+      more_options: Más opciones
       budget_title: "Presupuesto de %{month}"
       similar_title: "Transacciones similares"
       keep_both: No, mantener ambas

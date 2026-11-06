@@ -113,6 +113,26 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_not second.unseen?
   end
 
+  test "the detail puts what is used most first and the rest under «Más opciones»" do
+    get transaction_url(@entry), headers: { "Turbo-Frame" => "drawer" }
+
+    assert_response :success
+    show = ->(key) { I18n.t("transactions.show.#{key}", locale: @user.locale.presence || I18n.default_locale) }
+    sections = css_select("details > summary").map { |summary| summary.text.squish }
+    # Details (merchant, tags, notes) open; how it counts after; the rest last.
+    assert_select "details[open] > summary", text: /#{Regexp.escape(show.call(:details))}/
+    assert_includes sections.join("|"), show.call(:how_it_counts)
+    more = css_select("details").find { |node| node.at_css("> summary")&.text.to_s.include?(show.call(:more_options)) }
+    assert more, "expected a «#{show.call(:more_options)}» section"
+    assert_not more.key?("open")
+    # Deleting is in «Más opciones», not in sight.
+    assert more.at_css("a[href='#{entry_path(@entry)}'][data-turbo-method='delete'], form[action='#{entry_path(@entry)}']"),
+           "delete should be inside «#{show.call(:more_options)}»"
+    # The account is next to the date, and not twice in the form.
+    assert_select "##{dom_id(@entry, :header)}", text: /#{Regexp.escape(@entry.account.name)}/
+    assert_select "select[name='entry[account]']", count: 0
+  end
+
   test "the detail lists similar movements, marking the recurring ones" do
     twin = Entry.create!(account: @entry.account, name: @entry.name, date: @entry.date - 30, amount: @entry.amount,
                          currency: @entry.currency, entryable: Transaction.new(expense_type: "fixed"))

@@ -49,7 +49,8 @@
       <% end %>
     <% end %>
     <%= render "entries/protection_indicator", entry: @entry, unlock_path: unlock_transaction_path(@entry.transaction) %>
-    <% dialog.with_section(title: t(".overview"), open: true) do %>
+    <%# Fulas Bank: what is changed most (name, date, amount, category,
+        account), straight under the amount, not in a section. %>
       <div>
         <% split_locked = @entry.split_child? || @entry.split_parent? %>
         <% edit_locked = !can_edit_entry? %>
@@ -131,23 +132,7 @@
           <p class="text-xs text-secondary px-1"><%= t(".account_label") %>: <span class="text-primary"><%= @entry.account.name %></span></p>
         <% end %>
       </div>
-    <% end %>
-    <%# Fulas Bank: the month's budget for this movement's category, and the
-        movements like it (as Bilance shows them). %>
-    <% if (budget_view = transaction_budget_for(@entry)) %>
-      <% dialog.with_section(title: t(".budget_title", month: l(@entry.date, format: "%B").capitalize), open: true) do %>
-        <%= render "transactions/budget", plan: budget_view.first, row: budget_view.last %>
-      <% end %>
-    <% end %>
-
-    <% similar = Transaction::Similar.new(@entry, scope: Current.accessible_entries) %>
-    <% if similar.any? %>
-      <% dialog.with_section(title: t(".similar_title"), open: true) do %>
-        <%= render "transactions/similar", similar: similar %>
-      <% end %>
-    <% end %>
-
-    <% dialog.with_section(title: t(".details")) do %>
+    <% dialog.with_section(title: t(".details"), open: true) do %>
       <div class="space-y-2">
         <%= styled_form_with model: @entry,
               url: transaction_path(@entry),
@@ -155,13 +140,6 @@
               data: { controller: "auto-submit-form" } do |f| %>
           <%= hidden_field_tag :grouped, "true" if params[:grouped] == "true" %>
           <% unless @entry.transaction.transfer? %>
-            <%= f.select :account,
-                options_for_select(
-                  accessible_accounts.alphabetically.pluck(:name, :id),
-                  @entry.account_id
-                ),
-                { label: t(".account_label") },
-                { disabled: true } %>
             <%= f.fields_for :entryable do |ef| %>
               <%= render DS::MerchantSelect.new(
                     form: ef,
@@ -188,9 +166,35 @@
       </div>
     <% end %>
 
+    <%# Fulas Bank: how it counts: the recurring payment it belongs to, and
+        whether it is fixed or variable. %>
+    <% unless @entry.transaction.transfer? %>
+      <% dialog.with_section(title: t(".how_it_counts"), open: true) do %>
+        <div class="space-y-2">
+          <%= render "transactions/subscription", entry: @entry, can_edit: can_annotate_entry? %>
+          <%= render "transactions/expense_type", entry: @entry, can_edit: can_annotate_entry? %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%# Fulas Bank: the month's budget for this movement's category, and the
+        movements like it (as Bilance shows them). %>
+    <% if (budget_view = transaction_budget_for(@entry)) %>
+      <% dialog.with_section(title: t(".budget_title", month: l(@entry.date, format: "%B").capitalize), open: true) do %>
+        <%= render "transactions/budget", plan: budget_view.first, row: budget_view.last %>
+      <% end %>
+    <% end %>
+
+    <% similar = Transaction::Similar.new(@entry, scope: Current.accessible_entries) %>
+    <% if similar.any? %>
+      <% dialog.with_section(title: t(".similar_title"), open: true) do %>
+        <%= render "transactions/similar", similar: similar %>
+      <% end %>
+    <% end %>
+
     <% asset_link_record = AssetLink.for_entry(@entry) %>
-    <% asset_link_accounts = asset_link_accounts_for(@entry) %>
-    <% if asset_link_record || asset_link_accounts.any? %>
+    <% asset_link_accounts = asset_link_record ? [] : asset_link_accounts_for(@entry) %>
+    <% if asset_link_record %>
       <% dialog.with_section(title: t(".asset_link"), open: true) do %>
         <%= render "transactions/asset_link", entry: @entry, record: asset_link_record, accounts: asset_link_accounts %>
       <% end %>
@@ -203,15 +207,12 @@
       <% end %>
     <% end %>
 
-    <%# Fulas Bank: the insurance instalment this charge pays, or those it
-        could pay, to link it from here. %>
-    <% if (insurance_payment = InsurancePayment.includes(:insurance).find_by(entry_id: @entry.id)) %>
+    <%# Fulas Bank: the insurance instalment this charge pays. Linking it to
+        one is in «Más opciones». %>
+    <% insurance_payment = InsurancePayment.includes(:insurance).find_by(entry_id: @entry.id) %>
+    <% if insurance_payment %>
       <% dialog.with_section(title: t("insurances.payments.section"), open: true) do %>
         <%= render "transactions/insurance_payment", entry: @entry, payment: insurance_payment %>
-      <% end %>
-    <% elsif can_edit_entry? && !@entry.transaction.transfer? && (insurance_options = Insurance.instalments_for_charge(Current.family, @entry).first(3)).any? %>
-      <% dialog.with_section(title: t("insurances.payments.section"), open: false) do %>
-        <%= render "transactions/insurance_options", entry: @entry, options: insurance_options %>
       <% end %>
     <% end %>
 
@@ -222,64 +223,12 @@
       <% end %>
     <% end %>
 
-    <%# Fulas Bank: the recurring payment a movement belongs to. %>
-    <% unless @entry.transaction.transfer? %>
-      <% dialog.with_section(title: t(".subscription"), open: SubscriptionLink.new(@entry).current.present?) do %>
-        <%= render "transactions/subscription", entry: @entry, can_edit: can_annotate_entry? %>
+    <% if @entry.transaction.attachments.attached? %>
+      <% dialog.with_section(title: t(".attachments"), open: true) do %>
+        <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
       <% end %>
     <% end %>
 
-    <% unless @entry.transaction.transfer? %>
-      <% dialog.with_section(title: t(".expense_type"), open: true) do %>
-        <%= render "transactions/expense_type", entry: @entry, can_edit: can_annotate_entry? %>
-      <% end %>
-    <% end %>
-
-    <% dialog.with_section(title: t(".attachments")) do %>
-      <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
-    <% end %>
-
-    <% if (details = build_transaction_extra_details(@entry)) %>
-      <% dialog.with_section(title: t(".additional_details"), open: false) do %>
-        <div class="px-3 py-2 space-y-3">
-          <% if details[:kind] == :simplefin || details[:kind] == :plaid %>
-            <%# build_transaction_extra_details already drops blank values, so every
-                key present here has something to show. Its keys double as locale
-                keys: payee/description/memo for SimpleFIN, original_description/
-                payment_channel/transaction_code for Plaid. %>
-            <% named_details = details[details[:kind]] %>
-            <% if named_details.present? %>
-              <dl class="space-y-2">
-                <% named_details.each do |key, value| %>
-                  <%= render DS::DetailRow.new(label: t(".#{key}"), value: value) %>
-                <% end %>
-              </dl>
-            <% end %>
-            <% if details[:provider_extras].present? %>
-              <div class="pt-2">
-                <h4 class="text-sm text-secondary mb-1"><%= t(".provider_extras") %></h4>
-                <dl class="space-y-2">
-                  <% details[:provider_extras].each do |ex| %>
-                    <% if ex[:multiline] %>
-                      <div class="space-y-1">
-                        <dt class="text-secondary text-sm"><%= ex[:key] %></dt>
-                        <dd>
-                          <pre class="text-xs text-secondary bg-surface-inset rounded p-2 overflow-auto whitespace-pre-wrap break-words"><%= ex[:value] %></pre>
-                        </dd>
-                      </div>
-                    <% else %>
-                      <%= render DS::DetailRow.new(label: ex[:key], value: ex[:value]) %>
-                    <% end %>
-                  <% end %>
-                </dl>
-              </div>
-            <% end %>
-          <% else %>
-            <pre class="text-xs text-secondary bg-surface-inset rounded p-2 overflow-auto whitespace-pre-wrap break-words"><%= details[:raw] %></pre>
-          <% end %>
-        </div>
-      <% end %>
-    <% end %>
     <%# Split children list for split parent %>
     <% if @entry.split_parent? %>
       <% dialog.with_section(title: t("splits.show.title"), open: true) do %>
@@ -364,8 +313,69 @@
       <% end %>
     <% end %>
 
-    <% if can_edit_entry? %>
-      <% dialog.with_section(title: t(".settings")) do %>
+    <%# Fulas Bank: what is used now and then, in one place under the rest
+        (as the boceto agreed): settings, linking it to a vehicle, home or
+        insurance, attachments, the bank's details, deleting it. %>
+    <% dialog.with_section(title: t(".more_options")) do %>
+      <div class="space-y-2">
+        <% if asset_link_accounts.any? %>
+          <%= render DS::Disclosure.new(title: t(".asset_link")) do %>
+            <%= render "transactions/asset_link", entry: @entry, record: nil, accounts: asset_link_accounts %>
+          <% end %>
+        <% end %>
+        <% if !insurance_payment && can_edit_entry? && !@entry.transaction.transfer? && (insurance_options = Insurance.instalments_for_charge(Current.family, @entry).first(3)).any? %>
+          <%= render DS::Disclosure.new(title: t("insurances.payments.section")) do %>
+            <%= render "transactions/insurance_options", entry: @entry, options: insurance_options %>
+          <% end %>
+        <% end %>
+        <% unless @entry.transaction.attachments.attached? %>
+          <%= render DS::Disclosure.new(title: t(".attachments")) do %>
+            <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
+          <% end %>
+        <% end %>
+        <% if (details = build_transaction_extra_details(@entry)) %>
+          <%= render DS::Disclosure.new(title: t(".additional_details")) do %>
+        <div class="px-3 py-2 space-y-3">
+          <% if details[:kind] == :simplefin || details[:kind] == :plaid %>
+            <%# build_transaction_extra_details already drops blank values, so every
+                key present here has something to show. Its keys double as locale
+                keys: payee/description/memo for SimpleFIN, original_description/
+                payment_channel/transaction_code for Plaid. %>
+            <% named_details = details[details[:kind]] %>
+            <% if named_details.present? %>
+              <dl class="space-y-2">
+                <% named_details.each do |key, value| %>
+                  <%= render DS::DetailRow.new(label: t(".#{key}"), value: value) %>
+                <% end %>
+              </dl>
+            <% end %>
+            <% if details[:provider_extras].present? %>
+              <div class="pt-2">
+                <h4 class="text-sm text-secondary mb-1"><%= t(".provider_extras") %></h4>
+                <dl class="space-y-2">
+                  <% details[:provider_extras].each do |ex| %>
+                    <% if ex[:multiline] %>
+                      <div class="space-y-1">
+                        <dt class="text-secondary text-sm"><%= ex[:key] %></dt>
+                        <dd>
+                          <pre class="text-xs text-secondary bg-surface-inset rounded p-2 overflow-auto whitespace-pre-wrap break-words"><%= ex[:value] %></pre>
+                        </dd>
+                      </div>
+                    <% else %>
+                      <%= render DS::DetailRow.new(label: ex[:key], value: ex[:value]) %>
+                    <% end %>
+                  <% end %>
+                </dl>
+              </div>
+            <% end %>
+          <% else %>
+            <pre class="text-xs text-secondary bg-surface-inset rounded p-2 overflow-auto whitespace-pre-wrap break-words"><%= details[:raw] %></pre>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+      </div>
+      <% if can_edit_entry? %>
         <% unless @entry.split_parent? %>
           <div class="pb-4">
             <%= styled_form_with model: @entry,
