@@ -171,6 +171,15 @@ class TransactionsController < ApplicationController
     end
   end
 
+  # Fulas Bank: one filter panel of the list, loaded when it is opened. It
+  # shows the filters the list has on (`q`), as the form would.
+  def search_filter
+    @panel = params[:panel].to_s
+    return head(:not_found) unless TransactionsHelper::LAZY_SEARCH_FILTERS.key?(@panel)
+
+    @q = search_params
+  end
+
   def clear_filter
     updated_params = {
       "q" => search_params,

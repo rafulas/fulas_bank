@@ -239,7 +239,7 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index groups subcategories immediately after their parent in the category filter" do
-    get transactions_url
+    get search_filter_transactions_url(panel: "category_filter")
     assert_response :success
 
     doc = Nokogiri::HTML::Document.parse(response.body)
@@ -251,6 +251,32 @@ class TransactionsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil parent_index
     assert_not_nil child_index
     assert_equal parent_index + 1, child_index
+  end
+
+  test "the long filter panels load when opened and keep the filters already on" do
+    get transactions_url(q: { categories: [ categories(:food_and_drink).name ], tags: [ "Viaje" ] })
+
+    assert_response :success
+    # No checkbox of every category on the page: the panel loads when opened,
+    # and until then carries the category and tag already chosen.
+    assert_select "input[type='checkbox'][name='q[categories][]']", count: 0
+    assert_select "turbo-frame#transaction-filter-category_filter[src*='#{search_filter_transactions_path}'][loading='lazy']" do
+      assert_select "input[type='hidden'][name='q[categories][]'][value='#{categories(:food_and_drink).name}']"
+    end
+    assert_select "turbo-frame#transaction-filter-tag_filter input[type='hidden'][name='q[tags][]'][value='Viaje']"
+    assert_select "turbo-frame#transaction-filter-merchant_filter[loading='lazy']"
+
+    get search_filter_transactions_url(panel: "category_filter", q: { categories: [ categories(:food_and_drink).name ] })
+
+    assert_response :success
+    assert_select "turbo-frame#transaction-filter-category_filter input[type='checkbox'][name='q[categories][]'][value='#{categories(:food_and_drink).name}'][checked]"
+
+    get search_filter_transactions_url(panel: "merchant_filter")
+    assert_response :success
+    assert_select "input[type='checkbox'][name='q[merchants][]']", minimum: 1
+
+    get search_filter_transactions_url(panel: "../../layouts/application")
+    assert_response :not_found
   end
 
   test "creates with transaction details" do

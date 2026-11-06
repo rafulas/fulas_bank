@@ -1,0 +1,14 @@
+<%# Fulas Bank: one filter panel of the list, for its frame in the filter
+    form (transactions/searches/_lazy_filter). Its fields are named as the
+    form's own (q[...]), so they are sent with it. %>
+<%= turbo_frame_tag "transaction-filter-#{@panel}" do %>
+  <%= fields :q do |form| %>
+    <% if @panel == "category_filter" %>
+      <%= render "transactions/searches/filters/category_filter", form: form %>
+    <% elsif @panel == "merchant_filter" %>
+      <%= render "transactions/searches/filters/merchant_filter", form: form %>
+    <% elsif @panel == "tag_filter" %>
+      <%= render "transactions/searches/filters/tag_filter", form: form %>
+    <% end %>
+  <% end %>
+<% end %>

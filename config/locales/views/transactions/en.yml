@@ -394,6 +394,8 @@ en:
         conversion_failed: "Failed to convert transaction: %{error}"
         unexpected_error: "Unexpected error during conversion: %{error}"
     searches:
+      lazy_filter:
+        loading: Loading…
       filters:
         account_filter:
           filter_accounts: Filter accounts

@@ -1,0 +1,11 @@
+<%# locals: (panel:, key:) %>
+<%# Fulas Bank: a filter panel with a long list (every category, merchant or
+    tag), loaded when it is opened instead of with every page of the list.
+    Until then it carries the values already chosen, so applying another
+    filter keeps this one. %>
+<%= turbo_frame_tag "transaction-filter-#{panel}", src: search_filter_transactions_path(panel: panel, q: @q), loading: :lazy do %>
+  <% Array(@q[key]).each do |value| %>
+    <%= hidden_field_tag "q[#{key}][]", value, id: nil %>
+  <% end %>
+  <p class="p-2 text-sm text-secondary animate-pulse"><%= t("transactions.searches.lazy_filter.loading") %></p>
+<% end %>

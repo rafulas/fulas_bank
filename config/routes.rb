@@ -589,6 +589,9 @@ Rails.application.routes.draw do
   end
 
   resources :transactions, only: %i[index new create show update destroy] do
+    # Fulas Bank: a filter panel of the list (categories, merchants, tags),
+    # loaded when it is opened (see transactions/searches/_lazy_filter).
+    get :search_filter, on: :collection, path: "filtro"
     resource :split, only: %i[new create edit update destroy]
     resource :transfer_match, only: %i[new create]
     resource :pending_duplicate_merges, only: %i[new create]
