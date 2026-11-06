@@ -715,7 +715,7 @@ class Forecast
       family.accounts.visible.where(accountable_type: "Loan").includes(:accountable).flat_map do |loan_account|
         loan = loan_account.accountable
         payment = loan.monthly_payment&.amount || loan.payment_amount
-        next [] if payment.blank? || !payment.to_d.positive? || loan.finished?(as_of: today)
+        next [] if payment.blank? || !payment.to_d.positive? || loan.paid_off?(as_of: today)
         next [] if paid_by_recurring?(payment.to_d, destination: loan_account)
 
         loan_payment_days(loan).map do |date|
