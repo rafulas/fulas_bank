@@ -151,6 +151,31 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal 960, october_line.balances[@account.id]
   end
 
+  test "folds the months after the first year, but those opened" do
+    today = Date.new(2026, 10, 18)
+    [ Date.new(2026, 11, 10), Date.new(2027, 11, 10), Date.new(2027, 12, 10) ].each do |date|
+      @family.forecast_items.create!(account: @account, name: "Previsto", nature: "outflow", amount: 10, date: date)
+    end
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 12, 31), include_variable: false, today: today)
+    rows = forecast.table_rows(forecast.ledger, open_months: [ Date.new(2027, 12, 1) ])
+    months = rows.select(&:month?).index_by(&:month)
+
+    # The first twelve months, line by line.
+    assert_not months[Date.new(2026, 11, 1)].folded
+    assert_not forecast.foldable_month?(Date.new(2027, 9, 1))
+    # November 2027 folded: its row, with its result and line count, and no line.
+    assert months[Date.new(2027, 11, 1)].folded
+    assert_equal 1, months[Date.new(2027, 11, 1)].lines
+    assert_equal(-10, months[Date.new(2027, 11, 1)].net.amount)
+    assert_not rows.any? { |row| !row.month? && row.flow.date.month == 11 && row.flow.date.year == 2027 }
+    # December 2027 opened.
+    assert_not months[Date.new(2027, 12, 1)].folded
+    assert rows.any? { |row| !row.month? && row.flow.date == Date.new(2027, 12, 10) }
+    # Without a list, every month line by line, as in the wide dialog before.
+    assert forecast.table_rows(forecast.ledger).select(&:month?).none?(&:folded)
+  end
+
   test "an expected movement whose day has passed waits for the bank's statement" do
     today = Date.new(2026, 10, 20)
     create_transaction(account: @account, name: "Último movimiento importado", date: Date.new(2026, 10, 10), amount: 10)

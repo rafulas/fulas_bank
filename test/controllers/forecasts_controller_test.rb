@@ -70,9 +70,36 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     get forecast_url(account_id: accounts(:depository).id, period: "6m")
 
     assert_response :success
-    assert_select "table thead th", minimum: 4
+    # Fulas Bank: the table comes in its own frame, loaded after the page.
+    assert_select "turbo-frame#forecast_ledger[src*='#{ledger_forecast_path}']"
+
+    get ledger_forecast_url(account_id: accounts(:depository).id, period: "6m")
+
+    assert_response :success
+    assert_select "turbo-frame#forecast_ledger table thead th", minimum: 4
     assert_match "Seguro vida", response.body
     assert_select "a[href*='#{edit_forecast_adjustment_path}'][href*='#{CGI.escape("recurring:#{series.id}")}']", minimum: 1
+  end
+
+  test "folds the months after the first year until one is opened" do
+    @user.family.recurring_transactions.create!(
+      account: accounts(:depository), name: "Seguro vida", amount: 47, currency: "USD", expected_day_of_month: 24,
+      status: "active", manual: true, bill_type: "bill", last_occurrence_date: Date.current, next_expected_date: Date.current
+    )
+    later = Date.current.beginning_of_month >> (Forecast::DETAILED_MONTHS + 2)
+
+    get ledger_forecast_url(account_id: accounts(:depository).id, period: "5y")
+
+    assert_response :success
+    assert_select "a[data-forecast-month='#{later.strftime("%Y-%m")}'][aria-expanded='false']"
+    assert_select "a[href*='#{edit_forecast_adjustment_path}'][href*='date=#{later.strftime("%Y-%m")}']", count: 0
+
+    get ledger_forecast_url(account_id: accounts(:depository).id, period: "5y", open: [ later.strftime("%Y-%m") ], focus: later.strftime("%Y-%m"))
+
+    assert_response :success
+    assert_select "a[data-forecast-month='#{later.strftime("%Y-%m")}'][aria-expanded='true']"
+    assert_select "a[href*='#{edit_forecast_adjustment_path}'][href*='date=#{later.strftime("%Y-%m")}']", minimum: 1
+    assert_select "[data-forecast-ledger-focus-value='#{later.strftime("%Y-%m")}']"
   end
 
   test "changes, leaves out and brings back a line the app works out" do

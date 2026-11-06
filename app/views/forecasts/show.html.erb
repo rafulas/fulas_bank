@@ -116,6 +116,13 @@
       <% end %>
     <% end %>
 
-    <%= render "forecasts/table", forecast: forecast, account: selected, hidden: @hidden_columns || [] %>
+    <%# Fulas Bank: the table comes in its own request once the rest is shown:
+        drawing it is most of the page's work. %>
+    <%= turbo_frame_tag "forecast_ledger", src: ledger_forecast_path(request.query_parameters.slice("period", "until", "account_id", "variable")) do %>
+      <%= render DS::Card.new(class: "gap-3") do %>
+        <h3 class="text-sm font-medium text-primary"><%= t("forecasts.table.title") %></h3>
+        <p class="text-sm text-secondary animate-pulse"><%= t("forecasts.table.loading") %></p>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

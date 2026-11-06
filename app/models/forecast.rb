@@ -110,11 +110,23 @@ class Forecast
   # the month starts from (today's for this month, and for the next ones what
   # is left after the month before), so each line below adds to or takes
   # from them, as in the user's spreadsheet.
-  MonthRow = Data.define(:month, :net, :balances, :total) do
+  #
+  # Fulas Bank: `lines` is how many lines the month has, and `folded` says
+  # they are left out of the table (see #table_rows).
+  MonthRow = Data.define(:month, :net, :balances, :total, :lines, :folded) do
+    def initialize(month:, net:, balances:, total:, lines: 0, folded: false)
+      super
+    end
+
     def month?
       true
     end
   end
+
+  # Fulas Bank: the months shown line by line in the table; after them each
+  # month is one row (its result and balances) until it is opened. Five years
+  # of lines are thousands of rows, too many to draw at once.
+  DETAILED_MONTHS = 12
 
   attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups,
               :variable_excluded_ids, :variable_plan
@@ -187,8 +199,12 @@ class Forecast
 
   # { "cash" => Money, "investment" => Money } for a row's balances, in the
   # family's currency.
+  #
+  # Fulas Bank: worked out once per row (the table asks for each group in
+  # its own column), by the row's very balances hash.
   def group_totals(balances)
-    %w[cash investment].index_with do |group|
+    @group_totals ||= {}.compare_by_identity
+    @group_totals[balances] ||= %w[cash investment].index_with do |group|
       money(accounts.select { |account| group_for(account) == group }.sum { |account| net_worth_amount(account, balances[account.id]) })
     end
   end
@@ -240,12 +256,25 @@ class Forecast
   end
 
   # The table's rows: each month's opening row, then its lines.
-  def table_rows(ledger_rows)
+  #
+  # Fulas Bank: with `open_months` (the months the user opened), a month
+  # after the first DETAILED_MONTHS is folded, only its opening row, unless
+  # it is one of them. Without it, every month shows its lines.
+  def table_rows(ledger_rows, open_months: nil)
     ledger_rows.group_by { |row| row.flow.date.beginning_of_month }.flat_map do |month, month_rows|
       net = month_rows.reject { |row| row.flow.skipped }.sum(money(0)) { |row| user_amount(row.flow) }
       opening_day = [ month - 1, today ].max
-      [ MonthRow.new(month: month, net: net, balances: raw_balances_on(opening_day), total: total_on(opening_day)) ] + month_rows
+      folded = folded_month?(month, open_months)
+      opening = MonthRow.new(month: month, net: net, balances: raw_balances_on(opening_day), total: total_on(opening_day),
+                             lines: month_rows.size, folded: folded)
+      folded ? [ opening ] : [ opening ] + month_rows
     end
+  end
+
+  # Whether `month` can be folded: it comes after the months always shown
+  # line by line.
+  def foldable_month?(month)
+    month >= today.beginning_of_month >> DETAILED_MONTHS
   end
 
   # A line's amount from the user's side, in the family's currency: income
@@ -309,6 +338,12 @@ class Forecast
   private
     def money(amount)
       Money.new(amount, currency)
+    end
+
+    def folded_month?(month, open_months)
+      return false if open_months.nil?
+
+      foldable_month?(month) && !open_months.include?(month)
     end
 
     def weekly?
@@ -376,8 +411,23 @@ class Forecast
 
     # Recurring movements with no account (a series detected across several
     # accounts) still count in the total, as money going out of "somewhere".
+    #
+    # Fulas Bank: from running totals by day, with a binary search, rather
+    # than adding up every line again for each day asked (the chart and the
+    # lowest total ask for over a thousand days).
     def unassigned_until(date)
-      -active_flows.select { |flow| flow.account.nil? && flow.date <= date }.sum { |flow| flow.amount }
+      days, totals = unassigned_running
+      index = days.bsearch_index { |day| day > date } || days.size
+      index.zero? ? 0 : -totals[index - 1]
+    end
+
+    def unassigned_running
+      @unassigned_running ||= begin
+        by_day = active_flows.select { |flow| flow.account.nil? }.group_by(&:date).transform_values { |list| list.sum(&:amount) }
+        days = by_day.keys.sort
+        running = 0
+        [ days, days.map { |day| running += by_day[day] } ]
+      end
     end
 
     def to_family_currency(amount, account)

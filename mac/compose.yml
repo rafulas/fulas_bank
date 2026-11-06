@@ -28,6 +28,8 @@ x-rails-env: &rails_env
   RAILS_FORCE_SSL: "false"
   RAILS_ASSUME_SSL: "false"
   RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-warn}
+  # Fulas Bank: «1» writes where each page's time goes ([perf] in the log).
+  FULAS_PERF_LOG: ${FULAS_PERF_LOG:-}
   DB_HOST: db
   DB_PORT: 5432
   REDIS_URL: redis://redis:6379/1

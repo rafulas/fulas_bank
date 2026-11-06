@@ -1,6 +1,7 @@
 <%= render DS::Dialog.new(width: "expanded") do |dialog| %>
   <% dialog.with_header(title: t("forecasts.table.title")) %>
   <% dialog.with_body do %>
-    <%= render "forecasts/table", forecast: @forecast, account: @account, expanded: true, hidden: @hidden_columns || [] %>
+    <%= render "forecasts/table", forecast: @forecast, account: @account, expanded: true, hidden: @hidden_columns || [],
+                                  open_months: @open_months, focus_month: @focus_month %>
   <% end %>
 <% end %>

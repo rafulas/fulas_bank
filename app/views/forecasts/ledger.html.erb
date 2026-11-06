@@ -1,0 +1,7 @@
+<%# Fulas Bank: the Forecast page's table, loaded in its frame after the rest
+    of the page, and again when a folded month is opened or folded. Its
+    links (edit a line, «Editar tabla») still open the dialog or the page. %>
+<%= turbo_frame_tag "forecast_ledger", target: "_top" do %>
+  <%= render "forecasts/table", forecast: @forecast, account: @account, hidden: @hidden_columns || [],
+                                open_months: @open_months, focus_month: @focus_month %>
+<% end %>

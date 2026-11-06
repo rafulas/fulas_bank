@@ -16,8 +16,17 @@ class ForecastsController < ApplicationController
   def show
   end
 
+  # Fulas Bank: the table on the page, in its own frame, loaded once the
+  # summary and the chart are shown: drawing it is most of the page's work.
+  def ledger
+    @open_months = open_months
+    @focus_month = month_param(params[:focus])
+  end
+
   # The table on its own, in a wide dialog, to see every column at once.
   def table
+    @open_months = open_months
+    @focus_month = month_param(params[:focus])
   end
 
   # Fulas Bank: "Editar tabla": the accounts shown as columns and the group
@@ -166,6 +175,18 @@ class ForecastsController < ApplicationController
       end
 
       Current.user.preferences&.dig(Forecast::CUSHION_PREFERENCE).presence&.to_d
+    end
+
+    # Fulas Bank: the folded months the user opened in the table.
+    def open_months
+      Array(params[:open]).filter_map { |value| month_param(value) }.uniq
+    end
+
+    # A month given as «2028-03», or nil.
+    def month_param(value)
+      Date.strptime(value.to_s, "%Y-%m")
+    rescue Date::Error
+      nil
     end
 
     # The month asked for in «Ver cálculo», this month by default.

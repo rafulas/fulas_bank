@@ -1,14 +1,17 @@
-<%# locals: (forecast:, account:, expanded: false, hidden: []) %>
+<%# locals: (forecast:, account:, expanded: false, hidden: [], open_months: nil, focus_month: nil) %>
 <%# The forecast table: one dense table whose header stays in view while it
     scrolls, with a row opening each month (its result and the balance it
-    starts from) followed by that month's lines. %>
+    starts from) followed by that month's lines.
+    Fulas Bank: with `open_months`, the months after the first year are
+    folded (only their row) until opened; `focus_month` is the one just
+    opened or folded, scrolled to. %>
 
 <% rows = forecast.ledger(account: account) %>
 <%# Fulas Bank: as in the user's spreadsheet, the total, then the cash and the
     savings and investments it is made of, then each account (the main one,
     where most movements go, first), without those hidden in "Editar tabla". %>
 <% balance_accounts = account ? [] : ([ forecast.main_account ].compact + (forecast.accounts - [ forecast.main_account ])).reject { |each| hidden.include?(each.id) } %>
-<% table_rows = forecast_table_rows(forecast, rows) %>
+<% table_rows = forecast_table_rows(forecast, rows, open_months: open_months) %>
 
 <%= render DS::Card.new(class: class_names("gap-3", "shadow-none p-0" => expanded)) do %>
   <% unless expanded %>
@@ -29,6 +32,7 @@
   <% if rows.empty? %>
     <p class="text-sm text-secondary"><%= t(".empty") %></p>
   <% else %>
+    <div data-controller="forecast-ledger" data-forecast-ledger-focus-value="<%= focus_month&.strftime("%Y-%m") %>">
     <%= render DS::Table.new(
       rows: table_rows,
       dense: true,
@@ -44,15 +48,25 @@
       }
     ) do |table| %>
       <% table.with_column(t(".date"), class: "whitespace-nowrap") do |row| %>
-        <% if row.month? %>
-          <span class="text-primary first-letter:uppercase"><%= l(row.month, format: "%B %Y") %></span>
+        <% if row.month? && open_months && forecast.foldable_month?(row.month) %>
+          <%= link_to forecast_month_toggle_path(row.month, open_months: open_months, expanded: expanded),
+                class: "inline-flex items-center gap-1 text-primary hover:underline",
+                data: { turbo_frame: expanded ? "modal" : "forecast_ledger", forecast_month: row.month.strftime("%Y-%m") },
+                aria: { expanded: !row.folded } do %>
+            <%= icon(row.folded ? "chevron-right" : "chevron-down", size: "sm") %>
+            <span class="first-letter:uppercase"><%= l(row.month, format: "%B %Y") %></span>
+          <% end %>
+        <% elsif row.month? %>
+          <span class="text-primary first-letter:uppercase" data-forecast-month="<%= row.month.strftime("%Y-%m") %>"><%= l(row.month, format: "%B %Y") %></span>
         <% else %>
           <%= l(row.flow.date, format: "%d/%m/%y") %>
         <% end %>
       <% end %>
       <% table.with_column(t(".name")) do |row| %>
         <% if row.month? %>
-          <span class="text-xs font-normal text-secondary"><%= t(".month_opening") %></span>
+          <span class="text-xs font-normal text-secondary">
+            <%= t(".month_opening") %><%= " · #{t(".lines", count: row.lines)}" if row.folded %>
+          </span>
         <% else %>
           <div class="flex items-center gap-1.5 min-w-0 max-w-64">
             <span class="truncate" title="<%= row.flow.name %>"><%= row.flow.name %></span>
@@ -98,5 +112,6 @@
         <% end %>
       <% end %>
     <% end %>
+    </div>
   <% end %>
 <% end %>
