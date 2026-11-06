@@ -321,7 +321,7 @@
         (as the boceto agreed): settings, linking it to a vehicle, home or
         insurance, attachments, the bank's details, deleting it. %>
     <% dialog.with_section(title: t(".more_options")) do %>
-      <div class="space-y-2">
+      <div class="space-y-6 pt-2">
         <%= styled_form_with model: @entry,
               url: transaction_path(@entry),
               class: "px-1",
@@ -335,22 +335,22 @@
                 "data-auto-submit-form-target": "auto" %>
         <% end %>
         <% if asset_link_accounts.any? %>
-          <%= render DS::Disclosure.new(title: t(".asset_link")) do %>
+          <%= render layout: "transactions/detail_block", locals: { title: t(".asset_link") } do %>
             <%= render "transactions/asset_link", entry: @entry, record: nil, accounts: asset_link_accounts %>
           <% end %>
         <% end %>
         <% if !insurance_payment && can_edit_entry? && !@entry.transaction.transfer? && (insurance_options = Insurance.instalments_for_charge(Current.family, @entry).first(3)).any? %>
-          <%= render DS::Disclosure.new(title: t("insurances.payments.section")) do %>
+          <%= render layout: "transactions/detail_block", locals: { title: t("insurances.payments.section") } do %>
             <%= render "transactions/insurance_options", entry: @entry, options: insurance_options %>
           <% end %>
         <% end %>
         <% unless @entry.transaction.attachments.attached? %>
-          <%= render DS::Disclosure.new(title: t(".attachments")) do %>
+          <%= render layout: "transactions/detail_block", locals: { title: t(".attachments") } do %>
             <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
           <% end %>
         <% end %>
         <% if (details = build_transaction_extra_details(@entry)) %>
-          <%= render DS::Disclosure.new(title: t(".additional_details")) do %>
+          <%= render layout: "transactions/detail_block", locals: { title: t(".additional_details") } do %>
         <div class="px-3 py-2 space-y-3">
           <% if details[:kind] == :simplefin || details[:kind] == :plaid %>
             <%# build_transaction_extra_details already drops blank values, so every

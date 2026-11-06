@@ -50,6 +50,7 @@ es:
     show:
       subscription: Recurrente
     subscription:
+      change_link: Cambiar
       linked: "Va con %{name}, %{kind} de %{amount}."
       not_linked: No va con ningún recurrente.
       change: Recurrente de este movimiento

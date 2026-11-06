@@ -13,6 +13,12 @@
   </p>
 
   <% if can_edit %>
+    <%# Fulas Bank: one line in the detail (as on the sketch); the form opens
+        under «Cambiar». %>
+    <%= render DS::Disclosure.new(variant: :inline, body_class: "mt-2 space-y-3") do |disclosure| %>
+      <% disclosure.with_summary_content do %>
+        <span class="text-sm font-medium text-primary underline"><%= t(".change_link") %></span>
+      <% end %>
     <% if options.any? %>
       <% grouped = options.group_by(&:fulas_kind).map do |kind, list|
            [ kind_label.call(kind), list.map { |series| [ "#{series.display_name} (#{format_money(series.amount_money.abs)})", series.id ] } ]
@@ -42,6 +48,7 @@
         </div>
         <%= form.submit t(".create") %>
       <% end %>
+    <% end %>
     <% end %>
   <% end %>
 </div>
