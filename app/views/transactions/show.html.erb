@@ -6,6 +6,7 @@
     </div>
   <% end %>
   <% dialog.with_body do %>
+    <div class="space-y-6 pb-6">
     <%# Potential duplicate alert %>
     <% if @entry.transaction.has_potential_duplicate? %>
       <% potential_match = @entry.transaction.potential_duplicate_entry %>
@@ -49,9 +50,10 @@
       <% end %>
     <% end %>
     <%= render "entries/protection_indicator", entry: @entry, unlock_path: unlock_transaction_path(@entry.transaction) %>
-    <%# Fulas Bank: what is changed most (name, date, amount, category,
-        account), straight under the amount, not in a section. %>
-      <div>
+    <%# Fulas Bank: what is changed most, straight under the amount as in the
+        sketch: the name; category and date; type and amount; the account.
+        The time, seldom set, is in «Más opciones». %>
+      <div class="space-y-2">
         <% split_locked = @entry.split_child? || @entry.split_parent? %>
         <% edit_locked = !can_edit_entry? %>
         <% annotate_locked = !can_annotate_entry? %>
@@ -64,17 +66,40 @@
                 label: t(".name_label"),
                 disabled: @entry.split_child? || edit_locked,
                 "data-auto-submit-form-target": "auto" %>
-          <%= f.date_field :date,
-                label: t(".date_label"),
-                max: Date.current,
-                disabled: @entry.linked? || split_locked || edit_locked,
-                "data-auto-submit-form-target": "auto" %>
-          <%# Fulas Bank: an optional time; without one it counts as 00:00. %>
-          <%= f.time_field :time_of_day,
-                label: t(".time_label"),
-                value: @entry.time_of_day&.strftime("%H:%M"),
-                disabled: split_locked || edit_locked,
-                "data-auto-submit-form-target": "auto" %>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <% if !@entry.transaction.transfer? %>
+              <%= f.fields_for :entryable do |ef| %>
+                <%= render DS::CategorySelect.new(
+                      form: ef,
+                      categories: Current.family.categories.alphabetically_by_hierarchy,
+                      selected_id: ef.object.category_id,
+                      disabled: @entry.split_child? || annotate_locked,
+                      auto_submit: true,
+                      blank_label: t(".uncategorized"),
+                      suggested: @entry.transaction.suggested_categories
+                    ) %>
+              <% end %>
+            <% elsif @entry.transaction.counts_by_kind? %>
+              <%# A loan instalment, a contribution to an investment or the cash
+                  from selling one: a transfer that still counts as income or
+                  expense, so its category can be chosen. %>
+              <%= f.fields_for :entryable do |ef| %>
+                <%= render DS::CategorySelect.new(
+                      form: ef,
+                      categories: Current.family.categories.alphabetically_by_hierarchy,
+                      selected_id: ef.object.category_id,
+                      disabled: annotate_locked,
+                      auto_submit: true,
+                      blank_label: t(".uncategorized")
+                    ) %>
+              <% end %>
+            <% end %>
+            <%= f.date_field :date,
+                  label: t(".date_label"),
+                  max: Date.current,
+                  disabled: @entry.linked? || split_locked || edit_locked,
+                  "data-auto-submit-form-target": "auto" %>
+          </div>
           <% if !@entry.transaction.transfer? %>
             <div class="flex items-center gap-2">
               <%= f.select :nature,
@@ -89,31 +114,6 @@
                     disabled: @entry.linked? || split_locked || edit_locked,
                     disable_currency: @entry.linked? || split_locked || edit_locked %>
             </div>
-            <%= f.fields_for :entryable do |ef| %>
-              <%= render DS::CategorySelect.new(
-                    form: ef,
-                    categories: Current.family.categories.alphabetically_by_hierarchy,
-                    selected_id: ef.object.category_id,
-                    disabled: @entry.split_child? || annotate_locked,
-                    auto_submit: true,
-                    blank_label: t(".uncategorized"),
-                    suggested: @entry.transaction.suggested_categories
-                  ) %>
-            <% end %>
-          <% elsif @entry.transaction.counts_by_kind? %>
-            <%# A loan instalment, a contribution to an investment or the cash
-                from selling one: a transfer that still counts as income or
-                expense, so its category can be chosen. %>
-            <%= f.fields_for :entryable do |ef| %>
-              <%= render DS::CategorySelect.new(
-                    form: ef,
-                    categories: Current.family.categories.alphabetically_by_hierarchy,
-                    selected_id: ef.object.category_id,
-                    disabled: annotate_locked,
-                    auto_submit: true,
-                    blank_label: t(".uncategorized")
-                  ) %>
-            <% end %>
           <% end %>
         <% end %>
 
@@ -132,7 +132,7 @@
           <p class="text-xs text-secondary px-1"><%= t(".account_label") %>: <span class="text-primary"><%= @entry.account.name %></span></p>
         <% end %>
       </div>
-    <% dialog.with_section(title: t(".details"), open: true) do %>
+    <%= render layout: "transactions/detail_block", locals: { title: t(".details") } do %>
       <div class="space-y-2">
         <%= styled_form_with model: @entry,
               url: transaction_path(@entry),
@@ -141,6 +141,7 @@
           <%= hidden_field_tag :grouped, "true" if params[:grouped] == "true" %>
           <% unless @entry.transaction.transfer? %>
             <%= f.fields_for :entryable do |ef| %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <%= render DS::MerchantSelect.new(
                     form: ef,
                     method: :merchant_id,
@@ -159,6 +160,7 @@
                     auto_submit: true,
                     update_url: tags_transaction_path(@entry)
                   ) %>
+              </div>
             <% end %>
           <% end %>
         <% end %>
@@ -169,7 +171,7 @@
     <%# Fulas Bank: how it counts: the recurring payment it belongs to, and
         whether it is fixed or variable. %>
     <% unless @entry.transaction.transfer? %>
-      <% dialog.with_section(title: t(".how_it_counts"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".how_it_counts") } do %>
         <div class="space-y-2">
           <%= render "transactions/subscription", entry: @entry, can_edit: can_annotate_entry? %>
           <%= render "transactions/expense_type", entry: @entry, can_edit: can_annotate_entry? %>
@@ -180,14 +182,14 @@
     <%# Fulas Bank: the month's budget for this movement's category, and the
         movements like it (as Bilance shows them). %>
     <% if (budget_view = transaction_budget_for(@entry)) %>
-      <% dialog.with_section(title: t(".budget_title", month: l(@entry.date, format: "%B").capitalize), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".budget_title", month: l(@entry.date, format: "%B").capitalize) } do %>
         <%= render "transactions/budget", plan: budget_view.first, row: budget_view.last %>
       <% end %>
     <% end %>
 
     <% similar = Transaction::Similar.new(@entry, scope: Current.accessible_entries) %>
     <% if similar.any? %>
-      <% dialog.with_section(title: t(".similar_title"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".similar_title") } do %>
         <%= render "transactions/similar", similar: similar %>
       <% end %>
     <% end %>
@@ -195,14 +197,14 @@
     <% asset_link_record = AssetLink.for_entry(@entry) %>
     <% asset_link_accounts = asset_link_record ? [] : asset_link_accounts_for(@entry) %>
     <% if asset_link_record %>
-      <% dialog.with_section(title: t(".asset_link"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".asset_link") } do %>
         <%= render "transactions/asset_link", entry: @entry, record: asset_link_record, accounts: asset_link_accounts %>
       <% end %>
     <% end %>
 
     <%# Fulas Bank: the buy or sale of shares this movement paid for. %>
     <% if (linked_trade = @entry.linked_trade) %>
-      <% dialog.with_section(title: t(".linked_trade"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".linked_trade") } do %>
         <%= render "transactions/linked_trade", entry: @entry, trade: linked_trade, can_edit: can_edit_entry? %>
       <% end %>
     <% end %>
@@ -211,27 +213,27 @@
         one is in «Más opciones». %>
     <% insurance_payment = InsurancePayment.includes(:insurance).find_by(entry_id: @entry.id) %>
     <% if insurance_payment %>
-      <% dialog.with_section(title: t("insurances.payments.section"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t("insurances.payments.section") } do %>
         <%= render "transactions/insurance_payment", entry: @entry, payment: insurance_payment %>
       <% end %>
     <% end %>
 
     <%# Fulas Bank: the card statement it goes in, and paying it in instalments. %>
     <% if @entry.account.accountable_type == "CreditCard" && !@entry.transaction.transfer? %>
-      <% dialog.with_section(title: t(".card_statement"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".card_statement") } do %>
         <%= render "transactions/card_statement", entry: @entry, can_edit: can_annotate_entry? %>
       <% end %>
     <% end %>
 
     <% if @entry.transaction.attachments.attached? %>
-      <% dialog.with_section(title: t(".attachments"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t(".attachments") } do %>
         <%= render "transactions/attachments", transaction: @entry.transaction, can_upload: can_annotate_entry?, can_delete: can_edit_entry? %>
       <% end %>
     <% end %>
 
     <%# Split children list for split parent %>
     <% if @entry.split_parent? %>
-      <% dialog.with_section(title: t("splits.show.title"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t("splits.show.title") } do %>
         <div class="px-3 py-2 space-y-2">
           <p class="text-xs text-secondary"><%= t("splits.show.description") %></p>
           <% @entry.child_entries.includes(:entryable).each do |child| %>
@@ -272,7 +274,7 @@
 
     <%# For split child, show parent info and actions %>
     <% if @entry.split_child? %>
-      <% dialog.with_section(title: t("splits.child.title"), open: true) do %>
+      <%= render layout: "transactions/detail_block", locals: { title: t("splits.child.title") } do %>
         <div class="px-3 py-2">
           <% parent = @entry.parent_entry %>
           <% if parent %>
@@ -313,11 +315,25 @@
       <% end %>
     <% end %>
 
+    </div>
+
     <%# Fulas Bank: what is used now and then, in one place under the rest
         (as the boceto agreed): settings, linking it to a vehicle, home or
         insurance, attachments, the bank's details, deleting it. %>
     <% dialog.with_section(title: t(".more_options")) do %>
       <div class="space-y-2">
+        <%= styled_form_with model: @entry,
+              url: transaction_path(@entry),
+              class: "px-1",
+              data: { controller: "auto-submit-form" } do |f| %>
+          <%= hidden_field_tag :grouped, "true" if params[:grouped] == "true" %>
+          <%# Fulas Bank: an optional time; without one it counts as 00:00. %>
+          <%= f.time_field :time_of_day,
+                label: t(".time_label"),
+                value: @entry.time_of_day&.strftime("%H:%M"),
+                disabled: @entry.split_child? || @entry.split_parent? || !can_edit_entry?,
+                "data-auto-submit-form-target": "auto" %>
+        <% end %>
         <% if asset_link_accounts.any? %>
           <%= render DS::Disclosure.new(title: t(".asset_link")) do %>
             <%= render "transactions/asset_link", entry: @entry, record: nil, accounts: asset_link_accounts %>
