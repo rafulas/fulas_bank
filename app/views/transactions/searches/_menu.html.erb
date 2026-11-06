@@ -20,7 +20,11 @@
       <div class="grow p-3 border-b border-secondary overflow-y-auto">
         <% transaction_search_filters.each do |filter| %>
           <%= tabs.with_panel(tab_id: filter[:key]) do %>
-            <%= render partial: get_transaction_search_filter_partial_path(filter), locals: { form: form } %>
+            <% if (key = TransactionsHelper::LAZY_SEARCH_FILTERS[filter[:key]]) %>
+              <%= render "transactions/searches/lazy_filter", panel: filter[:key], key: key %>
+            <% else %>
+              <%= render partial: get_transaction_search_filter_partial_path(filter), locals: { form: form } %>
+            <% end %>
           <% end %>
         <% end %>
       </div>

@@ -1,4 +1,8 @@
 module TransactionsHelper
+  # Fulas Bank: the filter panels with a long list, loaded when opened
+  # (transactions/searches/_lazy_filter), and the filter each one sets.
+  LAZY_SEARCH_FILTERS = { "category_filter" => :categories, "merchant_filter" => :merchants, "tag_filter" => :tags }.freeze
+
   # Fulas Bank: [plan, budget row] for the month and category a movement's
   # spending counts against, or nil when it has no budget there (or is not
   # spending: income, transfers, excluded movements).
