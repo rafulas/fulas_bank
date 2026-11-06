@@ -62,6 +62,7 @@ es:
         go_to_workshop: Ir a Taller
       overview:
         purchase_price_hint: Pon el precio real en «Editar detalles de la cuenta».
+        purchase_paid: "Pagado de la compra: %{amount} (no suma en los gastos: ya cuenta en la pérdida de valor)"
         total_cost: Coste total
         total_cost_breakdown: "%{depreciation} de pérdida de valor + %{spent} de gastos"
         total_spent: Gastos totales
@@ -161,6 +162,7 @@ es:
         service: Taller
         expense: Otros gastos
       categories:
+        purchase: Compra del vehículo
         insurance: Seguro
         road_tax: Impuesto de circulación
         inspection: ITV

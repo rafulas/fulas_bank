@@ -78,6 +78,27 @@ class Vehicle::LogbookTest < ActiveSupport::TestCase
     assert_equal BigDecimal("2300"), logbook.total_cost.amount
   end
 
+  test "what was paid for the vehicle itself is not a running cost" do
+    @vehicle.update!(purchase_price: 20_000)
+    @vehicle.account.update!(balance: 18_000)
+    refuel(date: 10.days.ago, odometer: 10_000, quantity: 40, amount: 60)
+    @vehicle.logs.create!(kind: "expense", category: "purchase", date: 300.days.ago.to_date, amount: 457.31)
+    @vehicle.logs.create!(kind: "expense", category: "purchase", date: 270.days.ago.to_date, amount: 457.31)
+
+    logbook = @vehicle.reload.logbook
+
+    assert_equal BigDecimal("914.62"), logbook.purchase_paid.amount
+    assert_equal BigDecimal("60"), logbook.total_spent.amount
+    assert_equal BigDecimal("2060"), logbook.total_cost.amount, "the purchase counts once, as the value lost"
+  end
+
+  test "without a price typed in, the purchase cost is what the logbook says was paid for it" do
+    @vehicle.update!(purchase_price: nil)
+    @vehicle.logs.create!(kind: "expense", category: "purchase", date: 300.days.ago.to_date, amount: 15_000)
+
+    assert_equal BigDecimal("15000"), @vehicle.reload.purchase_cost.amount
+  end
+
   test "consumption points carry the distance and fuel they measure" do
     refuel(date: 20.days.ago, odometer: 10_000, quantity: 40)
     refuel(date: 10.days.ago, odometer: 10_500, quantity: 30)

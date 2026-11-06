@@ -43,8 +43,19 @@ class Vehicle::Logbook
     (segments.sum { |segment| segment[:quantity] } / distance * 100).round(2)
   end
 
+  # Fulas Bank: what was paid for the vehicle itself is not a running cost:
+  # the value lost since the purchase already counts it.
+  def running_logs
+    @running_logs ||= logs.reject(&:purchase?)
+  end
+
+  # What was paid for the vehicle itself («Compra del vehículo»).
+  def purchase_paid
+    Money.new(logs.select(&:purchase?).sum { |log| log.amount.to_d }, currency)
+  end
+
   def total_spent
-    Money.new(logs.sum { |log| log.amount.to_d }, currency)
+    Money.new(running_logs.sum { |log| log.amount.to_d }, currency)
   end
 
   # What the car has really cost: the value it has lost since it was bought
@@ -76,13 +87,13 @@ class Vehicle::Logbook
     distance = readings.max - readings.min
     return if distance <= 0
 
-    Money.new(logs.sum { |log| log.amount.to_d } / distance, currency)
+    Money.new(running_logs.sum { |log| log.amount.to_d } / distance, currency)
   end
 
   # This calendar year's spending, by kind of log.
   def year_totals(year: as_of.year)
     totals = Vehicle::Log::KINDS.index_with { 0.to_d }
-    logs.each { |log| totals[log.kind] += log.amount.to_d if log.date.year == year }
+    running_logs.each { |log| totals[log.kind] += log.amount.to_d if log.date.year == year }
     totals.transform_values { |value| Money.new(value, currency) }
   end
 

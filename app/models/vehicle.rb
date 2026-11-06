@@ -42,11 +42,15 @@ class Vehicle < ApplicationRecord
     Measurement.new(mileage_value, mileage_unit) if mileage_value.present?
   end
 
-  # What the car cost: the price typed in its details or, failing that, the
+  # What the car cost: the price typed in its details or, failing that, what
+  # its logbook says was paid for it («Compra del vehículo»), or else the
   # first value the account was given. (`purchase_price` stays the plain
   # column, which the details form edits.)
   def purchase_cost
     return Money.new(purchase_price, account.currency) if purchase_price.present?
+
+    paid = logs.settled.expenses.where(category: "purchase").sum(:amount)
+    return Money.new(paid, account.currency) if paid.positive?
 
     first_valuation_amount
   end

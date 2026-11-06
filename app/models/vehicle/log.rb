@@ -9,7 +9,10 @@ class Vehicle::Log < ApplicationRecord
   include Monetizable, BankChargeLinkable
 
   KINDS = %w[fuel service expense].freeze
-  CATEGORIES = %w[insurance road_tax inspection parking toll washing fine accessories other].freeze
+  # Fulas Bank: «purchase» is what was paid for the vehicle itself (the price,
+  # or the instalments of the loan that paid for it). It is not a running
+  # cost: the value lost since the purchase already counts it (Vehicle::Logbook).
+  CATEGORIES = %w[purchase insurance road_tax inspection parking toll washing fine accessories other].freeze
 
   monetize :amount, :unit_price
 
@@ -48,6 +51,10 @@ class Vehicle::Log < ApplicationRecord
 
   def asset_account
     vehicle&.account
+  end
+
+  def purchase?
+    expense? && category == "purchase"
   end
 
   private

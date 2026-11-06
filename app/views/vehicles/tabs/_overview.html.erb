@@ -23,6 +23,10 @@
       <% unless vehicle.purchase_price_recorded? %>
         <span class="block text-xs text-secondary font-normal mt-1"><%= t(".purchase_price_hint") %></span>
       <% end %>
+      <%# Fulas Bank: paid for the vehicle itself, kept out of the running costs. %>
+      <% if logbook.purchase_paid.positive? %>
+        <span class="block text-xs text-secondary font-normal mt-1 privacy-sensitive"><%= t(".purchase_paid", amount: format_money(logbook.purchase_paid)) %></span>
+      <% end %>
     <% end %>
 
     <%= summary_card title: t(".current_price") do %>
