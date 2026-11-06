@@ -1,4 +1,5 @@
 require "application_system_test_case"
+require "base64"
 
 # Temporary: a screenshot of a movement's detail at iPad size, to look at the
 # layout. It fails on purpose so CI keeps the screenshot. Never merged.
@@ -29,6 +30,14 @@ class ZzCapturaDetalleTest < ApplicationSystemTestCase
       page.execute_script("document.querySelector('dialog[open] .overflow-auto')?.scrollTo(0, 100000)")
       sleep 0.3
       page.save_screenshot(dir.join("captura_#{name}_mas_opciones.png"))
+    end
+
+    # The artifact storage is not reachable from where they are looked at:
+    # the screenshots go out in the log, in base64 lines.
+    Dir[dir.join("captura_*.png")].sort.each do |file|
+      Base64.strict_encode64(File.binread(file)).scan(/.{1,8000}/).each_with_index do |chunk, index|
+        puts "CAPTURA|#{File.basename(file)}|#{index}|#{chunk}"
+      end
     end
 
     flunk "Solo para la captura"
