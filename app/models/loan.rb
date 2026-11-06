@@ -507,6 +507,17 @@ class Loan < ApplicationRecord
     months_elapsed(as_of: as_of) >= term_months
   end
 
+  # Fulas Bank: nothing left to pay, either because the term has run out or
+  # because the debt was repaid early (its balance is zero). Such a loan has no
+  # instalment ahead: it leaves the Forecast and Planes, and the Préstamos
+  # screen keeps it apart, under «Pagados».
+  def paid_off?(as_of: Date.current)
+    return true if finished?(as_of: as_of)
+
+    balance = account&.balance
+    !balance.nil? && balance.to_d.abs < BigDecimal("0.01")
+  end
+
   # What is still owed after a given scheduled payment, read off the schedule
   # rather than re-derived, so it cannot drift from the table beside it.
   def remaining_balance_at(payment_number)

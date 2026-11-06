@@ -23,6 +23,9 @@ es:
         other: "Quedan %{count} cuotas"
       add: Añadir préstamo
       debt_plan: Plan de deuda
+      paid_off:
+        one: Pagado (1)
+        other: "Pagados (%{count})"
   investments_overviews:
     realized_gains:
       title: "Beneficio realizado"

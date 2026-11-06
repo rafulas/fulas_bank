@@ -127,6 +127,17 @@ class ForecastTest < ActiveSupport::TestCase
     assert_includes lines.first.name, loan_account.name
   end
 
+  test "a loan repaid early is not expected any more" do
+    today = Date.new(2026, 10, 20)
+    loan_account = create_account("Préstamo BBVA Boda", Loan.new(payment_amount: 303.57, payment_day: 19, term_months: 60,
+                                                                start_date: Date.new(2024, 5, 28)), balance: 0)
+    @family.recurring_transactions.where(loan_account: loan_account).destroy_all
+
+    forecast = Forecast.new(@family, accounts: [ @account ], through: Date.new(2027, 1, 31), include_variable: false, today: today)
+
+    assert_empty forecast.flows.select { |flow| flow.source == :loan }
+  end
+
   test "each month's row starts from the balance the month begins with" do
     today = Date.new(2026, 10, 18)
     [ [ Date.new(2026, 10, 25), "outflow", 40 ], [ Date.new(2026, 11, 10), "outflow", 100 ], [ Date.new(2026, 12, 5), "inflow", 60 ] ].each do |date, nature, amount|
