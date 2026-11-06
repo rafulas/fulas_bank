@@ -35,6 +35,8 @@ class Loan::InstallmentSync
 
     if payment.nil? || loan.finished?(as_of: today) || !loan_account.active?
       series.update!(status: "ended", cancelled_on: today) if series&.active?
+      # A staff loan paid off long ago still has its past months to book.
+      book_payroll(loan_account)
       return series
     end
 
@@ -56,12 +58,17 @@ class Loan::InstallmentSync
       create_series(loan_account, payment, attributes)
     end
 
-    Loan::PayrollDeduction.new(loan, today: today).book_due! if loan.payroll_deducted?
+    book_payroll(loan_account)
     series
   end
 
   private
     attr_reader :family, :user, :today
+
+    def book_payroll(loan_account)
+      loan = loan_account.accountable
+      Loan::PayrollDeduction.new(loan, today: today).book_due! if loan.payroll_deducted? && loan_account.active?
+    end
 
     def loan_accounts
       family.accounts.where(accountable_type: "Loan").includes(:accountable)

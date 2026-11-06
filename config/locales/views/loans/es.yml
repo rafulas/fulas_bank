@@ -19,7 +19,8 @@ es:
       payroll_deducted_hint: "La empresa te descuenta la cuota de la nómina y paga ella al banco: el dinero no pasa por tus cuentas. Cada mes, el día de pago, la app apunta en este préstamo el ingreso de nómina y el gasto de la cuota, y baja la deuda."
       payroll_expense_category: Categoría del gasto de la cuota
       payroll_income_category: Categoría del ingreso
-      payroll_deducted_since: "Se apunta solo desde el %{date}. Lo anterior puedes pasarlo desde la pestaña Pagos."
+      payroll_deducted_since_label: Se descuenta desde
+      payroll_deducted_since_hint: "El primer mes en que te lo quitaron de la nómina. Al guardar, la app apunta sola las cuotas desde esa fecha. Si un mes ya está en otra cuenta (como la Cuenta Fake), no lo repite: pásalo desde la pestaña Pagos."
       insurance_annual_amount: Importe anual del seguro
       insurance_rate_type_fixed_amount: Importe anual fijo
       asset_account: Vincular a un activo

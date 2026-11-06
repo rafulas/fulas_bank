@@ -44,10 +44,13 @@ class Loan < ApplicationRecord
   belongs_to :payroll_income_category, class_name: "Category", optional: true
   validates :payroll_expense_category, presence: true, if: :payroll_deducted?
   validate :payroll_categories_belong_to_family
-  # Booked by itself from the day the option is switched on; what came
-  # before can be moved in from where it was (see the loan's Payments tab).
-  before_save -> { self.payroll_deducted_since ||= Date.current }, if: -> { payroll_deducted? && will_save_change_to_payroll_deducted? }
-  before_save -> { self.payroll_deducted_since = nil }, if: -> { !payroll_deducted? && will_save_change_to_payroll_deducted? }
+  # Booked by itself from the day the option is switched on, or from the
+  # first month it was deducted when that is given (an old staff loan typed in
+  # now); months already booked in another account are moved in from the
+  # loan's Payments tab instead.
+  before_save -> { self.payroll_deducted_since ||= Date.current }, if: :payroll_deducted?
+  validates :payroll_deducted_since, comparison: { less_than_or_equal_to: -> { Date.current } }, allow_nil: true
+  before_save -> { self.payroll_deducted_since = nil }, unless: :payroll_deducted?
 
   # Fields the amortisation schedule is built from. When one changes (a
   # corrected start date, say), the balances anchored at each linked payment

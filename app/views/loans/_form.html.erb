@@ -100,9 +100,13 @@
               { label: t("loans.form.payroll_expense_category"), include_blank: true } %>
         <%= loan_form.select :payroll_income_category_id, category_options,
               { label: t("loans.form.payroll_income_category"), include_blank: true, selected: payroll_income } %>
-        <% if loan.payroll_deducted_since %>
-          <p class="text-xs text-secondary"><%= t("loans.form.payroll_deducted_since", date: l(loan.payroll_deducted_since, format: :long)) %></p>
-        <% end %>
+        <%# Fulas Bank: the first month the employer took the instalment. Months
+            from then on are booked by themselves when the loan is saved, except
+            those already booked in another account (the Payments tab moves them). %>
+        <%= loan_form.date_field :payroll_deducted_since,
+                                 label: t("loans.form.payroll_deducted_since_label"),
+                                 max: Date.current,
+                                 help_text: t("loans.form.payroll_deducted_since_hint") %>
       </div>
 
       <%# Rate changes only mean something for a loan whose rate can move. The
