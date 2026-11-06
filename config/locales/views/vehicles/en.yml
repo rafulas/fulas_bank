@@ -62,6 +62,7 @@ en:
         go_to_workshop: Go to Workshop
       overview:
         purchase_price_hint: Enter the real price in “Edit account details”.
+        purchase_paid: "Paid for the purchase: %{amount} (not in running costs: the value lost already counts it)"
         total_cost: Total cost
         total_cost_breakdown: "%{depreciation} of lost value + %{spent} spent"
         total_spent: Total spent
@@ -161,6 +162,7 @@ en:
         service: Workshop
         expense: Other costs
       categories:
+        purchase: Vehicle purchase
         insurance: Insurance
         road_tax: Road tax
         inspection: Inspection
