@@ -18,6 +18,19 @@ class PerformanceLogTest < ActionDispatch::IntegrationTest
     assert_match(/más lento: \S/, line)
   end
 
+  test "lists the Forecast's own steps" do
+    messages = []
+    Rails.logger.stubs(:warn).with { |message| messages << message.to_s }
+
+    with_env_overrides(FULAS_PERF_LOG: "1") { get forecast_url }
+
+    assert_response :success
+    line = messages.find { |message| message.start_with?("[perf] GET /forecast") }
+    assert line, "expected a [perf] line, got #{messages.inspect}"
+    assert_match(/pasos: .*forecast\.recurrentes \d+ms/, line)
+    assert_match(/forecast\.grafica \d+ms/, line)
+  end
+
   test "writes nothing without FULAS_PERF_LOG" do
     messages = []
     Rails.logger.stubs(:warn).with { |message| messages << message.to_s }

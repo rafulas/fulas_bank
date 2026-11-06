@@ -205,6 +205,8 @@ class ForecastsController < ApplicationController
     end
 
     def sync_loan_installments
-      Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
+      ActiveSupport::Notifications.instrument("part.fulas", part: "forecast.sincronizar_prestamos") do
+        Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
+      end
     end
 end

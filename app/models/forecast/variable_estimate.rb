@@ -162,15 +162,25 @@ class Forecast::VariableEstimate
 
   # The months that go into the combined estimate for `month`, newest first:
   # the sample months from the first one any account has history in.
+  #
+  # Fulas Bank: kept per month, as are the totals below: five years of
+  # forecast ask for the same sample months again and again (the last six
+  # finished months are the same for every month ahead).
   def combined_sample_months(month)
-    start = history_starts.values.compact.min
-    return [] unless start
+    @combined_sample_months ||= {}
+    @combined_sample_months[month.beginning_of_month] ||= begin
+      start = history_starts.values.compact.min
 
-    # A month with no variable spending at all in any account is a month
-    # with no data (an account's single old movement makes it look covered),
-    # not a month in which nothing was spent: it is left out of the average.
-    sample_months(month.beginning_of_month).select do |sample|
-      sample >= start.beginning_of_month && combined_total(sample).positive?
+      # A month with no variable spending at all in any account is a month
+      # with no data (an account's single old movement makes it look covered),
+      # not a month in which nothing was spent: it is left out of the average.
+      if start
+        sample_months(month.beginning_of_month).select do |sample|
+          sample >= start.beginning_of_month && combined_total(sample).positive?
+        end
+      else
+        []
+      end
     end
   end
 
@@ -180,7 +190,8 @@ class Forecast::VariableEstimate
   #
   # `without`: category ids whose spending is left out.
   def combined_total(month, without: [])
-    monthly_totals.sum do |account_id, months|
+    @combined_totals ||= {}
+    @combined_totals[[ month.beginning_of_month, without.map(&:to_s).sort ]] ||= monthly_totals.sum do |account_id, months|
       in_family_currency(sum_categories(months[month.beginning_of_month], without), accounts_by_id[account_id])
     end.to_d
   end

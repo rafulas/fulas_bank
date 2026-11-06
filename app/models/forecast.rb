@@ -225,8 +225,21 @@ class Forecast
   # (with `skipped`), which do not count in any balance. On the same day, the
   # month's variable spending goes last.
   def flows
-    @flows ||= (adjusted(recurring_flows + variable_flows + insurance_flows + policy_flows + loan_flows) + planned_flows + debt_plan_flows + card_flows)
-                 .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
+    @flows ||= begin
+      worked_out = measure(:recurrentes) { recurring_flows } + measure(:gastos_varios) { variable_flows } +
+                   measure(:seguros) { insurance_flows + policy_flows } + measure(:prestamos) { loan_flows }
+      own = measure(:puntuales) { planned_flows } + measure(:plan_deuda) { debt_plan_flows } + measure(:tarjetas) { card_flows }
+      measure(:ordenar) do
+        (measure(:ajustes) { adjusted(worked_out) } + own)
+          .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
+      end
+    end
+  end
+
+  # Fulas Bank: names a part of the work, for the [perf] line of the log
+  # (PerformanceLog) when it is on; nothing otherwise.
+  def measure(part, &block)
+    ActiveSupport::Notifications.instrument("part.fulas", part: "forecast.#{part}", &block)
   end
 
   def active_flows
@@ -236,6 +249,11 @@ class Forecast
   # The table: every line with the balances right after it. With an account,
   # only that account's lines (the balances still cover every account).
   def ledger(account: nil)
+    flows
+    measure(:tabla) { build_ledger(account) }
+  end
+
+  def build_ledger(account)
     balances = accounts.to_h { |each_account| [ each_account.id, each_account.balance.to_d ] }
     unassigned = 0
 
@@ -254,6 +272,7 @@ class Forecast
 
     account ? rows.select { |row| row.flow.account == account } : rows
   end
+  private :build_ledger
 
   # The table's rows: each month's opening row, then its lines.
   #
@@ -261,6 +280,10 @@ class Forecast
   # after the first DETAILED_MONTHS is folded, only its opening row, unless
   # it is one of them. Without it, every month shows its lines.
   def table_rows(ledger_rows, open_months: nil)
+    measure(:filas_por_mes) { build_table_rows(ledger_rows, open_months) }
+  end
+
+  def build_table_rows(ledger_rows, open_months)
     ledger_rows.group_by { |row| row.flow.date.beginning_of_month }.flat_map do |month, month_rows|
       net = month_rows.reject { |row| row.flow.skipped }.sum(money(0)) { |row| user_amount(row.flow) }
       opening_day = [ month - 1, today ].max
@@ -270,6 +293,7 @@ class Forecast
       folded ? [ opening ] : [ opening ] + month_rows
     end
   end
+  private :build_table_rows
 
   # Whether `month` can be folded: it comes after the months always shown
   # line by line.
@@ -300,7 +324,8 @@ class Forecast
   # The lowest expected total and when, to warn before money runs short. It
   # looks at every day with a line too, which the weekly chart may skip.
   def lowest_total
-    checked_dates.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount }
+    flows
+    measure(:punto_mas_bajo) { checked_dates.map { |date| [ date, total_on(date) ] }.min_by { |_, amount| amount.amount } }
   end
 
   # The first day `account` is expected to drop below `minimum` (in its own
@@ -327,6 +352,11 @@ class Forecast
 
   # A Series for the chart: the total, or one account's balance.
   def series(account: nil)
+    flows
+    measure(:grafica) { build_series(account) }
+  end
+
+  def build_series(account)
     values = dates.map do |date|
       value = account ? Money.new(balance_of(account, date), account.currency) : total_on(date)
       { date: date, value: value }
@@ -334,6 +364,7 @@ class Forecast
 
     Series.from_raw_values(values, interval: weekly? ? "1 week" : "1 day")
   end
+  private :build_series
 
   private
     def money(amount)
