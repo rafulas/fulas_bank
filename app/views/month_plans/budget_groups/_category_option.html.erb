@@ -1,9 +1,10 @@
 <%# locals: (category:, chosen:, taken:, month_budget:, sub:) %>
 <% id = category.id.to_s %>
+<%# Fulas Bank: a category in another budget can be chosen too; it moves here. %>
 <% in_other = taken.include?(id) %>
-<label class="flex items-center gap-3 min-w-0 <%= in_other ? "opacity-50 cursor-not-allowed" : "cursor-pointer" %>">
+<label class="flex items-center gap-3 min-w-0 cursor-pointer">
   <%= check_box_tag "budget_group[category_ids][]", id, chosen.include?(id),
-        id: "budget_group_category_#{id}", disabled: in_other, class: "checkbox checkbox--light shrink-0" %>
+        id: "budget_group_category_#{id}", class: "checkbox checkbox--light shrink-0" %>
   <% unless sub %>
     <%= render DS::FilledIcon.new(variant: :solid, icon: category.lucide_icon, hex_color: category.color, size: "sm", rounded: true) %>
   <% end %>

@@ -53,12 +53,22 @@ class MonthBudgetTest < ActiveSupport::TestCase
     assert_equal [ @food.id.to_s ], group.reload.chosen_ids
   end
 
-  test "a category goes in one budget only" do
-    create_group("Comida", [ @food ], "400")
-    group = @family.budget_groups.new
+  test "a category goes in one budget only: choosing it again moves it" do
+    food = create_group("Comida", [ @food ], "400")
+    restaurants = create_group("Restaurantes", [ @restaurants ], "100")
 
-    assert_not budget.assign(group, name: "Restaurantes", category_ids: [ @restaurants.id ], amount: "100")
-    assert_match "Restaurants", group.errors.full_messages.to_sentence
+    month = budget
+    assert_equal restaurants, month.group_for(@restaurants)
+    assert_equal food, month.group_for(@food)
+    assert_not_includes food.reload.expanded_category_ids, @restaurants.id.to_s
+
+    # Chosen again by a third budget, it leaves the second, which has nothing
+    # left and goes.
+    bars = create_group("Bares", [ @restaurants ], "50")
+    assert_equal bars, budget.group_for(@restaurants)
+    assert_not BudgetGroup.exists?(restaurants.id)
+
+    group = @family.budget_groups.new
     assert_not budget.assign(group, name: "Nada", category_ids: [], amount: "100")
     assert_not budget.assign(group, name: "", category_ids: [ @other.id ], amount: "100")
   end

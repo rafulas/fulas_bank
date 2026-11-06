@@ -5,7 +5,9 @@
                    elsif form.object && form.object.respond_to?(currency_method)
                      form.object.public_send(currency_method)
                    end
-   currency = Money::Currency.new(currency_value || options[:default_currency] || "USD")
+   # Fulas Bank: a record with no currency yet (a new planned movement, say)
+   # shows the family's, euros, rather than dollars.
+   currency = Money::Currency.new(currency_value.presence || options[:default_currency] || Current.family&.currency || "USD")
    # A text input has no native min/max constraint, so the bounds the old
    # number_field enforced (the caller's, or these defaults) are handed to
    # money_field_controller, which checks the evaluated amount against them.

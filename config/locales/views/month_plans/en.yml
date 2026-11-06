@@ -119,7 +119,7 @@ en:
         amount: "Monthly amount from %{month}"
         amount_hint: It repeats every month until you change it; earlier months stay as they were.
         categories: Categories
-        categories_hint: Tick the categories or subcategories it covers, from one or several main categories. A main category includes all its subcategories. Each category can be in one budget only.
+        categories_hint: Tick the categories or subcategories it covers, from one or several main categories. A main category includes its subcategories, except those in another budget. Ticking one already in another budget moves it here.
         in_budget: "In “%{name}”"
         submit: Save
         delete: Delete budget

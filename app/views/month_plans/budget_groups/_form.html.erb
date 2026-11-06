@@ -1,7 +1,7 @@
 <%# locals: (month_budget:, group:, chosen:, taken:, amount:) %>
 <%# Fulas Bank: a budget's name, the categories it groups and its amount
     from the chosen month on. A main category takes in its subcategories;
-    a category already in another budget cannot be chosen. %>
+    a category already in another budget moves to this one. %>
 <% month = month_budget.month %>
 <% month_param = month.strftime("%Y-%m") %>
 <%= styled_form_with model: group, scope: :budget_group, class: "space-y-4",

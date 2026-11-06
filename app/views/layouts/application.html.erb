@@ -46,8 +46,12 @@ end %>
 <% collapsed_sidebar_class = "w-0 overflow-hidden" %>
 
 <%= render "layouts/shared/htmldoc", sidebar_aware: true do %>
+  <%# Fulas Bank: installed on the iPad home screen, the status bar is drawn
+      over the page (black-translucent), blurring the top bar beneath it. The
+      phone layout leaves room for it in its own top bar; the wide layout
+      does it here. Zero in a browser. %>
   <div
-    class="flex flex-col lg:flex-row h-full bg-surface"
+    class="flex flex-col lg:flex-row h-full bg-surface lg:pt-[env(safe-area-inset-top)]"
     data-controller="app-layout privacy-mode sidebar-resize"
     data-app-layout-expanded-sidebar-class="<%= expanded_sidebar_class %>"
     data-app-layout-collapsed-sidebar-class="<%= collapsed_sidebar_class %>"

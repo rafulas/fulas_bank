@@ -96,11 +96,23 @@ class BudgetGroup < ApplicationRecord
 
   # The categories chosen with the subcategories of the main ones: what the
   # budget's spending is made of.
+  #
+  # Fulas Bank: a subcategory another budget chose by itself counts there,
+  # not here («Restaurantes y bares» takes Restaurantes out of «Comida y
+  # bebida», which keeps the rest).
   def expanded_category_ids
     @expanded_category_ids ||= begin
       ids = chosen_ids
-      ids.empty? ? [] : ids | family.categories.where(parent_id: ids).pluck(:id).map(&:to_s)
+      ids.empty? ? [] : ids | (family.categories.where(parent_id: ids).pluck(:id).map(&:to_s) - chosen_elsewhere_ids)
     end
+  end
+
+  # The categories the family's other budgets (of the same owner) chose.
+  def chosen_elsewhere_ids
+    BudgetGroupCategory.joins(:budget_group)
+                       .where(budget_groups: { family_id: family_id, user_id: user_id })
+                       .where.not(budget_group_id: id)
+                       .pluck(:category_id).map(&:to_s)
   end
 
   def covers?(category)

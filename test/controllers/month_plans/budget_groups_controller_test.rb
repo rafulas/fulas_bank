@@ -30,17 +30,22 @@ class MonthPlans::BudgetGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Restaurantes y otros", response.body
   end
 
-  test "refuses a category already in another budget" do
+  test "a subcategory of another budget's main category can be chosen and moves here" do
     post month_plan_budget_groups_url(month: @month), params: { budget_group: { name: "Comida", amount: "400", category_ids: [ @food.id ] } }
+    food_budget = @family.budget_groups.find_by!(name: "Comida")
 
     get new_month_plan_budget_group_url(month: @month)
-    assert_select "input[value='#{@restaurants.id}'][disabled]"
+    assert_select "input[value='#{@restaurants.id}']:not([disabled])"
 
-    assert_no_difference -> { @family.budget_groups.count } do
+    assert_difference -> { @family.budget_groups.count }, 1 do
       post month_plan_budget_groups_url(month: @month),
            params: { budget_group: { name: "Restaurantes", amount: "100", category_ids: [ @restaurants.id ] } }
     end
-    assert_response :unprocessable_entity
+    assert_redirected_to month_plan_url(month: @month)
+
+    food_budget.reload
+    assert_equal [ @food.id.to_s ], food_budget.chosen_ids, "the main category keeps its own movements"
+    assert_not_includes food_budget.expanded_category_ids, @restaurants.id.to_s
   end
 
   test "edits the name, categories and amount, and deletes it" do
