@@ -53,4 +53,23 @@ class InsuranceLinkerTest < ActiveSupport::TestCase
     forecast = Forecast.new(@family, accounts: [ @checking ], through: @today + 30, include_variable: false, today: @today)
     assert_empty forecast.flows.select { |flow| flow.source == :insurance && flow.date == @today + 5 }
   end
+
+  test "a policy paid every month gets its charges proposed too, and they can be found from the charge" do
+    hogar = @family.insurances.create!(
+      name: "Mapfre Hogar", kind: "home", payment_frequency: "monthly", premium: 47.30, payment_account: @checking,
+      renewal_date: Date.new(@today.year, @today.month, 1).next_year
+    )
+    charge_day = Date.new(@today.year, @today.month, 1).prev_month
+    paid = charge(amount: 47.30, date: charge_day + 2)
+
+    assert_equal 12, hogar.charges_between(@today.prev_year..@today.prev_day).size
+    assert_equal [ 12 ], hogar.charges_between(charge_day..charge_day).map(&:fourth)
+
+    options = Insurance.instalments_for_charge(@family, paid)
+    assert_equal [ hogar ], options.map(&:first)
+    assert_equal charge_day, options.first.second
+
+    InsuranceLinker.new(@family, today: @today).run!
+    assert_equal paid, hogar.insurance_payments.find_by!(due_on: charge_day).entry
+  end
 end

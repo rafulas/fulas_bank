@@ -49,7 +49,7 @@ class Insurances::PaymentsController < ApplicationController
     end
 
     def instalment_day?(date)
-      @insurance.installment_charges_between(date..date).any?
+      @insurance.charges_between(date..date).any?
     end
 
     def visible_entries

@@ -16,6 +16,8 @@ es:
       other: "%{count} plazos"
     next_installment: "próximo el %{date}: %{amount}"
     payments:
+      options_hint: "Este cargo podría ser el pago de uno de tus seguros. Vincúlalo para que el seguro lo dé por pagado."
+      link_insurance: "Vincular a %{name} · plazo del %{date} (%{amount})"
       title: Cobros de los plazos
       hint: El último año y el próximo plazo. La app busca sola el cargo de cada plazo en tus movimientos; confírmalo, elige otro o márcalo como pagado.
       section: Plazo de seguro

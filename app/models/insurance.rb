@@ -228,13 +228,27 @@ class Insurance < ApplicationRecord
     ends_on && ends_on - 1
   end
 
+  # Fulas Bank: every charge of the policy in `range`, whatever it is paid
+  # by: its custom instalments, or the premium every month, quarter, half year
+  # or year. Each is [date, Money, number, count]: its place in the year
+  # (from 1) and how many there are in a year.
+  def charges_between(range)
+    return installment_charges_between(range) if custom_payments?
+
+    anchor = renewal_date || start_date
+    count = payments_per_year
+    step = 12 / count
+    periodic_charges_between(range).map do |date, amount|
+      months = (date.year * 12 + date.month) - (anchor.year * 12 + anchor.month)
+      [ date, amount, (months / step) % count + 1, count ]
+    end
+  end
+
   # The instalments of the last year and the next one to come: what the
   # policy's page shows, to see which have been charged.
   def recent_instalments(today = Date.current)
-    return [] unless custom_payments?
-
-    past = installment_charges_between((today - 1.year + 1.day)..today)
-    upcoming = installment_charges_between((today + 1)..(today + 1.year)).min_by(&:first)
+    past = charges_between((today - 1.year + 1.day)..today)
+    upcoming = charges_between((today + 1)..(today + 1.year)).min_by(&:first)
     payments = insurance_payments.index_by(&:due_on)
 
     (past + [ upcoming ].compact).sort_by(&:first).map do |date, amount, number, count|
@@ -252,6 +266,28 @@ class Insurance < ApplicationRecord
   # closest amount first.
   def payment_candidates(date, amount, limit: 3)
     InsuranceLinker.new(family).candidates(self, date, amount.amount, window: 15.days, tolerance: nil).first(limit)
+  end
+
+  # Fulas Bank: the instalments of the family's policies a bank charge could
+  # pay, for the charge's page: around its day, not paid yet, the closest
+  # amount first. Each is [Insurance, Date, Money].
+  #
+  # Only instalments within `tolerance` of the charge's amount: a policy paid
+  # every month has an instalment near any charge.
+  def self.instalments_for_charge(family, entry, window: 15.days, tolerance: BigDecimal("0.10"))
+    charged = entry.amount.to_d
+    return [] unless charged.positive?
+
+    range = (entry.date - window)..(entry.date + window)
+    family.insurances.active.includes(:insurance_payments).flat_map do |insurance|
+      payments = insurance.insurance_payments.index_by(&:due_on)
+      insurance.charges_between(range).filter_map do |date, amount, _, _|
+        next if payments[date]&.paid?
+        next if (amount.amount.to_d - charged).abs > amount.amount.to_d * tolerance
+
+        [ insurance, date, amount ]
+      end
+    end.sort_by { |_, date, amount| [ (amount.amount.to_d - entry.amount.to_d).abs, (date - entry.date).abs ] }
   end
 
   # The next instalment to be charged, as [Date, Money], for a policy paid in

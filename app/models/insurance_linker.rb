@@ -1,5 +1,6 @@
 # Fulas Bank: proposes the bank charge of each instalment of the insurance
-# policies paid in custom instalments (see InsurancePayment), so the user
+# policies, paid in custom instalments or every month, quarter, half year or
+# year (see InsurancePayment and Insurance#charges_between), so the user
 # only has to confirm it, as AssetLinker does for the car and the house.
 #
 # An instalment is matched with an outgoing charge a few days either side of
@@ -39,10 +40,10 @@ class InsuranceLinker
     count = 0
     taken = Set.new
 
-    family.insurances.active.where(payment_frequency: Insurance::CUSTOM_FREQUENCY).find_each do |insurance|
+    family.insurances.active.find_each do |insurance|
       payments = insurance.insurance_payments.index_by(&:due_on)
 
-      insurance.installment_charges_between((today - LOOKBACK)..(today + MATCH_DAYS)).each do |date, amount, _, _|
+      insurance.charges_between((today - LOOKBACK)..(today + MATCH_DAYS)).each do |date, amount, _, _|
         payment = payments[date]
         next if payment&.paid? || payment&.entry_id.present?
 
