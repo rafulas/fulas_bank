@@ -19,7 +19,8 @@ en:
       payroll_deducted_hint: "Your employer takes the instalment out of your pay and pays the lender: the money never goes through your accounts. Each month, on the payment day, the app books the pay and the instalment in this loan and brings the debt down."
       payroll_expense_category: Category of the instalment
       payroll_income_category: Category of the pay
-      payroll_deducted_since: "Booked by itself since %{date}. Earlier months can be moved in from the Payments tab."
+      payroll_deducted_since_label: Deducted since
+      payroll_deducted_since_hint: "The first month it was taken out of your pay. On saving, the app books the instalments from that date by itself. A month already booked in another account is not repeated: move it in from the Payments tab."
       insurance_annual_amount: Annual insurance amount
       insurance_rate_type_fixed_amount: Fixed annual amount
       asset_account: Link to an asset

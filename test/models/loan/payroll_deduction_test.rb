@@ -104,4 +104,62 @@ class Loan::PayrollDeductionTest < ActiveSupport::TestCase
     assert_equal 0, @fake.entries.count, "the made-up account is left empty"
     assert_equal 1, master.payment_links.count
   end
+
+  test "the first month deducted can be given, and saving books the months since then" do
+    since = (Date.current << 3).beginning_of_month
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina,
+                  payroll_deducted_since: since)
+
+    assert_equal since, @loan.reload.payroll_deducted_since
+    months = Loan::PayrollDeduction.new(@loan).due_dates.size
+    assert_operator months, :>=, 3
+    assert_equal months, @loan.payment_links.count
+  end
+
+  test "the first month deducted cannot be in the future" do
+    @loan.assign_attributes(payroll_deducted: true, payroll_expense_category: @reforma, payroll_deducted_since: Date.current + 1)
+    assert_not @loan.valid?
+  end
+
+  test "switching it off forgets the first month deducted" do
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+    @loan.update!(payroll_deducted: false)
+    assert_nil @loan.reload.payroll_deducted_since
+  end
+
+  test "a month still booked in another account is not booked again" do
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+    deduction = Loan::PayrollDeduction.new(@loan.reload)
+    date = (Date.current << 2).change(day: 19)
+    amount = deduction.instalment_on(date)
+    @fake.entries.create!(name: "Nómina préstamo", date: date, amount: -amount, currency: "USD", entryable: Transaction.new(category: @nomina))
+    @fake.entries.create!(name: "Préstamo Reforma", date: date, amount: amount, currency: "USD", entryable: Transaction.new(category: @reforma))
+    @loan.update_columns(payroll_deducted_since: (Date.current << 3).beginning_of_month)
+
+    booked = Loan::PayrollDeduction.new(@loan.reload).book_due!
+
+    assert_not_includes booked.map(&:date), date
+    assert_equal 0, @loan_account.entries.where(entryable_type: "Transaction", date: date).count
+    assert_operator booked.size, :>=, 2
+  end
+
+  test "an instalment typed in by hand in the loan gets its pay, and that month is not booked again" do
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+    @loan.update_columns(payroll_deducted_since: (Date.current << 3).beginning_of_month)
+    date = (Date.current << 2).change(day: 19)
+    amount = Loan::PayrollDeduction.new(@loan.reload).instalment_on(date)
+    manual = @loan_account.entries.create!(name: "Préstamo BBVA Cupra", date: date, amount: amount, currency: "USD",
+                                          entryable: Transaction.new(category: @reforma))
+    @loan.link_payment!(manual)
+
+    deduction = Loan::PayrollDeduction.new(@loan.reload)
+    assert_equal [ manual ], deduction.instalments_without_pay
+    deduction.book_due!
+
+    on_that_day = @loan_account.entries.where(entryable_type: "Transaction", date: date)
+    assert_equal 2, on_that_day.count, "the hand-typed instalment and its pay, nothing else"
+    assert_equal 0, on_that_day.sum(:amount)
+    assert_equal @nomina, on_that_day.find_by("entries.amount < 0").entryable.category
+    assert_empty Loan::PayrollDeduction.new(@loan.reload).instalments_without_pay
+  end
 end

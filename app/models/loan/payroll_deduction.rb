@@ -67,12 +67,46 @@ class Loan::PayrollDeduction
     loan.payroll_deducted? && loan.payroll_deducted_since.present? && loan.payroll_expense_category.present? && account.present?
   end
 
-  # Books each instalment due since the option was switched on that has no
-  # payment yet. @return [Array<Pair>]
+  # Books each instalment due since the option was switched on (or since the
+  # first month deducted, when that was given) that has no payment yet.
+  #
+  # Months still booked in another account (the «Cuenta Fake») are left
+  # alone: booking them here too would count them twice. The Payments tab
+  # moves them in.
+  #
+  # An instalment typed in by hand in the loan and linked as its payment, but
+  # without the pay beside it, gets that pay first: alone, it would raise the
+  # debt instead of leaving it to the schedule. @return [Array<Pair>]
   def book_due!
     return [] unless active?
 
-    due_dates.reject { |date| paid_in_month?(date) }.filter_map { |date| book!(date) }
+    complete_own_instalments!
+    pending = due_dates.reject { |date| paid_in_month?(date) }
+    return [] if pending.empty?
+
+    elsewhere = pairs_elsewhere(since: pending.first, on: pending).map { |pair| pair.date.beginning_of_month }.to_set
+    pending.reject { |date| elsewhere.include?(date.beginning_of_month) }.filter_map { |date| book!(date) }
+  end
+
+  # Instalments in the loan's own account, linked as its payments since the
+  # first month deducted, that have no pay of the same amount on their day.
+  # @return [Array<Entry>]
+  def instalments_without_pay
+    expenses = account.entries.where(entryable_type: "Transaction", id: loan.payment_links.select(:entry_id))
+                      .where(date: loan.payroll_deducted_since..today)
+                      .where("entries.amount > 0")
+                      .to_a
+    return [] if expenses.empty?
+
+    paid_in = account.entries.where(entryable_type: "Transaction", date: expenses.map(&:date).uniq)
+                     .where("entries.amount < 0")
+                     .pluck(:date, :amount)
+                     .map { |date, amount| [ date, -amount ] }
+
+    expenses.reject do |expense|
+      index = paid_in.index([ expense.date, expense.amount ])
+      paid_in.delete_at(index) if index
+    end
   end
 
   # The instalment's days from the option's first day to today.
@@ -108,8 +142,10 @@ class Loan::PayrollDeduction
   # Fulas Bank: one income can also cover several instalments of that day
   # (400,00 € in, 300,00 € and 100,00 € out for two staff loans), when it is
   # exactly what goes out of that account that day. The pair then shares it.
-  def pairs_elsewhere(since:)
-    entries = candidate_entries(since)
+  #
+  # `on` narrows the search to those days (the instalment days still unpaid).
+  def pairs_elsewhere(since:, on: nil)
+    entries = candidate_entries(since, on)
     expenses = entries.select { |entry| entry.amount.positive? && instalment_like?(entry) }
     incomes = entries.select { |entry| entry.amount.negative? }.group_by { |entry| [ entry.account_id, entry.date ] }
     spent = entries.select { |entry| entry.amount.positive? }.group_by { |entry| [ entry.account_id, entry.date ] }
@@ -158,6 +194,24 @@ class Loan::PayrollDeduction
   end
 
   private
+    # Adds the pay beside each instalment that lacks it, so the two cancel out
+    # in the loan's balance as booked pairs do.
+    def complete_own_instalments!
+      missing = instalments_without_pay
+      return if missing.empty?
+
+      Entry.transaction do
+        missing.each do |expense|
+          account.entries.create!(
+            name: I18n.t("loans.payroll_deduction.income_name", loan: account.name), date: expense.date,
+            amount: -expense.amount, currency: expense.currency,
+            entryable: Transaction.new(category: loan.payroll_income_category)
+          )
+        end
+      end
+      account.sync_later
+    end
+
     def book!(date)
       amount = instalment_on(date)
       return unless amount
@@ -200,15 +254,15 @@ class Loan::PayrollDeduction
       expected.present? && expected.positive? && (entry.amount - expected).abs <= expected * AMOUNT_TOLERANCE
     end
 
-    # Movements of the family's other accounts since `since`: ordinary ones
-    # (not transfers), not linked to another loan.
-    def candidate_entries(since)
+    # Movements of the family's other accounts since `since` (or on the days
+    # `on`): ordinary ones (not transfers), not linked to another loan.
+    def candidate_entries(since, on = nil)
       @candidate_entries ||= {}
-      @candidate_entries[since] ||= begin
+      @candidate_entries[[ since, on ]] ||= begin
         other_loans = Loan::PaymentLink.where.not(loan_id: loan.id).select(:entry_id)
         family.entries.where(entryable_type: "Transaction")
               .where.not(account_id: account.id)
-              .where(date: since..today)
+              .where(date: on || (since..today))
               .where.not(id: other_loans)
               .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
               .where.not(transactions: { kind: Transaction::TRANSFER_KINDS })
