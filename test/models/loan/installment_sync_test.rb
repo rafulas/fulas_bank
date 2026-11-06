@@ -57,6 +57,15 @@ class Loan::InstallmentSyncTest < ActiveSupport::TestCase
     assert series.reload.ended?
   end
 
+  test "a loan repaid early, with nothing left to pay, ends its movement" do
+    series = sync.sync_account(@loan_account)
+    @loan_account.update_columns(balance: 0)
+    @loan_account.reload
+
+    sync.sync_account(@loan_account)
+    assert series.reload.ended?
+  end
+
   test "a loan paid twice, by its own movement and one from the bank, keeps the bank's and ends the other" do
     own = sync.sync_account(@loan_account)
     bank = @family.recurring_transactions.create!(

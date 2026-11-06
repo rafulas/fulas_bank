@@ -23,6 +23,9 @@ en:
         other: "%{count} payments left"
       add: Add loan
       debt_plan: Debt plan
+      paid_off:
+        one: Paid off (1)
+        other: "Paid off (%{count})"
   investments_overviews:
     realized_gains:
       title: "Realised gain"

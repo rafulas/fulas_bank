@@ -25,8 +25,23 @@ class LoansOverview
     family.currency
   end
 
+  # Fulas Bank: the loans still being paid. Those paid off (see
+  # Loan#paid_off?) are kept apart in #paid_off_rows and left out of the
+  # totals, as deactivated recurring payments are.
   def rows
-    @rows ||= loan_accounts.map do |account|
+    @rows ||= all_rows.reject { |row| row.loan.paid_off?(as_of: today) }
+  end
+
+  def paid_off_rows
+    @paid_off_rows ||= all_rows.select { |row| row.loan.paid_off?(as_of: today) }
+  end
+
+  def empty?
+    all_rows.empty?
+  end
+
+  def all_rows
+    @all_rows ||= loan_accounts.map do |account|
       loan = account.accountable
       projection = loan.payoff_projection(as_of: today) if loan.amortizable?
 
