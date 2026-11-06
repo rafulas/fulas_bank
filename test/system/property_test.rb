@@ -13,7 +13,13 @@ class PropertiesEditTest < ApplicationSystemTestCase
 
   test "can persist property subtype" do
     click_link "[system test] Property Account"
-    open_account_edit_dialog
+
+    # The page's morph refresh can still wipe the dialog right after it
+    # opened (see #open_account_edit_dialog): open it again until it stays.
+    3.times do
+      open_account_edit_dialog
+      break if has_field?("account_accountable_attributes_subtype", with: "single_family_home", wait: 3)
+    end
     assert_field "account_accountable_attributes_subtype", with: "single_family_home"
   end
 
