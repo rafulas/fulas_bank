@@ -45,6 +45,33 @@ HwComboboxController.prototype._filterAsync = async function(inputType) {
   }
 };
 
+// Fulas Bank: the blue bar at the top while a movement's detail (the drawer),
+// a dialog or the Forecast table is loading, as when changing page. Turbo
+// only shows it for pages and forms, so a tap on a movement showed nothing
+// until its detail arrived. Same delay as for pages: quick loads show none.
+const PROGRESS_FRAMES = new Set(["drawer", "modal", "forecast_ledger"]);
+let framesLoading = 0;
+
+const progressFrame = (event) =>
+  event.target?.tagName === "TURBO-FRAME" &&
+  PROGRESS_FRAMES.has(event.target.id);
+
+const frameLoadFinished = (event) => {
+  if (!progressFrame(event) || framesLoading === 0) return;
+
+  framesLoading -= 1;
+  if (framesLoading === 0) Turbo.session.adapter?.formSubmissionFinished?.();
+};
+
+document.addEventListener("turbo:before-fetch-request", (event) => {
+  if (!progressFrame(event)) return;
+
+  framesLoading += 1;
+  if (framesLoading === 1) Turbo.session.adapter?.formSubmissionStarted?.();
+});
+document.addEventListener("turbo:before-fetch-response", frameLoadFinished);
+document.addEventListener("turbo:fetch-request-error", frameLoadFinished);
+
 Turbo.StreamActions.redirect = function () {
   // Use "replace" to avoid adding form submission to browser history
   Turbo.visit(this.target, { action: "replace" });

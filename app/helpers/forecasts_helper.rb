@@ -8,8 +8,20 @@ module ForecastsHelper
     amount.to_d.negative? ? "−#{format_money(money)}" : "+#{format_money(money)}"
   end
 
-  def forecast_table_rows(forecast, ledger_rows)
-    forecast.table_rows(ledger_rows)
+  # Fulas Bank: `open_months` nil shows every month line by line; a list
+  # folds the months after the first year but those (see Forecast#table_rows).
+  def forecast_table_rows(forecast, ledger_rows, open_months: nil)
+    forecast.table_rows(ledger_rows, open_months: open_months)
+  end
+
+  # Fulas Bank: the table again with `month` opened or folded, scrolled to
+  # it: in the page's frame (#ledger) or in the wide dialog (#table). The
+  # period, account and other choices of the page go along.
+  def forecast_month_toggle_path(month, open_months:, expanded:)
+    months = open_months.include?(month) ? open_months - [ month ] : open_months + [ month ]
+    params = request.query_parameters.slice("period", "until", "account_id", "variable")
+                    .merge("open" => months.map { |each| each.strftime("%Y-%m") }, "focus" => month.strftime("%Y-%m"))
+    expanded ? table_forecast_path(params) : ledger_forecast_path(params)
   end
 
   def forecast_source_tone(source)

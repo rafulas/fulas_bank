@@ -806,6 +806,8 @@ Rails.application.routes.draw do
   # app proposed (AssetLinker): confirm, reject or undo them, and search again.
   resource :forecast, only: :show do
     get :table
+    # Fulas Bank: the table on the page, loaded after the rest of it.
+    get :ledger, path: "lineas"
     # Fulas Bank: which accounts the table shows and how they add up.
     get :columns, to: "forecasts#edit_columns"
     patch :columns, to: "forecasts#update_columns"
