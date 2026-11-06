@@ -7,7 +7,9 @@
 #   docker compose logs -f web | grep --line-buffered "\[perf\]"
 #
 # It writes as a warning, so it shows with the usual log level. The times of
-# the pieces include the pieces inside them.
+# the pieces include the pieces inside them. Code can also name a step of
+# its own work with a "part.fulas" notification (see Forecast#measure),
+# listed apart under "pasos".
 module PerformanceLog
   extend ActiveSupport::Concern
 
@@ -23,6 +25,7 @@ module PerformanceLog
       queries = 0
       query_ms = 0.0
       pieces = Hash.new(0.0)
+      steps = Hash.new(0.0)
 
       # Notifications reach every thread's subscribers: count only this
       # request's, which run in its own thread.
@@ -38,6 +41,11 @@ module PerformanceLog
           next unless Thread.current == thread
 
           pieces[performance_piece_name(event.payload[:identifier])] += event.duration
+        end,
+        ActiveSupport::Notifications.subscribe("part.fulas") do |event|
+          next unless Thread.current == thread
+
+          steps[event.payload[:part].to_s] += event.duration
         end
       ]
 
@@ -49,10 +57,10 @@ module PerformanceLog
       if started
         total = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000
         slowest = pieces.sort_by { |_, ms| -ms }.first(SLOWEST_PIECES).map { |name, ms| "#{name} #{ms.round}ms" }
-        Rails.logger.warn(
-          "[perf] #{request.method} #{request.fullpath.truncate(80)} #{total.round}ms" \
-          " · SQL #{queries} consultas #{query_ms.round}ms · más lento: #{slowest.join(", ")}"
-        )
+        line = "[perf] #{request.method} #{request.fullpath.truncate(80)} #{total.round}ms" \
+               " · SQL #{queries} consultas #{query_ms.round}ms · más lento: #{slowest.join(", ")}"
+        line += " · pasos: #{steps.map { |name, ms| "#{name} #{ms.round}ms" }.join(", ")}" if steps.any?
+        Rails.logger.warn(line)
       end
     end
 
