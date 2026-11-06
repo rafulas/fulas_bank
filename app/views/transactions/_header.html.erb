@@ -19,7 +19,7 @@
     </h3>
     <div class="flex items-center gap-2">
       <span class="text-sm text-secondary">
-        <%= entry.date ? I18n.l(entry.date, format: :long) : "—" %>
+        <%= entry.date ? I18n.l(entry.date, format: :long) : "—" %> · <%= entry.account.name %>
       </span>
       <% if entry.transaction.pending? %>
         <%= render DS::Pill.new(
