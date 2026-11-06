@@ -83,7 +83,7 @@ class TransactionsController < ApplicationController
   def index
     @q = search_params
     @accessible_account_ids = Current.user.accessible_accounts.pluck(:id)
-    @unseen_count = Current.accessible_entries.unseen.count
+    @unseen_count = performance_step("transacciones.nuevos") { Current.accessible_entries.unseen.count }
     @search = Transaction::Search.new(Current.family, filters: @q, accessible_account_ids: @accessible_account_ids, user: Current.user)
 
     base_scope = @search.transactions_scope
@@ -110,9 +110,11 @@ class TransactionsController < ApplicationController
                          }
                        )
 
-    @pagy, @transactions = pagy(base_scope, limit: safe_per_page(stored_params["per_page"]))
-    @transactions = complete_last_day(base_scope, @transactions)
-    Transaction::ActivitySecurityPreloader.new(@transactions).preload
+    @pagy, @transactions = performance_step("transacciones.paginar") do
+      pagy(base_scope, limit: safe_per_page(stored_params["per_page"])).then { |pagy, page| [ pagy, page.to_a ] }
+    end
+    @transactions = performance_step("transacciones.completar_dia") { complete_last_day(base_scope, @transactions) }
+    performance_step("transacciones.precargar") { Transaction::ActivitySecurityPreloader.new(@transactions).preload }
 
     # Preload split parent data
     entry_ids = @transactions.map { |t| t.entry.id }
@@ -138,8 +140,10 @@ class TransactionsController < ApplicationController
       Set.new
     end
 
-    @uncategorized_count = Rails.cache.fetch(uncategorized_count_cache_key) do
-      Current.accessible_entries.uncategorized_transactions.count
+    @uncategorized_count = performance_step("transacciones.sin_categoria") do
+      Rails.cache.fetch(uncategorized_count_cache_key) do
+        Current.accessible_entries.uncategorized_transactions.count
+      end
     end
 
     # Load projected recurring transactions for the upcoming window.

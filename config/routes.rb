@@ -570,6 +570,8 @@ Rails.application.routes.draw do
     # Fulas Bank: "Añadir a recurrente", for one movement or a selection.
     resource :recurring_assignment, only: %i[new create]
     resource :panel_accounts, only: %i[edit update]
+    # Fulas Bank: the panel's 90-day balance chart, loaded when it is opened.
+    resource :panel_balance, only: :show
     resource :categorize, only: %i[show create] do
       patch :assign_entry, on: :collection
       get :preview_rule, on: :collection

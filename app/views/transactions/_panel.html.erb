@@ -37,11 +37,11 @@
           <%= render "transactions/panel_week", panel: panel, week: week, index: index %>
         <% end %>
       </div>
-    <% if (series = panel.balance_series) %>
-      <div class="bg-container rounded-xl shadow-border-xs p-3 space-y-2">
-        <p class="text-xs text-secondary"><%= t(".balance_title", days: Transaction::Panel::BALANCE_DAYS) %></p>
-        <div class="h-32 w-full" data-controller="time-series-chart" data-time-series-chart-data-value="<%= series.to_json %>"></div>
-      </div>
+    <%# Loaded when «Análisis» is opened (Transactions::PanelBalancesController). %>
+    <% if panel.accounts.any? %>
+      <%= turbo_frame_tag "transactions_panel_balance", src: transactions_panel_balance_path, loading: :lazy do %>
+        <p class="p-3 text-sm text-secondary animate-pulse"><%= t("transactions.searches.lazy_filter.loading") %></p>
+      <% end %>
     <% end %>
     </div>
   <% end %>

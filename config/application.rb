@@ -42,6 +42,9 @@ module Sure
     end
 
     config.view_component.previews.controller = "LookbooksController"
+    # Fulas Bank: with FULAS_PERF_LOG, the [perf] log lists components too
+    # (PerformanceLog). Read at boot: the container restarts to turn it on.
+    config.view_component.instrumentation_enabled = ENV["FULAS_PERF_LOG"].present?
     config.lookbook.preview_display_options = {
       theme: [ "light", "dark" ] # available in view as params[:theme]
     }
