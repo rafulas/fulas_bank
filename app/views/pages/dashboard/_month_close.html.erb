@@ -1,0 +1,15 @@
+<%# locals: (month_close:) %>
+<%# Fulas Bank: the month just ended still has close steps left (see
+    MonthClose#offer_on_inicio?). %>
+<%= link_to month_close_path(month_close), class: "mb-6 flex items-center gap-3 rounded-xl bg-container shadow-border-xs px-4 py-3 hover:bg-container-hover", data: { turbo_frame: "_top" } do %>
+  <%= render DS::FilledIcon.new(variant: :inverse, icon: "list-checks", size: "md", rounded: true) %>
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-sm font-medium text-primary">
+      <%= t("pages.dashboard.month_close.title", month: l(month_close.start_date, format: "%B")) %>
+    </p>
+    <p class="truncate text-xs text-secondary">
+      <%= t("pages.dashboard.month_close.subtitle", count: month_close.pending_steps.size) %>
+    </p>
+  </div>
+  <%= render DS::ProgressRing.new(percent: (month_close.checkable_steps.count(&:done?) * 100.0 / month_close.checkable_steps.size).round, size: 32, stroke_width: 3, tone: :success, show_percent: false) %>
+<% end %>

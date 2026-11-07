@@ -89,6 +89,9 @@ class PagesController < ApplicationController
     @price_rises = PriceRises.new(Current.family, user: Current.user)
     # Fulas Bank: ITV, warranties, documents and insurance renewals coming up.
     @upcoming_deadlines = Deadline::Upcoming.new(Current.family)
+    # Fulas Bank: the month close, while the month just ended has steps left.
+    month_close = MonthClose.latest(Current.family, user: Current.user)
+    @month_close = month_close if month_close.offer_on_inicio?
     # Fulas Bank: the badge on the "Categorizar" quick action.
     @uncategorized_count = cached_uncategorized_count
 
