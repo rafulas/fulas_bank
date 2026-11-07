@@ -8,6 +8,28 @@ class ValuationsControllerTest < ActionDispatch::IntegrationTest
     @entry = entries(:valuation)
   end
 
+  test "new without an account asks which account or loan to update" do
+    get new_valuation_path
+
+    assert_response :ok
+    assert_select "[role='listbox'] [role='option'][data-value='#{accounts(:depository).id}']"
+  end
+
+  test "confirming without an account asks for it again" do
+    post confirm_create_valuations_path, params: { entry: { amount: 100, date: Date.current.to_s, account_id: "" } }
+
+    assert_response :unprocessable_entity
+    assert_select "[role='listbox'] [role='option'][data-value='#{accounts(:depository).id}']"
+  end
+
+  test "new from an account keeps it fixed" do
+    get new_valuation_path(account_id: accounts(:depository).id)
+
+    assert_response :ok
+    assert_select "[role='listbox']", count: 0
+    assert_select "input[type='hidden'][name='entry[account_id]'][value='#{accounts(:depository).id}']"
+  end
+
   test "can create reconciliation" do
     account = accounts(:investment)
 

@@ -1,0 +1,28 @@
+<%# locals: (uncategorized_count: 0) %>
+<%# Fulas Bank: the everyday operations, one tap away from Inicio. %>
+<% actions = [
+     { key: "expense", icon: "minus-circle", href: new_transaction_path(nature: "outflow"), frame: :modal },
+     { key: "income", icon: "plus-circle", href: new_transaction_path(nature: "inflow"), frame: :modal },
+     { key: "transfer", icon: "arrow-right-left", href: new_transfer_path, frame: :modal },
+     { key: "balance", icon: "refresh-ccw", href: new_valuation_path, frame: :modal },
+     { key: "import", icon: "download", href: new_import_path, frame: :modal }
+   ] %>
+<% if uncategorized_count.positive? %>
+  <% actions << { key: "categorize", icon: "tag", href: transactions_categorize_path, frame: :_top, count: uncategorized_count } %>
+<% end %>
+
+<nav class="min-w-0 flex-1 -my-1 py-1 overflow-x-auto no-scrollbar" aria-label="<%= t("pages.dashboard.quick_actions.aria_label") %>">
+  <div class="flex items-center gap-2 w-max">
+    <% actions.each do |action| %>
+      <%= render DS::Link.new(
+            text: t("pages.dashboard.quick_actions.#{action[:key]}", count: action[:count]),
+            icon: action[:icon],
+            variant: "outline",
+            size: "sm",
+            href: action[:href],
+            frame: action[:frame],
+            class: "shrink-0 whitespace-nowrap"
+          ) %>
+    <% end %>
+  </div>
+</nav>

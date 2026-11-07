@@ -48,6 +48,7 @@ es:
       entry_updated: Registro actualizado
     errors:
       amount_required: El importe es obligatorio
+      account_required: Elige la cuenta o el préstamo
     form:
       amount: Importe
       submit: Añadir actualización de saldo
@@ -62,6 +63,10 @@ es:
       value: valor
     new:
       title: Nuevo saldo
+      account: Cuenta
+      account_prompt: Elige la cuenta o el préstamo
+      amount: Saldo en la fecha
+      submit: Revisar ajuste
     show:
       amount: Importe
       amount_label: Valor de la cuenta en la fecha
