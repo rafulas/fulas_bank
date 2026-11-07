@@ -48,6 +48,7 @@ en:
       entry_updated: Entry updated
     errors:
       amount_required: Amount is required
+      account_required: Choose the account or loan
     form:
       amount: Amount
       submit: Add balance update
@@ -62,6 +63,10 @@ en:
       value: value
     new:
       title: New balance
+      account: Account
+      account_prompt: Choose the account or loan
+      amount: Balance on date
+      submit: Review adjustment
     show:
       amount: Amount
       amount_label: Account value on date

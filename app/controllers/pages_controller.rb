@@ -81,6 +81,8 @@ class PagesController < ApplicationController
     @spending_trend_data = build_spending_trend_data(income_statement, @spending_trend_month)
 
     @dashboard_sections = build_dashboard_sections
+    # Fulas Bank: the badge on the "Categorizar" quick action.
+    @uncategorized_count = cached_uncategorized_count
 
     # Fulas Bank: Inicio is the top page, no trail to show ("Inicio › Panel").
     @breadcrumbs = []

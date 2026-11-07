@@ -14,6 +14,19 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "dashboard offers the everyday operations as quick actions" do
+    get root_path
+
+    assert_response :ok
+    assert_select "nav[aria-label='#{I18n.t("pages.dashboard.quick_actions.aria_label")}']" do
+      assert_select "a[href='#{new_transaction_path(nature: "outflow")}'][data-turbo-frame='modal']"
+      assert_select "a[href='#{new_transaction_path(nature: "inflow")}'][data-turbo-frame='modal']"
+      assert_select "a[href='#{new_transfer_path}'][data-turbo-frame='modal']"
+      assert_select "a[href='#{new_valuation_path}'][data-turbo-frame='modal']"
+      assert_select "a[href='#{new_import_path}'][data-turbo-frame='modal']"
+    end
+  end
+
   test "dashboard renders the net worth chart as drag-selectable, opting it out of card drag-and-drop" do
     get root_path
 

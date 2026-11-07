@@ -1,7 +1,22 @@
 class ValuationsController < ApplicationController
   include EntryableResource, StreamExtensions
 
+  # Fulas Bank: opened from Inicio's quick actions there is no account yet,
+  # so the dialog asks for one.
+  def new
+    super
+    @balance_accounts = balance_accounts unless @entry.account
+  end
+
   def confirm_create
+    if params.dig(:entry, :account_id).blank?
+      @entry = Current.family.entries.new(entryable: Valuation.new, currency: Current.family.currency)
+      @balance_accounts = balance_accounts
+      @error_message = t("valuations.errors.account_required")
+      render :new, status: :unprocessable_entity
+      return
+    end
+
     @account = accessible_accounts.find(params.dig(:entry, :account_id))
     return unless require_account_permission!(@account)
 
@@ -103,6 +118,14 @@ class ValuationsController < ApplicationController
   end
 
   private
+    def balance_accounts
+      Account.in_picker_order(accessible_accounts
+        .writable_by(Current.user)
+        .visible
+        .alphabetically
+        .includes(logo_attachment: :blob))
+    end
+
     def entry_params
       params.require(:entry).permit(:date, :amount, :notes)
     end

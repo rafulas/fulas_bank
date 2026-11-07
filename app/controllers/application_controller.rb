@@ -116,4 +116,24 @@ class ApplicationController < ActionController::Base
       Current.finance_accounts
     end
     helper_method :finance_accounts
+
+    # Fulas Bank: the movements still to categorize, shared by Movimientos
+    # and the quick actions on Inicio.
+    def cached_uncategorized_count
+      Rails.cache.fetch(uncategorized_count_cache_key) do
+        Current.accessible_entries.uncategorized_transactions.count
+      end
+    end
+
+    # Scoped by user (not just family) because Current.accessible_entries is
+    # user-scoped for family sharing (see Current#accessible_entries).
+    #
+    # Includes Family#accounts_status_version because `uncategorized_transactions`
+    # filters on account status (draft/active), and toggling an account's
+    # active status (AccountsController#toggle_active) doesn't touch `entries`
+    # or `AccountShare`, so it wouldn't otherwise bust this cache.
+    def uncategorized_count_cache_key
+      "transactions_uncategorized_count/v4/#{Current.family.id}/#{Current.user.id}/" \
+        "#{Current.family.entries_version}/#{Current.family.accounts_status_version}/#{Current.account_share_version}"
+    end
 end

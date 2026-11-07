@@ -2,7 +2,13 @@
   <% dialog.with_header(title: t(".title")) %>
   <% dialog.with_body do %>
     <%= styled_form_with model: @entry, url: confirm_create_valuations_path, class: "space-y-4" do |form| %>
-      <%= form.hidden_field :account_id %>
+      <% if @balance_accounts %>
+        <%= form.collection_select :account_id, @balance_accounts, :id, :name,
+              { prompt: t(".account_prompt"), label: t(".account"), variant: :logo, searchable: true },
+              required: true, class: "form-field__input text-ellipsis" %>
+      <% else %>
+        <%= form.hidden_field :account_id %>
+      <% end %>
 
       <% if @error_message.present? %>
         <%= render DS::Alert.new(message: @error_message, variant: :error) %>

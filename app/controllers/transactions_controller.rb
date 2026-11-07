@@ -141,9 +141,7 @@ class TransactionsController < ApplicationController
     end
 
     @uncategorized_count = performance_step("transacciones.sin_categoria") do
-      Rails.cache.fetch(uncategorized_count_cache_key) do
-        Current.accessible_entries.uncategorized_transactions.count
-      end
+      cached_uncategorized_count
     end
 
     # Load projected recurring transactions for the upcoming window.
@@ -618,18 +616,6 @@ class TransactionsController < ApplicationController
   private
     def set_entry_for_move
       set_entry
-    end
-
-    # Scoped by user (not just family) because Current.accessible_entries is
-    # user-scoped for family sharing (see Current#accessible_entries).
-    #
-    # Includes Family#accounts_status_version because `uncategorized_transactions`
-    # filters on account status (draft/active), and toggling an account's
-    # active status (AccountsController#toggle_active) doesn't touch `entries`
-    # or `AccountShare`, so it wouldn't otherwise bust this cache.
-    def uncategorized_count_cache_key
-      "transactions_uncategorized_count/v4/#{Current.family.id}/#{Current.user.id}/" \
-        "#{Current.family.entries_version}/#{Current.family.accounts_status_version}/#{Current.account_share_version}"
     end
 
     # Scoped additionally by Date.current since the "next 10 days" window is

@@ -38,6 +38,16 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      quick_actions:
+        aria_label: Quick actions
+        expense: Expense
+        income: Income
+        transfer: Transfer
+        balance: Update balance
+        import: Import statement
+        categorize:
+          one: Categorize 1
+          other: "Categorize %{count}"
       free_cash:
         title: Free cash this period
         of_income: "of your %{amount} income"
