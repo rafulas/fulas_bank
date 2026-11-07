@@ -85,6 +85,8 @@ class PagesController < ApplicationController
     @fresh_recaps = Recap.fresh(Current.family, user: Current.user)
     # Fulas Bank: a current account about to run out of money.
     @overdraft_warning = OverdraftWarning.new(Current.family, user: Current.user)
+    # Fulas Bank: recurring payments whose price went up lately.
+    @price_rises = PriceRises.new(Current.family, user: Current.user)
     # Fulas Bank: the badge on the "Categorizar" quick action.
     @uncategorized_count = cached_uncategorized_count
 
