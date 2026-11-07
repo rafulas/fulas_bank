@@ -39,12 +39,13 @@ namespace :demo_data do
     # Fulas Bank: on the server, only when asked (FULAS_DEMO_EN_SERVIDOR=1)
     # and with a password of your own for the example users.
     server = ENV["FULAS_DEMO_EN_SERVIDOR"] == "1"
-    password = ENV["FULAS_DEMO_PASSWORD"].to_s
-    if server && (password.length < 8 || password == Demo::FulasGenerator::PASSWORD)
+    own_login = ENV.fetch("FULAS_DEMO_PASSWORD", "")
+    if server && (own_login.length < 8 || own_login == Demo::FulasGenerator::PASSWORD)
       abort "En el servidor, la familia de ejemplo necesita una contraseña propia de al menos 8 caracteres."
     end
-    family = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42), password: password.presence || Demo::FulasGenerator::PASSWORD)
-                                 .generate!(allow_production: server)
+    generator = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42))
+    generator = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42), password: own_login) if own_login.present?
+    family = generator.generate!(allow_production: server)
     entries = Entry.joins(:account).where(accounts: { family_id: family.id }).count
     puts "✅ #{family.name}: #{family.accounts.count} cuentas y #{entries} movimientos en #{(Time.now - start).round(1)} s"
   end
