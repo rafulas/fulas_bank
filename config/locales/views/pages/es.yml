@@ -40,6 +40,11 @@ es:
     dashboard:
       fresh_recaps:
         subtitle: "%{spent} gastado · resultado %{net}"
+      overdraft:
+        title: "%{account} se quedará en %{balance} el %{date}"
+        cushion_title: "%{account} bajará de tu colchón el %{date} (%{balance})"
+        culprit: "Ese día se cobra %{name} (%{amount})."
+        open_forecast: Ver la previsión
       quick_actions:
         aria_label: Acciones rápidas
         expense: Gasto
