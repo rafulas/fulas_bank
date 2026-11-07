@@ -37,6 +37,19 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "dashboard warns of a current account about to go below zero" do
+    account = accounts(:depository)
+    warning = OverdraftWarning::Warning.new(account: account, date: Date.current + 5.days, balance: Money.new(-25, account.currency),
+                                            culprit_name: "Luz", culprit_amount: Money.new(95, account.currency), below_cushion: false)
+    OverdraftWarning.any_instance.stubs(:warnings).returns([ warning ])
+
+    get root_path
+
+    assert_response :ok
+    assert_select "a[href='#{forecast_path(account_id: account.id)}']"
+    assert_match "Luz", response.body
+  end
+
   test "dashboard renders the net worth chart as drag-selectable, opting it out of card drag-and-drop" do
     get root_path
 

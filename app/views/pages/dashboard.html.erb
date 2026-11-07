@@ -43,6 +43,10 @@
     <%= render "pages/dashboard/fresh_recaps", recaps: @fresh_recaps %>
   <% end %>
 
+  <% if accessible_accounts.any? && @overdraft_warning.any? %>
+    <%= render "pages/dashboard/overdraft_warning", warning: @overdraft_warning %>
+  <% end %>
+
   <% if accessible_accounts.any? && @free_cash %>
     <%= render "pages/dashboard/free_cash", free_cash: @free_cash %>
     <%= render "pages/dashboard/health", cash_cushion: @cash_cushion, savings_flow: @savings_flow, next_payments: @next_payments, duplicate_charges: @duplicate_charges %>
