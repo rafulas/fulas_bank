@@ -1,0 +1,5 @@
+---
+en:
+  price_rise_dismissals:
+    create:
+      dismissed: "OK, it won't show again."

@@ -1,0 +1,5 @@
+---
+es:
+  price_rise_dismissals:
+    create:
+      dismissed: "Vale, no volverá a salir."

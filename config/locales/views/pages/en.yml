@@ -38,6 +38,13 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      price_rises:
+        title:
+          one: A bill went up
+          other: "%{count} bills went up"
+        line: "From %{from} to %{to} since %{date}"
+        annual: "+%{amount} a year"
+        dismiss: Got it
       quick_actions:
         aria_label: Quick actions
         expense: Expense
