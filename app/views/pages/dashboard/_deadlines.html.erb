@@ -1,0 +1,29 @@
+<%# locals: (upcoming:) %>
+<%# Fulas Bank: deadlines and insurance renewals coming up (see
+    Deadline::Upcoming). %>
+<% today = upcoming.today %>
+<div class="mb-6">
+  <%= render DS::Alert.new(variant: :info, title: t("pages.dashboard.deadlines.title", count: upcoming.items.size)) do %>
+    <ul class="divide-y divide-divider">
+      <% upcoming.items.first(5).each do |item| %>
+        <% days = item.days_left(today) %>
+        <li class="flex items-center justify-between gap-3 py-2">
+          <div class="flex min-w-0 items-center gap-2">
+            <%= icon item.icon, size: "sm" %>
+            <span class="truncate font-medium text-primary"><%= item.name %></span>
+          </div>
+          <div class="flex shrink-0 items-center gap-3">
+            <span class="<%= class_names("text-xs whitespace-nowrap", days.negative? ? "text-destructive" : "text-secondary") %>">
+              <%= deadline_days_label(days) %>
+            </span>
+            <% unless item.insurance? %>
+              <%= render DS::Button.new(text: t("pages.dashboard.deadlines.done"), variant: :outline, size: :sm,
+                    href: complete_deadline_path(item.record), method: :patch, frame: :_top) %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+    <%= link_to t("pages.dashboard.deadlines.all"), deadlines_path, class: "text-sm underline", data: { turbo_frame: "_top" } %>
+  <% end %>
+</div>

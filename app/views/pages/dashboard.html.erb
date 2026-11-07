@@ -39,6 +39,10 @@
     </div>
   <% end %>
 
+  <% if @upcoming_deadlines.any? %>
+    <%= render "pages/dashboard/deadlines", upcoming: @upcoming_deadlines %>
+  <% end %>
+
   <% if accessible_accounts.any? && @free_cash %>
     <%= render "pages/dashboard/free_cash", free_cash: @free_cash %>
     <%= render "pages/dashboard/health", cash_cushion: @cash_cushion, savings_flow: @savings_flow, next_payments: @next_payments, duplicate_charges: @duplicate_charges %>

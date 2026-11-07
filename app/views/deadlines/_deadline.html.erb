@@ -1,0 +1,27 @@
+<%# locals: (deadline:, today: Date.current) %>
+<%# Fulas Bank: one row of Vencimientos y garantías. %>
+<% days = deadline.days_left(today) %>
+<div class="flex items-center gap-3 px-4 py-3">
+  <%= render DS::FilledIcon.new(variant: :inverse, icon: deadline.icon, size: "md", rounded: true) %>
+  <%= link_to edit_deadline_path(deadline), data: { turbo_frame: :modal }, class: "min-w-0 flex-1" do %>
+    <p class="<%= class_names("truncate text-sm font-medium", deadline.completed? ? "text-secondary line-through" : "text-primary") %>"><%= deadline.name %></p>
+    <p class="truncate text-xs text-secondary">
+      <%= t("deadlines.kinds.#{deadline.kind}") %>
+      <% if deadline.account %> · <%= deadline.account.name %><% end %>
+      <% if deadline.repeats? %> · <%= t("deadlines.repeat.#{deadline.repeat_months}", default: t("deadlines.repeat.months", count: deadline.repeat_months)) %><% end %>
+    </p>
+  <% end %>
+  <div class="shrink-0 text-right">
+    <p class="text-sm text-primary whitespace-nowrap"><%= l(deadline.completed_on || deadline.due_on, format: "%-d %b %Y") %></p>
+    <% unless deadline.completed? %>
+      <p class="<%= class_names("text-xs whitespace-nowrap", days.negative? ? "text-destructive" : (deadline.due_soon?(today) ? "text-warning" : "text-secondary")) %>">
+        <%= deadline_days_label(days) %>
+      </p>
+    <% end %>
+  </div>
+  <% if deadline.completed? %>
+    <%= render DS::Button.new(icon: "undo-2", variant: :icon, href: reopen_deadline_path(deadline), method: :patch, frame: :_top, aria: { label: t("deadlines.actions.reopen") }) %>
+  <% else %>
+    <%= render DS::Button.new(icon: "check", variant: :icon, href: complete_deadline_path(deadline), method: :patch, frame: :_top, aria: { label: t("deadlines.actions.complete") }) %>
+  <% end %>
+</div>

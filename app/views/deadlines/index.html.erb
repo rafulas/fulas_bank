@@ -1,0 +1,67 @@
+<%# Fulas Bank: Vencimientos y garantías (see Deadline). %>
+<% content_for :page_header do %>
+  <div class="flex items-start justify-between gap-3 mb-6">
+    <div class="space-y-1">
+      <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+      <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+    </div>
+    <%= render DS::Link.new(text: t(".new"), icon: "plus", variant: :primary, href: new_deadline_path, frame: :modal) %>
+  </div>
+<% end %>
+
+<% today = Date.current %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <% if @pending.none? && @completed.none? && @renewals.none? %>
+    <%= render DS::EmptyState.new(icon: "calendar-clock", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% end %>
+
+  <% if @pending.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".pending") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% @pending.each_with_index do |deadline, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= render deadline, today: today %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @renewals.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".renewals") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% @renewals.each_with_index do |insurance, index| %>
+          <% renewal = insurance.next_renewal(today) %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= link_to edit_insurance_path(insurance), data: { turbo_frame: :modal }, class: "flex items-center gap-3 px-4 py-3 hover:bg-container-hover" do %>
+            <%= render DS::FilledIcon.new(variant: :inverse, icon: "shield", size: "md", rounded: true) %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-primary"><%= insurance.name %></p>
+              <p class="truncate text-xs text-secondary"><%= insurance.insurer.presence || t(".insurance") %></p>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-sm text-primary whitespace-nowrap"><%= l(renewal, format: "%-d %b %Y") %></p>
+              <p class="<%= class_names("text-xs whitespace-nowrap", insurance.renews_soon?(today) ? "text-warning" : "text-secondary") %>">
+                <%= deadline_days_label((renewal - today).to_i) %>
+              </p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @completed.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".completed") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% @completed.each_with_index do |deadline, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= render deadline, today: today %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

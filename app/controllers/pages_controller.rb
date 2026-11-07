@@ -81,6 +81,8 @@ class PagesController < ApplicationController
     @spending_trend_data = build_spending_trend_data(income_statement, @spending_trend_month)
 
     @dashboard_sections = build_dashboard_sections
+    # Fulas Bank: ITV, warranties, documents and insurance renewals coming up.
+    @upcoming_deadlines = Deadline::Upcoming.new(Current.family)
     # Fulas Bank: the badge on the "Categorizar" quick action.
     @uncategorized_count = cached_uncategorized_count
 

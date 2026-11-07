@@ -38,6 +38,12 @@ es:
       heading: Condiciones del servicio
       placeholder: El contenido de las condiciones del servicio se mostrará aquí.
     dashboard:
+      deadlines:
+        title:
+          one: Un vencimiento cerca
+          other: "%{count} vencimientos cerca"
+        done: Hecho
+        all: Ver todos los vencimientos
       quick_actions:
         aria_label: Acciones rápidas
         expense: Gasto

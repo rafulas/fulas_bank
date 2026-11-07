@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -690,6 +690,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_160000) do
     t.datetime "updated_at", null: false
     t.index ["debt_plan_id"], name: "index_debt_plan_extra_payments_on_debt_plan_id"
     t.check_constraint "amount > 0::numeric", name: "chk_debt_plan_extra_payments_amount_positive"
+  end
+
+  create_table "deadlines", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id"
+    t.decimal "amount", precision: 19, scale: 4
+    t.date "completed_on"
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.date "due_on", null: false
+    t.uuid "family_id", null: false
+    t.string "kind", default: "other", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "remind_days", default: 30, null: false
+    t.integer "repeat_months"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_deadlines_on_account_id"
+    t.index ["family_id", "due_on"], name: "index_deadlines_on_family_id_and_due_on"
+    t.index ["family_id"], name: "index_deadlines_on_family_id"
+    t.check_constraint "remind_days >= 0", name: "chk_deadlines_remind_days_not_negative"
+    t.check_constraint "repeat_months IS NULL OR repeat_months > 0", name: "chk_deadlines_repeat_months_positive"
   end
 
   create_table "debt_plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -3273,6 +3294,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_160000) do
   add_foreign_key "coinstats_accounts", "coinstats_items"
   add_foreign_key "coinstats_items", "families"
   add_foreign_key "credit_cards", "accounts", column: "payment_account_id", on_delete: :nullify
+  add_foreign_key "deadlines", "accounts", on_delete: :nullify
+  add_foreign_key "deadlines", "families"
   add_foreign_key "debt_plan_extra_payments", "debt_plans", on_delete: :cascade
   add_foreign_key "debt_plans", "accounts", on_delete: :nullify
   add_foreign_key "debt_plans", "families", on_delete: :cascade
