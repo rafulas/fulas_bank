@@ -1,0 +1,15 @@
+<%# locals: (recap:, report:) %>
+<%# Fulas Bank: the written report of a recap (Recap::Report), in the lazy
+    frame of the recap page. %>
+<%= turbo_frame_tag "recap_report" do %>
+  <section class="rounded-xl bg-container shadow-border-xs p-4 space-y-2">
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-xs font-medium uppercase text-secondary"><%= t("recaps.report.label") %></p>
+      <% if report.ai %>
+        <span class="flex items-center gap-1 text-xs text-secondary"><%= icon "sparkles", size: "xs" %><%= t("recaps.report.ai") %></span>
+      <% end %>
+    </div>
+    <h2 class="text-lg font-medium text-primary"><%= report.headline %></h2>
+    <p class="text-sm text-primary leading-relaxed privacy-sensitive"><%= report.body %></p>
+  </section>
+<% end %>

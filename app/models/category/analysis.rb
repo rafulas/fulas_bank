@@ -185,6 +185,18 @@ class Category::Analysis
     money(month_bars.sum { |bar| bar.income.sum(&:amount) - bar.spending.sum(&:amount) } / month_bars.size)
   end
 
+  # ---- Biggest expenses ----
+
+  # The period's largest single expenses, biggest first.
+  def biggest_expenses(limit: 5)
+    base_scope(start_date..end_date)
+      .where("entries.amount > 0")
+      .includes(:account, entryable: [ :category, :merchant ])
+      .reorder(Arel.sql("#{converted_amount_sql} DESC"), date: :desc)
+      .limit(limit)
+      .to_a
+  end
+
   # ---- Average daily spending ----
 
   def days_elapsed

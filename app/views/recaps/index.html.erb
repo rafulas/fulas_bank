@@ -1,0 +1,30 @@
+<%# Fulas Bank: the weekly and monthly recaps to open, the running one
+    first. %>
+<% content_for :page_header do %>
+  <div class="mb-4"><%= render "shared/analysis_tabs" %></div>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <% [ [ "month", @months ], [ "week", @weeks ] ].each do |kind, recaps| %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".#{kind}s") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% recaps.each_with_index do |recap, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= link_to recap_path(recap), class: "flex items-center gap-3 px-4 py-3 hover:bg-container-hover" do %>
+            <%= icon(kind == "month" ? "calendar" : "calendar-range", size: "sm") %>
+            <span class="min-w-0 flex-1 truncate text-sm font-medium text-primary first-letter:uppercase"><%= recap.title %></span>
+            <% unless recap.closed? %>
+              <%= render DS::Pill.new(label: t(".running"), tone: :neutral, marker: false) %>
+            <% end %>
+            <%= icon "chevron-right", size: "sm" %>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

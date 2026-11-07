@@ -1,0 +1,58 @@
+---
+en:
+  recaps:
+    title:
+      week: "Recap of the week of %{start} to %{end}"
+      month: "%{month} recap"
+    period_name:
+      week: the week
+      previous_week: the week before
+    kinds:
+      week: Week
+      month: Month
+    index:
+      title: Recaps
+      subtitle: How each week and each month went
+      months: Months
+      weeks: Weeks
+      running: Running
+    show:
+      range: "From %{start} to %{end}"
+      running: running
+      previous: Previous
+      next: Next
+      kind_aria: Week or month
+      total: "Total for %{period}"
+      spent: spent
+      income: earned
+      savings_rate: savings rate
+      over_budget: Over budget
+      under_budget: Under budget
+      report_loading: Preparing the report…
+      balance: "Total balance in %{period}"
+      categories: Category
+      changes: "Against %{previous}"
+      before: "%{amount} in %{previous}"
+      biggest_expenses: Biggest expenses
+      budgets: Budgets
+      recurring: Recurring
+      paid: paid
+      unpaid: unpaid
+      open_plan: Open the month plan
+      coming: Next week
+    report:
+      label: Report
+      ai: Written with AI
+      headline:
+        quiet: A quiet period
+        negative: You spent more than came in
+        spent_less: Some breathing room
+        positive: The numbers add up
+      no_activity: "There are no movements in %{period}."
+      totals: "In %{period} you spent %{spent} and earned %{income}, for a result of %{net}."
+      spent_down: "You spent %{change} less than in %{previous_period} (%{previous})."
+      spent_up: "You spent %{change} more than in %{previous_period} (%{previous})."
+      top_category: "Most of it went on %{name}, with %{amount}."
+      biggest_expense: "Your biggest expense was %{name}, at %{amount}."
+      budget: "Of your %{budgeted} budget you spent %{spent}."
+      savings_rate: "Your savings rate was %{rate}."

@@ -451,6 +451,10 @@ Rails.application.routes.draw do
   resources :category_summaries, only: %i[index show], path: "resumen"
   # Fulas Bank: the necessary / discretionary / saving target and classes.
   resource :spending_split, only: %i[edit update], path: "resumen/reparto"
+  # Fulas Bank: the weekly and monthly recaps ("Resumen de octubre").
+  resources :recaps, only: %i[index show], path: "resumenes" do
+    get :report, on: :member
+  end
 
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection

@@ -1,0 +1,17 @@
+<%# locals: (recaps:) %>
+<%# Fulas Bank: the week or month that has just closed has its recap ready
+    (see Recap.fresh), like Bilance's "Resumen de octubre" card. %>
+<div class="grid grid-cols-1 <%= "sm:grid-cols-2" if recaps.size > 1 %> gap-3 mb-6">
+  <% recaps.each do |recap| %>
+    <%= link_to recap_path(recap), class: "flex items-center gap-3 rounded-xl bg-container shadow-border-xs px-4 py-3 hover:bg-container-hover", data: { turbo_frame: "_top" } do %>
+      <%= render DS::FilledIcon.new(variant: :inverse, icon: recap.month? ? "calendar" : "calendar-range", size: "md", rounded: true) %>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-medium text-primary first-letter:uppercase"><%= recap.title %></p>
+        <p class="truncate text-xs text-secondary privacy-sensitive">
+          <%= t("pages.dashboard.fresh_recaps.subtitle", spent: format_money(recap.spent, precision: 0), net: format_money(recap.net, precision: 0)) %>
+        </p>
+      </div>
+      <%= icon "chevron-right", size: "sm" %>
+    <% end %>
+  <% end %>
+</div>
