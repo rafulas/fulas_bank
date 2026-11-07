@@ -51,6 +51,22 @@ class Demo::FulasGeneratorTest < ActiveSupport::TestCase
     assert Family.exists?(kept.id)
   end
 
+  test "Fulas Bank: on the server, when asked, with a password of its own, and removed again" do
+    Rails.stubs(:env).returns(ActiveSupport::EnvironmentInquirer.new("production"))
+    kept = families(:dylan_family)
+
+    family = Demo::FulasGenerator.new(seed: 7, password: "MiDemo2026!").generate!(email: EMAIL, allow_production: true)
+
+    user = family.users.find_by!(email: EMAIL)
+    assert user.authenticate("MiDemo2026!")
+    assert_not user.authenticate(Demo::FulasGenerator::PASSWORD)
+
+    assert_equal 1, Demo::FulasGenerator.remove!(email: EMAIL)
+    assert_not Family.exists?(family.id)
+    assert Family.exists?(kept.id)
+    assert_equal 0, Demo::FulasGenerator.remove!(email: EMAIL)
+  end
+
   test "refuses to run outside development and test" do
     Rails.stubs(:env).returns(ActiveSupport::EnvironmentInquirer.new("production"))
 

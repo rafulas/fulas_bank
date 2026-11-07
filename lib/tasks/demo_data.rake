@@ -36,9 +36,26 @@ namespace :demo_data do
   desc "Load Fulas Bank's Spanish example family (replaces only the previous example family)"
   task fulas: :environment do
     start = Time.now
-    family = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42)).generate!
+    # Fulas Bank: on the server, only when asked (FULAS_DEMO_EN_SERVIDOR=1)
+    # and with a password of your own for the example users.
+    server = ENV["FULAS_DEMO_EN_SERVIDOR"] == "1"
+    password = ENV["FULAS_DEMO_PASSWORD"].to_s
+    if server && (password.length < 8 || password == Demo::FulasGenerator::PASSWORD)
+      abort "En el servidor, la familia de ejemplo necesita una contraseña propia de al menos 8 caracteres."
+    end
+    family = Demo::FulasGenerator.new(seed: ENV.fetch("SEED", 42), password: password.presence || Demo::FulasGenerator::PASSWORD)
+                                 .generate!(allow_production: server)
     entries = Entry.joins(:account).where(accounts: { family_id: family.id }).count
     puts "✅ #{family.name}: #{family.accounts.count} cuentas y #{entries} movimientos en #{(Time.now - start).round(1)} s"
+  end
+
+  desc "Remove Fulas Bank's Spanish example family (and only it)"
+  task fulas_remove: :environment do
+    if Rails.env.production? && ENV["FULAS_DEMO_EN_SERVIDOR"] != "1"
+      abort "En el servidor, añade FULAS_DEMO_EN_SERVIDOR=1."
+    end
+    count = Demo::FulasGenerator.remove!
+    puts count.positive? ? "Familia de ejemplo borrada." : "No había familia de ejemplo."
   end
 
   desc "Load full realistic demo dataset"
