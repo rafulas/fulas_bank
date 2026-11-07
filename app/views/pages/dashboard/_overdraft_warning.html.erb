@@ -1,0 +1,17 @@
+<%# locals: (warning:) %>
+<%# Fulas Bank: a current account the forecast sees going below zero (or
+    below its cushion) in the next weeks (see OverdraftWarning). %>
+<% warning.warnings.each do |item| %>
+  <div class="mb-6">
+    <%= render DS::Alert.new(variant: item.overdraft? ? :error : :warning,
+          title: t(item.overdraft? ? "pages.dashboard.overdraft.title" : "pages.dashboard.overdraft.cushion_title",
+                   account: item.account.name, date: l(item.date, format: "%-d %b"), balance: format_money(item.balance))) do %>
+      <% if item.culprit_name %>
+        <p class="text-secondary privacy-sensitive">
+          <%= t("pages.dashboard.overdraft.culprit", name: item.culprit_name, amount: format_money(item.culprit_amount)) %>
+        </p>
+      <% end %>
+      <%= link_to t("pages.dashboard.overdraft.open_forecast"), forecast_path(account_id: item.account.id), class: "text-sm underline", data: { turbo_frame: "_top" } %>
+    <% end %>
+  </div>
+<% end %>

@@ -38,6 +38,11 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      overdraft:
+        title: "%{account} will be at %{balance} on %{date}"
+        cushion_title: "%{account} will drop below your cushion on %{date} (%{balance})"
+        culprit: "That day %{name} is charged (%{amount})."
+        open_forecast: Open the forecast
       quick_actions:
         aria_label: Quick actions
         expense: Expense
