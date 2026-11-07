@@ -8209,6 +8209,116 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
         '204':
           description: token unregistered
+  "/api/v1/quick_entries":
+    post:
+      summary: Record a movement from plain words
+      tags:
+      - Quick entries
+      description: The "apunte exprés" for iOS Shortcuts and Siri. The first number
+        is the amount (Spanish "1.250,50" or plain "12.5"); a leading "+" or an income
+        word makes it income. A word naming one cash or card account picks it; the
+        rest is the name, and the latest movement with that name lends its category
+        and merchant.
+      security:
+      - apiKeyAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: movement recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - id
+                - entry_id
+                - name
+                - date
+                - amount
+                - signed_amount
+                - currency
+                - nature
+                - account
+                - message
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Transaction ID
+                  entry_id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  date:
+                    type: string
+                    format: date
+                  amount:
+                    type: string
+                    description: Formatted absolute amount
+                  signed_amount:
+                    type: string
+                    description: Positive for expenses, negative for income
+                  currency:
+                    type: string
+                  nature:
+                    type: string
+                    enum:
+                    - expense
+                    - income
+                  account:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                  category:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                  message:
+                    type: string
+                    description: One line to show or speak back
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: no amount in the text
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: The movement in plain words, e.g. "12 café" or "+1.250
+                    nómina" (required)
+                account_id:
+                  type: string
+                  format: uuid
+                  description: Account to record it in; guessed when omitted
+                date:
+                  type: string
+                  format: date
+                  description: Date of the movement; today when omitted
+              required:
+              - text
+        required: true
   "/api/v1/recurring_transactions":
     get:
       summary: List recurring transactions

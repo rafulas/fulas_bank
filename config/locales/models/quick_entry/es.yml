@@ -1,0 +1,13 @@
+---
+es:
+  quick_entries:
+    default_name:
+      expense: Gasto
+      income: Ingreso
+    errors:
+      amount_missing: Falta el importe. Prueba con algo como «12 café».
+      invalid_date: La fecha no es válida. Usa el formato AAAA-MM-DD.
+      account_missing: No hay ninguna cuenta donde apuntarlo.
+    summary:
+      expense: "Gasto apuntado: %{amount} · %{name} · %{account}"
+      income: "Ingreso apuntado: %{amount} · %{name} · %{account}"
