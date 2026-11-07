@@ -4,7 +4,7 @@ class PriceRiseDismissalsControllerTest < ActionDispatch::IntegrationTest
   setup do
     sign_in @user = users(:family_admin)
     @change = recurring_transactions(:netflix_subscription).recurring_price_changes.create!(
-      previous_amount: 13.99, new_amount: 15.99, effective_on: 3.days.ago.to_date, currency: "USD"
+      previous_amount: 13.99, new_amount: 15.99, effective_on: 3.days.ago.to_date, currency: "USD", source: "detected"
     )
   end
 
