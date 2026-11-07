@@ -36,6 +36,7 @@ class QuickEntryTest < ActiveSupport::TestCase
   end
 
   test "a word shared by several accounts does not pick any" do
+    @user.family.accounts.create!(name: "Savings Account", owner: @user, balance: 0, currency: "USD", accountable: Depository.new)
     @user.update!(default_account: @checking)
 
     entry = quick("20 account")
