@@ -1,0 +1,11 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= render "form", deadline: @deadline %>
+    <div class="pt-4">
+      <%= render DS::Button.new(text: t(".delete"), icon: "trash-2", variant: :outline_destructive, full_width: true,
+            href: deadline_path(@deadline), method: :delete, frame: :_top,
+            confirm: CustomConfirm.for_resource_deletion(t(".delete_subject"))) %>
+    </div>
+  <% end %>
+<% end %>

@@ -38,6 +38,12 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      deadlines:
+        title:
+          one: One deadline coming up
+          other: "%{count} deadlines coming up"
+        done: Done
+        all: See all deadlines
       quick_actions:
         aria_label: Quick actions
         expense: Expense
