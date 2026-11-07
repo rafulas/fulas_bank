@@ -45,6 +45,13 @@ en:
         cushion_title: "%{account} will drop below your cushion on %{date} (%{balance})"
         culprit: "That day %{name} is charged (%{amount})."
         open_forecast: Open the forecast
+      price_rises:
+        title:
+          one: A bill went up
+          other: "%{count} bills went up"
+        line: "From %{from} to %{to} since %{date}"
+        annual: "+%{amount} a year"
+        dismiss: Got it
       quick_actions:
         aria_label: Quick actions
         expense: Expense

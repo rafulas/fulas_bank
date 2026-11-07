@@ -45,6 +45,13 @@ es:
         cushion_title: "%{account} bajará de tu colchón el %{date} (%{balance})"
         culprit: "Ese día se cobra %{name} (%{amount})."
         open_forecast: Ver la previsión
+      price_rises:
+        title:
+          one: Ha subido un recibo
+          other: "Han subido %{count} recibos"
+        line: "De %{from} a %{to} desde el %{date}"
+        annual: "+%{amount} al año"
+        dismiss: Entendido
       quick_actions:
         aria_label: Acciones rápidas
         expense: Gasto
