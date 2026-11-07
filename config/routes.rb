@@ -922,6 +922,8 @@ Rails.application.routes.draw do
       resources :tags, only: [ :index, :show, :create, :update, :destroy ]
 
       resources :transactions, only: [ :index, :show, :create, :update, :destroy ]
+      # Fulas Bank: the "apunte exprés" for iOS Shortcuts and Siri.
+      resources :quick_entries, only: [ :create ]
       resources :trades, only: [ :index, :show, :create, :update, :destroy ]
       resources :holdings, only: [ :index, :show ]
       resources :transfers, only: [ :index, :show ]

@@ -1,0 +1,13 @@
+---
+en:
+  quick_entries:
+    default_name:
+      expense: Expense
+      income: Income
+    errors:
+      amount_missing: The amount is missing. Try something like "12 coffee".
+      invalid_date: The date is not valid. Use the YYYY-MM-DD format.
+      account_missing: There is no account to record it in.
+    summary:
+      expense: "Expense recorded: %{amount} · %{name} · %{account}"
+      income: "Income recorded: %{amount} · %{name} · %{account}"
