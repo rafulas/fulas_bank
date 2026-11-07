@@ -64,11 +64,11 @@ class Deadline < ApplicationRecord
     !completed? && due_on <= today + remind_days.days
   end
 
-  # Done: a repeating one moves on to its next date after today, the rest
-  # are kept as done.
+  # Done: a repeating one moves on to its next date (at least one period on,
+  # and after today), the rest are kept as done.
   def complete!(today = Date.current)
     if repeats?
-      next_due = due_on
+      next_due = due_on.advance(months: repeat_months)
       next_due = next_due.advance(months: repeat_months) while next_due <= today
       update!(due_on: next_due, completed_on: nil)
     else
