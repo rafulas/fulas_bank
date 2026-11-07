@@ -1,0 +1,54 @@
+---
+es:
+  month_closes:
+    show:
+      title: "Cierre de %{month}"
+      progress: "%{done} de %{total} pasos hechos"
+      previous: Mes anterior
+      next: Mes siguiente
+      all_done: Mes cerrado. Las cifras ya cuadran.
+      last_date: "Último dato: %{date}"
+      never: Nunca actualizado
+      actions:
+        categorize: Categorizar
+        duplicates: Revisar
+        payments: Ver el plan
+        recap: Ver el resumen
+        import: Importar
+        balance: Actualizar
+      steps:
+        statements:
+          title: Importa los extractos
+          done: Todas las cuentas tienen movimientos hasta final de mes.
+          pending:
+            one: A una cuenta le faltan los movimientos de final de mes.
+            other: "A %{count} cuentas les faltan los movimientos de final de mes."
+        balances:
+          title: Actualiza los saldos
+          done: Inversiones, bienes y préstamos están al día.
+          pending:
+            one: Una cuenta no tiene el saldo de final de mes.
+            other: "%{count} cuentas no tienen el saldo de final de mes."
+        categorize:
+          title: Categoriza los movimientos
+          done: Todo el mes está categorizado.
+          pending:
+            one: Queda un movimiento sin categoría.
+            other: "Quedan %{count} movimientos sin categoría."
+        duplicates:
+          title: Revisa los cargos repetidos
+          done: No hay cargos que parezcan duplicados.
+          pending:
+            one: Hay un cargo que parece cobrado dos veces.
+            other: "Hay %{count} cargos que parecen cobrados dos veces."
+        payments:
+          title: Repasa los recibos del mes
+          done: Todos los recurrentes del mes se han cobrado.
+          pending:
+            one: Un recurrente del mes sigue sin aparecer.
+            other: "%{count} recurrentes del mes siguen sin aparecer."
+        recap:
+          title: Lee el resumen del mes
+          pending:
+            one: Cómo te ha ido, en una pantalla.
+            other: Cómo te ha ido, en una pantalla.

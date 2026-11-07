@@ -1,0 +1,88 @@
+<%# Fulas Bank: the guided month close (see MonthClose). Each step ticks
+    itself once the data says it is done. %>
+<% close = @month_close %>
+<% recap = close.recap %>
+
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary first-letter:uppercase"><%= @month_close_title %></h1>
+    <p class="text-sm lg:text-base text-secondary">
+      <%= t(".progress", done: close.checkable_steps.count(&:done?), total: close.checkable_steps.size) %>
+    </p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <div class="flex items-center gap-1">
+    <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: month_close_path(recap.previous), aria: { label: t(".previous") }) %>
+    <% if (following = recap.next) && following.closed? %>
+      <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: month_close_path(following), aria: { label: t(".next") }) %>
+    <% end %>
+  </div>
+
+  <% if close.done? %>
+    <%= render DS::Alert.new(variant: :success, title: t(".all_done")) %>
+  <% end %>
+
+  <ol class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+    <% close.steps.each_with_index do |step, index| %>
+      <li class="<%= class_names("px-4 py-4 space-y-3", "border-t border-divider" => !index.zero?) %>">
+        <div class="flex items-start gap-3">
+          <% if !step.checkable? %>
+            <%= render DS::FilledIcon.new(variant: :inverse, icon: "book-open", size: "md", rounded: true) %>
+          <% elsif step.done? %>
+            <%= render DS::FilledIcon.new(variant: :inverse, icon: "check", size: "md", rounded: true) %>
+          <% else %>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary text-sm font-medium text-primary"><%= index + 1 %></span>
+          <% end %>
+
+          <div class="min-w-0 flex-1 space-y-1">
+            <p class="<%= class_names("text-sm font-medium", step.checkable? && step.done? ? "text-secondary line-through" : "text-primary") %>">
+              <%= t(".steps.#{step.key}.title") %>
+            </p>
+            <p class="text-xs text-secondary">
+              <% if step.checkable? && step.done? %>
+                <%= t(".steps.#{step.key}.done") %>
+              <% else %>
+                <%= t(".steps.#{step.key}.pending", count: step.count) %>
+              <% end %>
+            </p>
+          </div>
+
+          <% unless step.checkable? && step.done? %>
+            <% if step.key == :categorize %>
+              <%= render DS::Link.new(text: t(".actions.categorize"), variant: :outline, size: :sm, href: transactions_categorize_path, frame: :_top) %>
+            <% elsif step.key == :duplicates %>
+              <%= render DS::Link.new(text: t(".actions.duplicates"), variant: :outline, size: :sm, href: root_path(anchor: "duplicate-charges"), frame: :_top) %>
+            <% elsif step.key == :payments %>
+              <%= render DS::Link.new(text: t(".actions.payments"), variant: :outline, size: :sm, href: month_plan_path(month: recap.start_date.strftime("%Y-%m")), frame: :_top) %>
+            <% elsif step.key == :recap %>
+              <%= render DS::Link.new(text: t(".actions.recap"), variant: :primary, size: :sm, href: recap_path(recap), frame: :_top) %>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if step.items.any? %>
+          <ul class="ml-11 divide-y divide-divider rounded-lg border border-divider">
+            <% step.items.each do |item| %>
+              <li class="flex items-center justify-between gap-3 px-3 py-2">
+                <div class="min-w-0">
+                  <p class="truncate text-sm text-primary"><%= item.account.name %></p>
+                  <p class="text-xs text-secondary">
+                    <%= item.last_date ? t(".last_date", date: l(item.last_date, format: "%-d %b")) : t(".never") %>
+                  </p>
+                </div>
+                <% if item.href_kind == :import %>
+                  <%= render DS::Link.new(text: t(".actions.import"), icon: "download", variant: :outline, size: :sm, href: new_import_path, frame: :modal) %>
+                <% else %>
+                  <%= render DS::Link.new(text: t(".actions.balance"), icon: "refresh-ccw", variant: :outline, size: :sm,
+                        href: new_valuation_path(account_id: item.account.id), frame: :modal) %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</div>

@@ -39,6 +39,10 @@ es:
       paid: pagado
       unpaid: sin pagar
       open_plan: Ver el plan del mes
+      close_done: Mes cerrado
+      close_pending:
+        one: "Cierre del mes: queda un paso"
+        other: "Cierre del mes: quedan %{count} pasos"
       coming: La semana que viene
     report:
       label: Informe

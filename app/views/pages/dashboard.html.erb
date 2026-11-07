@@ -39,6 +39,10 @@
     </div>
   <% end %>
 
+  <% if accessible_accounts.any? && @month_close %>
+    <%= render "pages/dashboard/month_close", month_close: @month_close %>
+  <% end %>
+
   <% if accessible_accounts.any? && @fresh_recaps.any? %>
     <%= render "pages/dashboard/fresh_recaps", recaps: @fresh_recaps %>
   <% end %>

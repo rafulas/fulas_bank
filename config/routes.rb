@@ -455,6 +455,8 @@ Rails.application.routes.draw do
   resources :recaps, only: %i[index show], path: "resumenes" do
     get :report, on: :member
   end
+  # Fulas Bank: the guided month close ("Cierre de octubre").
+  resources :month_closes, only: %i[index show], path: "cierre-mes"
 
   resources :reports, only: %i[index] do
     patch :update_preferences, on: :collection
