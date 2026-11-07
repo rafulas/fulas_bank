@@ -1,0 +1,32 @@
+<%# locals: (price_rises:) %>
+<%# Fulas Bank: recurring payments whose price went up lately, and what
+    each rise costs over a year (see PriceRises). %>
+<div class="mb-6" id="price-rises">
+  <%= render DS::Alert.new(variant: :warning, title: t("pages.dashboard.price_rises.title", count: price_rises.rises.size)) do %>
+    <ul class="divide-y divide-divider">
+      <% price_rises.rises.first(5).each do |rise| %>
+        <li class="flex flex-wrap items-center justify-between gap-3 py-2">
+          <div class="min-w-0">
+            <p class="font-medium text-primary truncate"><%= rise.name %></p>
+            <p class="text-xs text-secondary privacy-sensitive">
+              <%= t("pages.dashboard.price_rises.line",
+                    from: format_money(Money.new(rise.previous, rise.currency)),
+                    to: format_money(Money.new(rise.current, rise.currency)),
+                    date: l(rise.change.effective_on, format: "%-d %b")) %>
+              <% if rise.percent %>(+<%= number_with_precision(rise.percent, precision: 1, strip_insignificant_zeros: true) %> %)<% end %>
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <% if (extra = rise.annual_extra) %>
+              <span class="font-amount font-semibold privacy-sensitive whitespace-nowrap">
+                <%= t("pages.dashboard.price_rises.annual", amount: format_money(Money.new(extra, rise.currency), precision: 0)) %>
+              </span>
+            <% end %>
+            <%= render DS::Button.new(text: t("pages.dashboard.price_rises.dismiss"), variant: :outline, size: :sm,
+                  href: price_rise_dismissals_path(change_id: rise.change.id)) %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
