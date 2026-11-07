@@ -24,6 +24,14 @@ class DeadlineTest < ActiveSupport::TestCase
     assert_not deadline.completed?
   end
 
+  test "a repeating one done ahead of its date moves one period on" do
+    deadline = create(due_on: @today + 10.days, repeat_months: 24)
+
+    deadline.complete!(@today)
+
+    assert_equal (@today + 10.days).advance(years: 2), deadline.due_on
+  end
+
   test "a one-off is kept as done and can be reopened" do
     deadline = create(due_on: @today)
 
