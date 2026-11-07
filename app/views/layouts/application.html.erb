@@ -14,6 +14,7 @@
   investments: { name: t(".nav.investments_overview"), path: investments_overview_path, icon: "line-chart", icon_custom: false, active: page_active?(investments_overview_path) },
   roadtrip: { name: t(".nav.roadtrip"), path: roadtrip_path, icon: "car", icon_custom: false, active: page_active?(roadtrip_path) },
   insurances: { name: t(".nav.insurances"), path: insurances_path, icon: "shield", icon_custom: false, active: page_active?(insurances_path) },
+  deadlines: { name: t(".nav.deadlines"), path: deadlines_path, icon: "calendar-clock", icon_custom: false, active: page_active?(deadlines_path) },
   reports: { name: t(".nav.reports"), path: reports_path, icon: "chart-bar", icon_custom: false, active: page_active?(reports_path) }
 } %>
 <% mobile_nav_items = if intro_mode
@@ -39,7 +40,7 @@ else
     { title: nil, items: [ nav[:home] ] },
     { title: t(".nav_groups.movements"), items: [ nav[:transactions], nav[:summary] ] },
     { title: t(".nav_groups.planning"), items: [ nav[:month_plan], nav[:recurring], nav[:forecast], nav[:subscriptions], bills_nav_item ].compact },
-    { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances] ] }
+    { title: t(".nav_groups.wealth"), items: [ nav[:loans], nav[:investments], nav[:roadtrip], nav[:insurances], nav[:deadlines] ] }
   ]
 end %>
 <% expanded_sidebar_class = "w-full" %>

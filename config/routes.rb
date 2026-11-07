@@ -848,6 +848,13 @@ Rails.application.routes.draw do
   end
   resource :roadtrip, only: :show, path: "roadtrip"
   # Fulas Bank: the insurance policies, tied to the vehicle or home they cover.
+  # Fulas Bank: Vencimientos y garantías (ITV, warranties, documents...).
+  resources :deadlines, except: :show, path: "vencimientos" do
+    member do
+      patch :complete
+      patch :reopen
+    end
+  end
   resources :insurances, except: :show, path: "seguros" do
     resources :documents, only: %i[show destroy], controller: "insurances/documents"
     # Fulas Bank: how each instalment was paid, by its due day (YYYY-MM-DD).

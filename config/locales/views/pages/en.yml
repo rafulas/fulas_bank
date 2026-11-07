@@ -52,6 +52,12 @@ en:
         line: "From %{from} to %{to} since %{date}"
         annual: "+%{amount} a year"
         dismiss: Got it
+      deadlines:
+        title:
+          one: One deadline coming up
+          other: "%{count} deadlines coming up"
+        done: Done
+        all: See all deadlines
       quick_actions:
         aria_label: Quick actions
         expense: Expense

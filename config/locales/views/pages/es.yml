@@ -52,6 +52,12 @@ es:
         line: "De %{from} a %{to} desde el %{date}"
         annual: "+%{amount} al año"
         dismiss: Entendido
+      deadlines:
+        title:
+          one: Un vencimiento cerca
+          other: "%{count} vencimientos cerca"
+        done: Hecho
+        all: Ver todos los vencimientos
       quick_actions:
         aria_label: Acciones rápidas
         expense: Gasto

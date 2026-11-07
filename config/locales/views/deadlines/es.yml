@@ -1,0 +1,76 @@
+---
+es:
+  deadlines:
+    kinds:
+      itv: ITV
+      warranty: Garantía
+      document: Documento
+      tax: Impuesto
+      maintenance: Revisión
+      other: Otro
+    remind:
+      one: 1 día antes
+      other: "%{count} días antes"
+    repeat:
+      "6": Cada 6 meses
+      "12": Cada año
+      "24": Cada 2 años
+      "48": Cada 4 años
+      "60": Cada 5 años
+      "120": Cada 10 años
+      months:
+        one: Cada mes
+        other: "Cada %{count} meses"
+    days:
+      today: Hoy
+      left:
+        one: Mañana
+        other: "En %{count} días"
+      overdue:
+        one: Venció ayer
+        other: "Venció hace %{count} días"
+    actions:
+      complete: Marcar como hecho
+      reopen: Volver a pendiente
+    index:
+      title: Vencimientos y garantías
+      subtitle: ITV, garantías, documentos, impuestos y renovaciones, con aviso antes de la fecha
+      new: Añadir
+      pending: Pendientes
+      renewals: Renovaciones de seguros
+      completed: Hechos
+      insurance: Seguro
+      empty_title: Nada que vigilar todavía
+      empty_description: Añade la ITV del coche, la garantía de una compra o la fecha de caducidad del DNI y te avisaremos antes.
+    new:
+      title: Nuevo vencimiento
+    edit:
+      title: Editar vencimiento
+      delete: Eliminar
+      delete_subject: este vencimiento
+    form:
+      kind: Tipo
+      due_on: Fecha
+      name: Nombre
+      name_placeholder: ITV del coche, garantía del portátil, DNI…
+      account: Cuenta o bien
+      no_account: Ninguno
+      remind_days: Avisar
+      repeat_months: Se repite
+      no_repeat: No se repite
+      repeat_hint: Si se repite, al marcarlo como hecho pasa a la siguiente fecha.
+      amount: Importe (opcional)
+      notes: Notas
+      create: Añadir
+      update: Guardar
+    create:
+      success: Vencimiento añadido
+    update:
+      success: Vencimiento guardado
+    destroy:
+      success: Vencimiento eliminado
+    complete:
+      success: Marcado como hecho
+      renewed: "Hecho. El siguiente es el %{date}."
+    reopen:
+      success: Vuelve a estar pendiente

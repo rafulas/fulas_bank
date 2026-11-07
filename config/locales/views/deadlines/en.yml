@@ -1,0 +1,76 @@
+---
+en:
+  deadlines:
+    kinds:
+      itv: Vehicle inspection
+      warranty: Warranty
+      document: Document
+      tax: Tax
+      maintenance: Check-up
+      other: Other
+    remind:
+      one: 1 day before
+      other: "%{count} days before"
+    repeat:
+      "6": Every 6 months
+      "12": Every year
+      "24": Every 2 years
+      "48": Every 4 years
+      "60": Every 5 years
+      "120": Every 10 years
+      months:
+        one: Every month
+        other: "Every %{count} months"
+    days:
+      today: Today
+      left:
+        one: Tomorrow
+        other: "In %{count} days"
+      overdue:
+        one: Due yesterday
+        other: "Due %{count} days ago"
+    actions:
+      complete: Mark as done
+      reopen: Back to pending
+    index:
+      title: Deadlines and warranties
+      subtitle: Inspections, warranties, documents, taxes and renewals, with a reminder before the date
+      new: Add
+      pending: Pending
+      renewals: Insurance renewals
+      completed: Done
+      insurance: Insurance
+      empty_title: Nothing to keep an eye on yet
+      empty_description: Add your car's inspection, a purchase's warranty or your ID's expiry date and you'll be reminded beforehand.
+    new:
+      title: New deadline
+    edit:
+      title: Edit deadline
+      delete: Delete
+      delete_subject: this deadline
+    form:
+      kind: Type
+      due_on: Date
+      name: Name
+      name_placeholder: Car inspection, laptop warranty, ID card…
+      account: Account or asset
+      no_account: None
+      remind_days: Remind me
+      repeat_months: Repeats
+      no_repeat: Does not repeat
+      repeat_hint: If it repeats, marking it done moves it to its next date.
+      amount: Amount (optional)
+      notes: Notes
+      create: Add
+      update: Save
+    create:
+      success: Deadline added
+    update:
+      success: Deadline saved
+    destroy:
+      success: Deadline deleted
+    complete:
+      success: Marked as done
+      renewed: "Done. The next one is on %{date}."
+    reopen:
+      success: Pending again

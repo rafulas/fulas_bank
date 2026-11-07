@@ -21,6 +21,7 @@ class Account < ApplicationRecord
   has_many :entries, dependent: :destroy
   has_many :card_financings, dependent: :destroy # Fulas Bank: purchases paid in instalments
   has_many :insurances, dependent: :nullify # Fulas Bank: the policies that insure this vehicle or property
+  has_many :deadlines, dependent: :nullify # Fulas Bank: its ITV, warranty...
   has_many :transactions, through: :entries, source: :entryable, source_type: "Transaction"
   has_many :valuations, through: :entries, source: :entryable, source_type: "Valuation"
   has_many :trades, through: :entries, source: :entryable, source_type: "Trade"

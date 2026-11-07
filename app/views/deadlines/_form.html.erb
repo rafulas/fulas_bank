@@ -1,0 +1,27 @@
+<%# locals: (deadline:) %>
+<%# Fulas Bank: the form of a deadline (Vencimientos y garantías). %>
+<%= styled_form_with model: deadline, url: (deadline.persisted? ? deadline_path(deadline) : deadlines_path), class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if deadline.errors.any? %>
+    <%= render DS::Alert.new(message: deadline.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.select :kind, Deadline::KINDS.map { |kind| [ t("deadlines.kinds.#{kind}"), kind ] }, { label: t(".kind") }, required: true %>
+      <%= form.date_field :due_on, label: t(".due_on"), required: true %>
+    </div>
+    <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
+    <%= form.select :account_id, deadline_accounts.map { |account| [ account.name, account.id ] },
+                    { label: t(".account"), include_blank: t(".no_account") } %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.select :remind_days, Deadline::REMIND_DAYS.map { |days| [ t("deadlines.remind", count: days), days ] }, { label: t(".remind_days") } %>
+      <%= form.select :repeat_months, Deadline::REPEAT_MONTHS.map { |months| [ t("deadlines.repeat.#{months}"), months ] },
+                      { label: t(".repeat_months"), include_blank: t(".no_repeat") } %>
+    </div>
+    <p class="text-xs text-secondary"><%= t(".repeat_hint") %></p>
+    <%= form.number_field :amount, label: t(".amount"), step: "0.01", min: 0 %>
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+  </div>
+
+  <%= form.submit t(deadline.persisted? ? ".update" : ".create") %>
+<% end %>
