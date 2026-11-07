@@ -87,6 +87,8 @@ class PagesController < ApplicationController
     @overdraft_warning = OverdraftWarning.new(Current.family, user: Current.user)
     # Fulas Bank: recurring payments whose price went up lately.
     @price_rises = PriceRises.new(Current.family, user: Current.user)
+    # Fulas Bank: ITV, warranties, documents and insurance renewals coming up.
+    @upcoming_deadlines = Deadline::Upcoming.new(Current.family)
     # Fulas Bank: the badge on the "Categorizar" quick action.
     @uncategorized_count = cached_uncategorized_count
 
