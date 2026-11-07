@@ -16,20 +16,27 @@
 #
 # `generate!` replaces any family whose user has the example email, and
 # leaves every other family alone: a trial copy may also hold your own data.
+#
+# It only runs in development and test, unless asked with
+# `allow_production: true`: the server (servidor/), to show the app to
+# someone. There the example users get a password of your own instead of the
+# public PASSWORD (rake demo_data:fulas with FULAS_DEMO_EN_SERVIDOR=1 and
+# FULAS_DEMO_PASSWORD), and `remove!` takes the family away again.
 # Sure's American example family (Demo::Generator) stays as it was, as the
 # job behind Settings' «load sample data» still uses it.
 class Demo::FulasGenerator
   SAFE_ENVIRONMENTS = %w[development test].freeze
   PASSWORD = "Password1!".freeze
 
-  def initialize(seed: 42)
+  def initialize(seed: 42, password: PASSWORD)
+    @password = password
     @rng = Random.new(seed.to_i)
     @today = Date.current
     @start = (@today << 12).beginning_of_month
   end
 
-  def generate!(email: Rails.application.config_for(:demo).fetch(:email))
-    unless SAFE_ENVIRONMENTS.include?(Rails.env)
+  def generate!(email: Rails.application.config_for(:demo).fetch(:email), allow_production: false)
+    unless SAFE_ENVIRONMENTS.include?(Rails.env) || allow_production
       raise SecurityError, "Demo::FulasGenerator only runs in #{SAFE_ENVIRONMENTS.join(', ')}"
     end
 
@@ -51,8 +58,13 @@ class Demo::FulasGenerator
     @family
   end
 
+  # Takes the example family away (and only it). Returns how many families.
+  def self.remove!(email: Rails.application.config_for(:demo).fetch(:email))
+    new.send(:remove_previous_family!, email)
+  end
+
   private
-    attr_reader :family, :today, :start
+    attr_reader :family, :today, :start, :password
 
     # ---------------------------------------------------------------- family
 
@@ -61,12 +73,15 @@ class Demo::FulasGenerator
     # family from being destroyed, as in Demo::DataCleaner.
     def remove_previous_family!(email)
       users = User.where(email: [ email, "partner_#{email}" ])
-      Family.where(id: users.select(:family_id)).find_each do |old|
+      families = Family.where(id: users.select(:family_id))
+      count = families.count
+      families.find_each do |old|
         old_user_ids = old.users.pluck(:id)
         ApiKey.where(user_id: old_user_ids, display_key: ApiKey::DEMO_MONITORING_KEY).delete_all
         Subscription.where(family_id: old.id).update_all(status: "canceled")
         old.destroy!
       end
+      count
     end
 
     def create_family!(email)
@@ -82,9 +97,9 @@ class Demo::FulasGenerator
       )
 
       new_family.users.create!(email: email, first_name: "Lucía", last_name: "García", role: "admin",
-                               password: PASSWORD, onboarded_at: Time.current)
+                               password: password, onboarded_at: Time.current)
       new_family.users.create!(email: "partner_#{email}", first_name: "Javier", last_name: "Martín", role: "member",
-                               password: PASSWORD, onboarded_at: Time.current)
+                               password: password, onboarded_at: Time.current)
       new_family
     end
 
