@@ -57,6 +57,18 @@
     <% end %>
   </section>
 
+  <%# ---- A closed month: its guided close ---- %>
+  <% if recap.month? && recap.closed? %>
+    <% month_close = MonthClose.new(recap) %>
+    <%= link_to month_close_path(month_close), class: "flex items-center gap-3 rounded-xl bg-container shadow-border-xs px-4 py-3 hover:bg-container-hover" do %>
+      <%= icon(month_close.done? ? "circle-check" : "list-checks", size: "sm") %>
+      <span class="min-w-0 flex-1 text-sm text-primary">
+        <%= month_close.done? ? t(".close_done") : t(".close_pending", count: month_close.pending_steps.size) %>
+      </span>
+      <%= icon "chevron-right", size: "sm" %>
+    <% end %>
+  <% end %>
+
   <%# ---- Written report, loaded apart: it may wait on the LLM ---- %>
   <%= turbo_frame_tag "recap_report", src: report_recap_path(recap), loading: :lazy do %>
     <section class="rounded-xl bg-container shadow-border-xs p-4 space-y-3" aria-busy="true">

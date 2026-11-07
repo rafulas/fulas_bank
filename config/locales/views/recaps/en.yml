@@ -39,6 +39,10 @@ en:
       paid: paid
       unpaid: unpaid
       open_plan: Open the month plan
+      close_done: Month closed
+      close_pending:
+        one: "Month close: one step left"
+        other: "Month close: %{count} steps left"
       coming: Next week
     report:
       label: Report

@@ -38,6 +38,11 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      month_close:
+        title: "%{month} close"
+        subtitle:
+          one: One step left
+          other: "%{count} steps left"
       fresh_recaps:
         subtitle: "%{spent} spent · result %{net}"
       overdraft:

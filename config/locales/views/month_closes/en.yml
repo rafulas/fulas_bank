@@ -1,0 +1,54 @@
+---
+en:
+  month_closes:
+    show:
+      title: "%{month} close"
+      progress: "%{done} of %{total} steps done"
+      previous: Previous month
+      next: Next month
+      all_done: Month closed. The numbers add up.
+      last_date: "Last data: %{date}"
+      never: Never updated
+      actions:
+        categorize: Categorize
+        duplicates: Review
+        payments: Open the plan
+        recap: Open the recap
+        import: Import
+        balance: Update
+      steps:
+        statements:
+          title: Import your statements
+          done: Every account has movements up to the end of the month.
+          pending:
+            one: One account is missing its end-of-month movements.
+            other: "%{count} accounts are missing their end-of-month movements."
+        balances:
+          title: Update your balances
+          done: Investments, assets and loans are up to date.
+          pending:
+            one: One account has no end-of-month balance.
+            other: "%{count} accounts have no end-of-month balance."
+        categorize:
+          title: Categorize your movements
+          done: The whole month is categorized.
+          pending:
+            one: One movement has no category.
+            other: "%{count} movements have no category."
+        duplicates:
+          title: Check repeated charges
+          done: No charge looks duplicated.
+          pending:
+            one: One charge looks taken twice.
+            other: "%{count} charges look taken twice."
+        payments:
+          title: Go over the month's bills
+          done: Every recurring payment of the month went through.
+          pending:
+            one: One recurring payment of the month has not shown up.
+            other: "%{count} recurring payments of the month have not shown up."
+        recap:
+          title: Read the month's recap
+          pending:
+            one: How it went, on one screen.
+            other: How it went, on one screen.
