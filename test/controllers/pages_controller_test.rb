@@ -27,6 +27,16 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "dashboard points at the recaps that have just closed" do
+    travel_to Date.new(2026, 11, 3) do
+      get root_path
+
+      assert_response :ok
+      assert_select "a[href='#{recap_path(Recap.latest(@family, user: @user, kind: "month"))}']"
+      assert_select "a[href='#{recap_path(Recap.latest(@family, user: @user, kind: "week"))}']"
+    end
+  end
+
   test "dashboard renders the net worth chart as drag-selectable, opting it out of card drag-and-drop" do
     get root_path
 

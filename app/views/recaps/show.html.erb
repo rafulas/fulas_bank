@@ -1,0 +1,205 @@
+<%# Fulas Bank: the recap of a week or a month, after Bilance's
+    "Resumen de octubre" (see Recap). %>
+<% recap = @recap %>
+<% analysis = recap.analysis %>
+<% currency = recap.currency %>
+
+<% content_for :page_header do %>
+  <div class="mb-4"><%= render "shared/analysis_tabs" %></div>
+  <div class="space-y-1 mb-4">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= recap.title %></h1>
+    <p class="text-sm lg:text-base text-secondary">
+      <%= t(".range", start: l(recap.start_date, format: :long), end: l(recap.end_date, format: :long)) %>
+      <% unless recap.closed? %>· <%= t(".running") %><% end %>
+    </p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-6 pb-6">
+  <%# ---- Navigation ---- %>
+  <div class="flex items-center justify-between gap-2">
+    <div class="flex items-center gap-1">
+      <%= render DS::Link.new(icon: "chevron-left", variant: :icon, href: recap_path(recap.previous), aria: { label: t(".previous") }) %>
+      <% if (following = recap.next) %>
+        <%= render DS::Link.new(icon: "chevron-right", variant: :icon, href: recap_path(following), aria: { label: t(".next") }) %>
+      <% end %>
+    </div>
+    <%= render DS::SegmentedControl.new(aria_label: t(".kind_aria")) do |control| %>
+      <% Recap::KINDS.each do |kind| %>
+        <% control.with_segment(t("recaps.kinds.#{kind}"), href: recap_path(kind == recap.kind ? recap : recap.switch_kind), active: kind == recap.kind) %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%= render "category_summaries/rings", analysis: analysis %>
+
+  <%# ---- Totals ---- %>
+  <section class="rounded-xl bg-container shadow-border-xs">
+    <div class="flex items-center justify-between gap-3 px-4 py-3">
+      <span class="text-sm font-medium text-primary"><%= t(".total", period: recap.period_name) %></span>
+      <span class="<%= class_names("font-amount text-base font-semibold privacy-sensitive whitespace-nowrap", recap.net.negative? ? "text-destructive" : "text-success") %>">
+        <%= format_money(recap.net, precision: 0) %>
+      </span>
+    </div>
+    <div class="grid grid-cols-3 border-t border-divider text-center">
+      <%= render "recaps/figure", value: format_money(recap.spent, precision: 0), label: t(".spent"), change: recap.spent_change, good_when: :down %>
+      <%= render "recaps/figure", value: format_money(recap.income, precision: 0), label: t(".income"), change: recap.income_change, good_when: :up %>
+      <%= render "recaps/figure", value: "#{recap.savings_rate} %", label: t(".savings_rate") %>
+    </div>
+    <% if (plan = recap.month_plan) && plan.budget_total.amount.positive? %>
+      <% over = plan.budget_spent.amount > plan.budget_total.amount %>
+      <div class="flex items-center justify-between gap-3 px-4 py-3 border-t border-divider text-sm">
+        <span class="text-secondary"><%= t(over ? ".over_budget" : ".under_budget") %></span>
+        <span class="<%= class_names("font-amount font-semibold privacy-sensitive whitespace-nowrap", over ? "text-destructive" : "text-success") %>">
+          <%= format_money(Money.new((plan.budget_total.amount - plan.budget_spent.amount).abs, currency), precision: 0) %>
+        </span>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ---- Written report, loaded apart: it may wait on the LLM ---- %>
+  <%= turbo_frame_tag "recap_report", src: report_recap_path(recap), loading: :lazy do %>
+    <section class="rounded-xl bg-container shadow-border-xs p-4 space-y-3" aria-busy="true">
+      <p class="text-xs font-medium uppercase text-secondary"><%= t("recaps.report.label") %></p>
+      <div class="flex items-center gap-2 text-sm text-secondary">
+        <%= icon "loader-circle", size: "sm", class: "animate-spin" %>
+        <span><%= t(".report_loading") %></span>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Total balance over the period ---- %>
+  <% series = recap.balance_series %>
+  <% if series.any? %>
+    <section class="space-y-2">
+      <p class="px-1 text-xs text-secondary"><%= t(".balance", period: recap.period_name) %></p>
+      <div class="rounded-xl bg-container shadow-border-xs p-2">
+        <div class="w-full h-40 privacy-sensitive"
+             data-controller="time-series-chart"
+             data-time-series-chart-data-value="<%= series.to_json %>"></div>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Categories ---- %>
+  <% rows = recap.summary.visible_rows %>
+  <% if rows.any? %>
+    <section class="space-y-2">
+      <p class="px-1 text-xs text-secondary"><%= t(".categories") %></p>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% rows.each_with_index do |row, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= render "category_summaries/row", row: row, href: category_summary_root_path(row, recap.period), summary: recap.summary %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Against the previous period ---- %>
+  <% if recap.category_changes.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".changes", previous: recap.previous_period_name) %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% recap.category_changes.each_with_index do |change, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <div class="flex items-center gap-3 px-4 py-3">
+            <%= render DS::ColorLabel.new(label: change.name, color: change.color, mark: :dot, show_label: false) %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-primary"><%= change.name %></p>
+              <p class="text-xs text-secondary privacy-sensitive">
+                <%= t(".before", amount: format_money(Money.new(change.previous, currency), precision: 0), previous: recap.previous_period_name) %>
+              </p>
+            </div>
+            <span class="<%= class_names("flex items-center gap-1 font-amount text-sm font-semibold privacy-sensitive whitespace-nowrap", change.up? ? "text-destructive" : "text-success") %>">
+              <%= icon(change.up? ? "trending-up" : "trending-down", size: "sm", color: "current") %>
+              <%= change.up? ? "+" : "−" %><%= format_money(Money.new(change.delta.abs, currency), precision: 0) %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Biggest expenses ---- %>
+  <% if recap.biggest_expenses.any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".biggest_expenses") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% recap.biggest_expenses.each_with_index do |entry, index| %>
+          <% category = entry.entryable.category %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= link_to entry_path(entry), data: { turbo_frame: "drawer", turbo_prefetch: false }, class: "flex items-center gap-3 px-4 py-3 hover:bg-container-hover" do %>
+            <%= render DS::FilledIcon.new(variant: :solid, icon: category&.lucide_icon || "help-circle",
+                                          hex_color: category&.color || Category::UNCATEGORIZED_COLOR, size: "md", rounded: true) %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-primary"><%= entry.name %></p>
+              <p class="truncate text-xs text-secondary">
+                <%= l(entry.date, format: "%a %-d %b") %><% if category %> · <%= category.display_name %><% end %>
+              </p>
+            </div>
+            <span class="font-amount text-sm font-semibold text-primary privacy-sensitive whitespace-nowrap">−<%= format_money(entry.amount_money.abs) %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Month: budgets and recurring payments ---- %>
+  <% if (plan = recap.month_plan) %>
+    <% if plan.budget_rows.any? %>
+      <section class="space-y-2">
+        <h2 class="text-lg font-medium text-primary"><%= t(".budgets") %></h2>
+        <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+          <% plan.budget_rows.each_with_index do |row, index| %>
+            <%= link_to month_plan_budget_group_path(row.group, month: plan.month.strftime("%Y-%m")),
+                  class: class_names("block px-4 py-3 hover:bg-container-hover", "border-t border-divider" => !index.zero?) do %>
+              <%= render "month_plans/budget_row", plan: plan, row: row, currency: currency %>
+            <% end %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <% if plan.payments.any? %>
+      <section class="space-y-2">
+        <h2 class="text-lg font-medium text-primary"><%= t(".recurring") %></h2>
+        <div class="rounded-xl bg-container shadow-border-xs">
+          <div class="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p class="text-sm text-primary privacy-sensitive font-amount font-semibold whitespace-nowrap"><%= format_money(plan.paid_total) %></p>
+              <p class="text-xs text-secondary"><%= t(".paid") %></p>
+            </div>
+            <%= render DS::ProgressRing.new(percent: plan.paid_share, size: 40, stroke_width: 4, tone: :success) %>
+            <div class="text-right">
+              <p class="text-sm text-primary privacy-sensitive font-amount font-semibold whitespace-nowrap"><%= format_money(plan.pending_total) %></p>
+              <p class="text-xs text-secondary"><%= t(".unpaid") %></p>
+            </div>
+          </div>
+          <%= link_to month_plan_path(month: plan.month.strftime("%Y-%m")),
+                class: "flex items-center gap-3 px-4 py-3 border-t border-divider text-sm text-primary hover:bg-container-hover" do %>
+            <%= icon "calendar-days", size: "sm" %>
+            <span><%= t(".open_plan") %></span>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  <% end %>
+
+  <%# ---- Week just closed: what comes next ---- %>
+  <% if (coming = recap.coming_payments).any? %>
+    <section class="space-y-2">
+      <h2 class="text-lg font-medium text-primary"><%= t(".coming") %></h2>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% coming.each_with_index do |payment, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <%= render "month_plans/payment_line", payment: payment, currency: currency %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ---- Tags, calendar, merchants, months and daily average, as in the Resumen ---- %>
+  <% if recap.any_activity? %>
+    <%= render "category_summaries/analysis", analysis: analysis, period: recap.period %>
+  <% end %>
+</div>

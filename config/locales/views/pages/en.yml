@@ -38,6 +38,8 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      fresh_recaps:
+        subtitle: "%{spent} spent · result %{net}"
       quick_actions:
         aria_label: Quick actions
         expense: Expense

@@ -36,6 +36,7 @@ en:
     analysis_tabs:
       aria: Summary or compare
       month: Month
+      recaps: Recaps
       compare: Compare
     preview: Preview
     dot_separator: "·"

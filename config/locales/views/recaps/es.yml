@@ -1,0 +1,58 @@
+---
+es:
+  recaps:
+    title:
+      week: "Resumen de la semana del %{start} al %{end}"
+      month: "Resumen de %{month}"
+    period_name:
+      week: la semana
+      previous_week: la semana anterior
+    kinds:
+      week: Semana
+      month: Mes
+    index:
+      title: Resúmenes
+      subtitle: Cómo te ha ido cada semana y cada mes
+      months: Meses
+      weeks: Semanas
+      running: En curso
+    show:
+      range: "Del %{start} al %{end}"
+      running: en curso
+      previous: Anterior
+      next: Siguiente
+      kind_aria: Semana o mes
+      total: "Total de %{period}"
+      spent: gastado
+      income: ingresado
+      savings_rate: tasa de ahorro
+      over_budget: Por encima del presupuesto
+      under_budget: Por debajo del presupuesto
+      report_loading: Preparando el informe…
+      balance: "Saldo total en %{period}"
+      categories: Categoría
+      changes: "Frente a %{previous}"
+      before: "%{amount} en %{previous}"
+      biggest_expenses: Mayores gastos
+      budgets: Presupuestos
+      recurring: Recurrentes
+      paid: pagado
+      unpaid: sin pagar
+      open_plan: Ver el plan del mes
+      coming: La semana que viene
+    report:
+      label: Informe
+      ai: Escrito con IA
+      headline:
+        quiet: Un periodo tranquilo
+        negative: Has gastado más de lo que entró
+        spent_less: Un respiro para tus finanzas
+        positive: Las cuentas salen
+      no_activity: "No hay movimientos en %{period}."
+      totals: "En %{period} has gastado %{spent} e ingresado %{income}, así que el resultado es %{net}."
+      spent_down: "Has gastado un %{change} menos que en %{previous_period} (%{previous})."
+      spent_up: "Has gastado un %{change} más que en %{previous_period} (%{previous})."
+      top_category: "Donde más se ha ido es en %{name}, con %{amount}."
+      biggest_expense: "El gasto más grande fue %{name}, de %{amount}."
+      budget: "Del presupuesto de %{budgeted} has gastado %{spent}."
+      savings_rate: "Tu tasa de ahorro ha sido del %{rate}."

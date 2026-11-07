@@ -1,0 +1,14 @@
+<%# locals: (value:, label:, change: nil, good_when: :up) %>
+<%# Fulas Bank: one figure of a recap's totals, with how it moved against
+    the period before (green when it moved the good way). %>
+<div class="px-2 py-3 space-y-0.5 border-l border-divider first:border-l-0">
+  <p class="font-amount text-sm font-semibold text-primary privacy-sensitive whitespace-nowrap"><%= value %></p>
+  <p class="text-xs text-secondary"><%= label %></p>
+  <% if change %>
+    <% rounded = change.round %>
+    <% good = good_when == :up ? rounded >= 0 : rounded <= 0 %>
+    <p class="<%= class_names("text-xs font-medium privacy-sensitive", good ? "text-success" : "text-destructive") %>">
+      <%= rounded.negative? ? "−" : "+" %><%= rounded.abs %> %
+    </p>
+  <% end %>
+</div>
