@@ -40,6 +40,6 @@ class PriceRisesTest < ActiveSupport::TestCase
     end
 
     def record(previous:, new:, on:, series: @series)
-      series.recurring_price_changes.create!(previous_amount: previous, new_amount: new, effective_on: on, currency: "USD")
+      series.recurring_price_changes.create!(previous_amount: previous, new_amount: new, effective_on: on, currency: "USD", source: "detected")
     end
 end
