@@ -59,11 +59,17 @@ class DeadlinesController < ApplicationController
       @deadline = Current.family.deadlines.find(params[:id])
     end
 
+    # The account comes apart from the permitted attributes: it is looked
+    # up among the user's own, never assigned from the raw id.
     def deadline_params
-      permitted = params.require(:deadline).permit(:name, :kind, :due_on, :remind_days, :repeat_months, :amount, :notes, :account_id)
-      permitted[:account_id] = nil unless deadline_accounts.any? { |account| account.id == permitted[:account_id].to_s }
+      permitted = params.require(:deadline).permit(:name, :kind, :due_on, :remind_days, :repeat_months, :amount, :notes)
       permitted[:repeat_months] = permitted[:repeat_months].presence
+      permitted[:account] = selected_account if params[:deadline].key?(:account_id)
       permitted
+    end
+
+    def selected_account
+      deadline_accounts.find { |account| account.id == params.dig(:deadline, :account_id).to_s }
     end
 
     # The accounts a deadline can be tied to: the user's visible ones.
