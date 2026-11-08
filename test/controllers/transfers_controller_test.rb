@@ -600,6 +600,18 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Traspaso redondeo tarjeta", transfer.inflow_transaction.entry.reload.name
   end
 
+  test "Fulas Bank: a transfer confirmed from the list still names both accounts" do
+    transfer = transfers(:one)
+    from = transfer.outflow_transaction.entry.account
+    to = transfer.inflow_transaction.entry.account
+
+    patch transfer_url(transfer), params: { transfer: { status: "confirmed" } }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_includes response.body, "#{CGI.escapeHTML(from.name)} → #{CGI.escapeHTML(to.name)}"
+    assert_includes response.body, "#{CGI.escapeHTML(to.name)} ← #{CGI.escapeHTML(from.name)}"
+  end
+
   test "can update transfer tags on both sides" do
     transfer = transfers(:one)
     tag = tags(:one)
