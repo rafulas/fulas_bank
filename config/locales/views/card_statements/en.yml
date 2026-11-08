@@ -29,6 +29,14 @@ en:
         installment_amount: Each instalment
         fee_amount: Fee (charged the first month)
         hint: "Use the figures your bank's app shows. The purchase leaves its month's statement; that payment day the fee is charged, and each following one an instalment."
+        dates: Dates (optional)
+        fee_on: Fee day
+        first_installment_on: First instalment day
+        dates_hint: "Only if the bank does not follow the card's charge day. The next instalments fall on that day of each month. Left empty: the fee on the purchase's statement charge day, and each instalment on the next ones."
+        payoff: Early payoff
+        paid_off_on: Payoff day
+        payoff_amount: Amount paid
+        payoff_hint: "That day the amount is charged and the next instalments are not. Left empty, the instalments still due from that day are used. With interest the bank usually charges less: type what it says. Clear the day to undo it."
         submit: Save
         delete: Remove the financing
         resource: financing
@@ -115,6 +123,8 @@ en:
         concept: Description
         fee: Fee
         installment: "Instalment %{number} of %{count}"
+        payoff: Early payoff
+        paid_off: "Paid off early on %{date}: what was left is paid that day and there are no more instalments."
         amount: Amount
         bank: At the bank
         in_bank: "Charged on %{date} (%{amount})"

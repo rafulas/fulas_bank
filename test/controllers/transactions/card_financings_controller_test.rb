@@ -31,6 +31,24 @@ class Transactions::CardFinancingsControllerTest < ActionDispatch::IntegrationTe
     assert_match I18n.t("credit_cards.tabs.statement.financed_title"), response.body
   end
 
+  test "Fulas Bank: a financing can be paid off early from its form" do
+    financing = CardFinancing.from_entry(@purchase)
+    financing.update!(installments_count: 4, installment_amount: 90, fee_amount: 2)
+
+    get edit_transaction_card_financing_url(@purchase)
+    assert_response :success
+    assert_select "input[name='card_financing[paid_off_on]']"
+    assert_select "input[name='card_financing[first_installment_on]']"
+
+    payoff_day = financing.charges.find { |charge| charge.kind == :installment && charge.number == 3 }.date
+    patch transaction_card_financing_url(@purchase), params: { card_financing: { paid_off_on: payoff_day.iso8601, payoff_amount: "175" } }
+
+    financing.reload
+    assert_equal payoff_day, financing.paid_off_on
+    assert_equal BigDecimal("175"), financing.payoff_amount
+    assert_equal [ :fee, :installment, :installment, :payoff ], financing.charges.map(&:kind)
+  end
+
   test "moves a purchase to the next statement" do
     patch transaction_card_statement_url(@purchase), params: { card_statement: { next_card_statement: "1" } }
 

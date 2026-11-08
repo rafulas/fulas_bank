@@ -29,6 +29,14 @@ es:
         installment_amount: Importe de cada cuota
         fee_amount: Comisión (se cobra el primer mes)
         hint: "Pon lo que te muestra la app del banco al financiar. El gasto sale del extracto de su mes; ese día de cobro se cobra la comisión y, en los siguientes, cada cuota."
+        dates: Fechas (opcional)
+        fee_on: Día de la comisión
+        first_installment_on: Día de la primera cuota
+        dates_hint: "Solo si el banco no sigue el día de cobro de la tarjeta. Las cuotas siguientes caen ese mismo día de cada mes. Vacío: la comisión, el día de cobro del extracto del gasto, y cada cuota, en los siguientes."
+        payoff: Cancelación anticipada
+        paid_off_on: Día en que la cancelas
+        payoff_amount: Importe que pagas
+        payoff_hint: "Ese día se cobra el importe y dejan de cobrarse las cuotas siguientes. Si dejas el importe vacío, se usa lo que quedaba de cuotas desde ese día. Con intereses, el banco suele cobrar menos: pon lo que te diga. Borra el día para deshacerla."
         submit: Guardar
         delete: Quitar la financiación
         resource: financiación
@@ -115,6 +123,8 @@ es:
         concept: Concepto
         fee: Comisión
         installment: "Cuota %{number} de %{count}"
+        payoff: Cancelación anticipada
+        paid_off: "Cancelada anticipadamente el %{date}: ese día se paga lo pendiente y ya no hay más cuotas."
         amount: Importe
         bank: En el banco
         in_bank: "Cobrado el %{date} (%{amount})"

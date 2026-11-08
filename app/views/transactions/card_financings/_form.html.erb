@@ -19,6 +19,32 @@
     <p class="text-xs text-secondary"><%= t(".hint") %></p>
   </div>
 
+  <%# Fulas Bank: own days for the fee and the first instalment, when the bank
+      does not follow the card's charge day. Open when already given. %>
+  <%= render DS::Disclosure.new(title: t(".dates"), open: financing.fee_on.present? || financing.first_installment_on.present?, align: "left") do %>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-2">
+        <%= form.date_field :fee_on, label: t(".fee_on") %>
+        <%= form.date_field :first_installment_on, label: t(".first_installment_on") %>
+      </div>
+      <p class="text-xs text-secondary"><%= t(".dates_hint") %></p>
+    </div>
+  <% end %>
+
+  <%# Fulas Bank: paying off early, once financed. %>
+  <% if financing.persisted? %>
+    <%= render DS::Disclosure.new(title: t(".payoff"), open: financing.paid_off_on.present?, align: "left") do %>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <%= form.date_field :paid_off_on, label: t(".paid_off_on") %>
+          <%= form.number_field :payoff_amount, label: t(".payoff_amount"), step: "0.01", min: 0,
+                placeholder: (financing.paid_off_on ? financing.due_on(financing.paid_off_on).round(2) : nil) %>
+        </div>
+        <p class="text-xs text-secondary"><%= t(".payoff_hint") %></p>
+      </div>
+    <% end %>
+  <% end %>
+
   <%= form.submit t(".submit") %>
 <% end %>
 

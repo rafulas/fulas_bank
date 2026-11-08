@@ -9,6 +9,15 @@
 # of October, the statement without it plus the fee; from the 5th of
 # November to the 5th of July, one instalment each.
 #
+# When the bank does not follow the card's charge day, the fee and the first
+# instalment can be given their own day (`fee_on`, `first_installment_on`);
+# the instalments then fall on that day of each month.
+#
+# Paid off early (`paid_off_on`): that day the bank charges what was left
+# (`payoff_amount`, or the instalments still due if not given) and the
+# instalments after it are not charged. In the example, paying off the 5th of
+# March after February's instalment: 50 € that day and no April instalment.
+#
 # The purchase still counts as spending in its month. The instalments repay
 # the card (a transfer from the account to the card) and only the fee and
 # the interest in the instalments are a cost.
@@ -25,7 +34,10 @@ class CardFinancing < ApplicationRecord
   validates :financed_amount, :installment_amount, numericality: { greater_than: 0 }
   validates :fee_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :installments_count, numericality: { only_integer: true, in: 1..120 }
+  validates :payoff_amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :fee_on, :first_installment_on, :paid_off_on, comparison: { greater_than_or_equal_to: :purchase_date }, allow_nil: true
   validate :account_is_a_credit_card
+  before_save -> { self.payoff_amount = nil }, unless: :paid_off_on?
 
   # One charge in the payment account: the fee or an instalment.
   Charge = Data.define(:date, :amount, :kind, :number)
@@ -40,17 +52,39 @@ class CardFinancing < ApplicationRecord
     cycle.statement_month_for(purchase_date, next_statement: entry&.entryable&.try(:next_card_statement))
   end
 
-  # The fee, then each instalment, with the day it is charged.
+  # The fee, then each instalment, with the day it is charged. Paid off
+  # early, the instalments from that day on give way to one :payoff charge.
   def charges(cycle = cycle_for)
-    return [] unless cycle.configured?
+    planned = planned_charges(cycle)
+    return planned unless paid_off_on
 
-    month = statement_month(cycle)
+    kept = planned.select { |charge| charge.date < paid_off_on }
+    due = planned.select { |charge| charge.kind == :installment && charge.date >= paid_off_on }
+    amount = payoff_amount.nil? ? due.sum(&:amount) : payoff_amount.to_d
+    number = due.first&.number || installments_count
+    kept << Charge.new(date: paid_off_on, amount: amount, kind: :payoff, number: number) if amount.positive?
+    kept
+  end
+
+  # The charges as financed, before any early payoff.
+  def planned_charges(cycle = cycle_for)
+    return [] unless cycle.configured? || first_installment_on
+
+    month = cycle.configured? ? statement_month(cycle) : nil
     list = []
-    list << Charge.new(date: cycle.charge_date(month), amount: fee_amount.to_d, kind: :fee, number: 0) if fee_amount.to_d.positive?
+    fee_date = fee_on || (month ? cycle.charge_date(month) : first_installment_on)
+    list << Charge.new(date: fee_date, amount: fee_amount.to_d, kind: :fee, number: 0) if fee_amount.to_d.positive?
     installments_count.times do |index|
-      list << Charge.new(date: cycle.charge_date(month >> (index + 1)), amount: installment_amount.to_d, kind: :installment, number: index + 1)
+      date = first_installment_on ? first_installment_on >> index : cycle.charge_date(month >> (index + 1))
+      list << Charge.new(date: date, amount: installment_amount.to_d, kind: :installment, number: index + 1)
     end
     list
+  end
+
+  # What was still due on `date` (the instalments from that day on), to
+  # suggest it when paying off early.
+  def due_on(date, cycle: cycle_for)
+    planned_charges(cycle).select { |charge| charge.kind == :installment && charge.date >= date }.sum(&:amount)
   end
 
   # Fulas Bank: each charge with whether its day has passed and the bank's
@@ -66,13 +100,18 @@ class CardFinancing < ApplicationRecord
     end
   end
 
-  def total_to_pay
+  # What is paid in all: the fee and the instalments, or, paid off early, the
+  # fee, the instalments before and what was paid off.
+  def total_to_pay(cycle: cycle_for)
+    list = paid_off_on ? charges(cycle) : []
+    return list.sum(&:amount) if list.any?
+
     installment_amount.to_d * installments_count + fee_amount.to_d
   end
 
   # What it costs on top of the purchase (fee and interest).
-  def cost
-    total_to_pay - financed_amount.to_d
+  def cost(cycle: cycle_for)
+    total_to_pay(cycle: cycle) - financed_amount.to_d
   end
 
   # The instalments do not even repay the purchase: the figures were likely

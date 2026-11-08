@@ -687,8 +687,11 @@ class Forecast
         financing.charges(cycle).filter_map do |charge|
           next unless window.cover?(charge.date)
 
-          name = if charge.kind == :fee
+          name = case charge.kind
+          when :fee
             I18n.t("forecasts.card_fee_line", name: financing.name)
+          when :payoff
+            I18n.t("forecasts.card_payoff_line", name: financing.name)
           else
             I18n.t("forecasts.card_installment_line", name: financing.name, number: charge.number, count: financing.installments_count)
           end

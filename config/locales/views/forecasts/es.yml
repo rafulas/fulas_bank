@@ -75,6 +75,7 @@ es:
     card_statement_line: "%{card}: extracto de %{month}"
     card_fee_line: "Comisión financiación: %{name}"
     card_installment_line: "Cuota %{number}/%{count}: %{name}"
+    card_payoff_line: "Cancelación anticipada: %{name}"
     debt_plan_extra_line: "Amortización extra: %{name}"
     show:
       title: Forecast
