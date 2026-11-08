@@ -600,6 +600,22 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Traspaso redondeo tarjeta", transfer.inflow_transaction.entry.reload.name
   end
 
+  test "Fulas Bank: a transfer confirmed from the list still names both accounts" do
+    transfer = transfers(:one)
+    # The fixture's movements use old kinds; a transfer between two of the
+    # user's accounts is a funds movement.
+    transfer.outflow_transaction.update_columns(kind: "funds_movement")
+    transfer.inflow_transaction.update_columns(kind: "funds_movement")
+    from = transfer.outflow_transaction.entry.account
+    to = transfer.inflow_transaction.entry.account
+
+    patch transfer_url(transfer), params: { transfer: { status: "confirmed" } }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_includes response.body, "#{CGI.escapeHTML(from.name)} → #{CGI.escapeHTML(to.name)}"
+    assert_includes response.body, "#{CGI.escapeHTML(to.name)} ← #{CGI.escapeHTML(from.name)}"
+  end
+
   test "can update transfer tags on both sides" do
     transfer = transfers(:one)
     tag = tags(:one)

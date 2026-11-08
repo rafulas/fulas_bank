@@ -3,6 +3,15 @@ module TransactionsHelper
   # (transactions/searches/_lazy_filter), and the filter each one sets.
   LAZY_SEARCH_FILTERS = { "category_filter" => :categories, "merchant_filter" => :merchants, "tag_filter" => :tags }.freeze
 
+  # Fulas Bank: whether the user can see an account, to name both sides of a
+  # transfer in its row. The list sets the accounts beforehand; a row drawn
+  # again on its own (after confirming a transfer, say) looks them up here
+  # once, so it does not lose the other account.
+  def accessible_account_id?(id)
+    @accessible_account_ids ||= Current.user.accessible_accounts.pluck(:id)
+    @accessible_account_ids.include?(id)
+  end
+
   # Fulas Bank: [plan, budget row] for the month and category a movement's
   # spending counts against, or nil when it has no budget there (or is not
   # spending: income, transfers, excluded movements).
