@@ -378,6 +378,9 @@ es:
     empty:
       message: No se han encontrado importaciones.
     index:
+      older:
+        one: Anteriores (1)
+        other: "Anteriores (%{count})"
       title: Importaciones
       new: Nueva importación
     table:
@@ -411,7 +414,16 @@ es:
           failed: Fallido
         actions:
           revert: Revertir
-          confirm_revert: Esto eliminará las transacciones que se importaron, pero aún podrás revisar y volver a importar tus datos en cualquier momento.
+          revert_title: ¿Revertir esta importación?
+          revert_entries:
+            zero: "No quedan movimientos de esta importación que borrar."
+            one: "Se borrará el movimiento que entró con esta importación, con lo que hayas cambiado en él (categoría, vínculos al coche, préstamos o seguros…)."
+            other: "Se borrarán los %{formatted} movimientos que entraron con esta importación, con lo que hayas cambiado en ellos (categorías, vínculos al coche, préstamos o seguros…)."
+          revert_account:
+            zero: "También se borrará entera la cuenta «%{name}», que creó esta importación."
+            one: "También se borrará entera la cuenta «%{name}», que creó esta importación, con su movimiento."
+            other: "También se borrará entera la cuenta «%{name}», que creó esta importación, con sus %{formatted} movimientos, también los que hayas metido a mano o con otras importaciones."
+          revert_kept: El archivo se queda guardado y se puede volver a importar, pero los cambios que hiciste a mano no vuelven.
           delete: Eliminar
           view: Ver
           mark_failed: Marcar como fallida

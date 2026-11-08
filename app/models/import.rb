@@ -344,6 +344,14 @@ class Import < ApplicationRecord
     true
   end
 
+  # Fulas Bank: done (or last touched) within the past week. Older imports are
+  # history and the Importaciones list keeps them under a closed list.
+  RECENT_FOR = 7.days
+
+  def recent?(now: Time.current)
+    updated_at >= now - RECENT_FOR
+  end
+
   def revert
     Import.transaction do
       accounts.destroy_all

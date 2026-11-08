@@ -58,6 +58,10 @@ class ImportsController < ApplicationController
 
   def index
     @pagy, @imports = pagy(Current.family.imports.where(type: Import::TYPES).ordered, limit: safe_per_page)
+    # Fulas Bank: the last week's imports in view, older ones under a closed
+    # list, and what reverting each would delete, for its confirmation.
+    @recent_imports, @older_imports = @imports.to_a.partition(&:recent?)
+    @revert_impact = Import::RevertImpact.new(@imports)
     @breadcrumbs = [
       [ t("breadcrumbs.home"), root_path ],
       [ t("breadcrumbs.imports"), imports_path ]
