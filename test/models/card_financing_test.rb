@@ -11,8 +11,9 @@ class CardFinancingTest < ActiveSupport::TestCase
     @financing.update!(installments_count: 4, installment_amount: 25, fee_amount: 2)
   end
 
+  # The 5th of December 2026 is a Saturday: the bank charges it the Friday before.
   test "the fee on the statement's charge day and each instalment on the next ones" do
-    assert_equal [ [ Date.new(2026, 12, 5), 2, :fee ], [ Date.new(2027, 1, 5), 25, :installment ], [ Date.new(2027, 2, 5), 25, :installment ],
+    assert_equal [ [ Date.new(2026, 12, 4), 2, :fee ], [ Date.new(2027, 1, 5), 25, :installment ], [ Date.new(2027, 2, 5), 25, :installment ],
                    [ Date.new(2027, 3, 5), 25, :installment ], [ Date.new(2027, 4, 5), 25, :installment ] ],
                  @financing.charges.map { |charge| [ charge.date, charge.amount, charge.kind ] }
   end
@@ -28,7 +29,7 @@ class CardFinancingTest < ActiveSupport::TestCase
     @financing.update!(paid_off_on: Date.new(2027, 3, 5))
 
     charges = @financing.charges
-    assert_equal [ Date.new(2026, 12, 5), Date.new(2027, 1, 5), Date.new(2027, 2, 5), Date.new(2027, 3, 5) ], charges.map(&:date)
+    assert_equal [ Date.new(2026, 12, 4), Date.new(2027, 1, 5), Date.new(2027, 2, 5), Date.new(2027, 3, 5) ], charges.map(&:date)
     assert_equal :payoff, charges.last.kind
     assert_equal 50, charges.last.amount
     assert_equal 102, @financing.total_to_pay
