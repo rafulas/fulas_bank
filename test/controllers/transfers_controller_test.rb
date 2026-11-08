@@ -602,6 +602,10 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
 
   test "Fulas Bank: a transfer confirmed from the list still names both accounts" do
     transfer = transfers(:one)
+    # The fixture's movements use old kinds; a transfer between two of the
+    # user's accounts is a funds movement.
+    transfer.outflow_transaction.update_columns(kind: "funds_movement")
+    transfer.inflow_transaction.update_columns(kind: "funds_movement")
     from = transfer.outflow_transaction.entry.account
     to = transfer.inflow_transaction.entry.account
 
