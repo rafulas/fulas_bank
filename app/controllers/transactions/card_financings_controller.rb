@@ -50,6 +50,7 @@ class Transactions::CardFinancingsController < ApplicationController
     end
 
     def financing_params
-      params.require(:card_financing).permit(:financed_amount, :installments_count, :installment_amount, :fee_amount)
+      params.require(:card_financing).permit(:financed_amount, :installments_count, :installment_amount, :fee_amount,
+                                             :fee_on, :first_installment_on, :paid_off_on, :payoff_amount)
     end
 end

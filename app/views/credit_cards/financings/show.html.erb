@@ -11,11 +11,11 @@
         </div>
         <div class="rounded-lg bg-container-inset p-3">
           <dt class="text-xs text-secondary"><%= t(".total") %></dt>
-          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.total_to_pay, currency)) %></dd>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.total_to_pay(cycle: @cycle), currency)) %></dd>
         </div>
         <div class="rounded-lg bg-container-inset p-3">
           <dt class="text-xs text-secondary"><%= t(".cost") %></dt>
-          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.cost, currency)) %></dd>
+          <dd class="font-medium text-primary privacy-sensitive"><%= format_money(Money.new(@financing.cost(cycle: @cycle), currency)) %></dd>
         </div>
         <div class="rounded-lg bg-info/10 p-3">
           <dt class="text-xs text-secondary"><%= t(".pending") %></dt>
@@ -38,6 +38,11 @@
         <% end %>
       </section>
 
+      <%# Fulas Bank: paid off early (see CardFinancing). %>
+      <% if @financing.paid_off_on %>
+        <%= render DS::Alert.new(message: t(".paid_off", date: l(@financing.paid_off_on, format: "%d/%m/%Y")), variant: :info) %>
+      <% end %>
+
       <section class="space-y-2">
         <h3 class="text-xs font-medium uppercase text-secondary"><%= t(".charges") %></h3>
         <% if @lines.any? %>
@@ -45,7 +50,7 @@
                 row_class: ->(line) { "text-secondary" unless line.paid }) do |table| %>
             <% table.with_column(t(".date"), class: "whitespace-nowrap") { |line| l(line.charge.date, format: "%d/%m/%y") } %>
             <% table.with_column(t(".concept")) do |line| %>
-              <%= line.charge.kind == :fee ? t(".fee") : t(".installment", number: line.charge.number, count: @financing.installments_count) %>
+              <%= { fee: t(".fee"), payoff: t(".payoff") }.fetch(line.charge.kind) { t(".installment", number: line.charge.number, count: @financing.installments_count) } %>
             <% end %>
             <% table.with_column(t(".amount"), numeric: true, class: "privacy-sensitive") { |line| format_money(Money.new(-line.charge.amount, currency)) } %>
             <% table.with_column(t(".bank")) do |line| %>

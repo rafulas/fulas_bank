@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -451,10 +451,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.uuid "entry_id"
     t.uuid "family_id", null: false
     t.decimal "fee_amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.date "fee_on"
     t.decimal "financed_amount", precision: 19, scale: 4, null: false
+    t.date "first_installment_on"
     t.decimal "installment_amount", precision: 19, scale: 4, null: false
     t.integer "installments_count", null: false
     t.string "name", null: false
+    t.date "paid_off_on"
+    t.decimal "payoff_amount", precision: 19, scale: 4
     t.date "purchase_date", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_card_financings_on_account_id"
