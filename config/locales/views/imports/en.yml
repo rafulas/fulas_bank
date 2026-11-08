@@ -392,6 +392,9 @@ en:
     empty:
       message: No imports found.
     index:
+      older:
+        one: Older (1)
+        other: "Older (%{count})"
       title: Imports
       new: New Import
     table:
@@ -425,7 +428,16 @@ en:
           failed: Failed
         actions:
           revert: Revert
-          confirm_revert: This will delete transactions that were imported, but you will still be able to review and re-import your data at any time.
+          revert_title: Revert this import?
+          revert_entries:
+            zero: "No movements from this import are left to delete."
+            one: "The movement that came in with this import will be deleted, with whatever you changed on it (category, links to the car, loans or insurance…)."
+            other: "The %{formatted} movements that came in with this import will be deleted, with whatever you changed on them (categories, links to the car, loans or insurance…)."
+          revert_account:
+            zero: "The account «%{name}», which this import created, will be deleted too."
+            one: "The account «%{name}», which this import created, will be deleted too, with its movement."
+            other: "The account «%{name}», which this import created, will be deleted too, with its %{formatted} movements, also those added by hand or by other imports."
+          revert_kept: The file is kept and can be imported again, but the changes you made by hand do not come back.
           delete: Delete
           view: View
           mark_failed: Mark as failed

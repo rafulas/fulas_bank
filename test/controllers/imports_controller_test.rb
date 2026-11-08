@@ -18,6 +18,28 @@ class ImportsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "Fulas Bank: imports older than a week go under a closed list" do
+    old_import = @user.family.imports.find_by!(type: "TradeImport")
+    old_import.update_columns(updated_at: 10.days.ago)
+
+    get imports_url
+
+    assert_response :success
+    assert_select "details #" + dom_id(old_import), count: 1
+    assert_select "details #" + dom_id(imports(:transaction)), count: 0
+  end
+
+  test "Fulas Bank: reverting warns of the accounts the import created" do
+    import = imports(:transaction)
+    import.update_columns(status: "complete")
+    @user.family.accounts.create!(name: "Cuenta creada al importar", balance: 0, currency: "USD", import: import, accountable: Depository.new)
+
+    get imports_url
+
+    assert_response :success
+    assert_select "##{dom_id(import)} [data-turbo-confirm*='Cuenta creada al importar']"
+  end
+
   test "gets new" do
     get new_import_url
 

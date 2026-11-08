@@ -58,6 +58,27 @@ module ImportsHelper
     ImportVerificationView.new(import.verification_payload)
   end
 
+  # Fulas Bank: the confirmation before reverting an import, saying how many
+  # movements go and which accounts the import created go too, whole.
+  # `impact` is an Import::RevertImpact::Impact.
+  def revert_import_confirm(impact)
+    body = [ t("imports.table.row.actions.revert_entries", count: impact.entries_count,
+               formatted: number_with_delimiter(impact.entries_count)) ]
+    impact.accounts.each do |account|
+      body << t("imports.table.row.actions.revert_account", name: account.name, count: account.entries_count,
+                formatted: number_with_delimiter(account.entries_count))
+    end
+    body << t("imports.table.row.actions.revert_kept")
+
+    CustomConfirm.new(
+      title: t("imports.table.row.actions.revert_title"),
+      body: body.join(" "),
+      btn_text: t("imports.table.row.actions.revert"),
+      destructive: true,
+      high_severity: impact.deletes_accounts?
+    ).to_data_attribute
+  end
+
   def permitted_import_configuration_path(import)
     if permitted_import_types.include?(import.type.underscore)
       "import/configurations/#{import.type.underscore}"
