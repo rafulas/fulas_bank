@@ -52,6 +52,16 @@ Todo sigue igual que antes, pero actuando sobre el servidor:
 - **Volver a la versión anterior:** deshace la última actualización del servidor.
 - **Recuperar una copia:** `~/FulasBank/restaurar.sh "ruta/a/la-copia.tar.enc"` la envía al servidor y la carga allí. Antes te pregunta y hace otra copia.
 
+## Actualizar desde cualquier aparato
+
+En la app, **Ajustes › Autoalojamiento › Versión de Fulas Bank** dice qué versión tienes y, si hay una nueva, qué trae, con el botón **Actualizar ahora**. También está **Volver a la versión anterior**.
+
+- La app no puede reiniciarse a sí misma: el botón solo deja una petición en su carpeta de archivos (`/rails/storage/fulas`).
+- En el servidor, `peticiones.sh` mira esa carpeta cada minuto (con `cron`, sin `sudo`). Si hay una petición, lanza `actualizar.sh`, el mismo que usa el Mac: primero la copia y luego la versión nueva. Al acabar, deja escrito cómo ha ido y la app lo enseña.
+- Lo que va diciendo la actualización queda en `~/FulasBank/registros/actualizacion-desde-app.log`.
+- El Mac, en su comprobación de cada hora, ve que el servidor ya está al día y se pone al día él solo (sus scripts y, si hay una nueva, la app de Aplicaciones; si está abierta, pregunta antes de cerrarla).
+- La primera vez hay que actualizar desde el Mac: eso deja `peticiones.sh` preparado en el servidor.
+
 ## Si algo falla
 
 - **No abre desde ningún aparato:** comprueba que Tailscale está conectado en ese aparato y que el servidor aparece en verde en la app de Tailscale.
@@ -76,5 +86,6 @@ Todo sigue igual que antes, pero actuando sobre el servidor:
 | `restaurar.sh` | Carga una copia y comprueba que ha llegado entera |
 | `actualizar.sh` | Copia, descarga la versión nueva y reinicia; con `--volver`, deshace la última |
 | `version.sh` | Dice qué versión está en marcha, para el aviso del Mac |
+| `peticiones.sh` | Atiende el botón «Actualizar ahora» de la app (cada minuto, con `cron`) |
 
 El `compose.yml` es el mismo que el del Mac (`mac/compose.yml`).

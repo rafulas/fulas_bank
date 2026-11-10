@@ -149,11 +149,11 @@ mkdir -p "$DIR/registros"
 cd "$DIR"
 # The same compose.yml as the Mac: it is not tied to macOS.
 curl -fsSL "$RAW/mac/compose.yml" -o compose.yml.nuevo && mv compose.yml.nuevo compose.yml
-for f in actualizar.sh copia.sh restaurar.sh version.sh; do
+for f in actualizar.sh copia.sh restaurar.sh version.sh peticiones.sh; do
   curl -fsSL "$RAW/servidor/$f" -o "$f.nuevo" || fallo "No se ha podido descargar $f."
   mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh version.sh
+chmod +x actualizar.sh copia.sh restaurar.sh version.sh peticiones.sh
 if [[ ! -f .env ]]; then
   umask 077
   {
@@ -221,6 +221,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now fulasbank-copia.timer > /dev/null 2>&1
 # The first copy now, so the passphrase file and copias/ exist from the start.
 FULAS_DOCKER="${DOCKER[*]}" "$DIR/copia.sh" | tail -n 1 || aviso "La primera copia no ha salido; se intentará a las 13:00."
+# Fulas Bank: lets the app ask for an update from any device (cron, no sudo).
+"$DIR/peticiones.sh" --instalar || aviso "No se ha podido preparar la actualización desde la app; se hará en la próxima actualización."
 
 cat <<FIN
 
@@ -228,7 +230,7 @@ $(printf '\033[1;32m')Fulas Bank está listo en el servidor.$(printf '\033[0m')
 
   • Ábrelo desde cualquier aparato con Tailscale:  https://$host
   • Copia cifrada cada día a las 13:00 en $DIR/copias (las 14 últimas).
-  • Actualizar:  ~/FulasBank/actualizar.sh   (el Mac te avisa cuando hay versión nueva)
+  • Actualizar:  desde la app (Ajustes › Autoalojamiento) o ~/FulasBank/actualizar.sh (el Mac te avisa cuando hay versión nueva)
 FIN
 
 }

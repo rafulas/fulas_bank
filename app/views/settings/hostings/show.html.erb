@@ -1,4 +1,8 @@
 <%= content_for :page_title, t(".title") %>
+<%# Fulas Bank: the version and updating it from here (FulasUpdate). %>
+<%= settings_section title: t("settings.hostings.fulas_update.title") do %>
+  <%= render "settings/hostings/fulas_update", update: FulasUpdate.new %>
+<% end %>
 <%= settings_section title: t(".ai_assistant") do %>
   <%= render "settings/hostings/assistant_settings" %>
 <% end %>

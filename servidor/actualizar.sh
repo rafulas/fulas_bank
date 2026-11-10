@@ -8,7 +8,11 @@
 #
 # «actualizar.sh --volver» undoes the last update: it loads the copy made
 # just before it and runs the version that was there before, pinned with
-# FULAS_IMAGE in .env until the next update.
+# FULAS_IMAGE in .env until the next update. «--volver --sin-preguntar»
+# does not ask first: the app asked already (peticiones.sh).
+#
+# It also keeps peticiones.sh set up, which lets the app itself ask for an
+# update from any device (Ajustes › Autoalojamiento).
 set -euo pipefail
 
 REPO="${FULAS_REPO:-rafulas/fulas_bank}"
@@ -47,8 +51,10 @@ if [[ "${1:-}" == "--volver" ]]; then
   fi
   echo "Vas a volver a la versión anterior (${prev_sha:0:7}) y a cargar la copia hecha justo antes de actualizar."
   echo "Lo que hayas apuntado en Fulas Bank desde entonces se perderá."
-  read -r -p "¿Seguimos? Escribe «si»: " answer < /dev/tty
-  [[ "$answer" == "si" || "$answer" == "sí" ]] || { echo "Cancelado: no se ha tocado nada."; exit 0; }
+  if [[ "${2:-}" != "--sin-preguntar" ]]; then
+    read -r -p "¿Seguimos? Escribe «si»: " answer < /dev/tty
+    [[ "$answer" == "si" || "$answer" == "sí" ]] || { echo "Cancelado: no se ha tocado nada."; exit 0; }
+  fi
   set_pinned_image "$IMAGE:sha-$prev_sha"
   if ! docker compose pull web worker; then
     set_pinned_image ""
@@ -70,10 +76,11 @@ set_pinned_image ""
 
 echo "▶ Descargando la versión nueva"
 curl -fsSL "$RAW/mac/compose.yml" -o compose.yml.nuevo && mv compose.yml.nuevo compose.yml
-for f in actualizar.sh copia.sh restaurar.sh version.sh; do
+for f in actualizar.sh copia.sh restaurar.sh version.sh peticiones.sh; do
   curl -fsSL "$RAW/servidor/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
 done
-chmod +x actualizar.sh copia.sh restaurar.sh version.sh
+chmod +x actualizar.sh copia.sh restaurar.sh version.sh peticiones.sh
+"$DIR/peticiones.sh" --instalar || true
 docker compose pull
 
 echo "▶ Reiniciando"
