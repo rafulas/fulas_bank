@@ -41,7 +41,10 @@ class AssetLinker
     "peajes" => Rule.new(kind: "expense", category: "toll", needs_tag: false),
     "aparcamiento" => Rule.new(kind: "expense", category: "parking", needs_tag: false),
     "accesorios vehiculos" => Rule.new(kind: "expense", category: "accessories", needs_tag: false),
-    "leasing" => Rule.new(kind: "expense", category: "other", needs_tag: false),
+    # Fulas Bank: the instalments of what paid for the car (and its final
+    # payment) are its purchase, which the value it has lost already counts:
+    # not a running cost (Vehicle::Log#purchase?).
+    "leasing" => Rule.new(kind: "expense", category: "purchase", needs_tag: false),
     "multas" => Rule.new(kind: "expense", category: "fine", needs_tag: true),
     "impuestos" => Rule.new(kind: "expense", category: "road_tax", needs_tag: true),
     "seguros" => Rule.new(kind: "expense", category: "insurance", needs_tag: true)

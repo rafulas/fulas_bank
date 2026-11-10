@@ -27,6 +27,17 @@ class AssetLinkerTest < ActiveSupport::TestCase
     assert_includes @vehicle.reload.logbook.logs, log
   end
 
+  test "Fulas Bank: a Leasing charge is proposed as the car's purchase, not a running cost" do
+    charge = create_transaction(name: "Cuota Préstamo Cupra", amount: 457.31, date: 2.days.ago.to_date, category: category("Leasing"))
+
+    @linker.run!
+
+    log = @vehicle.logs.find_by!(entry: charge)
+    assert_equal "expense", log.kind
+    assert_equal "purchase", log.category
+    assert log.purchase?
+  end
+
   test "links a refuel the user already typed, even when the amount paid differs" do
     log = @vehicle.logs.create!(kind: "fuel", date: 1.day.ago.to_date, odometer: 10_000, quantity: 40, amount: 70)
     charge = create_transaction(name: "REPSOL", amount: 65.3, date: Date.current, category: @fuel)
