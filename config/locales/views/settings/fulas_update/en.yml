@@ -1,0 +1,31 @@
+---
+en:
+  settings:
+    fulas_updates:
+      create:
+        requested_actualizar: "Update requested. Within a minute the server makes a backup and downloads the new version; the app restarts and comes back by itself in a few minutes."
+        requested_volver: "Going back requested. Within a minute the server goes back to the previous version and loads the backup made before updating."
+        not_requested: "Could not be requested: the server does not answer or an update is already running."
+    hostings:
+      fulas_update:
+        title: Fulas Bank version
+        improvements: Improvements and fixes
+        current: "Version in use: %{version}"
+        new_version: "There is a new version:"
+        change: "%{title} (#%{number})"
+        up_to_date: You have the latest version.
+        update_now: Update now
+        update_title: Update Fulas Bank?
+        update_body: "The server first makes a backup, downloads the new version and restarts. For a few minutes the app will not answer: come back to this page to see how it went."
+        go_back: Go back to the previous version
+        go_back_hint: "If something goes wrong after updating: go back to the version before and load the backup made just before updating."
+        go_back_title: Go back to the previous version?
+        go_back_body: "The backup made just before the last update is loaded: whatever you entered since will be lost."
+        pending_actualizar: "Update requested: it starts within a minute."
+        pending_volver: "Going back requested: it starts within a minute."
+        running_actualizar: "Updating… The app will restart in a few minutes."
+        running_volver: "Going back to the previous version… The app will restart in a few minutes."
+        done_actualizar: "Updated to version %{version} on %{date}."
+        done_volver: "Back to version %{version} on %{date}."
+        failed: "The last update (%{date}) did not finish well. Fulas Bank keeps working; on the Mac, «Actualizar Fulas Bank» shows what happened."
+        not_available: "To update from here, update once from the Mac: that prepares the server. Meanwhile the Mac keeps warning about new versions."

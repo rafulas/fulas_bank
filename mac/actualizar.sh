@@ -12,6 +12,11 @@
 # .command» (this script with --volver) undoes it: it loads the copy made just
 # before the update and runs the version that was there before, pinned with
 # FULAS_IMAGE in .env until the next update.
+#
+# «actualizar.sh --solo-mac <versión>» (server mode) only brings this Mac up to
+# date, when the server was updated from the app on another device: its
+# scripts and, if there is a new one, the app in Applications (asking first
+# if it is open). aviso.sh runs it by itself; nothing to do by hand.
 set -euo pipefail
 export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
 
@@ -28,6 +33,25 @@ LOCK="$DIR/registros/actualizando"
 mkdir -p "$DIR/registros"
 date '+%s' > "$LOCK"
 trap 'rm -f "$LOCK"' EXIT
+
+# The scripts of this Mac, newest from GitHub.
+actualizar_scripts_mac() {
+  echo "▶ Actualizando los scripts de este Mac"
+  for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
+    curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
+  done
+  chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh
+}
+
+# When the app in Applications was last built (the date of the release
+# «app-mac»), to know whether this Mac has the newest one.
+app_mac_stamp() {
+  local tmp
+  tmp="$(mktemp)"
+  curl -fsS "https://api.github.com/repos/$REPO/releases/tags/app-mac" -o "$tmp" 2> /dev/null &&
+    plutil -extract assets.0.updated_at raw -o - "$tmp" 2> /dev/null
+  rm -f "$tmp"
+}
 
 # The «Fulas Bank» app in Applications, from the release «app-mac».
 actualizar_app_mac() {
@@ -48,22 +72,51 @@ actualizar_app_mac() {
   rm -rf "$tmp"
 }
 
+# Only this Mac: the server is already up to date (updated from the app).
+if [[ "${1:-}" == "--solo-mac" ]]; then
+  actualizar_scripts_mac
+  stamp="$(app_mac_stamp || true)"
+  if [[ -n "$stamp" && ! -f registros/app-mac ]]; then
+    # First time: the app was just installed or updated the usual way.
+    echo "$stamp" > registros/app-mac
+  elif [[ -n "$stamp" && "$stamp" != "$(cat registros/app-mac)" ]]; then
+    today="$(date '+%Y-%m-%d')"
+    if [[ "$(cat registros/app-mac-pospuesto 2> /dev/null)" != "$today" ]]; then
+      update_app=true
+      if [[ "$(osascript -e 'application "Fulas Bank" is running' 2> /dev/null)" == "true" ]]; then
+        answer="$(osascript -e 'display dialog "Hay una versión nueva de la app Fulas Bank de este Mac. Para cambiarla hay que cerrarla un momento." with title "Fulas Bank" buttons {"Más tarde", "Cerrar y actualizar"} default button "Cerrar y actualizar" giving up after 3600' 2> /dev/null)"
+        if [[ "$answer" != *"Cerrar y actualizar"* ]]; then
+          update_app=false
+          echo "$today" > registros/app-mac-pospuesto
+        fi
+      fi
+      if $update_app; then
+        actualizar_app_mac
+        echo "$stamp" > registros/app-mac
+        rm -f registros/app-mac-pospuesto
+      fi
+    fi
+  fi
+  [[ -n "${2:-}" ]] && echo "$2" > registros/mac-al-dia
+  exit 0
+fi
+
 # Server mode (mac/pasar-a-servidor.sh): Fulas Bank runs on a server reached
 # through Tailscale. This Mac updates its own scripts and app, and the server
 # updates itself (servidor/actualizar.sh, which makes its copy first).
 SERVIDOR="$(grep '^FULAS_SERVIDOR=' .env 2> /dev/null | tail -1 | cut -d= -f2- || true)"
 if [[ -n "$SERVIDOR" ]]; then
   if [[ "${1:-}" != "--volver" ]]; then
-    echo "▶ Actualizando los scripts de este Mac"
-    for f in compose.yml actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh; do
-      curl -fsSL "$RAW/$f" -o "$f.nuevo" && mv "$f.nuevo" "$f"
-    done
-    chmod +x actualizar.sh copia.sh restaurar.sh aviso.sh otros-aparatos.sh
+    actualizar_scripts_mac
   fi
   echo "▶ Fulas Bank en el servidor ($SERVIDOR)"
   ssh -t -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "$SERVIDOR" "FulasBank/actualizar.sh ${1:-}"
   if [[ "${1:-}" != "--volver" ]]; then
     actualizar_app_mac
+    # What this Mac now has, so aviso.sh does not bring it up to date again.
+    app_mac_stamp > registros/app-mac.nuevo 2> /dev/null && [[ -s registros/app-mac.nuevo ]] &&
+      mv registros/app-mac.nuevo registros/app-mac || rm -f registros/app-mac.nuevo
+    ssh -o ConnectTimeout=20 "$SERVIDOR" 'FulasBank/version.sh' 2> /dev/null | tr -d '[:space:]' > registros/mac-al-dia || true
     cat > "$DIR/Volver a la versión anterior.command" <<EOF
 #!/bin/bash
 "$DIR/actualizar.sh" --volver

@@ -15,6 +15,13 @@
 # «aviso.sh --ahora» is «Buscar actualizaciones…» in the app's menu: it
 # ignores «Más tarde» and, when there is nothing new or it cannot check,
 # says so in a window instead of staying quiet.
+#
+# Server mode, Fulas Bank can also be updated from the app on any device
+# (Ajustes › Autoalojamiento; servidor/peticiones.sh). Then the server is
+# already up to date when this runs: no window, but this Mac brings its own
+# scripts and app up to date by itself (actualizar.sh --solo-mac). It also
+# sets up peticiones.sh on the server once, for servers installed before it
+# existed.
 set -uo pipefail
 export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
 
@@ -78,6 +85,23 @@ tell() {
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
+# Server mode: let the app ask the server for updates (once; servers set up
+# before peticiones.sh existed do not have it).
+if [[ -n "$SERVIDOR" && ! -f "$DIR/registros/peticiones-en-servidor" ]]; then
+  raw="https://raw.githubusercontent.com/$REPO/main/servidor/peticiones.sh"
+  if "${SSH[@]}" "$SERVIDOR" "cd FulasBank && curl -fsSL '$raw' -o peticiones.sh.nuevo && mv peticiones.sh.nuevo peticiones.sh && chmod +x peticiones.sh && ./peticiones.sh --instalar" > /dev/null 2>&1; then
+    touch "$DIR/registros/peticiones-en-servidor"
+  fi
+fi
+
+# Server mode, the server already runs `$1`: bring this Mac's scripts and app
+# up to date too, once per version (the update was made from the app).
+mac_al_dia() {
+  [[ -n "$SERVIDOR" && -n "${1:-}" ]] || return 0
+  [[ "$(cat "$DIR/registros/mac-al-dia" 2> /dev/null)" == "$1" ]] && return 0
+  "$DIR/actualizar.sh" --solo-mac "$1" > /dev/null 2>&1 || true
+}
+
 # The version this Mac runs: the commit the running image was built from.
 # With a server, the version the server runs.
 if [[ -n "$SERVIDOR" ]]; then
@@ -102,6 +126,7 @@ if ! curl -fsS "$API/actions/workflows/fulas-imagen.yml/runs?branch=main&status=
 fi
 remote_sha="$(plutil -extract workflow_runs.0.head_sha raw -o - "$work/runs.json" 2> /dev/null)"
 if [[ -z "$remote_sha" || "$remote_sha" == "$local_sha" ]]; then
+  mac_al_dia "$local_sha"
   tell "Fulas Bank está al día: tienes la última versión."
   exit 0
 fi
@@ -119,6 +144,7 @@ changes=""
 if curl -fsS "$API/compare/$local_sha...$remote_sha" -o "$work/compare.json" 2> /dev/null; then
   status="$(plutil -extract status raw -o - "$work/compare.json" 2> /dev/null)"
   if [[ "$status" == "behind" || "$status" == "identical" ]]; then   # this Mac is not older
+    mac_al_dia "$local_sha"
     tell "Fulas Bank está al día: tienes la última versión."
     exit 0
   fi

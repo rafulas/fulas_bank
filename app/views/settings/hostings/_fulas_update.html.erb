@@ -1,0 +1,57 @@
+<%# locals: (update:) %>
+<%# Fulas Bank: the version running and, on the server, the button to update
+    it from any device (FulasUpdate). %>
+<div id="fulas-update" class="space-y-4">
+  <p class="text-sm text-secondary">
+    <%= t(".current", version: update.current_version.to_s.first(7).presence || "—") %>
+  </p>
+
+  <% status = update.status %>
+  <% if update.pending %>
+    <%= render DS::Alert.new(message: t(".pending_#{update.pending}"), variant: :info) %>
+  <% elsif status&.running? %>
+    <%= render DS::Alert.new(message: t(".running_#{status.action}"), variant: :info) %>
+  <% elsif status&.failed? && status.at > 1.day.ago %>
+    <%= render DS::Alert.new(message: t(".failed", date: l(status.at, format: :short)), variant: :error) %>
+  <% elsif status&.done? && status.at > 1.day.ago %>
+    <%= render DS::Alert.new(message: t(".done_#{status.action}", version: status.version.to_s.first(7), date: l(status.at, format: :short)), variant: :success) %>
+  <% end %>
+
+  <% if !update.available? %>
+    <p class="text-sm text-secondary"><%= t(".not_available") %></p>
+  <% elsif !update.busy? %>
+    <% if update.update_available? %>
+      <div class="space-y-2">
+        <p class="text-sm font-medium text-primary"><%= t(".new_version") %></p>
+        <ul class="text-sm text-secondary list-disc pl-5 space-y-1">
+          <% update.changes.each do |change| %>
+            <li><%= change.number ? t(".change", title: change.title, number: change.number) : change.title %></li>
+          <% end %>
+        </ul>
+      </div>
+      <%= render DS::Button.new(
+            text: t(".update_now"),
+            icon: "download",
+            href: settings_fulas_update_path(accion: "actualizar"),
+            method: :post,
+            confirm: CustomConfirm.new(title: t(".update_title"), body: t(".update_body"), btn_text: t(".update_now"))
+          ) %>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".up_to_date") %></p>
+    <% end %>
+
+    <%= render DS::Disclosure.new(title: t(".go_back"), align: "left") do %>
+      <div class="space-y-2">
+        <p class="text-xs text-secondary"><%= t(".go_back_hint") %></p>
+        <%= render DS::Button.new(
+              text: t(".go_back"),
+              icon: "undo-2",
+              variant: :outline_destructive,
+              href: settings_fulas_update_path(accion: "volver"),
+              method: :post,
+              confirm: CustomConfirm.new(title: t(".go_back_title"), body: t(".go_back_body"), btn_text: t(".go_back"), destructive: true, high_severity: true)
+            ) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

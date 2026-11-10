@@ -1,0 +1,31 @@
+---
+es:
+  settings:
+    fulas_updates:
+      create:
+        requested_actualizar: "Actualización pedida. En menos de un minuto el servidor hace una copia y descarga la versión nueva; la app se reinicia y vuelve sola en unos minutos."
+        requested_volver: "Vuelta atrás pedida. En menos de un minuto el servidor vuelve a la versión anterior y carga la copia de antes de actualizar."
+        not_requested: "No se ha podido pedir: el servidor no responde o ya hay una actualización en marcha."
+    hostings:
+      fulas_update:
+        title: Versión de Fulas Bank
+        improvements: Mejoras y arreglos
+        current: "Versión en uso: %{version}"
+        new_version: "Hay una versión nueva:"
+        change: "%{title} (n.º %{number})"
+        up_to_date: Tienes la última versión.
+        update_now: Actualizar ahora
+        update_title: ¿Actualizar Fulas Bank?
+        update_body: "El servidor hace primero una copia de seguridad, descarga la versión nueva y reinicia. Durante unos minutos la app no responderá: vuelve a esta página y saldrá cómo ha ido."
+        go_back: Volver a la versión anterior
+        go_back_hint: "Si algo va mal tras actualizar: vuelve a la versión de antes y carga la copia hecha justo antes de actualizar."
+        go_back_title: ¿Volver a la versión anterior?
+        go_back_body: "Se carga la copia hecha justo antes de la última actualización: lo que hayas apuntado desde entonces se perderá."
+        pending_actualizar: "Actualización pedida: empieza en menos de un minuto."
+        pending_volver: "Vuelta atrás pedida: empieza en menos de un minuto."
+        running_actualizar: "Actualizando… La app se reiniciará en unos minutos."
+        running_volver: "Volviendo a la versión anterior… La app se reiniciará en unos minutos."
+        done_actualizar: "Actualizada a la versión %{version} el %{date}."
+        done_volver: "Vuelta a la versión %{version} el %{date}."
+        failed: "La última actualización (%{date}) no ha terminado bien. Fulas Bank sigue funcionando; en el Mac, «Actualizar Fulas Bank» enseña qué ha pasado."
+        not_available: "Para actualizar desde aquí, actualiza una vez desde el Mac: eso deja preparado el servidor. Mientras tanto, el Mac sigue avisando de las versiones nuevas."
