@@ -7,6 +7,10 @@ import { Controller } from "@hotwired/stimulus";
 // choices: today, yesterday and payday. Every StyledFormBuilder#date_field
 // gets it (the markup is built there).
 //
+// To reach a date far away without pressing the arrow month after month,
+// the month's title opens the twelve months of its year (with arrows for the
+// year), and the year opens a page of twelve years.
+//
 // The calendar is shown in the browser's top layer (a popover) and placed
 // beside the field with fixed coordinates, so a dialog that scrolls or clips
 // its content cannot cut it, and it opens upwards when there is no room
@@ -17,6 +21,7 @@ export default class extends Controller {
   static values = {
     labels: Object,
     monthNames: Array,
+    shortMonthNames: Array,
     weekdays: Array,
     payday: Number,
     today: String,
@@ -115,6 +120,7 @@ export default class extends Controller {
     if (this.panel || this.unavailable()) return;
     const value = this.#parse(this.input.value) || this.#today();
     this.month = new Date(value.getFullYear(), value.getMonth(), 1);
+    this.view = "days";
 
     this.panel = document.createElement("div");
     this.panel.className =
@@ -214,37 +220,164 @@ export default class extends Controller {
     }
     panel.appendChild(quick);
 
-    // Month and arrows.
+    if (this.view === "months") this.#drawMonths(today, chosen);
+    else if (this.view === "years") this.#drawYears(today, chosen);
+    else this.#drawDays(today, chosen);
+    this.#place();
+  }
+
+  // A round arrow button that runs `step` and redraws.
+  #arrow(label, symbol, step) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className =
+      "size-11 flex items-center justify-center rounded-full bg-container-inset text-lg text-primary cursor-pointer hover:bg-container-inset-hover";
+    b.setAttribute("aria-label", label);
+    b.textContent = symbol;
+    b.addEventListener("click", () => {
+      step();
+      this.#draw();
+    });
+    return b;
+  }
+
+  // A title that opens another view, with a small chevron.
+  #titleButton(text, label, view) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className =
+      "h-9 px-3 rounded-full text-sm font-semibold text-primary cursor-pointer hover:bg-container-hover first-letter:uppercase";
+    b.setAttribute("aria-label", label);
+    b.textContent = `${text} ▾`;
+    b.addEventListener("click", () => {
+      this.view = view;
+      this.#draw();
+    });
+    return b;
+  }
+
+  #header(...children) {
     const header = document.createElement("div");
     header.className = "flex items-center justify-between";
-    const arrow = (label, delta, symbol) => {
+    header.append(...children);
+    this.panel.appendChild(header);
+  }
+
+  // A grid of round choices (months or years), the chosen one filled and the
+  // current one ringed, as days are.
+  #choiceGrid(items) {
+    const grid = document.createElement("div");
+    grid.className = "grid grid-cols-3 gap-2";
+    for (const { text, label, picked, current, choose } of items) {
       const b = document.createElement("button");
       b.type = "button";
-      b.className =
-        "size-11 flex items-center justify-center rounded-full bg-container-inset text-lg text-primary cursor-pointer hover:bg-container-inset-hover";
+      b.className = [
+        "h-11 rounded-full text-sm cursor-pointer first-letter:uppercase",
+        picked
+          ? "bg-inverse text-inverse font-semibold"
+          : "bg-container-inset text-primary hover:bg-container-inset-hover",
+        !picked && current
+          ? "ring-1 ring-inset ring-current text-brand font-semibold"
+          : "",
+      ].join(" ");
+      b.textContent = text;
       b.setAttribute("aria-label", label);
-      b.textContent = symbol;
       b.addEventListener("click", () => {
-        this.month = new Date(
-          this.month.getFullYear(),
-          this.month.getMonth() + delta,
-          1,
-        );
+        choose();
         this.#draw();
       });
-      return b;
+      grid.appendChild(b);
+    }
+    this.panel.appendChild(grid);
+  }
+
+  // The twelve months of the year shown, with arrows for the year. Choosing
+  // one goes back to its days.
+  #drawMonths(today, chosen) {
+    const year = this.month.getFullYear();
+    this.#header(
+      this.#arrow(this.labelsValue.prev_year, "‹", () => {
+        this.month = new Date(year - 1, this.month.getMonth(), 1);
+      }),
+      this.#titleButton(String(year), this.labelsValue.pick_year, "years"),
+      this.#arrow(this.labelsValue.next_year, "›", () => {
+        this.month = new Date(year + 1, this.month.getMonth(), 1);
+      }),
+    );
+    const names = this.shortMonthNamesValue.length
+      ? this.shortMonthNamesValue
+      : this.monthNamesValue;
+    this.#choiceGrid(
+      names.map((name, index) => ({
+        text: name,
+        label: `${this.monthNamesValue[index]} ${year}`,
+        picked:
+          !!chosen &&
+          chosen.getFullYear() === year &&
+          chosen.getMonth() === index,
+        current: today.getFullYear() === year && today.getMonth() === index,
+        choose: () => {
+          this.month = new Date(year, index, 1);
+          this.view = "days";
+        },
+      })),
+    );
+  }
+
+  // Twelve years, the shown one among them; the arrows move twelve years.
+  // Choosing one goes back to its months.
+  #drawYears(today, chosen) {
+    const year = this.month.getFullYear();
+    const first = year - (((year % 12) + 12) % 12);
+    const move = (delta) => () => {
+      this.month = new Date(year + delta, this.month.getMonth(), 1);
     };
     const title = document.createElement("span");
-    title.className =
-      "text-sm font-semibold text-primary first-letter:uppercase";
-    title.textContent = `${this.monthNamesValue[this.month.getMonth()]} ${this.month.getFullYear()}`;
-    header.append(
-      arrow(this.labelsValue.prev, -1, "‹"),
+    title.className = "text-sm font-semibold text-primary";
+    title.textContent = `${first} – ${first + 11}`;
+    this.#header(
+      this.#arrow(this.labelsValue.prev_years, "‹", move(-12)),
       title,
-      arrow(this.labelsValue.next, 1, "›"),
+      this.#arrow(this.labelsValue.next_years, "›", move(12)),
     );
-    panel.appendChild(header);
+    this.#choiceGrid(
+      Array.from({ length: 12 }, (_, index) => first + index).map((y) => ({
+        text: String(y),
+        label: String(y),
+        picked: !!chosen && chosen.getFullYear() === y,
+        current: today.getFullYear() === y,
+        choose: () => {
+          this.month = new Date(y, this.month.getMonth(), 1);
+          this.view = "months";
+        },
+      })),
+    );
+  }
 
+  #drawDays(today, chosen) {
+    const panel = this.panel;
+    // Month and arrows; the month opens the months of its year.
+    this.#header(
+      this.#arrow(this.labelsValue.prev, "‹", () => {
+        this.month = new Date(
+          this.month.getFullYear(),
+          this.month.getMonth() - 1,
+          1,
+        );
+      }),
+      this.#titleButton(
+        `${this.monthNamesValue[this.month.getMonth()]} ${this.month.getFullYear()}`,
+        this.labelsValue.pick_month,
+        "months",
+      ),
+      this.#arrow(this.labelsValue.next, "›", () => {
+        this.month = new Date(
+          this.month.getFullYear(),
+          this.month.getMonth() + 1,
+          1,
+        );
+      }),
+    );
     // Weekdays and days, Monday first.
     const grid = document.createElement("div");
     grid.className = "grid grid-cols-7 gap-y-1 text-center";
@@ -289,7 +422,6 @@ export default class extends Controller {
       grid.appendChild(cell);
     }
     panel.appendChild(grid);
-    this.#place();
   }
 
   #pick(date) {

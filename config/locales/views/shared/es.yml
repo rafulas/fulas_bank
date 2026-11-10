@@ -33,6 +33,12 @@ es:
       payday: "Día de nómina (%{day})"
       prev_month: Mes anterior
       next_month: Mes siguiente
+      pick_month: Elegir mes y año
+      pick_year: Elegir año
+      prev_year: Año anterior
+      next_year: Año siguiente
+      prev_years: Años anteriores
+      next_years: Años siguientes
     analysis_tabs:
       aria: Resumen o comparar
       month: Mes

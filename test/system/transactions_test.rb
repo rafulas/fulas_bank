@@ -289,13 +289,14 @@ class TransactionsTest < ApplicationSystemTestCase
 
     calendar = "[data-controller='date-field'] [role='dialog']"
     find("button[aria-label='Open the calendar']").click
-    month = find("#{calendar} span.font-semibold").text
+    title = "#{calendar} button[aria-label='Choose month and year']"
+    month = find(title).text
 
     find("#{calendar} button[aria-label='Next month']").click
     find("#{calendar} button[aria-label='Next month']").click
 
     assert_selector calendar
-    assert_no_selector "#{calendar} span.font-semibold", text: month, exact_text: true
+    assert_no_selector title, text: month, exact_text: true
 
     box = page.evaluate_script("(() => { const r = document.querySelector(\"[data-controller='date-field'] [role='dialog']\").getBoundingClientRect(); return [r.top, r.bottom, window.innerHeight]; })()")
     assert_operator box[0], :>=, 0
@@ -305,6 +306,24 @@ class TransactionsTest < ApplicationSystemTestCase
     assert_no_selector calendar
     target = Date.current.beginning_of_month.next_month(2).change(day: 15)
     assert_equal target.iso8601, find("input[type='date'][name='entry[date]']").value
+  end
+
+  test "Fulas Bank: the calendar jumps to another year and month without the arrows" do
+    visit new_transaction_path
+
+    calendar = "[data-controller='date-field'] [role='dialog']"
+    find("button[aria-label='Open the calendar']").click
+
+    find("#{calendar} button[aria-label='Choose month and year']").click
+    find("#{calendar} button[aria-label='Choose year']").click
+    find("#{calendar} button[aria-label='Earlier years']").click
+    target_year = Date.current.year - 12
+    find("#{calendar} button[aria-label='#{target_year}']").click
+    find("#{calendar} button[aria-label='March #{target_year}']").click
+    find("#{calendar} button[aria-label='9 March #{target_year}']").click
+
+    assert_no_selector calendar
+    assert_equal Date.new(target_year, 3, 9).iso8601, find("input[type='date'][name='entry[date]']").value
   end
 
   test "can create deposit transaction for investment account" do

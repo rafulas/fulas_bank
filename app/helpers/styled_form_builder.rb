@@ -157,9 +157,13 @@ class StyledFormBuilder < ActionView::Helpers::FormBuilder
           open: I18n.t("shared.date_field.open"), today: I18n.t("shared.date_field.today"),
           yesterday: I18n.t("shared.date_field.yesterday"),
           payday: I18n.t("shared.date_field.payday", day: payday),
-          prev: I18n.t("shared.date_field.prev_month"), next: I18n.t("shared.date_field.next_month")
+          prev: I18n.t("shared.date_field.prev_month"), next: I18n.t("shared.date_field.next_month"),
+          pick_month: I18n.t("shared.date_field.pick_month"), pick_year: I18n.t("shared.date_field.pick_year"),
+          prev_year: I18n.t("shared.date_field.prev_year"), next_year: I18n.t("shared.date_field.next_year"),
+          prev_years: I18n.t("shared.date_field.prev_years"), next_years: I18n.t("shared.date_field.next_years")
         }.to_json,
         date_field_month_names_value: I18n.t("date.month_names").drop(1).to_json,
+        date_field_short_month_names_value: I18n.t("date.abbr_month_names").drop(1).to_json,
         date_field_weekdays_value: I18n.t("shared.period_picker.weekdays").to_json,
         date_field_payday_value: payday,
         date_field_today_value: Date.current.iso8601

@@ -33,6 +33,12 @@ en:
       payday: "Payday (%{day})"
       prev_month: Previous month
       next_month: Next month
+      pick_month: Choose month and year
+      pick_year: Choose year
+      prev_year: Previous year
+      next_year: Next year
+      prev_years: Earlier years
+      next_years: Later years
     analysis_tabs:
       aria: Summary or compare
       month: Month
