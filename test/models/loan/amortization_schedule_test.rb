@@ -14,6 +14,19 @@ class Loan::AmortizationScheduleTest < ActiveSupport::TestCase
                  schedule.payments.map(&:date)
   end
 
+  # Fulas Bank: a staff loan signed on the 9th of September and first taken
+  # from the pay of the 19th of that same month.
+  test "the first payment can fall on a date of its own, the rest monthly from it" do
+    schedule = Loan::AmortizationSchedule.new(
+      principal: 3_000, annual_rate: 0, term_months: 3,
+      start_date: Date.new(2019, 9, 9), currency: "EUR", payment_day: 19,
+      first_payment_date: Date.new(2019, 9, 19)
+    )
+
+    assert_equal [ Date.new(2019, 9, 19), Date.new(2019, 10, 19), Date.new(2019, 11, 19) ], schedule.payments.map(&:date)
+    assert_equal 0, schedule.payments.last.ending_balance.amount
+  end
+
   # The instalment the lender quotes is held as given rather than re-derived.
   # 1,000 at 12% (1% a month) over 12 months levels at 88.85; a quoted 100
   # clears it sooner, and the last payment settles what is left.

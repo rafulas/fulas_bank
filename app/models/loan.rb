@@ -56,10 +56,22 @@ class Loan < ApplicationRecord
   # corrected start date, say), the balances anchored at each linked payment
   # are worked out again from the new schedule.
   SCHEDULE_ATTRIBUTES = %w[initial_balance interest_rate rate_type term_months start_date payment_day
-                           payment_amount variable_rate_schedule].freeze
+                           payment_amount variable_rate_schedule first_payment_date].freeze
   after_update_commit :reanchor_linked_payments, if: -> { (saved_changes.keys & SCHEDULE_ATTRIBUTES).any? }
   # Fulas Bank: the instalment follows the loan (Loan::InstallmentSync).
   after_save_commit :sync_installment
+
+  # Fulas Bank: the first instalment's own day, when it is not a month after
+  # the loan was taken out (Loan::AmortizationSchedule).
+  validates :first_payment_date, comparison: { greater_than_or_equal_to: :start_date }, allow_nil: true, if: :start_date
+
+  # Fulas Bank: repaid early, the day the rest was paid. From then on nothing
+  # is owed (its balance is set to zero that day), no instalment is expected
+  # and, deducted from the pay, no month after it is booked; those the app had
+  # booked after it are taken back.
+  validates :paid_off_on, comparison: { less_than_or_equal_to: -> { Date.current } }, allow_nil: true
+  validates :paid_off_on, comparison: { greater_than_or_equal_to: :start_date }, allow_nil: true, if: :start_date
+  after_update_commit :apply_paid_off_on, if: :saved_change_to_paid_off_on?
 
   # Movements this far either side of the expected instalment, in amount, are
   # offered as candidates on the loan's Payments tab.
@@ -241,6 +253,29 @@ class Loan < ApplicationRecord
     Loan::InstallmentSync.new(loan_account.family).sync_account(loan_account)
   rescue ActiveRecord::RecordInvalid => error
     Rails.logger.warn("Loan instalment not synced for account #{loan_account&.id}: #{error.message}")
+  end
+
+  # Repaid early: the balance is zero from that day, and the pay deductions
+  # the app booked after it go (each instalment with its pay). Undone, the
+  # zero goes and the months are booked again.
+  private def apply_paid_off_on
+    loan_account = Account.find_by(accountable_type: "Loan", accountable_id: id)
+    return unless loan_account
+
+    before, after = saved_change_to_paid_off_on
+    if before
+      loan_account.entries.valuations.where(date: before).destroy_all
+    end
+
+    if after
+      Loan::PayrollDeduction.new(self).unbook_after!(after) if payroll_deducted?
+      result = Account::ReconciliationManager.new(loan_account).reconcile_balance(balance: 0, date: after)
+      Rails.logger.warn("Loan #{id}: could not set the balance to zero on #{after}: #{result.error_message}") unless result.success?
+    end
+
+    # The loan's instalment series is ended by sync_installment, which runs
+    # after this (Loan#paid_off?).
+    loan_account.sync_later
   end
 
   private def reanchor_linked_payments
@@ -512,6 +547,7 @@ class Loan < ApplicationRecord
   # instalment ahead: it leaves the Forecast and Planes, and the Préstamos
   # screen keeps it apart, under «Pagados».
   def paid_off?(as_of: Date.current)
+    return true if paid_off_on && paid_off_on <= as_of
     return true if finished?(as_of: as_of)
 
     balance = account&.balance

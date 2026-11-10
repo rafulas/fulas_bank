@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1826,12 +1826,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_100000) do
     t.uuid "asset_account_id"
     t.datetime "created_at", null: false
     t.decimal "down_payment", precision: 19, scale: 4
+    t.date "first_payment_date"
     t.decimal "initial_balance", precision: 19, scale: 4
     t.decimal "insurance_annual_amount", precision: 19, scale: 4
     t.decimal "insurance_rate", precision: 8, scale: 4
     t.string "insurance_rate_type"
     t.decimal "interest_rate", precision: 10, scale: 3
     t.jsonb "locked_attributes", default: {}
+    t.date "paid_off_on"
     t.decimal "payment_amount", precision: 19, scale: 4
     t.integer "payment_day"
     t.boolean "payroll_deducted", default: false, null: false

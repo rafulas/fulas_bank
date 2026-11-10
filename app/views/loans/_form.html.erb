@@ -39,6 +39,12 @@
                                required: account.new_record?,
                                help_text: t("loans.form.start_date_hint") %>
 
+      <%# Fulas Bank: when the first instalment is not a month after the loan
+          was taken out (Loan::AmortizationSchedule). %>
+      <%= loan_form.date_field :first_payment_date,
+                               label: t("loans.form.first_payment_date"),
+                               help_text: t("loans.form.first_payment_date_hint") %>
+
       <div class="flex items-center gap-2">
         <%# Bounded here rather than validated on Loan: PlaidAccount::Liabilities::StudentLoanProcessor
             writes this column from provider dates, and a term the simulator will not walk is
@@ -108,6 +114,14 @@
                                  max: Date.current,
                                  help_text: t("loans.form.payroll_deducted_since_hint") %>
       </div>
+
+      <%# Fulas Bank: repaid early (Loan#paid_off_on). Only once the loan exists. %>
+      <% if account.persisted? %>
+        <%= loan_form.date_field :paid_off_on,
+                                 label: t("loans.form.paid_off_on"),
+                                 max: Date.current,
+                                 help_text: t("loans.form.paid_off_on_hint") %>
+      <% end %>
 
       <%# Rate changes only mean something for a loan whose rate can move. The
           section is rendered for every rate type, retained rows included, and

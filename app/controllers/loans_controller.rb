@@ -6,6 +6,7 @@ class LoansController < ApplicationController
     :down_payment, :insurance_rate, :insurance_rate_type, :insurance_annual_amount,
     :payment_amount, :payment_day, :asset_account_id,
     :payroll_deducted, :payroll_expense_category_id, :payroll_income_category_id, :payroll_deducted_since,
+    :first_payment_date, :paid_off_on,
     { rate_changes: [ :effective_date, :rate ] }
   )
 
