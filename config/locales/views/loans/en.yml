@@ -46,6 +46,10 @@ en:
       rate_change_remove: Remove
       start_date: Origination date
       start_date_hint: When the loan was signed or drawn down. The original balance applies on this date and the outstanding balance today.
+      first_payment_date: First instalment date
+      first_payment_date_hint: "Optional. Only if the first instalment was not a month after the loan was taken out (signed on the 9th, first instalment on the 19th of that month, say). The rest follow monthly from it."
+      paid_off_on: Fully repaid on
+      paid_off_on_hint: "If you repaid it early. From that day nothing is owed, no instalment is expected and, if deducted from your pay, the months after it are not booked (those the app had booked are taken back). Record the payment itself in the account it came from, as a transfer to this loan or as Excluded. Clear the date to undo it."
       down_payment: Down payment
       insurance_rate: Insurance rate
       insurance_rate_placeholder: '0.36'

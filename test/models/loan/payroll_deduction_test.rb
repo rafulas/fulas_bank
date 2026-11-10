@@ -162,4 +162,32 @@ class Loan::PayrollDeductionTest < ActiveSupport::TestCase
     assert_equal @nomina, on_that_day.find_by("entries.amount < 0").entryable.category
     assert_empty Loan::PayrollDeduction.new(@loan.reload).instalments_without_pay
   end
+
+  test "repaid early: nothing owed from that day, no month after it, and those booked after it go" do
+    @loan.update!(payroll_deducted: true, payroll_expense_category: @reforma, payroll_income_category: @nomina)
+    @loan.update_columns(payroll_deducted_since: (Date.current << 6).beginning_of_month)
+    Loan::PayrollDeduction.new(@loan.reload).book_due!
+    booked = @loan.payment_links.count
+    assert_operator booked, :>=, 5
+
+    paid_off = (Date.current << 3).change(day: 25)
+    @loan.update!(paid_off_on: paid_off)
+
+    @loan.reload
+    assert @loan.paid_off?
+    assert @loan.payment_links.joins(:entry).where(entries: { date: paid_off.. }).none?, "no instalment after the payoff"
+    assert @loan_account.entries.where(entryable_type: "Transaction", date: paid_off..).none?, "nor its pay"
+    assert_operator @loan.payment_links.count, :>=, 2
+    assert_equal 0, @loan_account.entries.valuations.find_by!(date: paid_off).amount
+    assert_empty Loan::PayrollDeduction.new(@loan).book_due!, "the months after it are not booked again"
+
+    @loan.update!(paid_off_on: nil)
+    assert_nil @loan_account.entries.valuations.find_by(date: paid_off)
+    assert_not @loan.reload.paid_off_on
+  end
+
+  test "the payoff day cannot be in the future" do
+    @loan.paid_off_on = Date.current + 1
+    assert_not @loan.valid?
+  end
 end

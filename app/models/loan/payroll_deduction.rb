@@ -113,16 +113,39 @@ class Loan::PayrollDeduction
   def due_dates
     from = loan.payroll_deducted_since
     day = loan.payment_day || loan.start_date&.day || 1
+    # Fulas Bank: repaid early, nothing is deducted from that day on.
+    last = loan.paid_off_on ? [ today, loan.paid_off_on - 1 ].min : today
     dates = []
     month = from.beginning_of_month
 
-    while month <= today
+    while month <= last
       date = month.change(day: [ day, month.end_of_month.day ].min)
-      dates << date if date >= from && date <= today && instalment_on(date)
+      dates << date if date >= from && date <= last && instalment_on(date)
       month = month.next_month
     end
 
     dates
+  end
+
+  # Fulas Bank: takes back the months booked in the loan from `date` on (each
+  # linked instalment and the pay beside it), once the loan was repaid early.
+  # Movements in other accounts are left alone. @return [Integer] instalments taken back
+  def unbook_after!(date)
+    return 0 unless account
+
+    expenses = account.entries.where(entryable_type: "Transaction", id: loan.payment_links.select(:entry_id))
+                      .where(date: date..).where("entries.amount > 0").to_a
+    return 0 if expenses.empty?
+
+    Entry.transaction do
+      expenses.each do |expense|
+        pay = account.entries.where(entryable_type: "Transaction", date: expense.date, amount: -expense.amount).first
+        pay&.destroy!
+        expense.destroy!
+      end
+    end
+    account.sync_later
+    expenses.size
   end
 
   # What the employer takes that month: the schedule's instalment, or the

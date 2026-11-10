@@ -46,6 +46,10 @@ es:
       rate_change_remove: Quitar
       start_date: Fecha de formalización
       start_date_hint: Cuándo se firmó o se dispuso el préstamo. El importe inicial se aplica en esta fecha y el saldo pendiente, hoy.
+      first_payment_date: Fecha de la primera cuota
+      first_payment_date_hint: "Opcional. Solo si la primera cuota no fue un mes después de la formalización (por ejemplo, firmado el 9 y primera cuota el 19 de ese mismo mes). Las demás van cada mes desde ella."
+      paid_off_on: Amortizado por completo el
+      paid_off_on_hint: "Si lo pagaste entero antes de tiempo. Desde ese día no se debe nada, no se esperan más cuotas y, si se descuenta de la nómina, no se apuntan los meses siguientes (y se quitan los que la app hubiera apuntado). El pago en sí apúntalo en la cuenta desde la que lo hiciste como traspaso a este préstamo o como Excluido. Borra la fecha para deshacerlo."
       down_payment: Entrada
       insurance_rate: Tipo del seguro (%)
       insurance_rate_placeholder: '0,36'

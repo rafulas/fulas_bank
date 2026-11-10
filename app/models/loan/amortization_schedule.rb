@@ -16,7 +16,7 @@ class Loan::AmortizationSchedule
   Payment = Data.define(:number, :date, :payment, :principal, :interest, :ending_balance)
 
   attr_reader :principal, :annual_rate, :term_months, :start_date, :currency, :payment_day, :fixed_payment,
-              :fixed_payment_window
+              :fixed_payment_window, :first_payment_date
 
   class << self
     # Returns a schedule for the loan, or nil when the loan isn't amortizable
@@ -33,7 +33,8 @@ class Loan::AmortizationSchedule
         rate_resolver: (Loan::RateResolver.for(loan) if loan.variable_rate_type?),
         payment_day: loan.payment_day,
         fixed_payment: loan.payment_amount,
-        fixed_payment_window: (quoted_payment_window(loan) if loan.variable_rate_type?)
+        fixed_payment_window: (quoted_payment_window(loan) if loan.variable_rate_type?),
+        first_payment_date: loan.first_payment_date
       )
     end
 
@@ -62,9 +63,15 @@ class Loan::AmortizationSchedule
   # `fixed_payment_window` limits the quoted instalment to the payment dates
   # it covers -- a variable loan's current rate period. Omitted, a quoted
   # instalment holds for the whole term, which is what a fixed loan does.
+  #
+  # Fulas Bank: `first_payment_date` is the day of the first instalment when
+  # it is not a month after origination (a staff loan taken on the 9th and
+  # first deducted from the pay of the 19th). The others follow monthly from
+  # it; interest still runs from origination.
   def initialize(principal:, annual_rate:, term_months:, start_date:, currency:, rate_resolver: nil,
-                 payment_day: nil, fixed_payment: nil, fixed_payment_window: nil)
+                 payment_day: nil, fixed_payment: nil, fixed_payment_window: nil, first_payment_date: nil)
     @currency = currency
+    @first_payment_date = first_payment_date
     # Rounded to the currency at the door. A balance carrying more fractional
     # units than the currency has -- `first_valuation_amount` is decimal(19,4)
     # against two-decimal USD -- otherwise loses its residue in the first
@@ -164,7 +171,7 @@ class Loan::AmortizationSchedule
     # origination, so the term keeps its number of payments.
     def payment_schedule
       @payment_schedule ||= (1..term_months).map do |number|
-        date = start_date >> number
+        date = first_payment_date ? first_payment_date >> (number - 1) : start_date >> number
         payment_day ? date.change(day: [ payment_day, date.end_of_month.day ].min) : date
       end
     end
