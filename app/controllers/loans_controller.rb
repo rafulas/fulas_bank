@@ -7,7 +7,8 @@ class LoansController < ApplicationController
     :payment_amount, :payment_day, :asset_account_id,
     :payroll_deducted, :payroll_expense_category_id, :payroll_income_category_id, :payroll_deducted_since,
     :first_payment_date, :paid_off_on,
-    { rate_changes: [ :effective_date, :rate ] }
+    { rate_changes: [ :effective_date, :rate ] },
+    { prepayments: [ :date, :amount, :mode ] }
   )
 
   private

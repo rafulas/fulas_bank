@@ -194,6 +194,35 @@ class Loan::AmortizationScheduleTest < ActiveSupport::TestCase
     assert_nil Loan::AmortizationSchedule.for(loan)
   end
 
+
+  # Fulas Bank: 1.200 at 0 % over 12 months is 100 a month. 300 paid off
+  # after the third instalment leaves 600: kept at 100, it is gone six
+  # instalments later; re-sized, the twelve months hold at about 66,67.
+  test "a partial repayment that shortens the term keeps the instalment" do
+    schedule = prepaid_schedule(mode: "term")
+
+    assert_equal 9, schedule.payments.size
+    assert schedule.payments.all? { |payment| payment.payment.amount == BigDecimal("100") }
+    assert_equal BigDecimal("300"), schedule.payments[3].prepayment.amount
+    assert_nil schedule.payments[2].prepayment
+    assert_equal 0, schedule.payments.last.ending_balance.amount
+  end
+
+  test "a partial repayment that lowers the instalment keeps the term" do
+    schedule = prepaid_schedule(mode: "payment")
+
+    assert_equal 12, schedule.payments.size
+    assert_equal BigDecimal("100"), schedule.payments[2].payment.amount
+    assert_in_delta 66.67, schedule.payments[3].payment.amount.to_f, 0.01
+    assert_equal 0, schedule.payments.last.ending_balance.amount
+  end
+
+  test "a partial repayment larger than the debt settles it" do
+    schedule = prepaid_schedule(mode: "term", amount: 5_000)
+
+    assert_equal 3, schedule.payments.size
+  end
+
   private
     def build_schedule(principal: 500_000, annual_rate: 3.5, term_months: 360,
                        start_date: Date.new(2026, 1, 1), currency: "USD")
@@ -213,5 +242,13 @@ class Loan::AmortizationScheduleTest < ActiveSupport::TestCase
         balance: 500_000,
         currency: "USD",
         accountable: Loan.create!(subtype: "mortgage", **loan_attrs)
+    end
+
+    def prepaid_schedule(mode:, amount: 300)
+      Loan::AmortizationSchedule.new(
+        principal: 1_200, annual_rate: 0, term_months: 12,
+        start_date: Date.new(2026, 1, 15), currency: "EUR",
+        prepayments: [ { date: Date.new(2026, 4, 20), amount: BigDecimal(amount.to_s), mode: mode } ]
+      )
     end
 end

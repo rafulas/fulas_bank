@@ -13,10 +13,16 @@
 # what a *schedule* is -- the dates, the term, and the presentation of a run as
 # Payment records -- and nothing about how interest accrues.
 class Loan::AmortizationSchedule
-  Payment = Data.define(:number, :date, :payment, :principal, :interest, :ending_balance)
+  # Fulas Bank: `prepayment` is what was repaid early in the period ending on
+  # this payment (nil when nothing was).
+  Payment = Data.define(:number, :date, :payment, :principal, :interest, :ending_balance, :prepayment) do
+    def initialize(prepayment: nil, **rest)
+      super(prepayment: prepayment, **rest)
+    end
+  end
 
   attr_reader :principal, :annual_rate, :term_months, :start_date, :currency, :payment_day, :fixed_payment,
-              :fixed_payment_window, :first_payment_date
+              :fixed_payment_window, :first_payment_date, :prepayments
 
   class << self
     # Returns a schedule for the loan, or nil when the loan isn't amortizable
@@ -34,7 +40,8 @@ class Loan::AmortizationSchedule
         payment_day: loan.payment_day,
         fixed_payment: loan.payment_amount,
         fixed_payment_window: (quoted_payment_window(loan) if loan.variable_rate_type?),
-        first_payment_date: loan.first_payment_date
+        first_payment_date: loan.first_payment_date,
+        prepayments: loan.prepayment_rows
       )
     end
 
@@ -69,9 +76,13 @@ class Loan::AmortizationSchedule
   # first deducted from the pay of the 19th). The others follow monthly from
   # it; interest still runs from origination.
   def initialize(principal:, annual_rate:, term_months:, start_date:, currency:, rate_resolver: nil,
-                 payment_day: nil, fixed_payment: nil, fixed_payment_window: nil, first_payment_date: nil)
+                 payment_day: nil, fixed_payment: nil, fixed_payment_window: nil, first_payment_date: nil,
+                 prepayments: [])
     @currency = currency
     @first_payment_date = first_payment_date
+    # Fulas Bank: partial early repayments ({date:, amount:, mode:}); see
+    # Loan#prepayment_rows and Loan::Simulator.
+    @prepayments = Array(prepayments)
     # Rounded to the currency at the door. A balance carrying more fractional
     # units than the currency has -- `first_valuation_amount` is decimal(19,4)
     # against two-decimal USD -- otherwise loses its residue in the first
@@ -107,6 +118,7 @@ class Loan::AmortizationSchedule
     @payments ||= simulation.payments.map do |row|
       Payment.new(
         number: row[:payment_number],
+        prepayment: (money(row[:prepayment]) if row[:prepayment]&.positive?),
         date: row[:payment_date],
         payment: money(row[:payment_amount]),
         principal: money(row[:principal_payment]),
@@ -191,7 +203,8 @@ class Loan::AmortizationSchedule
           # the table agrees with what the bank actually charges. The final
           # payment still settles whatever is left.
           payment_strategy: payment_strategy,
-          payment_amount: payment_amount
+          payment_amount: payment_amount,
+          prepayments: prepayments
         ).run
       else
         Loan::SimulationResult.new(payments: [], currency_precision: currency_precision)

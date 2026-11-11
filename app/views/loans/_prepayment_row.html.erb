@@ -1,0 +1,27 @@
+<%# locals: (date:, amount:, mode:) %>
+
+<%# Fulas Bank: one partial early repayment (Loan#prepayments=). Also the JS
+    clone template, hence no ids (see loans/_rate_change_field). %>
+<div class="flex flex-wrap items-end gap-2" data-prepayment-row>
+  <%= render "loans/rate_change_field",
+             label: t("loans.form.prepayment_date"), type: "date",
+             name: "account[accountable_attributes][prepayments][][date]",
+             value: date, attributes: { max: Date.current.iso8601 } %>
+
+  <%= render "loans/rate_change_field",
+             label: t("loans.form.prepayment_amount"), type: "number",
+             name: "account[accountable_attributes][prepayments][][amount]",
+             value: amount, attributes: { step: "0.01", min: "0.01" } %>
+
+  <div class="form-field">
+    <label class="form-field__body">
+      <span class="form-field__label"><%= t("loans.form.prepayment_mode") %></span>
+      <%= select_tag "account[accountable_attributes][prepayments][][mode]",
+                     options_for_select(Loan::PREPAYMENT_MODES.map { |value| [ t("loans.form.prepayment_modes.#{value}"), value ] }, mode.presence || "term"),
+                     id: nil, class: "form-field__input" %>
+    </label>
+  </div>
+
+  <%= render DS::Button.new(text: t("loans.form.rate_change_remove"), variant: "ghost", type: "button", class: "shrink-0",
+                            data: { action: "loan-prepayments#remove" }) %>
+</div>

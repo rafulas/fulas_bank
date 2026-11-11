@@ -68,7 +68,8 @@ class Loan
       re_amortisation_events: nil,
       payment_strategy: :reamortize,
       payment_amount: nil,
-      settle_at_schedule_end: true
+      settle_at_schedule_end: true,
+      prepayments: []
     )
       @starting_balance = BigDecimal(starting_balance.to_s)
       @accrual_start_date = accrual_start_date
@@ -88,6 +89,11 @@ class Loan
         else BigDecimal(payment_amount.to_s)
         end
       @settle_at_schedule_end = settle_at_schedule_end
+      # Fulas Bank: partial early repayments, each {date:, amount:, mode:}.
+      # Paid off the balance the period they fall in opens with (monthly
+      # accrual has one charge per period). :term keeps the instalment, so the
+      # loan ends sooner; :payment re-sizes it over the payments left.
+      @prepayments = Array(prepayments).sort_by { |prepayment| prepayment[:date] }
 
       raise ArgumentError, "payment schedule must not be empty" if @payment_schedule.empty?
       if @payment_schedule.length > MAX_PERIODS
@@ -108,11 +114,24 @@ class Loan
       payments = []
       payment = nil
       previous_sizing_rate = nil
+      pending_prepayments = @prepayments.dup
       (0...@payment_schedule.length).each do |index|
-        break if balance <= 0
-
         payment_date = @payment_schedule[index]
         period_start = index.zero? ? @accrual_start_date : @payment_schedule[index - 1]
+
+        resize_after_prepayment = false
+        prepaid = BigDecimal("0")
+        while pending_prepayments.any? && pending_prepayments.first[:date] < payment_date
+          prepayment = pending_prepayments.shift
+          amount = [ BigDecimal(prepayment[:amount].to_s), balance ].min
+          next unless amount.positive?
+
+          balance -= amount
+          prepaid += amount
+          resize_after_prepayment ||= prepayment[:mode].to_s == "payment"
+        end
+
+        break if balance <= 0
 
         # See the class comment: opening rate charges the period, closing rate
         # sizes the payment.
@@ -157,7 +176,7 @@ class Loan
           # settlement thousands short). The sizing is told what this period
           # actually charged so the figure covers it and amortises the rest
           # evenly.
-          if payment.nil? || (@payment_strategy == :reamortize && rate_moved)
+          if payment.nil? || (@payment_strategy == :reamortize && rate_moved) || resize_after_prepayment
             payment = AmortizationMath.level_payment(
               balance: balance,
               monthly_rate: sizing_rate,
@@ -189,6 +208,7 @@ class Loan
         payments << {
           payment_number: index + 1,
           payment_date: payment_date,
+          prepayment: prepaid,
           interest_rate: BigDecimal(@accrual_rate_for.call(period_start).to_s),
           sizing_rate: BigDecimal(rate_on(payment_date).to_s),
           **step
