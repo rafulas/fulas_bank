@@ -44,7 +44,7 @@
       <%# Fulas Bank: one block of movements, and the next block loads as the
           list is scrolled (see transactions/_list_page). %>
       <div id="transactions-pages" class="space-y-3">
-        <%= render "transactions/list_page", transactions: @transactions, pagy: @pagy, after_month: nil %>
+        <%= render "transactions/list_page", transactions: @transactions, more: @more, after_month: nil %>
       </div>
     </div>
   <% else %>

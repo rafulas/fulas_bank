@@ -1,16 +1,17 @@
 import { Controller } from "@hotwired/stimulus";
 
 // The next block of movements in the list: a turbo-frame that loads its URL
-// when its button is pressed or when the user scrolls close to it. Nothing
-// loads on its own before the user scrolls, so the first screen stays as it
-// was served.
+// when its button is pressed or when the list comes within a few screens of
+// it, so the block is usually there before the user reaches it. Checked as
+// the page scrolls, and once when the block appears (after the page has
+// settled): a short first block brings the next one in the background.
 //
 // Once loaded, the block stays through a page refresh. Saving a movement
 // syncs its account, and the sync refreshes the page by morphing it: the
 // fresh page only has the first block, so the blocks loaded by scrolling
 // were emptied and the list jumped back to the top.
 export default class extends Controller {
-  static values = { url: String, margin: { type: Number, default: 600 } };
+  static values = { url: String, margin: { type: Number, default: 2500 } };
 
   connect() {
     this.loading = false;
@@ -26,9 +27,11 @@ export default class extends Controller {
       capture: true,
       passive: true,
     });
+    this.settleTimer = setTimeout(this.onScroll, 300);
   }
 
   disconnect() {
+    clearTimeout(this.settleTimer);
     document.removeEventListener("scroll", this.onScroll, { capture: true });
     this.element.removeEventListener(
       "turbo:before-morph-element",
@@ -44,6 +47,9 @@ export default class extends Controller {
 
   onScroll() {
     if (this.loading) return;
+    // In a hidden tab every block would look close and load the next one,
+    // all the way down the history.
+    if (this.element.getClientRects().length === 0) return;
 
     const distance =
       this.element.getBoundingClientRect().top - window.innerHeight;

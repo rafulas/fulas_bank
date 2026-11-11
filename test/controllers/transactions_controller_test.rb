@@ -979,6 +979,37 @@ end
     assert_empty page_2_entry_ids
   end
 
+  # Fulas Bank: the blocks after the first are read from the last day shown,
+  # whole days at a time, and only the rows are worked out for them.
+  test "the next block takes the days before the last one shown" do
+    family = families(:empty)
+    sign_in users(:empty)
+    family.accounts.each { |account| account.entries.delete_all }
+    account = family.accounts.create! name: "Blocks", balance: 0, currency: "USD", accountable: Depository.new
+
+    create_transaction(account: account, name: "Day 10", amount: 10, date: Date.new(2026, 5, 10))
+    create_transaction(account: account, name: "Day 9 a", amount: 11, date: Date.new(2026, 5, 9))
+    create_transaction(account: account, name: "Day 9 b", amount: 12, date: Date.new(2026, 5, 9))
+    create_transaction(account: account, name: "Day 8", amount: 13, date: Date.new(2026, 5, 8))
+    create_transaction(account: account, name: "Day 7", amount: 14, date: Date.new(2026, 5, 7))
+
+    TransactionsController.any_instance.stubs(:next_block_size).returns(1)
+    Transaction::Panel.expects(:new).never
+
+    get transactions_url(after_date: "2026-05-10", after_month: "2026-05-01"),
+        headers: { "Turbo-Frame" => "transactions_page_2026-05-10" }
+    assert_response :success
+
+    names = Entry.where(id: rendered_entry_ids).pluck(:name)
+    assert_equal [ "Day 9 a", "Day 9 b" ].sort, names.sort, "the whole of the 9th, nothing of the 10th"
+    assert_select "turbo-frame#transactions_page_2026-05-09[data-infinite-scroll-url-value*='after_date=2026-05-09']"
+
+    get transactions_url(after_date: "2026-05-08", after_month: "2026-05-01"),
+        headers: { "Turbo-Frame" => "transactions_page_2026-05-08" }
+    assert_equal [ "Day 7" ], Entry.where(id: rendered_entry_ids).pluck(:name)
+    assert_select "turbo-frame[id^='transactions_page_']", count: 1, message: "only the frame answered, no further block"
+  end
+
   test "calls Transaction::Search totals method with correct search parameters" do
     family = families(:empty)
     sign_in users(:empty)
