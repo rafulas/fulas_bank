@@ -1,7 +1,9 @@
-<%# locals: (transactions:, pagy:, after_month:, after_date: nil) %>
+<%# locals: (transactions:, more:, after_month:, after_date: nil) %>
 <%# Fulas Bank: a block of movements, grouped by month (each month starts with
     its summary) and day. At the end, the frame that brings the next block
-    when the list is scrolled down to it or its button is pressed.
+    when the list comes near it or its button is pressed. Each block after
+    the first is read from the last day shown (`after_date`), not by page
+    number (TransactionsController#load_next_block).
     `after_month` is the month the previous block ended in, so a month split
     between two blocks does not get its summary twice. A day is never split
     (see TransactionsController#complete_last_day): `after_date` is the last
@@ -33,14 +35,13 @@
   </div>
 <% end %>
 
-<%# A block can be empty when a long day took all of it: the list goes on. %>
 <% last_date = entries.last&.date || after_date %>
-<% if pagy.next && last_date %>
-  <%= turbo_frame_tag "transactions_page_#{pagy.next}",
+<% if more && last_date %>
+  <%= turbo_frame_tag "transactions_page_#{last_date.iso8601}",
         class: "block",
         data: {
           controller: "infinite-scroll",
-          infinite_scroll_url_value: transactions_path(q: @q, per_page: pagy.limit, page: pagy.next,
+          infinite_scroll_url_value: transactions_path(q: @q,
                                                        after_month: (entries.any? ? last_date.beginning_of_month : after_month).iso8601,
                                                        after_date: last_date.iso8601)
         } do %>

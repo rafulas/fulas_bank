@@ -4,6 +4,11 @@ class TransactionsController < ApplicationController
 
   # Fulas Bank: how far ahead the "Upcoming" tab looks for recurring payments.
   UPCOMING_DAYS = 45
+  # Fulas Bank: the first block of the list is small, so the page opens fast;
+  # the blocks after it, asked for in the background as the list is
+  # scrolled, are large, so scrolling seldom waits for the server.
+  FIRST_BLOCK_SIZE = 30
+  NEXT_BLOCK_SIZE = 150
 
   before_action :set_entry_for_unlock, only: :unlock
   before_action :set_entry_for_tags, only: :update_tags
@@ -83,7 +88,6 @@ class TransactionsController < ApplicationController
   def index
     @q = search_params
     @accessible_account_ids = Current.user.accessible_accounts.pluck(:id)
-    @unseen_count = performance_step("transacciones.nuevos") { Current.accessible_entries.unseen.count }
     @search = Transaction::Search.new(Current.family, filters: @q, accessible_account_ids: @accessible_account_ids, user: Current.user)
 
     base_scope = @search.transactions_scope
@@ -110,10 +114,15 @@ class TransactionsController < ApplicationController
                          }
                        )
 
-    @pagy, @transactions = performance_step("transacciones.paginar") do
-      pagy(base_scope, limit: safe_per_page(stored_params["per_page"])).then { |pagy, page| [ pagy, page.to_a ] }
+    if next_page_request?
+      load_next_block(base_scope)
+    else
+      @pagy, @transactions = performance_step("transacciones.paginar") do
+        pagy(base_scope, limit: safe_per_page(stored_params["per_page"] || FIRST_BLOCK_SIZE)).then { |pagy, page| [ pagy, page.to_a ] }
+      end
+      @more = @pagy.next.present?
+      @transactions = performance_step("transacciones.completar_dia") { complete_last_day(base_scope, @transactions) }
     end
-    @transactions = performance_step("transacciones.completar_dia") { complete_last_day(base_scope, @transactions) }
     performance_step("transacciones.precargar") { Transaction::ActivitySecurityPreloader.new(@transactions).preload }
 
     # Preload split parent data
@@ -140,6 +149,15 @@ class TransactionsController < ApplicationController
       Set.new
     end
 
+    # Fulas Bank: the next block of the list, asked for by its frame as the
+    # list is scrolled (see transactions/_list_page). It needs only its rows,
+    # not the counts, upcoming payments and panel of the whole page.
+    if next_page_request?
+      @after_month = parse_month(params[:after_month])
+      return render :next_page
+    end
+
+    @unseen_count = performance_step("transacciones.nuevos") { Current.accessible_entries.unseen.count }
     @uncategorized_count = performance_step("transacciones.sin_categoria") do
       cached_uncategorized_count
     end
@@ -163,14 +181,7 @@ class TransactionsController < ApplicationController
 
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.transactions"), nil ] ]
 
-    # Fulas Bank: the next block of the list, asked for by its frame as the
-    # list is scrolled (see transactions/_list_page).
-    if next_page_request?
-      @after_month = parse_month(params[:after_month])
-      render :next_page
-    elsif @q.blank?
-      @panel = Transaction::Panel.new(Current.family, user: Current.user)
-    end
+    @panel = Transaction::Panel.new(Current.family, user: Current.user) if @q.blank?
   end
 
   # Fulas Bank: one filter panel of the list, loaded when it is opened. It
@@ -899,12 +910,34 @@ class TransactionsController < ApplicationController
     # (told that day as `after_date`) leaves them out.
     def complete_last_day(scope, page)
       page = page.to_a
-      @after_date = parse_date(params[:after_date]) if next_page_request?
-      page = page.reject { |transaction| transaction.entry.date == @after_date } if @after_date
-      return page unless @pagy.next && page.any?
+      return page unless @more && page.any?
 
       last_date = page.last.entry.date
       page + scope.where(entries: { date: last_date }).where.not(id: page.map(&:id)).to_a
+    end
+
+    # Fulas Bank: a block after the first, told the last day already shown
+    # (`after_date`): the movements of the days before it, newest first. Read
+    # from that day rather than by page number, so blocks can be of any size
+    # and nothing is counted. One row more than the block says whether there
+    # is another after it.
+    def load_next_block(scope)
+      @after_date = parse_date(params[:after_date])
+      @transactions = []
+      @more = false
+      return unless @after_date
+
+      rows = performance_step("transacciones.bloque") do
+        scope.where(entries: { date: ...@after_date }).limit(next_block_size + 1).to_a
+      end
+      @more = rows.size > next_block_size
+      @transactions = performance_step("transacciones.completar_dia") do
+        complete_last_day(scope, rows.first(next_block_size))
+      end
+    end
+
+    def next_block_size
+      NEXT_BLOCK_SIZE
     end
 
     def parse_date(value)

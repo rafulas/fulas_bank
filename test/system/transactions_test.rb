@@ -371,11 +371,15 @@ class TransactionsTest < ApplicationSystemTestCase
         entryable: Transaction.new(category: category, merchant: merchant, tags: tags)
     end
 
+    # Fulas Bank: the block after the first comes on its own once the page
+    # settles (TransactionsController#load_next_block), so selecting the page
+    # takes every movement loaded, here all of them.
     def number_of_transactions_on_page
-      [ @user.family.entries.count, @page_size ].min
+      @user.family.entries.count
     end
 
     def all_transactions_checkbox
+      assert_selector "turbo-frame[id^='entry_']", count: number_of_transactions_on_page
       find("#selection_entry")
     end
 
