@@ -20,11 +20,13 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
   test "the next block of movements comes in its own frame" do
     12.times { |index| create_transaction(account: accounts(:depository), name: "Bloque #{index}", amount: 5, date: Date.current - index) }
 
-    get transactions_url(page: 2, per_page: 10, after_month: Date.current.beginning_of_month.iso8601),
-        headers: { "Turbo-Frame" => "transactions_page_2" }
+    # Fulas Bank: a block is told the last day already shown, and its frame
+    # is named after it.
+    get transactions_url(after_date: Date.current.iso8601, after_month: Date.current.beginning_of_month.iso8601),
+        headers: { "Turbo-Frame" => "transactions_page_#{Date.current.iso8601}" }
 
     assert_response :success
-    assert_select "turbo-frame#transactions_page_2"
+    assert_select "turbo-frame#transactions_page_#{Date.current.iso8601}"
     assert_select "#transactions-panel", count: 0
   end
 
@@ -37,10 +39,10 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
     assert_response :success
     assert_select "#entry-group-#{day}", count: 1
     assert_select "#entry-group-#{day} a", text: /Mismo día/, count: 14
-    assert_select "turbo-frame#transactions_page_2[data-infinite-scroll-url-value*=?]", "after_date=#{day.iso8601}"
+    assert_select "turbo-frame#transactions_page_#{day.iso8601}[data-infinite-scroll-url-value*=?]", "after_date=#{day.iso8601}"
 
-    get transactions_url(page: 2, per_page: 10, after_month: day.beginning_of_month.iso8601, after_date: day.iso8601),
-        headers: { "Turbo-Frame" => "transactions_page_2" }
+    get transactions_url(after_month: day.beginning_of_month.iso8601, after_date: day.iso8601),
+        headers: { "Turbo-Frame" => "transactions_page_#{day.iso8601}" }
 
     assert_response :success
     assert_select "#entry-group-#{day}", count: 0
