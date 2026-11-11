@@ -18,9 +18,12 @@
     <div data-testid="account-details">
       <% if tabs.count > 1 %>
         <%= render DS::Tabs.new(active_tab: active_tab, url_param_key: "tab") do |tabs_container| %>
-          <% tabs_container.with_nav(classes: "max-w-fit") do |nav| %>
+          <%# Fulas Bank: a vehicle or a loan has more tabs than fit on a phone.
+              The bar scrolls sideways on its own instead of widening the page,
+              which pushed the cards off the left edge. %>
+          <% tabs_container.with_nav(classes: "max-w-fit overflow-x-auto no-scrollbar") do |nav| %>
             <% tabs.each do |tab| %>
-              <% nav.with_btn(id: tab, label: t("accounts.show.tabs.#{tab}", default: tab.to_s.humanize), classes: "px-6") %>
+              <% nav.with_btn(id: tab, label: t("accounts.show.tabs.#{tab}", default: tab.to_s.humanize), classes: "px-6 whitespace-nowrap") %>
             <% end %>
           <% end %>
 
