@@ -6,15 +6,21 @@
 <html
   lang="<%= I18n.locale %>"
   data-theme="<%= theme %>"
-  data-controller="theme viewport"
+  data-controller="theme"
   data-theme-user-preference-value="<%= Current.user&.theme || "system" %>"
-  class="h-[var(--app-height, 100dvh)] text-primary bg-surface overflow-hidden overscroll-none font-sans <%= @os %>">
+  class="h-dvh text-primary bg-surface overflow-hidden overscroll-none font-sans <%= @os %>">
   <head>
     <%= render "layouts/shared/head" %>
     <%= yield :head %>
   </head>
 
-  <body class="h-[var(--app-height)] overflow-hidden antialiased"<% if sidebar_aware %> data-controller="notification-tray"<% end %>>
+  <%# Fulas Bank: the page is exactly as tall as the screen, measured by the
+      browser itself (100dvh), which keeps it right as the screen changes.
+      It used to be measured once in JavaScript (window.innerHeight), and the
+      iPad app on the home screen sometimes got a figure taller than the
+      screen: the end of each page stayed hidden under the bottom bar until
+      the iPad was turned. %>
+  <body class="h-dvh overflow-hidden antialiased"<% if sidebar_aware %> data-controller="notification-tray"<% end %>>
     <% if Rails.env.development? %>
       <button hidden data-controller="hotkey" data-hotkey="t t /" data-action="theme#toggle"></button>
     <% end %>

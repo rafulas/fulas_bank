@@ -147,7 +147,7 @@ end %>
     </div>
 
     <%# SHARED - Main content %>
-    <%= tag.main id: "main", class: class_names("grow overflow-y-auto px-3 lg:px-10 w-full mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"), data: { app_layout_target: "content", viewport_target: "content", notification_tray_target: "main" } do %>
+    <%= tag.main id: "main", class: class_names("grow overflow-y-auto px-3 lg:px-10 w-full mx-auto pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"), data: { app_layout_target: "content", notification_tray_target: "main" } do %>
       <% unless intro_mode %>
         <div class="hidden lg:flex gap-2 items-center justify-between mb-6 sticky top-0 z-10 -mx-3 lg:-mx-10 px-3 lg:px-10 py-4 bg-surface border-b border-tertiary">
           <div class="flex items-center gap-2">
@@ -273,8 +273,7 @@ end %>
     <% mobile_main = intro_mode ? mobile_nav_items : [ nav[:home], nav[:transactions], nav[:month_plan], nav[:forecast] ] %>
     <% mobile_more_groups = intro_mode ? [] : desktop_nav_groups.map { |group| group.merge(items: group[:items] - mobile_main) }.reject { |group| group[:items].empty? } %>
     <% mobile_more_groups << { title: nil, items: [ { name: t("layouts.application.nav.assistant"), path: chats_path, icon: "icon-assistant", icon_custom: true, active: page_active?(chats_path) } ] } unless intro_mode %>
-    <%= tag.nav class: "lg:hidden fixed bottom-0 left-0 right-0 bg-surface z-10 border-t border-tertiary flex justify-around pb-[env(safe-area-inset-bottom)]",
-      data: { viewport_target: "bottomNav" } do %>
+    <%= tag.nav class: "lg:hidden fixed bottom-0 left-0 right-0 bg-surface z-10 border-t border-tertiary flex justify-around pb-[env(safe-area-inset-bottom)]" do %>
       <% mobile_main.each do |nav_item| %>
         <%= render "layouts/shared/nav_item", **nav_item %>
       <% end %>
