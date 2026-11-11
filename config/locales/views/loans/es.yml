@@ -44,6 +44,16 @@ es:
       rate_change_rate: Tipo
       rate_change_add: Añadir cambio de tipo
       rate_change_remove: Quitar
+      prepayments: "Amortizaciones parciales"
+      prepayments_hint: "Dinero que adelantaste aparte de las cuotas. Cada una baja lo que se debe desde su fecha. El pago en sí apúntalo en la cuenta de donde salió (como gasto en la categoría del préstamo), igual que las cuotas."
+      prepayments_empty: "No hay amortizaciones parciales."
+      prepayment_date: "Fecha"
+      prepayment_amount: "Importe"
+      prepayment_mode: "Efecto"
+      prepayment_add: "Añadir amortización parcial"
+      prepayment_modes:
+        term: "Reducir plazo (misma cuota)"
+        payment: "Reducir cuota (mismo plazo)"
       start_date: Fecha de formalización
       start_date_hint: Cuándo se firmó o se dispuso el préstamo. El importe inicial se aplica en esta fecha y el saldo pendiente, hoy.
       first_payment_date: Fecha de la primera cuota
@@ -145,6 +155,7 @@ es:
         payment: Cuota
         principal: Capital
         remaining_balance: Saldo pendiente
+        prepayment: Amortización parcial
         total_cost: Coste total
         total_interest: Intereses totales
       overview:

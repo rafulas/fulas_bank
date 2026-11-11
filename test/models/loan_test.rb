@@ -228,6 +228,27 @@ class LoanTest < ActiveSupport::TestCase
     assert_equal 80_000, account.loan.reload.original_balance.amount
   end
 
+
+  # Fulas Bank: the form's rows, blank ones and the hidden sentinel dropped.
+  test "partial repayments are stored from the form rows, oldest first" do
+    loan = build_loan_account(balance: 10_000, down_payment: 1_000).loan
+    loan.prepayments = [ "", { date: "2023-05-02", amount: "2000", mode: "term" },
+                         { date: "2021-03-01", amount: "1500,50", mode: "payment" }, { date: "", amount: "" } ]
+
+    assert loan.valid?
+    assert_equal [ Date.new(2021, 3, 1), Date.new(2023, 5, 2) ], loan.prepayment_rows.map { |row| row[:date] }
+    assert_equal BigDecimal("1500.5"), loan.prepayment_rows.first[:amount]
+    assert_equal %w[payment term], loan.prepayment_rows.map { |row| row[:mode] }
+  end
+
+  test "a partial repayment without an amount is rejected and kept for the form" do
+    loan = build_loan_account(balance: 10_000, down_payment: 1_000).loan
+    loan.prepayments = [ { date: "2023-05-02", amount: "", mode: "term" } ]
+
+    assert_not loan.valid?
+    assert_equal [ { date: "2023-05-02", amount: "", mode: "term" } ], loan.prepayment_form_rows
+  end
+
   private
     # A loan imported part way through its life: the principal it was written
     # for is recorded, and the only valuation the account carries is the

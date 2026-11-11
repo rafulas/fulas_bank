@@ -58,6 +58,10 @@
     <% table.with_column(t(".payment"), numeric: true, class: "privacy-sensitive") { |payment| format_money(payment.payment) } %>
     <% table.with_column(t(".principal"), numeric: true, class: "privacy-sensitive") { |payment| format_money(payment.principal) } %>
     <% table.with_column(t(".interest"), numeric: true, class: "text-secondary privacy-sensitive") { |payment| format_money(payment.interest) } %>
+    <%# Fulas Bank: partial early repayments, only when there are any. %>
+    <% if schedule.payments.any?(&:prepayment) %>
+      <% table.with_column(t(".prepayment"), numeric: true, class: "privacy-sensitive") { |payment| payment.prepayment ? format_money(payment.prepayment) : "" } %>
+    <% end %>
     <% table.with_column(t(".remaining_balance"), numeric: true, class: "privacy-sensitive") { |payment| format_money(payment.ending_balance) } %>
   <% end %>
 </div>

@@ -44,6 +44,16 @@ en:
       rate_change_rate: Rate
       rate_change_add: Add rate change
       rate_change_remove: Remove
+      prepayments: "Early repayments"
+      prepayments_hint: "Money paid off the loan apart from the instalments. Each one lowers what is owed from its date. Record the payment itself in the account it left (as spending in the loan's category), as you do with the instalments."
+      prepayments_empty: "No early repayments recorded."
+      prepayment_date: "Date"
+      prepayment_amount: "Amount"
+      prepayment_mode: "Effect"
+      prepayment_add: "Add early repayment"
+      prepayment_modes:
+        term: "Shorter term (same instalment)"
+        payment: "Lower instalment (same term)"
       start_date: Origination date
       start_date_hint: When the loan was signed or drawn down. The original balance applies on this date and the outstanding balance today.
       first_payment_date: First instalment date
@@ -123,6 +133,7 @@ en:
         payment: Payment
         principal: Principal
         remaining_balance: Remaining Balance
+        prepayment: Early repayment
         total_cost: Total Cost
         total_interest: Total Interest
       overview:

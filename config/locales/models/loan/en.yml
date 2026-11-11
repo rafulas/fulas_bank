@@ -12,3 +12,4 @@ en:
         loan:
           invalid_rate_change: Rate change rows need both an effective date and a rate.
           rate_change_before_origination: A rate change cannot take effect before the loan originated.
+          invalid_prepayment: Each early repayment needs a date, an amount above zero and an effect.

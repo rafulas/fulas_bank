@@ -56,7 +56,7 @@ class Loan < ApplicationRecord
   # corrected start date, say), the balances anchored at each linked payment
   # are worked out again from the new schedule.
   SCHEDULE_ATTRIBUTES = %w[initial_balance interest_rate rate_type term_months start_date payment_day
-                           payment_amount variable_rate_schedule first_payment_date].freeze
+                           payment_amount variable_rate_schedule first_payment_date prepayments].freeze
   after_update_commit :reanchor_linked_payments, if: -> { (saved_changes.keys & SCHEDULE_ATTRIBUTES).any? }
   # Fulas Bank: the instalment follows the loan (Loan::InstallmentSync).
   after_save_commit :sync_installment
@@ -435,7 +435,7 @@ class Loan < ApplicationRecord
   # loan that has recorded rate changes and no start date; every other loan
   # answers from its own attributes.
   def changed_for_autosave?
-    super || invalid_rate_changes.present? || rate_changes_precede_origination?
+    super || invalid_rate_changes.present? || invalid_prepayments.present? || rate_changes_precede_origination?
   end
 
   # Form rows, in a shape the form can render without parsing anything.
@@ -452,6 +452,69 @@ class Loan < ApplicationRecord
       Array(invalid_rate_changes)
   end
 
+  # Fulas Bank: partial early repayments, paid apart from the instalments
+  # (from the bank account, say). Each lowers what is owed; "term" keeps the
+  # instalment, so the loan ends sooner, and "payment" keeps the end and
+  # lowers the instalment (Loan::Simulator).
+  PREPAYMENT_MODES = %w[term payment].freeze
+
+  attr_reader :invalid_prepayments
+
+  validate :prepayments_must_be_parseable
+
+  # Form rows ({date, amount, mode}); blank rows are dropped, the hidden
+  # sentinel ("") included, so removing every row clears them.
+  def prepayments=(rows)
+    invalid = []
+
+    parsed = Array(rows).filter_map do |row|
+      next unless row.respond_to?(:[]) && !row.is_a?(String)
+
+      date = row[:date].presence || row["date"].presence
+      amount = row[:amount].presence || row["amount"].presence
+      mode = (row[:mode].presence || row["mode"].presence || "term").to_s
+      next if date.blank? && amount.blank?
+
+      begin
+        raise ArgumentError, "incomplete" if date.blank? || amount.blank?
+        raise ArgumentError, "mode" unless PREPAYMENT_MODES.include?(mode)
+
+        parsed_amount = BigDecimal(amount.to_s.tr(",", "."))
+        raise ArgumentError, "amount" unless parsed_amount.finite? && parsed_amount.positive?
+
+        { "date" => Date.iso8601(date.to_s).iso8601, "amount" => parsed_amount.to_s("F"), "mode" => mode }
+      rescue ArgumentError, TypeError, Date::Error, FloatDomainError
+        invalid << { date: date.to_s, amount: amount.to_s, mode: mode }
+        nil
+      end
+    end
+
+    @invalid_prepayments = invalid
+    @amortization_schedule = nil
+    super(parsed.sort_by { |row| row["date"] })
+  end
+
+  # The recorded prepayments, oldest first, as the schedule reads them.
+  def prepayment_rows
+    Array(self[:prepayments]).filter_map do |row|
+      date = Date.iso8601(row["date"].to_s)
+      amount = BigDecimal(row["amount"].to_s)
+      { date: date, amount: amount, mode: PREPAYMENT_MODES.include?(row["mode"]) ? row["mode"] : "term" }
+    rescue ArgumentError, TypeError, Date::Error
+      nil
+    end.sort_by { |row| row[:date] }
+  end
+
+  # What the form shows: the stored rows, then any rejected ones as typed.
+  def prepayment_form_rows
+    prepayment_rows.map { |row| { date: row[:date].iso8601, amount: row[:amount].to_s("F"), mode: row[:mode] } } +
+      Array(invalid_prepayments)
+  end
+
+  private def prepayments_must_be_parseable
+    errors.add(:base, I18n.t("activerecord.errors.models.loan.invalid_prepayment")) if invalid_prepayments.present?
+  end
+
   def amortization_schedule
     @amortization_schedule ||= AmortizationSchedule.for(self)
   end
@@ -459,7 +522,7 @@ class Loan < ApplicationRecord
   # The columns AmortizationSchedule.for reads from the loan itself. Assigning
   # any of them drops the memoised schedule, as reload does, so a read after the
   # change answers with the new terms rather than the ones it was built from.
-  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule payment_day payment_amount].freeze
+  SCHEDULE_INPUTS = %i[interest_rate term_months rate_type start_date variable_rate_schedule payment_day payment_amount first_payment_date].freeze
 
   SCHEDULE_INPUTS.each do |input|
     define_method(:"#{input}=") do |value|

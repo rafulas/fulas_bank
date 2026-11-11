@@ -123,6 +123,43 @@
                                  help_text: t("loans.form.paid_off_on_hint") %>
       <% end %>
 
+      <%# Fulas Bank: partial early repayments (Loan#prepayments=), paid apart
+          from the instalments. Only once the loan exists. %>
+      <% if account.persisted? %>
+        <% prepayment_rows = account.loan.prepayment_form_rows %>
+        <div data-controller="loan-prepayments">
+          <%= render DS::Disclosure.new(variant: :inline, open: prepayment_rows.any?, body_class: "space-y-2 mt-2 pl-4 border-l border-primary") do |disclosure| %>
+            <% disclosure.with_summary_content do %>
+              <span class="text-sm text-secondary hover:text-primary flex items-center gap-1 py-2">
+                <%= icon "chevron-right", size: "sm", class: "group-open:rotate-90 transition-transform" %>
+                <%= t("loans.form.prepayments") %>
+              </span>
+            <% end %>
+
+            <p class="text-xs text-secondary"><%= t("loans.form.prepayments_hint") %></p>
+
+            <input type="hidden" name="account[accountable_attributes][prepayments][]" value="">
+
+            <div data-loan-prepayments-target="rows" class="space-y-2">
+              <% prepayment_rows.each do |row| %>
+                <%= render "loans/prepayment_row", date: row[:date], amount: row[:amount], mode: row[:mode] %>
+              <% end %>
+            </div>
+
+            <p data-loan-prepayments-target="empty" class="text-xs text-subdued" <%= "hidden" if prepayment_rows.any? %>>
+              <%= t("loans.form.prepayments_empty") %>
+            </p>
+
+            <template data-loan-prepayments-target="template">
+              <%= render "loans/prepayment_row", date: nil, amount: nil, mode: "term" %>
+            </template>
+
+            <%= render DS::Button.new(text: t("loans.form.prepayment_add"), icon: "plus", variant: "ghost", type: "button",
+                                      data: { action: "loan-prepayments#add" }) %>
+          <% end %>
+        </div>
+      <% end %>
+
       <%# Rate changes only mean something for a loan whose rate can move. The
           section is rendered for every rate type, retained rows included, and
           for fixed it is hidden AND its inputs disabled -- here, server-side,
