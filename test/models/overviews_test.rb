@@ -64,6 +64,25 @@ class OverviewsTest < ActiveSupport::TestCase
     assert_equal Money.new(660, "USD"), row.gain
   end
 
+  test "Fulas Bank: shares bought from the bank compare with what the ones still held cost, the sales' gain apart" do
+    account = @family.accounts.create!(name: "Cuenta de Valores", balance: 3_000, currency: "USD",
+                                       accountable: Investment.new(subtype: "stocks", brokerage_cash: false))
+    [ [ Date.current - 900, 100, 5 ], [ Date.current - 500, 100, 7 ], [ Date.current - 200, -100, 15 ] ].each do |date, qty, price|
+      account.entries.create!(date: date, amount: qty * price, currency: "USD", name: "Trade",
+                              entryable: Trade.new(qty: qty, price: price, fee: 0, currency: "USD", security: securities(:aapl)))
+    end
+
+    overview = InvestmentsOverview.new(@family, user: @user)
+    row = overview.rows.sole
+
+    assert_equal Money.new(700, "USD"), row.contributed, "the 100 shares left, bought at 7"
+    assert_equal Money.new(2_300, "USD"), row.gain
+    assert_equal Money.new(1_000, "USD"), row.realized, "100 × (15 − 5)"
+    assert_equal Money.new(3_300, "USD"), row.total_gain
+    assert_equal Money.new(1_000, "USD"), overview.total_realized
+    assert_equal Money.new(3_300, "USD"), overview.total_gain_with_sales
+  end
+
   test "funds held by participaciones count what was put into them in the totals" do
     account = @family.accounts.create!(name: "Fondos", balance: "1017.41", currency: "USD", accountable: Investment.new)
     @family.investment_funds.create!(account: account, name: "Indexado", units: 100, price: "10.1741", price_date: Date.current, cost: 1_000)

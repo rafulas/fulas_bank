@@ -35,6 +35,26 @@ class Import::BalanceChecksControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#import_balance_check"
   end
 
+  test "while the balances are recalculated, the check reloads itself from inside its frame" do
+    patch import_balance_check_url(@import, account_id: @account.id), params: { balance_check: { amount: "1000" } }
+    Family.any_instance.stubs(:syncing?).returns(true)
+
+    get import_balance_check_url(@import), headers: { "Turbo-Frame" => "import_balance_check" }
+
+    # Turbo swaps only what is inside the frame, so the poller must live there
+    # to start after «Comprobar».
+    assert_select "turbo-frame#import_balance_check[data-controller]", count: 0
+    assert_select "turbo-frame#import_balance_check > div[data-controller='polling'][data-polling-frame-id-value='import_balance_check']"
+  end
+
+  test "once recalculated, the check stops reloading" do
+    patch import_balance_check_url(@import, account_id: @account.id), params: { balance_check: { amount: "1000" } }
+
+    get import_balance_check_url(@import), headers: { "Turbo-Frame" => "import_balance_check" }
+
+    assert_select "[data-controller='polling']", count: 0
+  end
+
   test "rejects an amount that is not a number" do
     patch import_balance_check_url(@import, account_id: @account.id), params: { balance_check: { amount: "mucho" } }
 

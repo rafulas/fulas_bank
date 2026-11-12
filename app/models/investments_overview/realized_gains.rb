@@ -43,25 +43,50 @@ class InvestmentsOverview::RealizedGains
     total(:fifo_gain)
   end
 
+  # Fulas Bank: what the shares an account still holds cost, by FIFO (the
+  # lots left once the sales have used up the first ones), in the account's
+  # currency. nil when the account has no trades.
+  def open_cost(account)
+    all_sales
+    @open_costs[account.id]
+  end
+
+  # Fulas Bank: everything an account's sales have gained or lost by FIFO,
+  # every year, in the account's currency. nil when it never sold.
+  def realized_for(account)
+    list = all_sales.select { |sale| sale.account.id == account.id }
+    list.sum(&:fifo_gain) if list.any?
+  end
+
   private
     def total(attribute)
       Money.new(sales.sum { |sale| converted(sale.public_send(attribute), sale.currency) }, family.currency)
     end
 
     def all_sales
-      @all_sales ||= trades.group_by { |entry| [ entry.account_id, entry.entryable.security_id ] }
-                           .flat_map { |_, list| sales_of(list) }
-                           .sort_by(&:date)
+      @all_sales ||= begin
+        @open_costs = {}
+        positions = trades.group_by { |entry| [ entry.account_id, entry.entryable.security_id ] }
+        positions.flat_map do |(account_id, _), list|
+          sales, lots = sales_of(list)
+          @open_costs[account_id] = (@open_costs[account_id] || 0.to_d) + lots_cost(lots)
+          sales
+        end.sort_by(&:date)
+      end
+    end
+
+    def lots_cost(lots)
+      lots.sum { |qty, unit_cost| qty * unit_cost }
     end
 
     # One position's trades in date order: buys stack up lots, sales use
-    # them up.
+    # them up. Returns the sales and the lots still held.
     def sales_of(entries)
       lots = []
       held = 0.to_d
       cost = 0.to_d
 
-      entries.filter_map do |entry|
+      sales = entries.filter_map do |entry|
         trade = entry.entryable
         qty = trade.qty.to_d
         price = trade.price.to_d
@@ -87,6 +112,8 @@ class InvestmentsOverview::RealizedGains
                  proceeds: proceeds, average_gain: proceeds - average_cost, fifo_gain: proceeds - fifo_cost,
                  currency: entry.currency)
       end
+
+      [ sales, lots ]
     end
 
     # What the first lots still held cost for `sold` shares, using them up.

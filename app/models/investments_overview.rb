@@ -5,7 +5,10 @@
 #
 # "Put into it" is the net of the money movements of the account (transfers
 # in minus transfers out). Buying and selling inside the account does not
-# count. An account with no money movements but with positions (shares
+# count. An account without brokerage cash (shares bought and sold straight
+# from the bank) uses what the shares it still holds cost, by FIFO: its
+# gain is the one of what it holds today, and what its sales gained, which
+# left the account, is shown apart (Row#realized). An account with no money movements but with positions (shares
 # recorded purchase by purchase) uses what those positions cost instead;
 # with neither, there is nothing to compare against and no gain is shown.
 # An account holding funds by participaciones (InvestmentFund) uses the
@@ -14,9 +17,14 @@ class InvestmentsOverview
   ACCOUNT_TYPES = %w[Investment Crypto].freeze
   TOP_HOLDINGS = 5
 
-  Row = Data.define(:account, :value, :contributed) do
+  Row = Data.define(:account, :value, :contributed, :realized) do
     def gain
       contributed && value - contributed
+    end
+
+    # Fulas Bank: the gain of what is held plus what the sales gained.
+    def total_gain
+      gain && realized && gain + realized
     end
 
     def return_ratio
@@ -44,11 +52,13 @@ class InvestmentsOverview
   def rows
     @rows ||= accounts.map do |account|
       net_in = funds_cost(account) ||
-        (account.brokerage_cash? ? (contributions[account.id] || holdings_cost(account)) : trades_net_in(account))
+        (account.brokerage_cash? ? (contributions[account.id] || holdings_cost(account)) : realized_gains.open_cost(account))
+      sold = realized_gains.realized_for(account) unless account.brokerage_cash?
       Row.new(
         account: account,
         value: Money.new(account.balance.to_d, account.currency),
-        contributed: (Money.new(net_in, account.currency) if net_in)
+        contributed: (Money.new(net_in, account.currency) if net_in),
+        realized: (Money.new(sold, account.currency) if sold)
       )
     end.sort_by { |row| -row.value.amount }
   end
@@ -66,6 +76,18 @@ class InvestmentsOverview
   def total_gain
     with_contributions = rows.select(&:contributed)
     sum(with_contributions.map(&:value)) - total_contributed
+  end
+
+  # Fulas Bank: what every sale ever gained, by FIFO, in the accounts whose
+  # sales left them (see Row#realized). nil when none sold.
+  def total_realized
+    with_sales = rows.filter_map(&:realized)
+    sum(with_sales) if with_sales.any?
+  end
+
+  # Fulas Bank: the gain of what is held today plus what the sales gained.
+  def total_gain_with_sales
+    total_realized && total_gain + total_realized
   end
 
   # Fulas Bank: the accounts the gain leaves out, having no contributions
@@ -129,16 +151,10 @@ class InvestmentsOverview
                                .transform_values { |amount| -amount.to_d }
     end
 
-    # Fulas Bank: for an account without brokerage cash, the money put in is
-    # what its buys cost minus what its sales brought (a buy's entry amount is
-    # positive, a sale's negative). Selling with a gain therefore lowers what
-    # is "put in", and the gain shows in the return. nil without trades.
-    def trades_net_in(account)
-      amounts = account.entries.where(entryable_type: "Trade", excluded: false)
-                       .joins("INNER JOIN trades ON trades.id = entries.entryable_id")
-                       .where.not(trades: { qty: 0 })
-                       .pluck(:amount)
-      amounts.sum(&:to_d) if amounts.any?
+    # Fulas Bank: buys and sales, worked out lot by lot (FIFO), for what the
+    # shares still held cost and what the sales gained.
+    def realized_gains
+      @realized_gains ||= InvestmentsOverview::RealizedGains.new(family, user: user)
     end
 
     # Fulas Bank: what was put into the account's funds (their "Total
