@@ -34,7 +34,7 @@ class InvestmentsOverview::RealizedGainsTest < ActiveSupport::TestCase
     realized = InvestmentsOverview::RealizedGains.new(@family, user: @user, year: 2026, today: Date.new(2026, 10, 19))
 
     assert_equal 350, realized.open_cost(@account), "50 shares of the 2025 lot, at 7"
-    assert_equal 250 + 650, realized.realized_for(@account), "50 × (10 − 5) in 2025, then 50 × (12 − 5) + 50 × (12 − 7)"
+    assert_equal 250 + 600, realized.realized_for(@account), "50 × (10 − 5) in 2025, then 50 × (12 − 5) + 50 × (12 − 7)"
   end
 
   test "Fulas Bank: an account without trades has no cost nor sales" do
