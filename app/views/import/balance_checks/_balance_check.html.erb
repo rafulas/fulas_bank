@@ -1,11 +1,15 @@
 <%# locals: (balance_check:) %>
 <%# Does each account hold what the bank says, now that the movements are in?
-    Reloads itself while the app recalculates the balances. %>
+    Reloads itself while the app recalculates the balances. The polling sits
+    inside the frame, not on it: when «Comprobar» reloads the frame, Turbo
+    swaps only what is inside, so a poller on the frame itself would never
+    start after typing a balance and the check would say «Calculando» for
+    good. %>
 <% import = balance_check.import %>
-<% polling = balance_check.any_pending? ? { controller: "polling", polling_url_value: import_balance_check_path(import), polling_interval_value: 3000 } : {} %>
+<% polling = balance_check.any_pending? ? { controller: "polling", polling_url_value: import_balance_check_path(import), polling_frame_id_value: "import_balance_check", polling_interval_value: 3000 } : {} %>
 
-<%= turbo_frame_tag "import_balance_check", data: polling do %>
-  <div class="bg-container border border-primary rounded-lg p-4 space-y-3 text-left">
+<%= turbo_frame_tag "import_balance_check" do %>
+  <%= tag.div class: "bg-container border border-primary rounded-lg p-4 space-y-3 text-left", data: polling do %>
     <div class="space-y-1">
       <h2 class="text-sm font-medium text-primary"><%= t(".title") %></h2>
       <p class="text-xs text-secondary"><%= t(".hint") %></p>
@@ -70,5 +74,5 @@
         <% end %>
       </div>
     <% end %>
-  </div>
+  <% end %>
 <% end %>

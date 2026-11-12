@@ -52,6 +52,11 @@
           <% end %>
         <% end %>
       </div>
+      <%# Fulas Bank: the gain above is the one of what is held today; what
+          the sales gained left the account and is added here. %>
+      <% if (realized = overview.total_realized) %>
+        <p class="mt-2 text-xs text-secondary privacy-sensitive"><%= t(".total_with_sales", realized: format_money(realized, precision: 0), total: format_money(overview.total_gain_with_sales, precision: 0)) %></p>
+      <% end %>
       <p class="mt-2 text-xs text-secondary"><%= t(".annual_return_hint") %></p>
       <%# Fulas Bank: say which accounts the contributions and gain cover. %>
       <% if (missing = overview.rows_without_contributions).any? && overview.total_contributed.amount.positive? %>
@@ -95,6 +100,9 @@
       <% table.with_column(t(".gain"), numeric: true, class: "privacy-sensitive") do |row| %>
         <% if row.gain %>
           <span class="<%= row.gain.negative? ? "text-destructive" : "text-success" %>"><%= format_money(row.gain) %></span>
+          <% if row.total_gain %>
+            <span class="block text-secondary whitespace-nowrap"><%= t(".gain_with_sales", amount: format_money(row.total_gain)) %></span>
+          <% end %>
         <% else %>
           —
         <% end %>
