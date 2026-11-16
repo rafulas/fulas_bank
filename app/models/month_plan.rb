@@ -8,6 +8,12 @@
 #   - and the recurring movements that come later than this month (yearly
 #     taxes, insurance renewals...).
 #
+# Fulas Bank: the instalments of the insurance policies (Seguros) are
+# recurring payments too, in a group of their own, paid when their charge is
+# linked to them (InsurancePayment). A policy paid every month, quarter...
+# that a recurring series of about the same amount already pays is left to
+# that series, as the forecast does, so it is not listed twice.
+#
 # It reads the budget and the recurring payments the app already keeps; it
 # creates neither.
 class MonthPlan
@@ -22,6 +28,7 @@ class MonthPlan
     "transfer" => "fixed",
     "other" => "fixed",
     "bill" => "bills",
+    "insurance" => "insurance",
     "subscription" => "subscriptions"
   }.freeze
 
@@ -71,6 +78,34 @@ class MonthPlan
   end
 
   Upcoming = Data.define(:series, :date, :amount)
+
+  # Fulas Bank: an insurance policy in the place of a recurring series, so
+  # its instalments go in the same lists. `category` is the one of the last
+  # charge linked to it (for its icon and colour); `amount` what its next
+  # instalment costs.
+  InsuranceSeries = Data.define(:insurance, :category, :amount) do
+    def id
+      "insurance-#{insurance.id}"
+    end
+
+    def display_name
+      insurance.name
+    end
+    alias_method :list_name, :display_name
+
+    # Policies are charged by direct debit.
+    def autopay?
+      true
+    end
+
+    def typed_income?
+      false
+    end
+
+    def bill_type
+      "insurance"
+    end
+  end
 
   # Fulas Bank: a payment still to make (or income still to come), for
   # Inicio's "next payments" and the timeline.
@@ -218,12 +253,12 @@ class MonthPlan
   # ---- Recurring movements ----
 
   def payments
-    @payments ||= occurrences.map do |occurrence|
+    @payments ||= (occurrences.map do |occurrence|
       series = occurrence.recurring_transaction
       paid = occurrence.paid?
       amount = paid && occurrence.confirmed_allocated.to_d.positive? ? occurrence.confirmed_allocated.to_d : occurrence.resolved_expected_amount.to_d
       Payment.new(occurrence: occurrence, series: series, date: occurrence.effective_due_on, amount: amount, paid: paid, state: payment_state(occurrence))
-    end.sort_by { |payment| [ payment.date, payment.name.to_s ] }
+    end + insurance_payments).sort_by { |payment| [ payment.date, payment.name.to_s ] }
   end
 
   def groups
@@ -269,7 +304,7 @@ class MonthPlan
       series_list.reject { |series| in_month.include?(series.id) }.filter_map do |series|
         date = series.schedule.first_occurrence_after(end_of_month)
         Upcoming.new(series: series, date: date, amount: series.amount.to_d.abs) if date
-      end.sort_by(&:date).first(FUTURE_LIMIT)
+      end.concat(insurance_upcoming(in_month)).sort_by(&:date).first(FUTURE_LIMIT)
     end
   end
 
@@ -311,9 +346,12 @@ class MonthPlan
 
     # :paid, :today, :overdue (its date passed without payment) or :expected.
     def payment_state(occurrence)
-      return :paid if occurrence.paid?
+      state_for(occurrence.effective_due_on, occurrence.paid?)
+    end
 
-      date = occurrence.effective_due_on
+    def state_for(date, paid)
+      return :paid if paid
+
       if date == today
         :today
       elsif date < today
@@ -321,5 +359,72 @@ class MonthPlan
       else
         :expected
       end
+    end
+
+    # ---- Fulas Bank: insurance instalments ----
+
+    # The month's instalments of every policy. One of a policy no longer in
+    # force counts only if it was paid.
+    def insurance_payments
+      insurance_series.flat_map do |series|
+        insurance = series.insurance
+        records = insurance.insurance_payments.index_by(&:due_on)
+
+        insurance.charges_between(month..end_of_month).filter_map do |date, amount, _, _|
+          record = records[date]
+          paid = record&.paid? || false
+          next if !insurance.active? && !paid
+
+          charged = paid && record.entry ? in_family_currency(record.entry.amount_money) : in_family_currency(amount)
+          Payment.new(occurrence: nil, series: series, date: date, amount: charged, paid: paid, state: state_for(date, paid))
+        end
+      end
+    end
+
+    # The next instalment of the policies in force with none this month.
+    def insurance_upcoming(in_month)
+      insurance_series.select { |series| series.insurance.active? && in_month.exclude?(series.id) }.filter_map do |series|
+        date, amount = series.insurance.charges_between((end_of_month + 1)..(end_of_month + 1.year)).min_by(&:first)
+        Upcoming.new(series: series, date: date, amount: in_family_currency(amount)) if date
+      end
+    end
+
+    def insurance_series
+      @insurance_series ||= begin
+        policies = family.insurances.includes(insurance_payments: :entry).to_a
+                         .reject { |insurance| paid_by_recurring_series?(insurance) }
+        categories = last_charge_categories(policies)
+
+        policies.map do |insurance|
+          next_amount = insurance.charges_between(today..(today + 1.year)).min_by(&:first)&.second
+          InsuranceSeries.new(insurance: insurance, category: categories[insurance.id],
+                              amount: next_amount ? in_family_currency(next_amount) : 0.to_d)
+        end
+      end
+    end
+
+    # A policy paid every month, quarter, half year or year that a recurring
+    # series of about its premium already pays (Forecast::SAME_AMOUNT_TOLERANCE).
+    def paid_by_recurring_series?(insurance)
+      return false if insurance.custom_payments? || insurance.premium.blank?
+
+      premium = insurance.premium.to_d
+      series_list.any? { |series| (series.amount.to_d.abs - premium).abs <= premium * Forecast::SAME_AMOUNT_TOLERANCE }
+    end
+
+    # { insurance id => category of its last linked charge }
+    def last_charge_categories(policies)
+      policies.each_with_object({}) do |insurance, map|
+        entry = insurance.insurance_payments.select(&:entry).max_by(&:due_on)&.entry
+        map[insurance.id] = entry&.entryable.try(:category)
+      end
+    end
+
+    def in_family_currency(money)
+      return money.amount.to_d if money.currency.iso_code == currency
+
+      money.exchange_to(currency).amount.to_d
+    rescue Money::ConversionError
+      money.amount.to_d
     end
 end

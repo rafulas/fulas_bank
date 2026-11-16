@@ -13,7 +13,7 @@ class Category::FixedVariableTest < ActiveSupport::TestCase
     spend(700, Date.new(2026, 9, 1), expense_type: "fixed")
     spend(100, Date.new(2026, 9, 5), expense_type: "recurring")
     spend(200, Date.new(2026, 9, 10))
-    spend(-50, Date.new(2026, 9, 12)) # a refund does not count
+    spend(-50, Date.new(2026, 9, 12)) # money in with no category does not count
 
     september = result.months.find { |month| month.month == Date.new(2026, 9, 1) }
 
@@ -21,6 +21,17 @@ class Category::FixedVariableTest < ActiveSupport::TestCase
     assert_equal 80, september.committed_share
     assert_equal 12, result.months.size
     assert_equal Date.new(2026, 10, 1), result.months.last.month
+  end
+
+  test "a refund lowers the spending of its type" do
+    @family.categories.create!(name: "Nómina", color: "#22c55e", spending_class: "income")
+    physio = @family.categories.create!(name: "Fisio", color: "#4da568")
+    create_transaction(account: @account, amount: 550, date: Date.new(2026, 9, 3), category: physio, currency: @family.currency)
+    create_transaction(account: @account, amount: -450, date: Date.new(2026, 9, 20), category: physio, currency: @family.currency)
+
+    september = result.months.find { |month| month.month == Date.new(2026, 9, 1) }
+
+    assert_equal 100, september.variable
   end
 
   private

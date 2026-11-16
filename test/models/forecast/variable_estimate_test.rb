@@ -119,6 +119,33 @@ class Forecast::VariableEstimateTest < ActiveSupport::TestCase
     assert_equal BigDecimal("80"), estimate.monthly(@account, Date.new(2026, 10, 1))
   end
 
+  test "a charge paying an insurance instalment is not variable" do
+    spend(100, Date.new(2026, 9, 2))
+    premium = spend(150, Date.new(2026, 9, 3))
+    insurance = @family.insurances.create!(name: "Seguro coche", kind: "car", payment_frequency: "custom",
+                                           installments: [ { "date" => "2026-09-03", "amount" => "150" } ])
+    insurance.insurance_payments.create!(due_on: Date.new(2026, 9, 3), entry: premium)
+
+    assert_equal BigDecimal("100"), estimate.monthly(@account, Date.new(2026, 10, 1))
+    assert_equal "fixed", premium.transaction.reload.effective_expense_type
+  end
+
+  test "refunds lower the spending, in whatever account they come back" do
+    @family.categories.create!(name: "Nómina prueba", color: "#22c55e", spending_class: "income")
+    physio = @family.categories.create!(name: "Fisio prueba", color: "#4da568")
+    card = Account.create!(family: @family, owner: users(:family_admin), name: "Estimate card", balance: 0,
+                           currency: "USD", accountable: CreditCard.new, status: "active")
+
+    10.times { |day| create_transaction(account: card, name: "Fisio", amount: 55, date: Date.new(2026, 9, day + 1), category: physio) }
+    10.times { |day| spend(-45, Date.new(2026, 9, day + 2), category: physio) }
+    spend(-2_000, Date.new(2026, 9, 28), category: @family.categories.find_by(name: "Nómina prueba"))
+
+    both = Forecast::VariableEstimate.new(@family, accounts: [ @account, card ], today: @today)
+    assert_equal BigDecimal("100"), both.combined_total(Date.new(2026, 9, 1))
+    # On its own, the current account only got money back: it spent nothing.
+    assert_equal BigDecimal("0"), estimate.spent(@account, Date.new(2026, 9, 1))
+  end
+
   test "no history, no estimate" do
     assert_equal 0, estimate.monthly(@account, Date.new(2026, 10, 1))
   end

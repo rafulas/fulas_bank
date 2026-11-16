@@ -45,6 +45,12 @@ module TransactionsHelper
       return t("transactions.transaction.recurring_tooltip", name: series.display_name)
     end
 
+    # Fulas Bank: a charge paying an insurance instalment is fixed too, unless
+    # the user chose variable for it.
+    if (insurance = entry.insurance_payment&.insurance) && entry.entryable.try(:expense_type) != "variable"
+      return t("transactions.transaction.insurance_tooltip", name: insurance.name)
+    end
+
     case entry.entryable.try(:expense_type)
     when "fixed" then t("transactions.transaction.fixed_tooltip")
     when "recurring" then t("transactions.transaction.ending_tooltip")

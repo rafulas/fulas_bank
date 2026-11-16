@@ -32,6 +32,7 @@ es:
         income: Ingresos fijos
         fixed: Fijos
         bills: Recibos
+        insurance: Seguros
         subscriptions: Suscripciones
       long_date: "%-d de %B"
       today: Hoy

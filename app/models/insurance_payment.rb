@@ -11,7 +11,7 @@
 # simply not paid yet.
 class InsurancePayment < ApplicationRecord
   belongs_to :insurance
-  belongs_to :entry, optional: true
+  belongs_to :entry, optional: true, inverse_of: :insurance_payment
 
   validates :due_on, presence: true, uniqueness: { scope: :insurance_id }
   validates :entry_id, uniqueness: true, allow_nil: true

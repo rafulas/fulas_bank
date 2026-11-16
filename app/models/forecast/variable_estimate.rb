@@ -18,12 +18,21 @@
 # "Variable" means movements that are neither fixed nor recurring (see
 # Transaction::ExpenseClassifiable), nor transfers, nor one-off purchases, nor
 # in the Excluded or Transfers categories, nor money put into investments
-# (the «Inversiones» categories). Only spending counts: income and
-# refunds are left out, so the estimate errs on the side of caution.
+# (the «Inversiones» categories). Only spending counts, net of what came back:
+# a refund (money in to a category that is not income, see
+# Category::REFUND_IDS_SQL) lowers it, whatever account it reaches. A physio
+# session of 55 € paid by card with 45 € paid back by the insurer into the
+# current account is 10 € of spending. Income (salary...) and money in with
+# no category are left out. A month never spends less than nothing.
 class Forecast::VariableEstimate
   SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
   RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
   INVESTMENT_ROOT_NAME = "Inversiones".freeze
+  # Spending, or a refund that lowers it: the same condition as
+  # Transaction.refund_sql, written with constants only so static analysis
+  # can see it holds no user input.
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR (entries.amount < 0 AND transactions.category_id IS NOT NULL " \
+                           "AND transactions.category_id IN (#{Category::REFUND_IDS_SQL})))".freeze
 
   # The movements that count as variable spending in `accounts` between
   # two dates, joined to their transactions. Forecast::VariableBreakdown
@@ -40,8 +49,8 @@ class Forecast::VariableEstimate
     family.entries
           .excluding_split_parents
           .where(account_id: accounts.map(&:id), entryable_type: "Transaction", excluded: false, date: from..to)
-          .where("entries.amount > 0")
           .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
+          .where(SPENDING_OR_REFUND_SQL)
           .where.not(transactions: { kind: Transaction::TRANSFER_KINDS + [ "one_time" ] })
           .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
           .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })
@@ -141,10 +150,10 @@ class Forecast::VariableEstimate
     return 0.to_d if ids.empty?
 
     values = combined_sample_months(month).map do |sample|
-      monthly_totals.sum do |account_id, months|
+      [ monthly_totals.sum do |account_id, months|
         by_category = months[sample.beginning_of_month] || {}
         in_family_currency(by_category.sum { |id, amount| ids.include?(id.to_s) ? amount : 0 }.to_d, accounts_by_id[account_id])
-      end.to_d
+      end.to_d, 0.to_d ].max
     end
     TrimmedMonthlyAverage.mean(values)
   end
@@ -191,9 +200,9 @@ class Forecast::VariableEstimate
   # `without`: category ids whose spending is left out.
   def combined_total(month, without: [])
     @combined_totals ||= {}
-    @combined_totals[[ month.beginning_of_month, without.map(&:to_s).sort ]] ||= monthly_totals.sum do |account_id, months|
+    @combined_totals[[ month.beginning_of_month, without.map(&:to_s).sort ]] ||= [ monthly_totals.sum do |account_id, months|
       in_family_currency(sum_categories(months[month.beginning_of_month], without), accounts_by_id[account_id])
-    end.to_d
+    end.to_d, 0.to_d ].max
   end
 
   def planned_ids(month)
@@ -248,8 +257,11 @@ class Forecast::VariableEstimate
                                 .minimum(:date)
     end
 
+    # Refunds may reach another account than the spending (the card's
+    # physio session, paid back into the current account): one account's
+    # month can come out negative, and then it spent nothing.
     def account_total(account, month)
-      sum_categories(monthly_totals.dig(account.id, month), [])
+      [ sum_categories(monthly_totals.dig(account.id, month), []), 0.to_d ].max
     end
 
     # A month's spending in one account, without the categories in `without`.
@@ -259,7 +271,8 @@ class Forecast::VariableEstimate
       by_category.sum { |category_id, amount| without.include?(category_id.to_s) ? 0 : amount }.to_d
     end
 
-    # { account_id => { month => { category_id => variable spending } } }
+    # { account_id => { month => { category_id => variable spending, net of
+    # refunds } } }
     # since the oldest month any sample can reach: the same month three
     # finished years back. The categories left out of the forecast are not
     # in it.

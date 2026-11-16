@@ -3,15 +3,21 @@
 #
 # A movement's type is the one chosen in its detail, or worked out by the app
 # (see Transaction::ExpenseClassifiable): fixed when it pays a recurring
-# series, variable otherwise. "Recurring" (a fixed one that ends, like a loan)
+# series or an insurance instalment, variable otherwise. "Recurring" (a fixed one that ends, like a loan)
 # is shown on its own.
 #
-# Only spending counts (refunds and income are left out), with the same
+# Only spending counts, net of refunds (money in to a category that is not
+# income, Category::REFUND_IDS_SQL; income is left out), with the same
 # scope as the rest of the Resumen: the accounts included in reports, no
 # transfers, Excluded or Transfers categories.
 class Category::FixedVariable
   MONTHS = 12
   TYPES = %w[fixed recurring variable].freeze
+  # Spending, or a refund that lowers it: the same condition as
+  # Transaction.refund_sql, written with constants only so static analysis
+  # can see it holds no user input.
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR (entries.amount < 0 AND t.category_id IS NOT NULL " \
+                           "AND t.category_id IN (#{Category::REFUND_IDS_SQL})))".freeze
 
   Month = Data.define(:month, :fixed, :recurring, :variable) do
     def total
@@ -70,7 +76,7 @@ class Category::FixedVariable
         type_sql = <<~SQL.squish
           CASE
             WHEN t.expense_type IN ('fixed', 'recurring') THEN t.expense_type
-            WHEN t.expense_type IS NULL AND entries.id IN (SELECT entry_id FROM recurring_allocations WHERE entry_id IS NOT NULL) THEN 'fixed'
+            WHEN #{Transaction.worked_out_fixed_sql("t")} THEN 'fixed'
             ELSE 'variable'
           END
         SQL
@@ -79,8 +85,8 @@ class Category::FixedVariable
                      .excluding_split_parents
                      .where(account_id: account_ids, entryable_type: "Transaction", excluded: false,
                             date: (today.beginning_of_month << (MONTHS - 1))..today)
-                     .where("entries.amount > 0")
                      .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+                     .where(SPENDING_OR_REFUND_SQL)
                      .joins(ActiveRecord::Base.sanitize_sql_array([
                        "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
                        currency
@@ -91,7 +97,7 @@ class Category::FixedVariable
                      .sum(Arel.sql("entries.amount * COALESCE(rates.rate, 1)"))
 
         rows.each_with_object(Hash.new { |hash, key| hash[key] = {} }) do |((month, type), amount), result|
-          result[month.to_date][type] = amount.to_d
+          result[month.to_date][type] = [ amount.to_d, 0.to_d ].max
         end
       end
     end

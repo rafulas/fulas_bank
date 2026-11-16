@@ -246,6 +246,7 @@ en:
       pending: Pending
       pending_tooltip: Pending transaction — may change when posted
       recurring_tooltip: "Recurring: %{name}"
+      insurance_tooltip: "Insurance: %{name}"
       fixed_tooltip: Fixed
       ending_tooltip: Recurring (ends)
       one_time_expense_tooltip: One-time expense (left out of averages and budgets)
