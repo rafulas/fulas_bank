@@ -19,7 +19,7 @@ env:
 jobs:
   check_openai:
     name: Check OpenAI credentials
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       should_run: ${{ steps.gate.outputs.should_run }}
       reason: ${{ steps.gate.outputs.reason }}
@@ -77,7 +77,7 @@ jobs:
     name: Discover eval datasets
     needs: check_openai
     if: needs.check_openai.outputs.should_run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -180,7 +180,7 @@ jobs:
     name: Run eval for ${{ matrix.dataset }} on ${{ matrix.model }}
     needs: [check_openai, discover_datasets]
     if: needs.check_openai.outputs.should_run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -346,7 +346,7 @@ jobs:
     name: Summarize LLM Evals
     needs: [check_openai, run_evals]
     if: always() && needs.check_openai.outputs.should_run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Download all artifacts
@@ -453,7 +453,7 @@ jobs:
     name: Skip evals (no valid OpenAI token/quota)
     needs: check_openai
     if: needs.check_openai.outputs.should_run != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Report skip reason
         run: |
