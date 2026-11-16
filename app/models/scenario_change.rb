@@ -64,7 +64,9 @@ class ScenarioChange < ApplicationRecord
     return 0.to_d unless loan
 
     payment = loan.amortization_schedule&.payments&.select { |each| each.date < starts_on }&.last
-    (payment&.ending_balance || loan_account.balance).to_d.abs
+    pending = payment&.ending_balance || loan_account.balance
+    pending = pending.amount if pending.respond_to?(:amount)
+    pending.to_d.abs
   end
 
   # What cancelling the loan costs: the pending balance, or the amount typed
