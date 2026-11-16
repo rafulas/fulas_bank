@@ -95,6 +95,45 @@ class MonthPlanTest < ActiveSupport::TestCase
     assert_equal [ :overdue, :expected ], upcoming.map(&:state)
   end
 
+  test "insurance instalments are recurring payments in a group of their own" do
+    insurance = @family.insurances.create!(
+      name: "Seguro moto", kind: "motorcycle", payment_frequency: "custom", payment_account: @account,
+      installments: [
+        { "date" => "2026-10-03", "amount" => "120" },
+        { "date" => "2026-10-25", "amount" => "110" },
+        { "date" => "2027-01-10", "amount" => "100" }
+      ]
+    )
+    charge = @account.entries.create!(name: "MAPFRE MOTO", date: Date.new(2026, 10, 4), amount: 120, currency: "USD",
+                                      entryable: Transaction.new)
+    insurance.insurance_payments.create!(due_on: Date.new(2026, 10, 3), entry: charge)
+
+    assert_equal [ "Seguro moto", "Seguro moto" ], plan.payments.map(&:name)
+    assert_equal [ Date.new(2026, 10, 3), Date.new(2026, 10, 25) ], plan.payments.map(&:date)
+    assert_equal [ :paid, :expected ], plan.payments.map(&:state)
+    assert_equal %w[insurance], plan.groups.map(&:key)
+    assert_equal Money.new(120, "USD"), plan.paid_total
+    assert_equal Money.new(110, "USD"), plan.pending_total
+  end
+
+  test "an insurance policy's next instalment after this month is coming" do
+    @family.insurances.create!(name: "Seguro hogar", kind: "home", payment_frequency: "annual", premium: 300,
+                               renewal_date: Date.new(2027, 2, 15))
+
+    assert_empty plan.payments
+    assert_equal [ [ "Seguro hogar", Date.new(2027, 2, 15) ] ], plan.upcoming.map { |item| [ item.series.list_name, item.date ] }
+  end
+
+  test "a policy a recurring series already pays is not listed twice" do
+    rent = series("Mapfre Hogar", 47.30, day: 24, bill_type: "bill")
+    occurrence(rent, Date.new(2026, 10, 24))
+    @family.insurances.create!(name: "Hogar", kind: "home", payment_frequency: "monthly", premium: 47.30,
+                               renewal_date: Date.new(2027, 1, 24))
+
+    assert_equal [ "Mapfre Hogar" ], plan.payments.map(&:name)
+    assert_empty plan.upcoming
+  end
+
   private
     def plan
       MonthPlan.new(@family, user: @user, month: @today, today: @today)

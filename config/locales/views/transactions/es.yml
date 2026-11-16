@@ -243,6 +243,7 @@ es:
       pending: Pendiente
       pending_tooltip: Transacción pendiente — puede cambiar al confirmarse
       recurring_tooltip: "Recurrente: %{name}"
+      insurance_tooltip: "Seguro: %{name}"
       fixed_tooltip: Fijo
       ending_tooltip: Recurrente (con fin)
       one_time_expense_tooltip: Gasto puntual (no cuenta en medias ni presupuestos)

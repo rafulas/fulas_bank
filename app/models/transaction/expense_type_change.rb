@@ -35,7 +35,12 @@ class Transaction::ExpenseTypeChange
   def self.current_choice(transaction)
     return "variable" if transaction.effective_expense_type == "variable"
 
-    transaction.recurring_series&.fulas_kind || "fixed"
+    series = transaction.recurring_series
+    return series.fulas_kind if series
+
+    # Fulas Bank: an insurance instalment is a bill (a direct debit that
+    # could be moved to another company).
+    transaction.insurance_policy ? "bill" : "fixed"
   end
 
   # @return [Boolean] whether the change was saved; #error says why not

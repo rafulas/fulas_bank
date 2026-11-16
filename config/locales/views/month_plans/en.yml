@@ -32,6 +32,7 @@ en:
         income: Fixed income
         fixed: Fixed
         bills: Bills
+        insurance: Insurance
         subscriptions: Subscriptions
       long_date: "%B %-d"
       today: Today

@@ -1,6 +1,7 @@
 <%# locals: (entry:, can_edit:) %>
 <% transaction = entry.transaction %>
 <% series = transaction.recurring_series %>
+<% insurance = series ? nil : transaction.insurance_policy %>
 <% current = Transaction::ExpenseTypeChange.current_choice(transaction) %>
 <% ends_on = series&.ends_on_date? ? series.end_on : nil %>
 
@@ -8,7 +9,13 @@
   <p class="text-sm text-secondary">
     <%= t(".current", type: t(".types.#{current}")) %>
     <% unless transaction.expense_type_chosen? %>
-      <%= t(series ? ".automatic_series" : ".automatic_default") %>
+      <% if series %>
+        <%= t(".automatic_series") %>
+      <% elsif insurance %>
+        <%= t(".automatic_insurance", name: insurance.name) %>
+      <% else %>
+        <%= t(".automatic_default") %>
+      <% end %>
     <% end %>
   </p>
 

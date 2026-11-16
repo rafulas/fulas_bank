@@ -7,6 +7,7 @@ es:
       change_link: Cambiar
       current: "Este movimiento es: %{type}."
       automatic_series: Lo ha decidido la app porque va con un recurrente.
+      automatic_insurance: "Lo ha decidido la app porque paga el seguro «%{name}»."
       automatic_default: Lo ha decidido la app porque no va con ningún recurrente.
       series: "Recurrente: %{name}"
       ends_on: "termina el %{date}"
