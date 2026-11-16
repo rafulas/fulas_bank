@@ -141,6 +141,8 @@ class Family < ApplicationRecord
   has_many :llm_usages, dependent: :destroy
   has_many :recurring_transactions, dependent: :destroy
   has_many :forecast_items, dependent: :destroy
+  # Fulas Bank: the «what if» versions of the forecast (Escenarios).
+  has_many :scenarios, dependent: :destroy
   has_many :forecast_adjustments, dependent: :destroy
   has_many :investment_funds, dependent: :destroy
   has_many :insurances, dependent: :destroy

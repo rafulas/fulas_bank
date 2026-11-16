@@ -1,0 +1,17 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= render "form", scenario: @scenario %>
+
+    <div class="pt-2">
+      <%= render DS::Button.new(
+        text: t(".delete"),
+        variant: "outline_destructive",
+        full_width: true,
+        href: forecast_scenario_path(@scenario),
+        method: :delete,
+        confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+      ) %>
+    </div>
+  <% end %>
+<% end %>

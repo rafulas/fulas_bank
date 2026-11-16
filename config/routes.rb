@@ -833,6 +833,10 @@ Rails.application.routes.draw do
     patch :variable_category, path: "gastos-varios/categoria", to: "forecasts#update_variable_category"
     # Fulas Bank: the next five years' budgets, from the forecast.
     post :budgets, path: "presupuestos", to: "forecasts#create_budgets"
+    # Fulas Bank: «what if» versions of the forecast, and their changes.
+    resources :scenarios, path: "escenarios", controller: "forecast_scenarios" do
+      resources :changes, path: "cambios", controller: "forecast_scenario_changes", only: %i[new create edit update destroy]
+    end
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do

@@ -1,0 +1,70 @@
+<%# locals: (scenario:, change:) %>
+<% kind = change.kind %>
+<% url = change.persisted? ? forecast_scenario_change_path(scenario, change) : forecast_scenario_changes_path(scenario) %>
+
+<%= styled_form_with model: change, scope: :scenario_change, url: url, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if change.errors.any? %>
+    <%= render DS::Alert.new(message: change.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <%= form.hidden_field :kind %>
+  <p class="text-sm text-secondary"><%= t(".hints.#{kind}") %></p>
+
+  <div class="space-y-3">
+    <% case kind %>
+    <% when "cancel_loan" %>
+      <%= form.select :loan_account_id, loan_options.map { |account| [ "#{account.name} · #{t('.owed_today', amount: format_money(Money.new(account.balance.to_d.abs, account.currency), precision: 0))}", account.id ] },
+            { label: t(".loan"), prompt: t(".choose") }, required: true %>
+      <%= form.date_field :starts_on, label: t(".payoff_date"), required: true %>
+      <%= form.select :payoff_mode, [ [ t(".payoff_pending"), "pending" ], [ t(".payoff_manual"), "manual" ] ], { label: t(".payoff_mode") } %>
+      <%= form.number_field :amount, label: t(".payoff_amount"), step: 0.01, min: 0, placeholder: t(".payoff_amount_placeholder") %>
+      <%= form.select :account_id, account_options.map { |account| [ account.name, account.id ] }, { label: t(".pay_from"), include_blank: t(".main_account") } %>
+    <% when "stop_recurring", "change_amount" %>
+      <%= form.select :recurring_transaction_id, recurring_options.map { |series| [ "#{series.display_name} · #{format_money(Money.new(series.amount.to_d.abs, series.currency || Current.family.currency))}", series.id ] },
+            { label: t(".recurring"), prompt: t(".choose") }, required: true %>
+      <% if kind == "change_amount" %>
+        <%= form.number_field :amount, label: t(".new_amount"), step: 0.01, min: 0, required: true %>
+      <% end %>
+      <div class="flex items-center gap-2">
+        <%= form.date_field :starts_on, label: t(".from"), required: true, container_class: "w-1/2" %>
+        <%= form.date_field :ends_on, label: t(".until_optional"), container_class: "w-1/2" %>
+      </div>
+    <% when "add_movement" %>
+      <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
+      <div class="flex items-center gap-2">
+        <%= form.select :nature, [ [ t(".outflow"), "outflow" ], [ t(".inflow"), "inflow" ] ], { label: t(".nature"), container_class: "w-1/3" } %>
+        <%= form.number_field :amount, label: t(".amount"), step: 0.01, min: 0, required: true, container_class: "w-2/3" %>
+      </div>
+      <%= form.select :frequency, ScenarioChange::FREQUENCIES.map { |frequency| [ t(".frequencies.#{frequency}"), frequency ] }, { label: t(".frequency") } %>
+      <div class="flex items-center gap-2">
+        <%= form.date_field :starts_on, label: t(".date_or_first"), required: true, container_class: "w-1/2" %>
+        <%= form.date_field :ends_on, label: t(".until_optional"), container_class: "w-1/2" %>
+      </div>
+      <%= form.select :account_id, account_options.map { |account| [ account.name, account.id ] }, { label: t(".account"), include_blank: t(".main_account") } %>
+    <% when "adjust_variable" %>
+      <div class="flex items-center gap-2">
+        <%= form.select :nature, [ [ t(".spend_more"), "outflow" ], [ t(".spend_less"), "inflow" ] ], { label: t(".variable_direction"), container_class: "w-1/2" } %>
+        <%= form.number_field :amount, label: t(".per_month"), step: 0.01, min: 0, required: true, container_class: "w-1/2" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= form.date_field :starts_on, label: t(".from"), required: true, container_class: "w-1/2" %>
+        <%= form.date_field :ends_on, label: t(".until_optional"), container_class: "w-1/2" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if change.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: forecast_scenario_change_path(scenario, change),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

@@ -78,6 +78,7 @@ en:
     card_payoff_line: "Early payoff: %{name}"
     debt_plan_extra_line: "Extra repayment: %{name}"
     show:
+      scenarios: Scenarios
       title: Forecast
       subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and each month's variable spending. Any line of the table can be changed.
       no_accounts_title: No accounts to forecast

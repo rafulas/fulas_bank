@@ -1,0 +1,34 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <div class="flex items-center gap-2 text-sm">
+      <%= link_to t(".back"), forecast_path, class: "text-secondary hover:text-primary" %>
+    </div>
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="space-y-4 pb-6 lg:pb-12">
+  <div class="flex justify-end">
+    <%= render DS::Link.new(text: t(".new"), icon: "plus", variant: :primary, size: :sm, href: new_forecast_scenario_path, frame: :modal) %>
+  </div>
+
+  <% if @scenarios.empty? %>
+    <%= render DS::EmptyState.new(icon: "git-branch", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <div class="bg-container rounded-xl shadow-border-xs divide-y divide-alpha-black-100">
+      <% @scenarios.each do |scenario| %>
+        <%= link_to forecast_scenario_path(scenario), class: "flex items-center justify-between gap-3 p-4 hover:bg-surface-hover" do %>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-primary truncate"><%= scenario.name %></p>
+            <p class="text-xs text-secondary truncate">
+              <%= t(".changes", count: scenario.scenario_changes.size) %>
+              <% if scenario.notes.present? %> · <%= scenario.notes %><% end %>
+            </p>
+          </div>
+          <%= icon "chevron-right", size: "sm" %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

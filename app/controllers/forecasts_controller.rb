@@ -4,6 +4,8 @@
 # usual variable spending; with the table of every expected line, which the
 # user can edit.
 class ForecastsController < ApplicationController
+  include ForecastBuilding
+
   # Shortcuts for the end date; any other date can be typed in.
   PERIODS = { "1m" => 1, "3m" => 3, "6m" => 6, "1y" => 12, "2y" => 24, "5y" => 60 }.freeze
   DEFAULT_PERIOD = "5y"
@@ -112,10 +114,6 @@ class ForecastsController < ApplicationController
       group.set_month_limit!(month, (planned_amount + source.recurring_of(group, month)).ceil)
     end
 
-    def variable_plan
-      @variable_plan ||= Forecast::VariablePlan.new(Current.family, user: Current.user)
-    end
-
     # An amount typed as «1.234,56» or «1234.56».
     def planned_amount
       raw = params[:amount].to_s.strip.delete(" €")
@@ -134,21 +132,9 @@ class ForecastsController < ApplicationController
       @main_account = main_account
       @cushion = cushion
 
-      @forecast = Forecast.new(Current.family, accounts: @accounts, through: @through, include_variable: @include_variable,
-                               main_account: @main_account, card_accounts: card_accounts,
-                               debt_plan: Current.family.debt_plan&.forecast_feed(Current.user),
-                               column_groups: Current.user.preferences&.dig(Forecast::COLUMN_GROUPS_PREFERENCE) || {},
-                               variable_excluded_ids: Forecast.variable_excluded_ids(Current.user, Current.family, @accounts + card_accounts),
-                               variable_plan: variable_plan)
+      @forecast = build_forecast_for(accounts: @accounts, through: @through, main_account: @main_account,
+                                     include_variable: @include_variable)
       @hidden_columns = Array(Current.user.preferences&.dig(Forecast::HIDDEN_COLUMNS_PREFERENCE))
-    end
-
-    def forecast_accounts
-      accessible_accounts.visible.where(accountable_type: Forecast::ACCOUNT_TYPES).alphabetically.to_a
-    end
-
-    def card_accounts
-      accessible_accounts.visible.where(accountable_type: Forecast::CARD_TYPES).to_a
     end
 
     # The account where the monthly variable spending and the card charges
@@ -160,8 +146,7 @@ class ForecastsController < ApplicationController
         return chosen
       end
 
-      saved = Current.user.preferences&.dig(Forecast::MAIN_ACCOUNT_PREFERENCE)
-      @accounts.find { |account| account.id == saved } || Forecast.default_main_account(@accounts)
+      saved_main_account(@accounts)
     end
 
     # The least the main account should have. Typing it in the form keeps it
@@ -202,11 +187,5 @@ class ForecastsController < ApplicationController
       [ date, Date.current + 1 ].max
     rescue Date::Error
       nil
-    end
-
-    def sync_loan_installments
-      ActiveSupport::Notifications.instrument("part.fulas", part: "forecast.sincronizar_prestamos") do
-        Loan::InstallmentSync.new(Current.family, user: Current.user).sync!
-      end
     end
 end

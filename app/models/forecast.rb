@@ -87,8 +87,12 @@ class Forecast
   # One expected movement. `key` identifies a line the app works out by itself
   # (recurring or variable) so the user's changes to it can be found again;
   # `record` is the ForecastItem behind a one-off line.
-  Flow = Data.define(:date, :account, :amount, :name, :source, :key, :skipped, :adjusted, :record, :card) do
-    def initialize(date:, account:, amount:, name:, source:, key: nil, skipped: false, adjusted: false, record: nil, card: nil)
+  #
+  # Fulas Bank: `origin` is the id of what a line comes from (the recurring
+  # series, or the loan's account for a loan or debt plan payment), so a
+  # scenario can find the lines it changes (Scenario::Effect).
+  Flow = Data.define(:date, :account, :amount, :name, :source, :key, :skipped, :adjusted, :record, :card, :origin) do
+    def initialize(date:, account:, amount:, name:, source:, key: nil, skipped: false, adjusted: false, record: nil, card: nil, origin: nil)
       super
     end
 
@@ -129,12 +133,15 @@ class Forecast
   DETAILED_MONTHS = 12
 
   attr_reader :family, :accounts, :card_accounts, :main_account, :through, :include_variable, :today, :debt_plan, :column_groups,
-              :variable_excluded_ids, :variable_plan
+              :variable_excluded_ids, :variable_plan, :scenario
 
   # `main_account` is where the monthly variable spending and the card
   # charges are expected (by default the first current account);
   # `card_accounts` are the cards whose spending ends up there.
-  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {}, variable_excluded_ids: [], variable_plan: nil)
+  #
+  # Fulas Bank: with a `scenario`, its changes are applied to the lines (see
+  # Scenario::Effect).
+  def initialize(family, accounts:, through:, include_variable: true, today: Date.current, main_account: nil, card_accounts: [], debt_plan: nil, column_groups: {}, variable_excluded_ids: [], variable_plan: nil, scenario: nil)
     @family = family
     @accounts = accounts.select { |account| ACCOUNT_TYPES.include?(account.accountable_type) }
     @card_accounts = card_accounts.select { |account| CARD_TYPES.include?(account.accountable_type) }
@@ -146,6 +153,7 @@ class Forecast
     @column_groups = (column_groups || {}).to_h.transform_keys(&:to_s)
     @variable_excluded_ids = Array(variable_excluded_ids).map(&:to_s)
     @variable_plan = variable_plan
+    @scenario = scenario
   end
 
   # Fulas Bank: the accounts and cards whose spending makes "Gastos varios":
@@ -229,9 +237,10 @@ class Forecast
       worked_out = measure(:recurrentes) { recurring_flows } + measure(:gastos_varios) { variable_flows } +
                    measure(:seguros) { insurance_flows + policy_flows } + measure(:prestamos) { loan_flows }
       own = measure(:puntuales) { planned_flows } + measure(:plan_deuda) { debt_plan_flows } + measure(:tarjetas) { card_flows }
+      list = measure(:ajustes) { adjusted(worked_out) } + own
+      list = measure(:escenario) { Scenario::Effect.new(scenario, self).apply(list) } if scenario
       measure(:ordenar) do
-        (measure(:ajustes) { adjusted(worked_out) } + own)
-          .sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
+        list.sort_by { |flow| [ flow.date, flow.source == :variable ? 1 : 0, flow.name.to_s ] }
       end
     end
   end
@@ -348,6 +357,23 @@ class Forecast
 
     date, balance = checked_dates.map { |day| [ day, balance_of(account, day) ] }.min_by { |_, amount| amount }
     [ date, Money.new(balance, account.currency) ]
+  end
+
+  # Fulas Bank: the active recurring series that pay `loan_account` (towards
+  # it, or of about its instalment), as the forecast leaves its instalment to
+  # them. Scenario::Effect stops them with a cancelled loan.
+  def recurring_paying(loan_account)
+    loan = loan_account.accountable
+    payment = (loan.monthly_payment&.amount || loan.payment_amount).to_d
+    recurring_in_force.select do |series|
+      series.destination_account_id == loan_account.id || series.loan_account_id == loan_account.id ||
+        (payment.positive? && (series.amount.to_d.abs - payment).abs <= payment * SAME_AMOUNT_TOLERANCE)
+    end
+  end
+
+  # The first and last day a line can be on: tomorrow and the end date.
+  def window
+    (today + 1)..through
   end
 
   # A Series for the chart: the total, or one account's balance.
@@ -477,10 +503,6 @@ class Forecast
       @accounts_by_id ||= accounts.index_by(&:id)
     end
 
-    def window
-      (today + 1)..through
-    end
-
     # Fulas Bank: the day a payment due on `date` is expected, or nil when it
     # is not: its own day inside the window, or tomorrow when it is overdue
     # but later than the last movement imported for `account_id` (so it has
@@ -561,11 +583,12 @@ class Forecast
       list = []
 
       if series.account_id.nil? || source_account
-        list << Flow.new(date: date, account: source_account, amount: outflow ? amount : -amount, name: name, source: :recurring, key: key)
+        list << Flow.new(date: date, account: source_account, amount: outflow ? amount : -amount, name: name, source: :recurring, key: key,
+                         origin: series.id)
       end
 
       if (destination = accounts_by_id[series.destination_account_id])
-        list << Flow.new(date: date, account: destination, amount: -amount, name: name, source: :recurring, key: key)
+        list << Flow.new(date: date, account: destination, amount: -amount, name: name, source: :recurring, key: key, origin: series.id)
       end
 
       list
@@ -642,17 +665,17 @@ class Forecast
       account = accounts_by_id[debt_plan.account_id] || main_account
       return [] unless account
 
-      payments = debt_plan.payments.map do |date, loan, amount|
-        [ date, I18n.t("forecasts.debt_plan_line", loan: loan), amount ]
+      payments = debt_plan.loan_payments.map do |date, key, loan, amount|
+        [ date, I18n.t("forecasts.debt_plan_line", loan: loan), amount, key ]
       end
       contributions = debt_plan.contributions.map do |date, names, amount|
-        [ date, I18n.t("forecasts.debt_plan_extra_line", name: names), amount ]
+        [ date, I18n.t("forecasts.debt_plan_extra_line", name: names), amount, nil ]
       end
 
-      (payments + contributions).filter_map do |date, name, amount|
+      (payments + contributions).filter_map do |date, name, amount, key|
         next unless window.cover?(date)
 
-        Flow.new(date: date, account: account, amount: amount, name: name, source: :debt_plan)
+        Flow.new(date: date, account: account, amount: amount, name: name, source: :debt_plan, origin: key)
       end
     end
 
@@ -754,7 +777,7 @@ class Forecast
 
         loan_payment_days(loan).map do |date|
           Flow.new(date: date, account: main_account, amount: to_account_currency(Money.new(payment, loan_account.currency), main_account),
-                   source: :loan, key: ForecastAdjustment.loan_key(loan_account, date),
+                   source: :loan, key: ForecastAdjustment.loan_key(loan_account, date), origin: loan_account.id,
                    name: I18n.t("forecasts.loan_line", name: loan_account.name))
         end
       end
