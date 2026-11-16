@@ -13,9 +13,11 @@
 class Category::FixedVariable
   MONTHS = 12
   TYPES = %w[fixed recurring variable].freeze
-  # Spending, or a refund that lowers it (a constant, so static analysis can
-  # see it holds no user input).
-  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR #{Transaction.refund_sql(table: 't')})".freeze
+  # Spending, or a refund that lowers it: the same condition as
+  # Transaction.refund_sql, written with constants only so static analysis
+  # can see it holds no user input.
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR (entries.amount < 0 AND t.category_id IS NOT NULL " \
+                           "AND t.category_id IN (#{Category::REFUND_IDS_SQL})))".freeze
 
   Month = Data.define(:month, :fixed, :recurring, :variable) do
     def total

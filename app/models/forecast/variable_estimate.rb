@@ -28,9 +28,11 @@ class Forecast::VariableEstimate
   SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
   RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
   INVESTMENT_ROOT_NAME = "Inversiones".freeze
-  # Spending, or a refund that lowers it (a constant, so static analysis can
-  # see it holds no user input).
-  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR #{Transaction.refund_sql})".freeze
+  # Spending, or a refund that lowers it: the same condition as
+  # Transaction.refund_sql, written with constants only so static analysis
+  # can see it holds no user input.
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR (entries.amount < 0 AND transactions.category_id IS NOT NULL " \
+                           "AND transactions.category_id IN (#{Category::REFUND_IDS_SQL})))".freeze
 
   # The movements that count as variable spending in `accounts` between
   # two dates, joined to their transactions. Forecast::VariableBreakdown
