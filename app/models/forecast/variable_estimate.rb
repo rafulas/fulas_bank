@@ -28,6 +28,9 @@ class Forecast::VariableEstimate
   SAME_MONTH_YEARS = TrimmedMonthlyAverage::SAME_MONTH_YEARS
   RECENT_MONTHS = TrimmedMonthlyAverage::RECENT_MONTHS
   INVESTMENT_ROOT_NAME = "Inversiones".freeze
+  # Spending, or a refund that lowers it (a constant, so static analysis can
+  # see it holds no user input).
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR #{Transaction.refund_sql})".freeze
 
   # The movements that count as variable spending in `accounts` between
   # two dates, joined to their transactions. Forecast::VariableBreakdown
@@ -45,7 +48,7 @@ class Forecast::VariableEstimate
           .excluding_split_parents
           .where(account_id: accounts.map(&:id), entryable_type: "Transaction", excluded: false, date: from..to)
           .joins("INNER JOIN transactions ON transactions.id = entries.entryable_id")
-          .where("entries.amount > 0 OR #{Transaction.refund_sql}")
+          .where(SPENDING_OR_REFUND_SQL)
           .where.not(transactions: { kind: Transaction::TRANSFER_KINDS + [ "one_time" ] })
           .where("transactions.category_id IS NULL OR transactions.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
           .where.not(transactions: { id: Transfer.select(:inflow_transaction_id) })

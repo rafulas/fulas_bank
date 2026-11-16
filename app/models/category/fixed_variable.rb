@@ -13,6 +13,9 @@
 class Category::FixedVariable
   MONTHS = 12
   TYPES = %w[fixed recurring variable].freeze
+  # Spending, or a refund that lowers it (a constant, so static analysis can
+  # see it holds no user input).
+  SPENDING_OR_REFUND_SQL = "(entries.amount > 0 OR #{Transaction.refund_sql(table: 't')})".freeze
 
   Month = Data.define(:month, :fixed, :recurring, :variable) do
     def total
@@ -81,7 +84,7 @@ class Category::FixedVariable
                      .where(account_id: account_ids, entryable_type: "Transaction", excluded: false,
                             date: (today.beginning_of_month << (MONTHS - 1))..today)
                      .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
-                     .where("entries.amount > 0 OR #{Transaction.refund_sql(table: 't')}")
+                     .where(SPENDING_OR_REFUND_SQL)
                      .joins(ActiveRecord::Base.sanitize_sql_array([
                        "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
                        currency
