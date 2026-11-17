@@ -19,6 +19,8 @@
     <div class="flex flex-wrap items-center gap-2">
       <%# Fulas Bank: «what if» versions of the forecast. %>
       <%= render DS::Link.new(text: t(".scenarios"), icon: "git-branch", variant: :secondary, size: :sm, href: forecast_scenarios_path, class: "order-last ml-auto") %>
+      <%# Fulas Bank: bonuses paid partly in shares. %>
+      <%= render DS::Link.new(text: t(".stock_plans"), icon: "trending-up", variant: :secondary, size: :sm, href: forecast_stock_plans_path, class: "order-last") %>
       <% ForecastsController::PERIODS.each_key do |period| %>
         <%= render DS::Link.new(
           text: t(".periods.#{period}"),

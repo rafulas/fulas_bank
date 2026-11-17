@@ -848,6 +848,10 @@ Rails.application.routes.draw do
     resources :scenarios, path: "escenarios", controller: "forecast_scenarios" do
       resources :changes, path: "cambios", controller: "forecast_scenario_changes", only: %i[new create edit update destroy]
     end
+    # Fulas Bank: bonuses paid partly in shares, and each year of them.
+    resources :stock_plans, path: "acciones", controller: "forecast_stock_plans", except: :show do
+      resources :grants, path: "anos", controller: "forecast_stock_plan_grants", only: %i[new create edit update destroy]
+    end
   end
   resource :sidebar_summary, only: :show
   resource :month_plan, only: :show, path: "planes" do

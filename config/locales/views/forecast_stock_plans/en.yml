@@ -1,0 +1,88 @@
+---
+en:
+  forecast_stock_plans:
+    index:
+      back: "← Forecast"
+      title: Share plan
+      subtitle: Bonuses paid partly in company shares. The Forecast expects the cash and the shares on the day you receive them, and their sale once they can be sold.
+      new: New plan
+      empty_title: No plan yet
+      empty_description: Create one with your base bonus, the share in stock, the income tax and the security in your investment account.
+    plan:
+      summary: "%{ticker} shares in %{account} · cash and sales in %{cash}"
+      main_account: the Forecast's main account
+      terms: "Base bonus %{bonus} · %{stock} in shares · tax %{tax} · 1 free for every %{gift} · %{years} years locked"
+      edit: Edit plan
+      add_year: Add year
+      edit_year: Edit year
+      price: "%{ticker} price: %{price} (%{date}). Estimates use it."
+      no_price: "The app has no price for %{ticker} yet: without it shares and sales cannot be estimated. Check the investment account's prices."
+      no_years: Add the year of each bonus, past ones not sold yet included.
+      can_sell: Can be sold now
+      columns:
+        granted_on: Delivery
+        bonus: Bonus
+        in_shares: In shares
+        shares: Shares
+        cash: Net cash
+        value: Value today
+        sell_on: Sale
+      sources:
+        typed: "%{bought} + %{free} free"
+        estimated: "Estimated: %{bought} + %{free} free"
+        traded: From your purchases in the account
+    new:
+      title: New share plan
+      default_name: Bonus in shares
+    edit:
+      title: Edit share plan
+    form:
+      name: Name
+      investment_account: Investment account
+      security: Security
+      cash_account: Account for cash and sales
+      main_account: Forecast's main account
+      cash_account_hint: Where the bonus cash and the sale proceeds land.
+      base_bonus: Base bonus (100%), gross
+      base_bonus_hint: Each year you enter the percentage achieved (for example, 120%).
+      stock_percent: "% of the bonus in shares"
+      tax_percent: "Income tax on the cash (%)"
+      gift_every: 1 free for every
+      gift_every_hint: 0 if there are no free shares.
+      lock_years: Years before selling
+      no_holdings: A plan needs an investment account holding the security (with at least one purchase).
+      submit: Save
+      delete: Delete plan
+      resource: share plan
+    create:
+      success: Share plan created
+    update:
+      success: Share plan updated
+    destroy:
+      success: Share plan deleted
+  forecast_stock_plan_grants:
+    new:
+      title: Add year
+    edit:
+      title: Edit year
+    form:
+      granted_on: Delivery date of the shares
+      granted_on_hint: Usually late February or early March.
+      achievement_percent: Bonus achieved (%)
+      achievement_percent_hint: "Of the base bonus of %{bonus}."
+      stock_percent: "% in shares"
+      shares: Shares bought
+      gift_shares: Free shares
+      shares_hint: Leave them empty and they are estimated from the price. Once received, enter the real ones. For a past year, empty means taken from the investment account's purchases.
+      sell_on: Sale date
+      sell_on_hint: "Empty, %{years} years after delivery."
+      notes: Notes
+      submit: Save
+      delete: Delete year
+      resource: plan year
+    create:
+      success: Year added
+    update:
+      success: Year updated
+    destroy:
+      success: Year deleted

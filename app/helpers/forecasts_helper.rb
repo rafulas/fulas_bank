@@ -1,5 +1,6 @@
 module ForecastsHelper
-  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia, card: :indigo, insurance: :green, loan: :fuchsia }.freeze
+  SOURCE_TONES = { recurring: :info, planned: :violet, variable: :amber, debt_plan: :fuchsia, card: :indigo, insurance: :green, loan: :fuchsia,
+                   stock_plan: :success }.freeze
 
   # An expected amount from the user's side: income with a plus sign, spending
   # with a minus sign.
@@ -32,6 +33,8 @@ module ForecastsHelper
   # any other line as a change to what the app works out (its key, plus its
   # current values for the form to show).
   def forecast_line_edit_path(flow)
+    # Fulas Bank: a year of the share plan opens in its own form.
+    return edit_forecast_stock_plan_grant_path(flow.record.stock_plan, flow.record) if flow.record.is_a?(StockPlanGrant)
     return edit_forecast_item_path(flow.record) if flow.record
     return debt_plan_path if flow.source == :debt_plan
     # A card's statement or instalment changes on the card itself.

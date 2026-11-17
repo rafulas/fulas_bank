@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -2908,6 +2908,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["name"], name: "index_sso_providers_on_name", unique: true
   end
 
+  create_table "stock_plan_grants", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "achievement_percent", precision: 7, scale: 4, default: "100.0", null: false
+    t.datetime "created_at", null: false
+    t.decimal "gift_shares", precision: 19, scale: 4
+    t.date "granted_on", null: false
+    t.text "notes"
+    t.date "sell_on", null: false
+    t.decimal "shares", precision: 19, scale: 4
+    t.decimal "stock_percent", precision: 7, scale: 4, default: "28.0", null: false
+    t.uuid "stock_plan_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stock_plan_id"], name: "index_stock_plan_grants_on_stock_plan_id"
+  end
+
+  create_table "stock_plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.decimal "base_bonus", precision: 19, scale: 4, default: "0.0", null: false
+    t.uuid "cash_account_id"
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.uuid "family_id", null: false
+    t.integer "gift_every", default: 10, null: false
+    t.uuid "investment_account_id", null: false
+    t.integer "lock_years", default: 3, null: false
+    t.string "name", null: false
+    t.uuid "security_id", null: false
+    t.decimal "stock_percent", precision: 7, scale: 4, default: "28.0", null: false
+    t.decimal "tax_percent", precision: 7, scale: 4, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cash_account_id"], name: "index_stock_plans_on_cash_account_id"
+    t.index ["family_id"], name: "index_stock_plans_on_family_id"
+    t.index ["investment_account_id"], name: "index_stock_plans_on_investment_account_id"
+    t.index ["security_id"], name: "index_stock_plans_on_security_id"
+  end
+
   create_table "subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.decimal "amount", precision: 19, scale: 4
     t.boolean "cancel_at_period_end", default: false, null: false
@@ -3520,6 +3554,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   add_foreign_key "sophtron_accounts", "sophtron_items"
   add_foreign_key "sophtron_items", "families"
   add_foreign_key "sso_audit_logs", "users"
+  add_foreign_key "stock_plan_grants", "stock_plans", on_delete: :cascade
+  add_foreign_key "stock_plans", "accounts", column: "cash_account_id", on_delete: :nullify
+  add_foreign_key "stock_plans", "accounts", column: "investment_account_id", on_delete: :cascade
+  add_foreign_key "stock_plans", "families", on_delete: :cascade
+  add_foreign_key "stock_plans", "securities", on_delete: :cascade
   add_foreign_key "subscriptions", "families"
   add_foreign_key "syncs", "syncs", column: "parent_id"
   add_foreign_key "taggings", "tags"

@@ -32,6 +32,10 @@
 #      its payment day in the main account until it is paid off, unless a
 #      recurring movement already pays it (towards the loan, or of about the
 #      same amount) or the debt plan feeds the forecast.
+#   8. Fulas Bank: the bonuses paid partly in shares (StockPlan): on the day
+#      each year's shares are delivered, the bonus cash in the cash account
+#      and the shares' value in the investment account; on the day they can
+#      be sold, that value leaves the investment account for the cash one.
 #
 # Fulas Bank: statements are imported by hand, days or weeks late. A payment
 # of 1 or 6 whose day has passed but is later than the last movement imported
@@ -237,7 +241,8 @@ class Forecast
     @flows ||= begin
       worked_out = measure(:recurrentes) { recurring_flows } + measure(:gastos_varios) { variable_flows } +
                    measure(:seguros) { insurance_flows + policy_flows } + measure(:prestamos) { loan_flows }
-      own = measure(:puntuales) { planned_flows } + measure(:plan_deuda) { debt_plan_flows } + measure(:tarjetas) { card_flows }
+      own = measure(:puntuales) { planned_flows } + measure(:plan_deuda) { debt_plan_flows } + measure(:tarjetas) { card_flows } +
+            measure(:acciones) { stock_plan_flows }
       list = measure(:ajustes) { adjusted(worked_out) } + own
       list = measure(:escenario) { Scenario::Effect.new(scenario, self).apply(list) } if scenario
       measure(:ordenar) do
@@ -735,6 +740,43 @@ class Forecast
           Flow.new(date: charge.date, account: account, amount: charge.amount.round(2), name: name, source: :card, card: card)
         end
       end
+    end
+
+    # ---- 8. Fulas Bank: bonuses paid partly in shares ----
+
+    # Valued at the security's latest price; a year whose shares cannot be
+    # worked out (no price yet) brings only its cash.
+    def stock_plan_flows
+      family.stock_plans.includes(:grants, :security).flat_map do |plan|
+        investment = accounts_by_id[plan.investment_account_id]
+        cash = accounts_by_id[plan.cash_account_id] || main_account
+
+        plan.grants.flat_map { |grant| stock_grant_flows(plan, grant, investment, cash) }
+      end
+    end
+
+    def stock_grant_flows(plan, grant, investment, cash)
+      list = []
+      value = grant.value(today: today)
+
+      if window.cover?(grant.granted_on)
+        if cash && grant.net_cash.positive?
+          list << Flow.new(date: grant.granted_on, account: cash, amount: -grant.net_cash, source: :stock_plan, record: grant,
+                           name: I18n.t("forecasts.stock_bonus_line", plan: plan.name))
+        end
+        if investment && value&.positive?
+          list << Flow.new(date: grant.granted_on, account: investment, amount: -value, source: :stock_plan, record: grant,
+                           name: I18n.t("forecasts.stock_grant_line", plan: plan.name, shares: grant.total_shares(today: today).to_i))
+        end
+      end
+
+      if window.cover?(grant.sell_on) && value&.positive?
+        name = I18n.t("forecasts.stock_sale_line", plan: plan.name, year: grant.granted_on.year, shares: grant.total_shares(today: today).to_i)
+        list << Flow.new(date: grant.sell_on, account: investment, amount: value, source: :stock_plan, record: grant, name: name) if investment
+        list << Flow.new(date: grant.sell_on, account: cash, amount: -value, source: :stock_plan, record: grant, name: name) if cash
+      end
+
+      list
     end
 
     # ---- 6. Insurance instalments ----

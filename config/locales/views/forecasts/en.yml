@@ -73,12 +73,16 @@ en:
     insurance_line: "%{name} (instalment %{number} of %{count})"
     debt_plan_line: "%{loan} payment (debt plan)"
     card_statement_line: "%{card}: %{month} statement"
+    stock_bonus_line: "%{plan}: bonus cash"
+    stock_grant_line: "%{plan}: %{shares} shares received"
+    stock_sale_line: "%{plan}: sale of %{shares} shares from %{year}"
     card_fee_line: "Financing fee: %{name}"
     card_installment_line: "Instalment %{number}/%{count}: %{name}"
     card_payoff_line: "Early payoff: %{name}"
     debt_plan_extra_line: "Extra repayment: %{name}"
     show:
       scenarios: Scenarios
+      stock_plans: Share plan
       title: Forecast
       subtitle: Expected balance of your accounts from today, with recurring movements, the one-off ones you expect and each month's variable spending. Any line of the table can be changed.
       no_accounts_title: No accounts to forecast
@@ -147,6 +151,7 @@ en:
         card: Card
         insurance: Insurance
         loan: Loan
+        stock_plan: Shares
   forecast_items:
     form:
       name: Description

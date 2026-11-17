@@ -1,0 +1,27 @@
+---
+en:
+  activerecord:
+    attributes:
+      stock_plan:
+        name: Name
+        investment_account: Investment account
+        security: Security
+        cash_account: Cash account
+        base_bonus: Base bonus
+        stock_percent: Share in stock
+        tax_percent: Income tax
+        gift_every: Free shares
+        lock_years: Years locked
+      stock_plan_grant:
+        granted_on: Delivery date
+        sell_on: Sale date
+        achievement_percent: Bonus achieved
+        stock_percent: Share in stock
+        shares: Shares bought
+        gift_shares: Free shares
+    errors:
+      models:
+        stock_plan_grant:
+          attributes:
+            sell_on:
+              before_granted: cannot be before delivery

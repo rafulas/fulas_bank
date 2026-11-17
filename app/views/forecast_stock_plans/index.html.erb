@@ -1,0 +1,23 @@
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <div class="flex items-center gap-2 text-sm">
+      <%= link_to t(".back"), forecast_path, class: "text-secondary hover:text-primary" %>
+    </div>
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<div class="space-y-4 pb-6 lg:pb-12">
+  <div class="flex justify-end">
+    <%= render DS::Link.new(text: t(".new"), icon: "plus", variant: :primary, size: :sm, href: new_forecast_stock_plan_path, frame: :modal) %>
+  </div>
+
+  <% if @plans.empty? %>
+    <%= render DS::EmptyState.new(icon: "trending-up", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <% @plans.each do |plan| %>
+      <%= render "plan", plan: plan %>
+    <% end %>
+  <% end %>
+</div>

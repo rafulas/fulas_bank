@@ -1,0 +1,102 @@
+<%# locals: (plan:) %>
+<% today = Date.current %>
+
+<section id="<%= dom_id(plan) %>" class="bg-container rounded-xl shadow-border-xs p-4 space-y-4">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="space-y-1 min-w-0">
+      <h2 class="text-base font-medium text-primary truncate"><%= plan.name %></h2>
+      <p class="text-xs text-secondary">
+        <%= t(".summary", account: plan.investment_account.name, ticker: plan.security.ticker,
+              cash: plan.cash_account&.name || t(".main_account")) %>
+      </p>
+      <p class="text-xs text-secondary privacy-sensitive">
+        <%= t(".terms", bonus: stock_plan_money(plan, plan.base_bonus), stock: number_to_percentage(plan.stock_percent, precision: 0),
+              tax: number_to_percentage(plan.tax_percent, precision: 0), gift: plan.gift_every, years: plan.lock_years) %>
+      </p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <%= render DS::Link.new(text: t(".edit"), icon: "pencil", variant: :outline, size: :sm, href: edit_forecast_stock_plan_path(plan), frame: :modal) %>
+      <%= render DS::Link.new(text: t(".add_year"), icon: "plus", variant: :secondary, size: :sm, href: new_forecast_stock_plan_grant_path(plan), frame: :modal) %>
+    </div>
+  </div>
+
+  <% if plan.price %>
+    <p class="text-sm text-primary privacy-sensitive">
+      <%= t(".price", ticker: plan.security.ticker, price: format_money(Money.new(plan.price, plan.currency)), date: l(plan.price_date, format: "%d/%m/%Y")) %>
+    </p>
+  <% else %>
+    <%= render DS::Alert.new(message: t(".no_price", ticker: plan.security.ticker), variant: :warning) %>
+  <% end %>
+
+  <% if plan.grants.empty? %>
+    <p class="text-sm text-secondary"><%= t(".no_years") %></p>
+  <% else %>
+    <div class="overflow-x-auto -mx-4 px-4">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-secondary">
+            <th class="py-2 pr-3 font-medium"><%= t(".columns.granted_on") %></th>
+            <th class="py-2 pr-3 font-medium text-right"><%= t(".columns.bonus") %></th>
+            <th class="py-2 pr-3 font-medium text-right"><%= t(".columns.in_shares") %></th>
+            <th class="py-2 pr-3 font-medium text-right"><%= t(".columns.shares") %></th>
+            <th class="py-2 pr-3 font-medium text-right"><%= t(".columns.cash") %></th>
+            <th class="py-2 pr-3 font-medium text-right"><%= t(".columns.value") %></th>
+            <th class="py-2 pr-3 font-medium"><%= t(".columns.sell_on") %></th>
+            <th class="py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-primary">
+          <% plan.grants.each do |grant| %>
+            <% source = grant.shares_source(today: today) %>
+            <% delivered = grant.delivered?(today: today) %>
+            <tr id="<%= dom_id(grant) %>" class="align-top">
+              <td class="py-2 pr-3 whitespace-nowrap text-primary"><%= l(grant.granted_on, format: "%d/%m/%Y") %></td>
+              <td class="py-2 pr-3 text-right whitespace-nowrap privacy-sensitive">
+                <% if delivered %>
+                  <span class="text-secondary">—</span>
+                <% else %>
+                  <%= stock_plan_money(plan, grant.gross_bonus) %>
+                  <p class="text-xs text-secondary"><%= number_to_percentage(grant.achievement_percent, precision: 0) %></p>
+                <% end %>
+              </td>
+              <td class="py-2 pr-3 text-right whitespace-nowrap privacy-sensitive">
+                <% if delivered %>
+                  <span class="text-secondary">—</span>
+                <% else %>
+                  <%= stock_plan_money(plan, grant.stock_amount) %>
+                  <p class="text-xs text-secondary"><%= number_to_percentage(grant.stock_percent, precision: 0) %></p>
+                <% end %>
+              </td>
+              <td class="py-2 pr-3 text-right whitespace-nowrap privacy-sensitive">
+                <%= stock_plan_shares(grant.total_shares(today: today)) %>
+                <% if source %>
+                  <p class="text-xs text-secondary">
+                    <% if source == :traded %>
+                      <%= t(".sources.traded") %>
+                    <% else %>
+                      <%= t(".sources.#{source}", bought: stock_plan_shares(grant.bought_shares(today: today)), free: stock_plan_shares(grant.free_shares(today: today))) %>
+                    <% end %>
+                  </p>
+                <% end %>
+              </td>
+              <td class="py-2 pr-3 text-right whitespace-nowrap privacy-sensitive">
+                <%= delivered ? tag.span("—", class: "text-secondary") : stock_plan_money(plan, grant.net_cash) %>
+              </td>
+              <td class="py-2 pr-3 text-right whitespace-nowrap font-medium text-primary privacy-sensitive"><%= stock_plan_money(plan, grant.value(today: today)) %></td>
+              <td class="py-2 pr-3 whitespace-nowrap text-primary">
+                <%= l(grant.sell_on, format: "%d/%m/%Y") %>
+                <% if grant.sell_on <= today %>
+                  <p class="text-xs text-secondary"><%= t(".can_sell") %></p>
+                <% end %>
+              </td>
+              <td class="py-2 text-right">
+                <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: edit_forecast_stock_plan_grant_path(plan, grant), frame: :modal,
+                                        aria: { label: t(".edit_year") }) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>
