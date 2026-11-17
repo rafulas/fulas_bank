@@ -577,6 +577,20 @@ class User < ApplicationRecord
     AccountOrder.find(default_account_order) || AccountOrder.default
   end
 
+  # Fulas Bank: the ids of the accounts in the order set by hand ("manual").
+  ACCOUNT_POSITIONS_PREFERENCE = "account_positions".freeze
+
+  def account_positions
+    Array(preferences&.dig(ACCOUNT_POSITIONS_PREFERENCE)).map(&:to_s)
+  end
+
+  # Saves the order and makes it the one used.
+  def save_account_positions!(ids)
+    self.preferences = (preferences || {}).merge(ACCOUNT_POSITIONS_PREFERENCE => ids.map(&:to_s))
+    self.default_account_order = "manual"
+    save!
+  end
+
   def default_account_for_transactions
     return nil unless default_account_id.present?
 

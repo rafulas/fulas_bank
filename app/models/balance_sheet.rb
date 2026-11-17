@@ -76,6 +76,9 @@ class BalanceSheet
         accounts.sort_by(&:balance)
       when "balance_desc"
         accounts.sort_by(&:balance).reverse
+      when "manual"
+        positions = user.account_positions.each_with_index.to_h
+        accounts.sort_by { |account| [ positions.fetch(account.id.to_s, positions.size), account.name.to_s.downcase ] }
       else
         accounts
       end

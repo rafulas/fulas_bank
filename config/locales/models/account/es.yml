@@ -4,6 +4,9 @@ es:
     balance_adjuster:
       name: Ajuste de saldo
   account_order:
+    manual:
+      label: Manual (ordenadas a mano)
+      label_short: Manual
     balance_asc:
       label: Saldo (de menor a mayor)
       label_short: Saldo ↑

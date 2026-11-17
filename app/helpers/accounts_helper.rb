@@ -49,7 +49,10 @@ module AccountsHelper
       # so toggling it in Settings busts the 12h fragment cache immediately
       # (this partial renders with skip_digest: true, so the template digest
       # would not otherwise reflect the change).
-      Current.user&.always_expanded_account_groups&.sort
+      Current.user&.always_expanded_account_groups&.sort,
+      # Fulas Bank: the order of the accounts, by hand or not.
+      Current.user&.default_account_order,
+      (Digest::MD5.hexdigest(Current.user.account_positions.join(",")) if Current.user&.default_account_order == "manual")
     ]
   end
 end

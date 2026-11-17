@@ -163,6 +163,7 @@ es:
       new_debt: Nueva deuda
       new_account: Nueva cuenta
       new_account_group: Añadir %{account_group}
+      reorder: Ordenar cuentas
       expand_all: Desplegar todo
       collapse_all: Contraer todo
     types:
