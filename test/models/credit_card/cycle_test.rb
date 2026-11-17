@@ -94,7 +94,27 @@ class CreditCard::CycleTest < ActiveSupport::TestCase
     assert_equal [ Date.new(2026, 11, 5), Date.new(2026, 12, 4) ], card_flows.select { |flow| flow.amount == BigDecimal("39.5") }.map(&:date)
   end
 
+  test "a statement whose payment day has passed is still expected until the bank's movements of that day are imported" do
+    today = Date.new(2026, 10, 15)
+    spend(120, Date.new(2026, 9, 12))
+    create_transaction(account: @bank, name: "Último importado", amount: 10, date: Date.new(2026, 10, 2), currency: "EUR")
+
+    line = card_statement_lines(today).find { |flow| flow.amount == BigDecimal("120") }
+    assert line, "the September statement, due on 5 October, is still expected"
+    assert_equal today + 1, line.date
+    assert_equal @bank, line.account
+
+    create_transaction(account: @bank, name: "Recibo tarjeta", amount: 120, date: Date.new(2026, 10, 5), currency: "EUR")
+
+    assert_not card_statement_lines(today).any? { |flow| flow.amount == BigDecimal("120") }
+  end
+
   private
+    def card_statement_lines(today)
+      Forecast.new(@family, accounts: [ @bank ], card_accounts: [ @card ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
+              .flows.select { |flow| flow.source == :card }
+    end
+
     def cycle(today: Date.new(2026, 10, 15))
       CreditCard::Cycle.new(@card, today: today)
     end

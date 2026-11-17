@@ -5,14 +5,27 @@
     <%= render DS::Alert.new(message: item.errors.full_messages.to_sentence, variant: :error) %>
   <% end %>
 
-  <div class="space-y-3">
+  <%# Fulas Bank: a transfer leaves «Cuenta» (then «Desde») and reaches «Hacia». %>
+  <div class="space-y-3" data-controller="forecast-item-nature"
+       data-forecast-item-nature-account-label-value="<%= t(".account") %>"
+       data-forecast-item-nature-from-label-value="<%= t(".from_account") %>">
     <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
     <div class="flex items-center gap-2">
-      <%= form.select :nature, [ [ t(".outflow"), "outflow" ], [ t(".inflow"), "inflow" ] ], { label: t(".nature"), container_class: "w-1/3" } %>
+      <%= form.select :nature, [ [ t(".outflow"), "outflow" ], [ t(".inflow"), "inflow" ], [ t(".transfer"), "transfer" ] ],
+                      { label: t(".nature"), container_class: "w-1/3" },
+                      data: { forecast_item_nature_target: "nature", action: "forecast-item-nature#refresh" } %>
       <%= form.money_field :amount, label: t(".amount"), container_class: "w-2/3", disable_currency: true, min: 0 %>
     </div>
     <%= form.date_field :date, label: t(".date"), required: true, min: Date.current + 1 %>
-    <%= form.select :account_id, forecast_accounts.map { |account| [ account.name, account.id ] }, { label: t(".account") }, required: true %>
+    <div data-forecast-item-nature-target="accountLabel">
+      <%= form.select :account_id, forecast_accounts.map { |account| [ account.name, account.id ] },
+                      { label: item.transfer? ? t(".from_account") : t(".account") }, required: true %>
+    </div>
+    <div data-forecast-item-nature-target="destination" class="<%= "hidden" unless item.transfer? %>">
+      <%= form.select :destination_account_id, forecast_accounts.map { |account| [ account.name, account.id ] },
+                      { label: t(".destination_account"), include_blank: t(".destination_blank") },
+                      disabled: !item.transfer? %>
+    </div>
     <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
   </div>
 

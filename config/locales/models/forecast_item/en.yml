@@ -7,3 +7,11 @@ en:
         amount: Amount
         date: Date
         account: Account
+        destination_account: Destination account
+    errors:
+      models:
+        forecast_item:
+          attributes:
+            destination_account:
+              same_account: must be a different account
+              other_currency: must be in the same currency

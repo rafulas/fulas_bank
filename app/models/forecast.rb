@@ -8,7 +8,8 @@
 #      their schedule produces up to the date, however far it is. A series
 #      that ends (a loan, a plan with an end date) stops there.
 #   2. The one-off movements the user typed in (ForecastItem), from the
-#      Forecast or as a transaction dated after today.
+#      Forecast or as a transaction dated after today. Fulas Bank: a
+#      transfer between two accounts takes it out of one and into the other.
 #   3. Optionally, one "Gastos varios" line a month per account with the
 #      expected variable spending (see Forecast::VariableEstimate), on the last
 #      day of the month. In the current month, only what is still to come.
@@ -598,13 +599,20 @@ class Forecast
 
     # Fulas Bank: like a recurring payment, one whose day has passed is still
     # expected (tomorrow) until a movement of that day or later is imported.
+    #
+    # Fulas Bank: a transfer between two accounts goes out of one and into
+    # the other on the same day (both lines open the same movement).
     def planned_flows
-      family.forecast_items.where(account_id: account_ids, date: (today - OVERDUE_LOOKBACK)..through).filter_map do |item|
+      family.forecast_items.where(account_id: account_ids, date: (today - OVERDUE_LOOKBACK)..through).flat_map do |item|
         on = expected_date(item.date, item.account_id)
-        next unless on
+        next [] unless on
 
-        Flow.new(date: on, account: accounts_by_id[item.account_id], amount: item.signed_amount,
-                 name: overdue_name(item.name, item.date, on), source: :planned, record: item)
+        name = overdue_name(item.name, item.date, on)
+        list = [ Flow.new(date: on, account: accounts_by_id[item.account_id], amount: item.signed_amount, name: name, source: :planned, record: item) ]
+        if item.transfer? && (destination = accounts_by_id[item.destination_account_id])
+          list << Flow.new(date: on, account: destination, amount: -item.amount, name: name, source: :planned, record: item)
+        end
+        list
       end
     end
 
@@ -698,10 +706,16 @@ class Forecast
     def statement_flows(card, cycle, account)
       month = cycle.statement_month_for(today)
       cycle.statements_between(month.prev_month, month).filter_map do |statement|
-        next unless window.cover?(statement.charged_on) && statement.amount.positive?
+        next unless statement.amount.positive?
 
-        Flow.new(date: statement.charged_on, account: account, amount: statement.amount.round(2), source: :card, card: card,
-                 name: I18n.t("forecasts.card_statement_line", card: card.name, month: I18n.l(statement.closes_on, format: "%B %Y")))
+        # Fulas Bank: like any payment, one whose day has passed is still
+        # expected (tomorrow) until the account's statement with it is imported.
+        on = expected_date(statement.charged_on, account.id)
+        next unless on
+
+        name = I18n.t("forecasts.card_statement_line", card: card.name, month: I18n.l(statement.closes_on, format: "%B %Y"))
+        Flow.new(date: on, account: account, amount: statement.amount.round(2), source: :card, card: card,
+                 name: overdue_name(name, statement.charged_on, on))
       end
     end
 

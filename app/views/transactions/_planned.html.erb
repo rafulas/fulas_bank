@@ -23,8 +23,10 @@
               <%= render DS::Pill.new(label: t("transactions.planned.overdue"), tone: :warning, marker: false, size: :sm) %>
             <% end %>
           </div>
-          <div class="hidden md:block shrink-0 text-secondary truncate max-w-48"><%= item.account.name %></div>
-          <div class="shrink-0 font-medium privacy-sensitive <%= item.outflow? ? "text-primary" : "text-success" %>">
+          <div class="hidden md:block shrink-0 text-secondary truncate max-w-48">
+            <%= item.transfer? ? t("transactions.planned.transfer_accounts", from: item.account.name, to: item.destination_account&.name) : item.account.name %>
+          </div>
+          <div class="shrink-0 font-medium privacy-sensitive <%= item.inflow? ? "text-success" : "text-primary" %>">
             <%= forecast_signed_amount(-item.signed_amount, item.currency) %>
           </div>
           <%= render DS::Link.new(icon: "pencil", variant: :icon, size: :sm, href: edit_forecast_item_path(item), frame: :modal, aria: { label: t("transactions.planned.edit") }) %>

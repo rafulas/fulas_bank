@@ -7,3 +7,11 @@ es:
         amount: Importe
         date: Fecha
         account: Cuenta
+        destination_account: Cuenta de destino
+    errors:
+      models:
+        forecast_item:
+          attributes:
+            destination_account:
+              same_account: tiene que ser otra cuenta
+              other_currency: tiene que estar en la misma moneda
