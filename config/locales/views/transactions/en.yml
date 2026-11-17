@@ -63,6 +63,7 @@ en:
       add_to_recurring: Add to recurring
       selected: selected
     form:
+      category_suggested: Category suggested from similar movements. You can change it.
       details: Details
       account: Account
       account_prompt: Select an Account
@@ -129,6 +130,12 @@ en:
         one: See the other one
         other: "See all %{count}"
     show:
+      suggestion:
+        label: "Suggestion:"
+        because:
+          one: Used by 1 similar movement
+          other: Used by %{count} similar movements
+        apply: Apply
       how_it_counts: How it counts
       more_options: More options
       budget_title: "%{month} budget"
@@ -309,6 +316,9 @@ en:
         other: "Categorize (%{count})"
     categorizes:
       show:
+        suggestion:
+          one: "Suggested: used by 1 similar movement"
+          other: "Suggested: used by %{count} similar movements"
         exit: "Exit"
         skip: "Skip"
         remaining:

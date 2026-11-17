@@ -604,6 +604,8 @@ Rails.application.routes.draw do
     # Fulas Bank: a filter panel of the list (categories, merchants, tags),
     # loaded when it is opened (see transactions/searches/_lazy_filter).
     get :search_filter, on: :collection, path: "filtro"
+    # Fulas Bank: the category the movements like a name have (new movement form).
+    get :category_suggestion, on: :collection, path: "sugerir-categoria"
     resource :split, only: %i[new create edit update destroy]
     resource :transfer_match, only: %i[new create]
     resource :pending_duplicate_merges, only: %i[new create]
