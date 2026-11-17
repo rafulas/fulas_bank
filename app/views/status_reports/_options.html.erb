@@ -1,0 +1,78 @@
+<%# locals: (report:, presets:, preset:, accounts:) %>
+<%# Fulas Bank: what the Informe covers. Every change reloads it; «Guardar»
+    keeps the current choices with a name. %>
+<aside class="flex-[1_1_16rem] max-w-sm space-y-4" aria-label="<%= t("status_reports.options.label") %>">
+  <%= render DS::Card.new(class: "gap-4") do %>
+    <% if presets.any? %>
+      <div class="space-y-2">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("status_reports.options.presets") %></h2>
+        <div class="flex flex-wrap gap-2">
+          <% presets.each do |saved| %>
+            <%= render DS::Link.new(text: saved.name, variant: (saved == preset ? :secondary : :outline), size: :sm,
+                                    href: status_report_path(preset_id: saved.id)) %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= form_with url: status_report_path, method: :get, class: "space-y-4",
+                  data: { controller: "auto-submit-form", auto_submit_form_trigger_event_value: "change", turbo_action: "replace" } do |form| %>
+      <%= hidden_field_tag "preset_id", preset&.id if preset %>
+      <div class="space-y-1">
+        <%= label_tag "period", t("status_reports.options.period"), class: "text-xs font-semibold uppercase tracking-wider text-secondary" %>
+        <%= select_tag "period", options_for_select(StatusReport::PERIODS.map { |key| [ t("status_reports.periods.#{key}"), key ] }, report.period_key),
+                       class: "form-field__input w-full rounded-md border border-secondary bg-container px-3 py-2 text-sm",
+                       data: { auto_submit_form_target: "auto" } %>
+      </div>
+
+      <fieldset class="space-y-1">
+        <legend class="text-xs font-semibold uppercase tracking-wider text-secondary mb-1"><%= t("status_reports.options.accounts") %></legend>
+        <%= hidden_field_tag "account_ids[]", "", id: nil %>
+        <% chosen = report.accounts.map(&:id) %>
+        <% accounts.each do |account| %>
+          <label class="flex items-center gap-2 py-1 text-sm text-primary cursor-pointer">
+            <%= check_box_tag "account_ids[]", account.id, chosen.include?(account.id), id: "report_account_#{account.id}",
+                              class: "checkbox checkbox--light", data: { auto_submit_form_target: "auto" } %>
+            <span class="flex-1 min-w-0 truncate"><%= account.name %></span>
+            <span class="text-xs text-secondary"><%= account.accountable.singular_display_name %></span>
+          </label>
+        <% end %>
+      </fieldset>
+
+      <fieldset class="space-y-1">
+        <legend class="text-xs font-semibold uppercase tracking-wider text-secondary mb-1"><%= t("status_reports.options.sections") %></legend>
+        <%= hidden_field_tag "sections[]", "", id: nil %>
+        <% StatusReport::SECTIONS.each do |section| %>
+          <label class="flex items-center gap-2 py-1 text-sm text-primary cursor-pointer">
+            <%= check_box_tag "sections[]", section, report.show?(section), id: "report_section_#{section}",
+                              class: "checkbox checkbox--light", data: { auto_submit_form_target: "auto" } %>
+            <span><%= t("status_reports.sections.#{section}") %></span>
+          </label>
+        <% end %>
+      </fieldset>
+    <% end %>
+
+    <%= form_with url: report_presets_path, scope: :report_preset, class: "space-y-2 border-t border-secondary pt-4" do |form| %>
+      <% report.accounts.each do |account| %>
+        <%= hidden_field_tag "report_preset[account_ids][]", account.id, id: nil %>
+      <% end %>
+      <% report.sections.each do |section| %>
+        <%= hidden_field_tag "report_preset[sections][]", section, id: nil %>
+      <% end %>
+      <%= hidden_field_tag "report_preset[period]", report.period_key, id: nil %>
+      <%= label_tag "report_preset_name", t("status_reports.options.save_label"), class: "text-xs font-semibold uppercase tracking-wider text-secondary" %>
+      <div class="flex gap-2">
+        <%= text_field_tag "report_preset[name]", preset&.name, id: "report_preset_name", required: true, maxlength: 60,
+                           placeholder: t("status_reports.options.save_placeholder"),
+                           class: "form-field__input flex-1 min-w-0 rounded-md border border-secondary bg-container px-3 py-2 text-sm" %>
+        <%= render DS::Button.new(text: t("status_reports.options.save"), variant: :secondary, size: :sm) %>
+      </div>
+    <% end %>
+
+    <% if preset %>
+      <%= render DS::Button.new(text: t("status_reports.options.delete", name: preset.name), variant: :ghost, size: :sm, icon: "trash-2",
+                                href: report_preset_path(preset), method: :delete,
+                                confirm: CustomConfirm.for_resource_deletion(t("status_reports.options.resource"))) %>
+    <% end %>
+  <% end %>
+</aside>

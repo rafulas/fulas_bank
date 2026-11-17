@@ -1,0 +1,117 @@
+---
+en:
+  status_reports:
+    show:
+      title: Report
+      subtitle: Where your accounts stand today, to read here or paste into your spreadsheet. Choose which accounts and sections go in.
+      as_of: "As of %{date} · period: %{period} · configuration: %{preset}"
+      custom: unsaved
+      empty_title: Nothing to show
+      empty_description: Tick at least one account and one section.
+      net_worth_subtitle: Assets, debt and net worth at the end of each month of the last year.
+      debt_free_on: "With your debt plan, debt-free in %{date}."
+      stock_plans_subtitle: Each year of your share plans, valued at the latest price.
+      cash_flow_subtitle: "Income %{income} · spending %{spent} · savings %{rate}%"
+      fixed_subtitle: This month's recurring payments, by group.
+      copy_hint: "«Copy for Sheets» copies the table without currency signs, one value per cell. Paste it into the template's sheet of the same name and the Dashboard's charts update."
+    sections:
+      summary: Summary
+      balances: Balances by account
+      net_worth: Net worth over time
+      loans: Loans
+      investments: Investments
+      stock_plans: Share plan
+      cash_flow: Income and spending
+      forecast: Forecast
+      fixed: Fixed this month
+    tabs:
+      summary: Summary
+      history: History
+      balances: Balances
+      net_worth: Net worth
+      loans: Loans
+      investments: Investments
+      stock_plans: Shares
+      cash_flow: Spending
+      forecast: Forecast
+      fixed: Fixed
+    headers:
+      date: Date
+      liquidity: Cash
+      investments: Investments
+      other_assets: Other assets
+      debt: Debt
+      net_worth: Net worth
+      income: Income
+      spending: Spending
+      savings_rate: Savings %
+      account: Account
+      type: Type
+      balance: Balance
+      month_ago: A month ago
+      change: Change
+      assets: Assets
+      loan: Loan
+      pending: Pending
+      payment: Instalment
+      ends_on: Ends
+      value: Value
+      contributed: Contributed
+      gain: Gain
+      return: Return %
+      plan: Plan
+      delivered_on: Delivery
+      shares: Shares
+      shares_source: Source
+      sell_on: Sale
+      category: Category
+      spent: Spent
+      normal: Normal
+      vs_normal: Against normal %
+      expected_total: Expected balance
+      cushion: Cushion
+      group: Group
+      monthly: Per month
+    shares_sources:
+      typed: Actual
+      traded: From purchases
+      estimated: Estimated
+    periods:
+      last_month: Last month
+      current_month: This month
+      last_90_days: Last 90 days
+      current_year: This year
+    copy:
+      button: Copy for Sheets
+      history_row: Copy row for History
+      copied: "Copied. Paste it into the «%{tab}» sheet."
+      failed: Could not copy. Try again or select the table by hand.
+    summary:
+      net_worth: Net worth
+      liquidity: Cash
+      investments: Investments
+      debt: Debt pending
+      change: "%{amount} against a month ago"
+    forecast:
+      subtitle: Expected balance of the ticked accounts at the end of each month, as in the Forecast.
+      in_months:
+        one: In 1 month
+        other: "In %{count} months"
+      lowest: Lowest point
+    empty: No data for the ticked accounts.
+    options:
+      label: What goes in the report
+      presets: Saved configurations
+      period: Income and spending period
+      accounts: Accounts
+      sections: Sections
+      save_label: Save this configuration
+      save_placeholder: For home
+      save: Save
+      delete: "Delete «%{name}»"
+      resource: report configuration
+  report_presets:
+    create:
+      success: "Configuration «%{name}» saved"
+    destroy:
+      success: Configuration deleted

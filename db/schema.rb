@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -2517,6 +2517,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_130000) do
     t.index ["outflow_transaction_id"], name: "index_rejected_transfers_on_outflow_transaction_id"
   end
 
+  create_table "report_presets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_ids", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "period", default: "last_month", null: false
+    t.string "sections", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["user_id", "name"], name: "index_report_presets_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_report_presets_on_user_id"
+  end
+
   create_table "rule_actions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "action_type", null: false
     t.datetime "created_at", null: false
@@ -3531,6 +3543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_130000) do
   add_foreign_key "redbark_items", "families"
   add_foreign_key "rejected_transfers", "transactions", column: "inflow_transaction_id", on_delete: :cascade
   add_foreign_key "rejected_transfers", "transactions", column: "outflow_transaction_id", on_delete: :cascade
+  add_foreign_key "report_presets", "users", on_delete: :cascade
   add_foreign_key "rule_actions", "rules"
   add_foreign_key "rule_conditions", "rule_conditions", column: "parent_id"
   add_foreign_key "rule_conditions", "rules"

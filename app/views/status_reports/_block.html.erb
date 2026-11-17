@@ -1,0 +1,24 @@
+<%# locals: (key:, block:, subtitle: nil) %>
+<%# Fulas Bank: one section of the Informe: its title, «Copiar para Sheets»
+    and what the section shows (yielded), or its table when nothing is. %>
+<% body = yield %>
+<%= render DS::Card.new(id: "report-#{key}", class: "gap-4") do %>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0 space-y-0.5">
+      <h2 class="text-base font-medium text-primary"><%= t("status_reports.sections.#{key}") %></h2>
+      <% if subtitle %>
+        <p class="text-sm text-secondary"><%= subtitle %></p>
+      <% end %>
+    </div>
+    <%= render "status_reports/copy_button", text: block.to_tsv, label: t("status_reports.copy.button"),
+               tab: t("status_reports.tabs.#{key}") unless block.empty? %>
+  </div>
+
+  <% if block.empty? %>
+    <p class="text-sm text-secondary"><%= t("status_reports.empty") %></p>
+  <% elsif body.present? %>
+    <%= body %>
+  <% else %>
+    <%= render "status_reports/table", block: block %>
+  <% end %>
+<% end %>

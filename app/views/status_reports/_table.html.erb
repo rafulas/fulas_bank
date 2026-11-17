@@ -1,0 +1,10 @@
+<%# locals: (block:) %>
+<%= render DS::Table.new(rows: block.rows, inset: true, dense: true, label: block.headers.first) do |table| %>
+  <% block.headers.each_with_index do |header, column| %>
+    <% format = block.formats[column] %>
+    <% table.with_column(header, numeric: %i[money percent number].include?(format),
+                         class: (%i[money number].include?(format) ? "privacy-sensitive" : nil)) do |row| %>
+      <%= status_report_cell(row[column], format) %>
+    <% end %>
+  <% end %>
+<% end %>

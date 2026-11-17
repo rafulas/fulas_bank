@@ -1,0 +1,32 @@
+<%# locals: (report:) %>
+<% totals = report.totals %>
+<% change = totals.net_worth - report.totals_a_month_ago.net_worth %>
+<% block = report.summary %>
+<%= render DS::Card.new(id: "report-summary", class: "gap-4") do %>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <h2 class="text-base font-medium text-primary"><%= t("status_reports.sections.summary") %></h2>
+    <div class="flex flex-wrap gap-2">
+      <%= render "status_reports/copy_button", text: block.to_tsv, label: t("status_reports.copy.button"), tab: t("status_reports.tabs.summary") %>
+      <%= render "status_reports/copy_button", text: block.to_tsv(header: false), label: t("status_reports.copy.history_row"), tab: t("status_reports.tabs.history") %>
+    </div>
+  </div>
+  <div class="@container">
+    <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+      <%= summary_card title: t("status_reports.summary.net_worth"), tone: :brand do %>
+        <span class="whitespace-nowrap"><%= status_report_money(totals.net_worth) %></span>
+        <span class="block text-xs font-normal text-secondary">
+          <%= t("status_reports.summary.change", amount: status_report_money(change)) %>
+        </span>
+      <% end %>
+      <%= summary_card title: t("status_reports.summary.liquidity") do %>
+        <span class="whitespace-nowrap"><%= status_report_money(totals.liquidity) %></span>
+      <% end %>
+      <%= summary_card title: t("status_reports.summary.investments") do %>
+        <span class="whitespace-nowrap"><%= status_report_money(totals.investments) %></span>
+      <% end %>
+      <%= summary_card title: t("status_reports.summary.debt"), tone: :negative do %>
+        <span class="whitespace-nowrap"><%= status_report_money(totals.debt) %></span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
