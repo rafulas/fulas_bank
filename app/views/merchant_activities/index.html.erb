@@ -1,0 +1,57 @@
+<% content_for :page_header do %>
+  <div class="mb-4"><%= render "shared/analysis_tabs" %></div>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% currency = @activity.currency %>
+<div class="max-w-2xl space-y-4 pb-6">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <%= form_with url: merchant_activities_path, method: :get, class: "flex-1 min-w-48", data: { controller: "auto-submit-form", turbo_action: "replace" } do |form| %>
+      <% merchant_activity_period_params(@period).each do |key, value| %>
+        <%= hidden_field_tag key, value %>
+      <% end %>
+      <%= render DS::SearchInput.new(name: "search", value: @search, placeholder: t(".search_placeholder"),
+                                     data: { "auto-submit-form-target": "auto" }) %>
+    <% end %>
+    <%= render UI::PeriodPicker.new(selected: @period, url: merchant_activities_path, picker: true,
+                                    extra_params: { search: @search.presence }.compact) %>
+  </div>
+
+  <% if @rows.empty? %>
+    <%= render DS::EmptyState.new(icon: "store", title: t(".empty_title"), description: t(".empty_description")) %>
+  <% else %>
+    <% total = @rows.sum(&:spent) %>
+    <div class="grid grid-cols-2 gap-3">
+      <%= summary_card title: t(".total_spent") do %>
+        <span class="privacy-sensitive"><%= format_money(Money.new(total, currency), precision: 0) %></span>
+      <% end %>
+      <%= summary_card title: t(".merchants_count_title") do %>
+        <%= @rows.count { |row| row.spent.positive? } %>
+      <% end %>
+    </div>
+
+    <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+      <% @rows.each_with_index do |row, index| %>
+        <%= render "shared/ruler" unless index.zero? %>
+        <%= link_to merchant_activity_link(row.name, @period), class: "flex items-center justify-between gap-3 px-4 py-3 hover:bg-container-hover" do %>
+          <div class="min-w-0">
+            <p class="text-sm text-primary truncate"><%= row.name %></p>
+            <p class="text-xs text-secondary truncate">
+              <%= t(".purchases", count: row.count) %>
+              <% if row.last_date %> · <%= t(".last", date: l(row.last_date, format: :short)) %><% end %>
+            </p>
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-sm text-primary privacy-sensitive"><%= format_money(Money.new(-row.spent, currency)) %></p>
+            <% if row.refunded.positive? %>
+              <p class="text-xs text-success privacy-sensitive"><%= t(".refunded", amount: format_money(Money.new(row.refunded, currency))) %></p>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,91 @@
+<% detail = @detail %>
+<% row = detail.row %>
+<% currency = @activity.currency %>
+<% content_for :page_header do %>
+  <div class="space-y-1 mb-6">
+    <div class="flex items-center gap-2 text-sm">
+      <%= link_to t(".back"), merchant_activities_path(merchant_activity_period_params(@period)), class: "text-secondary hover:text-primary" %>
+    </div>
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= detail.name %></h1>
+    <p class="text-sm lg:text-base text-secondary">
+      <%= t(".since", date: l(detail.first_date, format: :long)) %>
+    </p>
+  </div>
+<% end %>
+
+<div class="max-w-2xl space-y-4 pb-6">
+  <div class="flex items-center justify-end">
+    <%= render UI::PeriodPicker.new(selected: @period, url: merchant_activity_path, picker: true, extra_params: { name: detail.name }) %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <%= summary_card title: t(".spent") do %>
+      <span class="privacy-sensitive"><%= format_money(Money.new(row.spent, currency), precision: 0) %></span>
+      <% if row.refunded.positive? %>
+        <span class="block text-xs text-success font-normal mt-1 privacy-sensitive"><%= t(".refunded", amount: format_money(Money.new(row.refunded, currency))) %></span>
+      <% end %>
+    <% end %>
+    <%= summary_card title: t(".purchases_title") do %>
+      <%= row.count %>
+      <% if row.count.positive? %>
+        <span class="block text-xs text-secondary font-normal mt-1 privacy-sensitive"><%= t(".average", amount: format_money(Money.new(row.average, currency))) %></span>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# The last twelve months. %>
+  <% months = detail.months %>
+  <% scale = detail.months_max %>
+  <section class="space-y-2">
+    <div class="flex items-center justify-between px-1 text-xs text-secondary">
+      <span><%= t(".last_months", count: months.size) %></span>
+      <span class="privacy-sensitive"><%= t(".monthly_average", amount: format_money(Money.new(detail.monthly_average, currency), precision: 0)) %></span>
+    </div>
+    <div class="rounded-xl bg-container shadow-border-xs p-3">
+      <div class="grid gap-1" style="grid-template-columns: repeat(<%= months.size %>, minmax(0, 1fr))" role="img" aria-label="<%= t(".last_months_label") %>">
+        <% months.each do |month| %>
+          <div class="flex flex-col items-center text-xs">
+            <div class="flex flex-col justify-end items-center h-24 w-full">
+              <% if month.spent.positive? %>
+                <span class="text-secondary privacy-sensitive whitespace-nowrap"><%= transactions_panel_compact_amount(month.spent, currency) %></span>
+                <div class="w-3 rounded-t-sm bg-inverse" style="height: <%= transactions_panel_bar_height(month.spent, scale) %>%"></div>
+              <% end %>
+            </div>
+            <span class="mt-1 text-secondary first-letter:uppercase"><%= l(month.month, format: "%b") %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <% if detail.categories.any? %>
+    <section class="space-y-2">
+      <p class="px-1 text-xs text-secondary"><%= t(".categories") %></p>
+      <div class="overflow-hidden rounded-xl bg-container shadow-border-xs">
+        <% detail.categories.each_with_index do |share, index| %>
+          <%= render "shared/ruler" unless index.zero? %>
+          <div class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+            <% if share.category %>
+              <%= render DS::ColorLabel.new(label: share.category.display_name, color: share.category.color, icon: share.category.lucide_icon, size: :sm) %>
+            <% else %>
+              <span class="text-secondary"><%= t(".uncategorized") %></span>
+            <% end %>
+            <span class="shrink-0 text-primary privacy-sensitive"><%= format_money(Money.new(-share.spent, currency)) %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <section class="space-y-2">
+    <div class="flex items-center justify-between px-1 text-xs text-secondary">
+      <span><%= t(".latest", count: detail.entries.size) %></span>
+      <%= link_to t(".see_all"), transactions_path(q: { search: detail.name }), class: "hover:text-primary" %>
+    </div>
+    <ul class="rounded-xl bg-container shadow-border-xs p-1">
+      <% detail.entries.each do |entry| %>
+        <%= render "transactions/similar_item", entry: entry %>
+      <% end %>
+    </ul>
+  </section>
+</div>

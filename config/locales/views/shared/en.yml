@@ -44,6 +44,7 @@ en:
       month: Month
       recaps: Recaps
       compare: Compare
+      merchants: Merchants
     preview: Preview
     dot_separator: "·"
     sync_toast:

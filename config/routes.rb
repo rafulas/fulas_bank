@@ -449,6 +449,10 @@ Rails.application.routes.draw do
     delete :destroy_all, on: :collection
   end
 
+  # Fulas Bank: what was spent at each merchant, and one merchant's page
+  # (by name, since a movement without a merchant counts under its own).
+  get "resumen/comercios", to: "merchant_activities#index", as: :merchant_activities
+  get "resumen/comercios/detalle", to: "merchant_activities#show", as: :merchant_activity
   # Fulas Bank: spending by category and subcategory ("Resumen").
   resources :category_summaries, only: %i[index show], path: "resumen"
   # Fulas Bank: the necessary / discretionary / saving target and classes.

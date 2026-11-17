@@ -214,28 +214,30 @@ class Category::Analysis
     [ top, rest.size, money(rest.sum(&:amount) / days_elapsed) ]
   end
 
+
+  # Fulas Bank: public for MerchantActivity, which counts the same way.
+  # Transactions that count, in the user's accounts and the date range,
+  # with `t` for the transaction and `rates` for the exchange rate.
+  def base_scope(range)
+    family.entries
+          .excluding_split_parents
+          .where(account_id: account_ids, entryable_type: "Transaction", excluded: false, date: range)
+          .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
+          .joins(ActiveRecord::Base.sanitize_sql_array([
+            "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
+            currency
+          ]))
+          .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
+          .where("t.category_id IS NULL OR t.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
+  end
+
+  def converted_amount_sql
+    "entries.amount * COALESCE(rates.rate, 1)"
+  end
+
   private
     def money(amount)
       Money.new(amount, currency)
-    end
-
-    # Transactions that count, in the user's accounts and the date range,
-    # with `t` for the transaction and `rates` for the exchange rate.
-    def base_scope(range)
-      family.entries
-            .excluding_split_parents
-            .where(account_id: account_ids, entryable_type: "Transaction", excluded: false, date: range)
-            .joins("INNER JOIN transactions t ON t.id = entries.entryable_id")
-            .joins(ActiveRecord::Base.sanitize_sql_array([
-              "LEFT JOIN exchange_rates rates ON (rates.date = entries.date AND rates.from_currency = entries.currency AND rates.to_currency = ?)",
-              currency
-            ]))
-            .where("t.kind NOT IN (?) OR t.id IN (#{Transaction::INVESTMENT_WITHDRAWAL_IDS_SQL})", Transaction::ANALYTICS_EXCLUDED_KINDS)
-            .where("t.category_id IS NULL OR t.category_id NOT IN (#{Category::ANALYTICS_NEUTRAL_IDS_SQL})")
-    end
-
-    def converted_amount_sql
-      "entries.amount * COALESCE(rates.rate, 1)"
     end
 
     def category_joins_sql
