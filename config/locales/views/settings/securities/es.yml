@@ -3,6 +3,23 @@ es:
   settings:
     securities:
       show:
+        activity_title: Actividad
+        activity_subtitle: Dónde tienes la sesión abierta y los últimos cambios de seguridad de tu cuenta.
+        sessions_title: Sesiones abiertas
+        unknown_device: Dispositivo desconocido
+        last_active: "Última actividad: %{time}"
+        this_device: Este dispositivo
+        sessions_hint: "Una sesión sin usar durante %{days} días se cierra sola."
+        events_title: Cambios de seguridad
+        no_events: Aún no hay cambios registrados.
+        events:
+          api_key_created: Clave de API creada
+          api_key_revoked: Clave de API revocada
+          mfa_enabled: Verificación en dos pasos activada
+          mfa_disabled: Verificación en dos pasos desactivada
+          password_changed: Contraseña cambiada
+          webauthn_credential_added: Llave de seguridad añadida
+          webauthn_credential_removed: Llave de seguridad quitada
         disable_mfa: Deshabilitar 2FA
         disable_mfa_confirm: ¿Estás seguro de que deseas deshabilitar la autenticación de 2FA? Esto hará que tu cuenta sea menos segura.
         enable_mfa: Habilitar 2FA
