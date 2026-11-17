@@ -1,0 +1,35 @@
+---
+es:
+  merchant_activities:
+    index:
+      title: Comercios
+      subtitle: Lo que has gastado en cada comercio en el periodo. Los movimientos sin comercio cuentan con su propio nombre.
+      search_placeholder: Buscar comercio
+      empty_title: No hay gastos en este periodo
+      empty_description: Elige otro periodo o busca otro nombre.
+      total_spent: Gastado
+      merchants_count_title: Comercios con gasto
+      purchases:
+        zero: Sin compras
+        one: 1 compra
+        other: "%{count} compras"
+      last: "última el %{date}"
+      refunded: "+%{amount} devuelto"
+    show:
+      back: "← Comercios"
+      since: "Desde el %{date}"
+      spent: Gastado en el periodo
+      refunded: "Te devolvieron %{amount}"
+      purchases_title: Compras en el periodo
+      average: "%{amount} de media"
+      last_months:
+        one: Último mes
+        other: "Últimos %{count} meses"
+      last_months_label: Gasto de cada mes
+      monthly_average: "%{amount} al mes de media"
+      categories: Categorías en el periodo
+      uncategorized: Sin categoría
+      latest:
+        one: Último movimiento
+        other: "Últimos %{count} movimientos"
+      see_all: Ver en Movimientos

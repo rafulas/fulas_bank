@@ -117,6 +117,28 @@
           <% end %>
         <% end %>
 
+        <%# Fulas Bank: with no category, the one the movements like it have,
+            to apply with one tap (Transaction::CategorySuggester). %>
+        <% if @entry.transaction.category_id.nil? && !@entry.transaction.transfer? && can_annotate_entry? && !@entry.split_parent? %>
+          <% suggestion = Transaction::CategorySuggester.new(Current.family, scope: Current.accessible_entries).suggest_for(@entry) %>
+          <% if suggestion %>
+            <div class="flex items-center justify-between gap-2 rounded-lg bg-container-inset px-3 py-2" data-testid="category-suggestion">
+              <div class="min-w-0 text-xs text-secondary">
+                <span><%= t(".suggestion.label") %></span>
+                <%= render DS::ColorLabel.new(label: suggestion.category.display_name, color: suggestion.category.color, icon: suggestion.category.lucide_icon, size: :sm) %>
+                <span class="block mt-0.5"><%= t(".suggestion.because", count: suggestion.count) %></span>
+              </div>
+              <%= render DS::Button.new(
+                    text: t(".suggestion.apply"),
+                    variant: :secondary,
+                    size: :sm,
+                    href: transaction_path(@entry, entry: { entryable_attributes: { id: @entry.entryable_id, category_id: suggestion.category.id } }),
+                    method: :patch
+                  ) %>
+            </div>
+          <% end %>
+        <% end %>
+
         <%# Fulas Bank: the account it is in, which can be changed when it went
             in the wrong one (another card, say). %>
         <% move_targets = @entry.movable_to_another_account? && can_edit_entry? ? @entry.account_move_targets(Current.accessible_accounts).to_a : [] %>

@@ -624,6 +624,16 @@ class TransactionsController < ApplicationController
     end
   end
 
+
+  # Fulas Bank: the category the movements like this name have, for the new
+  # movement form (category_suggestion_controller.js).
+  def category_suggestion
+    suggestion = Transaction::CategorySuggester.new(Current.family, scope: Current.accessible_entries)
+                                               .suggest(name: params[:name].to_s.first(200), inflow: params[:nature] == "inflow")
+
+    render json: suggestion ? { category_id: suggestion.category.id, name: suggestion.category.display_name, count: suggestion.count } : {}
+  end
+
   private
     def set_entry_for_move
       set_entry

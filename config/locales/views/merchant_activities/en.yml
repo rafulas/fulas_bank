@@ -1,0 +1,35 @@
+---
+en:
+  merchant_activities:
+    index:
+      title: Merchants
+      subtitle: What you spent at each merchant in the period. Movements without a merchant count under their own name.
+      search_placeholder: Search merchant
+      empty_title: No spending in this period
+      empty_description: Choose another period or search another name.
+      total_spent: Spent
+      merchants_count_title: Merchants with spending
+      purchases:
+        zero: No purchases
+        one: 1 purchase
+        other: "%{count} purchases"
+      last: "last on %{date}"
+      refunded: "+%{amount} refunded"
+    show:
+      back: "← Merchants"
+      since: "Since %{date}"
+      spent: Spent in the period
+      refunded: "%{amount} refunded"
+      purchases_title: Purchases in the period
+      average: "%{amount} on average"
+      last_months:
+        one: Last month
+        other: "Last %{count} months"
+      last_months_label: Spending each month
+      monthly_average: "%{amount} a month on average"
+      categories: Categories in the period
+      uncategorized: Uncategorized
+      latest:
+        one: Latest movement
+        other: "Latest %{count} movements"
+      see_all: See in Movements

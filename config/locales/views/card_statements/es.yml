@@ -49,6 +49,17 @@ es:
   credit_cards:
     tabs:
       statement:
+        limit_title: Uso del límite
+        limit_usage: "%{usage} % usado"
+        limit_detail: "Debes %{owed} de %{limit}; te quedan %{available}"
+        limit_missing: Debes esto. Pon el límite en «Crédito disponible» al editar la tarjeta para ver cuánto te queda.
+        financing_summary_title: Aplazado pendiente
+        financing_next:
+          one: "1 aplazamiento · próxima cuota el %{date}: %{amount}"
+          other: "%{count} aplazamientos · próximas cuotas el %{date}: %{amount}"
+        financing_none: No tienes compras aplazadas en marcha.
+        financing_cost: "Aplazar te ha costado %{amount} este año"
+        annual_fee: "cuota anual %{amount}"
         current: "Extracto en curso (%{from} – %{to})"
         charged_on: "Se cobra el %{date} en %{account}"
         no_account: la cuenta de cobro

@@ -187,3 +187,45 @@
     <% end %>
   <% end %>
 <% end %>
+
+<%# Fulas Bank: where the account is signed in and its latest security changes. %>
+<%= settings_section title: t(".activity_title"), subtitle: t(".activity_subtitle") do %>
+  <div class="space-y-4">
+    <div>
+      <h4 class="text-sm font-medium text-primary mb-2"><%= t(".sessions_title") %></h4>
+      <ul class="divide-y divide-alpha-black-100 bg-container rounded-lg shadow-border-xs">
+        <% @sessions.each do |session_record| %>
+          <li class="flex items-center justify-between gap-3 px-3 py-2">
+            <div class="min-w-0">
+              <p class="text-sm text-primary truncate"><%= session_record.user_agent.presence || t(".unknown_device") %></p>
+              <p class="text-xs text-secondary">
+                <%= t(".last_active", time: l(session_record.updated_at, format: :short)) %>
+                <% if session_record.ip_address.present? %> · <%= session_record.ip_address %><% end %>
+              </p>
+            </div>
+            <% if session_record.id == Current.session&.id %>
+              <%= render DS::Pill.new(label: t(".this_device"), tone: :success) %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p class="text-xs text-secondary mt-2"><%= t(".sessions_hint", days: Session::INACTIVITY_TIMEOUT.in_days.to_i) %></p>
+    </div>
+
+    <div>
+      <h4 class="text-sm font-medium text-primary mb-2"><%= t(".events_title") %></h4>
+      <% if @audit_logs.any? %>
+        <ul class="divide-y divide-alpha-black-100 bg-container rounded-lg shadow-border-xs">
+          <% @audit_logs.each do |log| %>
+            <li class="flex items-center justify-between gap-3 px-3 py-2">
+              <p class="text-sm text-primary"><%= t(".events.#{log.event_type}") %></p>
+              <p class="text-xs text-secondary whitespace-nowrap"><%= l(log.created_at, format: :short) %></p>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-sm text-secondary"><%= t(".no_events") %></p>
+      <% end %>
+    </div>
+  </div>
+<% end %>

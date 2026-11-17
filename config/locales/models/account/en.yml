@@ -4,6 +4,9 @@ en:
     balance_adjuster:
       name: Balance adjustment
   account_order:
+    manual:
+      label: Manual (ordered by hand)
+      label_short: Manual
     balance_asc:
       label: Balance (Low to High)
       label_short: Balance ↑

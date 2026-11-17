@@ -63,6 +63,7 @@ es:
       add_to_recurring: Añadir a recurrente
       selected: seleccionadas
     form:
+      category_suggested: Categoría sugerida por movimientos parecidos. Puedes cambiarla.
       details: Detalles
       account: Cuenta
       account_prompt: Selecciona una cuenta
@@ -129,6 +130,12 @@ es:
         one: Ver el otro
         other: "Ver los %{count}"
     show:
+      suggestion:
+        label: "Sugerencia:"
+        because:
+          one: La tiene 1 movimiento parecido
+          other: La tienen %{count} movimientos parecidos
+        apply: Aplicar
       how_it_counts: Cómo cuenta
       more_options: Más opciones
       budget_title: "Presupuesto de %{month}"
@@ -306,6 +313,9 @@ es:
         other: Categorizar (%{count})
     categorizes:
       show:
+        suggestion:
+          one: "Sugerida: la tiene 1 movimiento parecido"
+          other: "Sugerida: la tienen %{count} movimientos parecidos"
         exit: Salir
         skip: Omitir
         remaining:

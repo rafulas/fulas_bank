@@ -49,6 +49,17 @@ en:
   credit_cards:
     tabs:
       statement:
+        limit_title: Limit used
+        limit_usage: "%{usage} % used"
+        limit_detail: "You owe %{owed} of %{limit}; %{available} left"
+        limit_missing: What you owe. Set the limit in "Available credit" when editing the card to see what is left.
+        financing_summary_title: Pending instalments
+        financing_next:
+          one: "1 deferred purchase · next instalment on %{date}: %{amount}"
+          other: "%{count} deferred purchases · next instalments on %{date}: %{amount}"
+        financing_none: No deferred purchases in progress.
+        financing_cost: "Deferring cost %{amount} this year"
+        annual_fee: "annual fee %{amount}"
         current: "Current statement (%{from} – %{to})"
         charged_on: "Charged on %{date} to %{account}"
         no_account: the payment account

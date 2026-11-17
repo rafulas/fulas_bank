@@ -22,6 +22,14 @@ class AccountOrder
       label: "Balance (High to Low)",
       label_short: "Balance ↓",
       sql_order: "balance DESC"
+    },
+    # Fulas Bank: the order set by hand (User#account_positions), from the
+    # accounts panel's "Ordenar cuentas". Accounts not placed yet go after,
+    # by name.
+    "manual" => {
+      label: "Manual",
+      label_short: "Manual",
+      sql_order: "name ASC"
     }
   }.freeze
 

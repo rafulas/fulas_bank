@@ -7,6 +7,7 @@
 <% last_closed = cycle.last_closed %>
 <% financings = account.card_financings.includes(entry: :entryable).order(purchase_date: :desc).to_a %>
 <% reconciler = CreditCard::Reconciler.new(account, today: today) %>
+<% overview = CreditCard::Overview.new(account, cycle: cycle) %>
 
 <div class="space-y-4">
   <div class="@container">
@@ -22,6 +23,37 @@
         <span class="block text-xs font-normal <%= last_closed.charged?(today) ? "text-secondary" : "text-warning" %>">
           <%= t(last_closed.charged?(today) ? ".was_charged" : ".will_be_charged", date: l(last_closed.charged_on, format: "%-d %B")) %>
         </span>
+      <% end %>
+      <%# Fulas Bank: how much of the limit is used, and the instalments. %>
+      <%= summary_card title: t(".limit_title") do %>
+        <% if overview.limit? %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= t(".limit_usage", usage: overview.usage) %></span>
+          <span class="block text-xs font-normal <%= overview.usage >= 80 ? "text-warning" : "text-secondary" %> privacy-sensitive">
+            <%= t(".limit_detail", owed: format_money(Money.new(overview.owed, overview.currency)),
+                                   limit: format_money(Money.new(overview.limit, overview.currency), precision: 0),
+                                   available: format_money(Money.new(overview.available, overview.currency))) %>
+          </span>
+        <% else %>
+          <span class="whitespace-nowrap privacy-sensitive"><%= format_money(Money.new(overview.owed, overview.currency)) %></span>
+          <span class="block text-xs font-normal text-secondary"><%= t(".limit_missing") %></span>
+        <% end %>
+      <% end %>
+      <%= summary_card title: t(".financing_summary_title") do %>
+        <span class="whitespace-nowrap privacy-sensitive"><%= format_money(Money.new(overview.pending_financed, overview.currency)) %></span>
+        <span class="block text-xs font-normal text-secondary privacy-sensitive">
+          <% if (next_date, next_amount = overview.next_installment) %>
+            <%= t(".financing_next", count: overview.active_financings.size, date: l(next_date, format: "%-d %b"),
+                                     amount: format_money(Money.new(next_amount, overview.currency))) %>
+          <% else %>
+            <%= t(".financing_none") %>
+          <% end %>
+        </span>
+        <% if overview.financing_cost_this_year.positive? || overview.annual_fee %>
+          <span class="block text-xs font-normal text-secondary privacy-sensitive">
+            <%= [ (t(".financing_cost", amount: format_money(Money.new(overview.financing_cost_this_year, overview.currency))) if overview.financing_cost_this_year.positive?),
+                  (t(".annual_fee", amount: format_money(Money.new(overview.annual_fee, overview.currency))) if overview.annual_fee) ].compact.join(" · ") %>
+          </span>
+        <% end %>
       <% end %>
     </div>
   </div>

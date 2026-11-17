@@ -99,6 +99,14 @@
         <div class="bg-container shadow-border-xs rounded-xl p-4 space-y-3">
           <p class="text-sm font-medium text-secondary"><%= t(".assign_category") %></p>
 
+          <%# Fulas Bank: the category the movements like these already have. %>
+          <% if @suggestion %>
+            <div class="rounded-lg bg-container-inset p-3 space-y-2" data-testid="categorize-suggestion">
+              <p class="text-xs text-secondary"><%= t(".suggestion", count: @suggestion.count) %></p>
+              <%= render "transactions/categorizes/category_pill", category: @suggestion.category %>
+            </div>
+          <% end %>
+
           <div data-controller="list-filter category-tree" class="space-y-3">
             <%# Search field %>
             <div class="relative flex items-center bg-container border border-primary rounded-lg">
