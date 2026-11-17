@@ -3,6 +3,15 @@ en:
   activerecord:
     errors:
       models:
+        rule/condition:
+          attributes:
+            value:
+              invalid_regex: is not a valid regular expression
+              regex_too_long: "is too long (at most %{count} characters)"
+        rule_group:
+          attributes:
+            name:
+              taken: is already the name of a group
         rule:
           min_actions: "must have at least one action"
           duplicate_actions: "Rule cannot have duplicate actions %{types}"

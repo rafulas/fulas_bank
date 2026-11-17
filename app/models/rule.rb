@@ -2,6 +2,10 @@ class Rule < ApplicationRecord
   UnsupportedResourceTypeError = Class.new(StandardError)
 
   belongs_to :family
+  # Fulas Bank: the group it is filed under on the rules page, if any.
+  belongs_to :rule_group, optional: true
+  # The name of a new group typed in the form (RulesController#assign_new_group).
+  attribute :new_group_name, :string
   has_many :conditions, dependent: :destroy
   has_many :actions, dependent: :destroy
   has_many :rule_runs, dependent: :destroy
@@ -18,6 +22,18 @@ class Rule < ApplicationRecord
   # Every rule must have at least 1 action
   validate :min_actions
   validate :no_duplicate_actions
+  validate :rule_group_in_the_family
+
+  # Fulas Bank: the rules whose name, conditions or actions mention `text`
+  # (a condition's value or an action's, such as a category id, does not
+  # count: a category is found by its name in the actions' labels instead).
+  scope :search, ->(text) {
+    like = "%#{sanitize_sql_like(text.to_s.strip)}%"
+    where("rules.name ILIKE :like OR rules.id IN (SELECT rule_id FROM rule_conditions WHERE rule_id IS NOT NULL AND value ILIKE :like) " \
+          "OR rules.id IN (SELECT rc.rule_id FROM rule_conditions rc JOIN rule_conditions sub ON sub.parent_id = rc.id WHERE sub.value ILIKE :like) " \
+          "OR rules.id IN (SELECT ra.rule_id FROM rule_actions ra JOIN categories c ON c.id::text = ra.value WHERE ra.action_type = 'set_transaction_category' AND c.name ILIKE :like)",
+          like: like)
+  }
 
   def action_executors
     registry.action_executors
@@ -128,6 +144,12 @@ class Rule < ApplicationRecord
   end
 
   private
+    def rule_group_in_the_family
+      return if rule_group.nil? || rule_group.family_id == family_id
+
+      errors.add(:rule_group, :invalid)
+    end
+
     def matching_resources_scope
       scope = registry.resource_scope
 

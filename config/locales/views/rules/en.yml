@@ -28,6 +28,11 @@ en:
     form:
       rule_name_label: Rule name (optional)
       rule_name_placeholder: Enter a name for this rule
+      group_label: Group
+      no_group: No group
+      group_existing: Group
+      group_new: Or create a new one
+      group_new_placeholder: Groceries
       add_condition: Add condition
       add_condition_group: Add condition group
       add_action: Add action
@@ -35,6 +40,17 @@ en:
       starting_from: Starting from
       then: THEN
     index:
+      search_placeholder: Search by name, text or category
+      status_label: Status
+      status_all: All
+      status_active: Active
+      status_inactive: Inactive
+      group_label: Group
+      group_all: All groups
+      group_none: No group
+      edit_group: Edit group
+      shown_of: "%{shown} of %{total}"
+      no_matches: No rule matches the search.
       page_title: Rules
       delete_all_rules: Delete all rules
       new_rule: New rule
@@ -117,6 +133,7 @@ en:
         contains: Contains
         does_not_contain: Does not contain
         starts_with: Starts with
+        matches_regex: Matches the expression
         ends_with: Ends with
         equal_to: Equal to
         is_equal_to: Is equal to

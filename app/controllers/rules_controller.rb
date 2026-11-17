@@ -11,7 +11,23 @@ class RulesController < ApplicationController
     @sort_by = "name" unless allowed_columns.include?(@sort_by)
     @direction = "asc" unless [ "asc", "desc" ].include?(@direction)
 
-    @rules = Current.family.rules.includes(conditions: :sub_conditions).order(@sort_by => @direction)
+    @rules = Current.family.rules.includes(:rule_group, conditions: :sub_conditions).order(@sort_by => @direction)
+
+    # Fulas Bank: search, status and group, and the rules shown by group.
+    @rule_groups = Current.family.rule_groups.alphabetically.to_a
+    @total_rules = @rules.size
+    @search = params[:search].to_s.strip.first(100)
+    @status = params[:status].presence_in(%w[active inactive])
+    @group_filter = params[:group].presence
+    @rules = @rules.search(@search) if @search.present?
+    @rules = @rules.where(active: @status == "active") if @status
+    if @group_filter == "none"
+      @rules = @rules.where(rule_group_id: nil)
+    elsif @group_filter
+      @rules = @rules.where(rule_group_id: @group_filter)
+    end
+    @grouped_rules = @rules.to_a.group_by(&:rule_group)
+                           .sort_by { |group, _| group ? [ 0, group.name.downcase ] : [ 1, "" ] }
 
     # Fetch recent rule runs with pagination
     recent_runs_scope = RuleRun
@@ -49,6 +65,7 @@ class RulesController < ApplicationController
 
   def create
     @rule = Current.family.rules.build(rule_params)
+    assign_new_group
 
     if @rule.save
       redirect_to confirm_rule_path(@rule, reload_on_close: true)
@@ -74,7 +91,10 @@ class RulesController < ApplicationController
   end
 
   def update
-    if @rule.update(rule_params)
+    @rule.assign_attributes(rule_params)
+    assign_new_group
+
+    if @rule.save
       respond_to do |format|
         format.html { redirect_back_or_to rules_path, notice: t(".success") }
         format.turbo_stream { stream_redirect_back_or_to rules_path, notice: t(".success") }
@@ -188,9 +208,18 @@ class RulesController < ApplicationController
       @rule = Current.family.rules.find(params[:id])
     end
 
+    # Fulas Bank: a group typed in the form is created (or reused, by name).
+    def assign_new_group
+      name = params.dig(:rule, :new_group_name).to_s.squish
+      return if name.blank?
+
+      @rule.rule_group = Current.family.rule_groups.where("LOWER(name) = ?", name.downcase).first ||
+                         Current.family.rule_groups.build(name: name)
+    end
+
     def rule_params
       params.require(:rule).permit(
-        :resource_type, :effective_date, :active, :name,
+        :resource_type, :effective_date, :active, :name, :rule_group_id,
         conditions_attributes: [
           :id, :condition_type, :operator, :value, :_destroy,
           sub_conditions_attributes: [ :id, :condition_type, :operator, :value, :_destroy ]

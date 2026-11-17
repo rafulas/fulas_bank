@@ -325,4 +325,56 @@ class RulesControllerTest < ActionDispatch::IntegrationTest
     assert_match "connection refused", entry.message
     assert_equal "connection refused", entry.metadata["error_message"]
   end
+
+  test "Fulas Bank: a rule can be filed under a new group typed in the form" do
+    post rules_url, params: {
+      rule: {
+        resource_type: "transaction",
+        name: "Mercadona",
+        new_group_name: " Supermercados ",
+        conditions_attributes: { "0" => { condition_type: "transaction_name", operator: "like", value: "mercadona" } },
+        actions_attributes: { "0" => { action_type: "set_transaction_category", value: categories(:food_and_drink).id } }
+      }
+    }
+
+    rule = @user.family.rules.find_by!(name: "Mercadona")
+    assert_equal "Supermercados", rule.rule_group.name
+  end
+
+  test "Fulas Bank: the rules page searches, filters and groups the rules" do
+    family = @user.family
+    group = family.rule_groups.create!(name: "Coche")
+    grouped = family.rules.build(resource_type: "transaction", name: "Gasolina Repsol", rule_group: group)
+    grouped.conditions.build(condition_type: "transaction_name", operator: "like", value: "repsol")
+    grouped.actions.build(action_type: "set_transaction_category", value: categories(:food_and_drink).id)
+    grouped.save!
+
+    get rules_url
+    assert_response :success
+    assert_select "[data-rule-group='#{group.id}']"
+
+    get rules_url(search: "repsol")
+    assert_response :success
+    assert_match "Gasolina Repsol", response.body
+
+    get rules_url(group: "none", status: "inactive")
+    assert_response :success
+    assert_select "[data-rule-group='#{group.id}']", count: 0
+  end
+
+  test "Fulas Bank: a group is renamed, and deleting it keeps its rules" do
+    family = @user.family
+    group = family.rule_groups.create!(name: "Ocio")
+    rule = family.rules.first
+    rule.update_column(:rule_group_id, group.id)
+
+    get edit_rule_group_url(group)
+    assert_response :success
+    patch rule_group_url(group), params: { rule_group: { name: "Ocio y viajes" } }
+    assert_equal "Ocio y viajes", group.reload.name
+
+    delete rule_group_url(group)
+    assert_not RuleGroup.exists?(group.id)
+    assert_nil rule.reload.rule_group_id
+  end
 end
