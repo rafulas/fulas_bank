@@ -1,0 +1,12 @@
+---
+en:
+  account_positions:
+    edit:
+      title: Reorder accounts
+      subtitle: Move each account up or down within its group. Once you tap an arrow, the panel uses this order.
+      reset: Back to ordering by name
+    list:
+      up: "Move %{name} up"
+      down: "Move %{name} down"
+    destroy:
+      success: Accounts are ordered by name again

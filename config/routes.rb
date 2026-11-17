@@ -729,6 +729,8 @@ Rails.application.routes.draw do
     end
   end
 
+  # Fulas Bank: the accounts panel's order set by hand.
+  resource :account_positions, only: %i[edit update destroy], path: "cuentas/orden"
   resources :accounts, only: %i[index new show destroy], shallow: true do
     member do
       post :sync

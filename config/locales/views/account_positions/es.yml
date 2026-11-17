@@ -1,0 +1,12 @@
+---
+es:
+  account_positions:
+    edit:
+      title: Ordenar cuentas
+      subtitle: Sube o baja cada cuenta dentro de su grupo. Al tocar una flecha, el panel pasa a usar este orden.
+      reset: Volver al orden por nombre
+    list:
+      up: "Subir %{name}"
+      down: "Bajar %{name}"
+    destroy:
+      success: Las cuentas vuelven a ordenarse por nombre

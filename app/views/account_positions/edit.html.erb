@@ -1,0 +1,13 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title"), subtitle: t(".subtitle")) %>
+  <% dialog.with_body do %>
+    <%= render "account_positions/list", groups: @groups %>
+
+    <% if Current.user.default_account_order == "manual" %>
+      <div class="pt-3">
+        <%= render DS::Button.new(text: t(".reset"), variant: :outline, full_width: true, href: account_positions_path, method: :delete,
+                                  data: { turbo_frame: "_top" }) %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

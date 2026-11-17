@@ -1,0 +1,21 @@
+<%# locals: (groups:) %>
+<div id="account-positions" class="space-y-4">
+  <% groups.each do |group| %>
+    <section class="space-y-1" data-testid="account-positions-group">
+      <p class="text-xs font-medium text-secondary"><%= group.name %></p>
+      <ul class="rounded-lg bg-container shadow-border-xs divide-y divide-divider">
+        <% group.accounts.each_with_index do |account, index| %>
+          <li class="flex items-center gap-2 px-3 py-2" data-account-position="<%= account.id %>">
+            <%= render "accounts/logo", account: account, size: "sm", color: group.color %>
+            <span class="min-w-0 grow text-sm text-primary truncate"><%= account.name %></span>
+            <% [ [ "up", "chevron-up", index.zero? ], [ "down", "chevron-down", index == group.accounts.size - 1 ] ].each do |direction, icon_name, disabled| %>
+              <%= render DS::Button.new(icon: icon_name, variant: :icon, size: :sm, disabled: disabled,
+                                        href: account_positions_path(account_id: account.id, direction: direction), method: :patch,
+                                        title: t("account_positions.list.#{direction}", name: account.name)) %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+</div>
