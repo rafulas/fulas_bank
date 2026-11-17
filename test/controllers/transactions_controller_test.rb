@@ -2071,7 +2071,6 @@ end
     assert_no_match(/attachment_status/, response.location)
   end
 
-
   test "suggests the category of the movements with a similar name" do
     physio = @user.family.categories.create!(name: "Fisio sugerida", color: "#4da568")
     accounts(:depository).entries.create!(name: "FISIO GARCIA 03/11", date: Date.current - 1, amount: 55, currency: "USD",
