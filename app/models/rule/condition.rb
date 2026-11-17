@@ -15,6 +15,7 @@ class Rule::Condition < ApplicationRecord
   validates :condition_type, presence: true, inclusion: { in: SUPPORTED_CONDITION_TYPES, allow_blank: true }
   validates :operator, presence: true
   validates :value, presence: true, unless: -> { compound? || Rule::ConditionFilter::VALUELESS_OPERATORS.include?(operator) }
+  validate :value_is_a_valid_regex, if: -> { operator == "matches" && value.present? }
 
   accepts_nested_attributes_for :sub_conditions, allow_destroy: true
 
@@ -78,6 +79,18 @@ class Rule::Condition < ApplicationRecord
   end
 
   private
+    # Fulas Bank: a "matches" condition needs an expression the database can
+    # run. Ruby's syntax is close enough to PostgreSQL's to catch typos.
+    def value_is_a_valid_regex
+      if value.length > Rule::ConditionFilter::REGEX_MAX_LENGTH
+        errors.add(:value, :regex_too_long, count: Rule::ConditionFilter::REGEX_MAX_LENGTH)
+      else
+        Regexp.new(value, Regexp::IGNORECASE, timeout: 0.1)
+      end
+    rescue RegexpError
+      errors.add(:value, :invalid_regex)
+    end
+
     def normalize_legacy_condition_type
       return if condition_type.blank?
 

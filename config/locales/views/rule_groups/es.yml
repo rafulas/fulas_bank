@@ -1,0 +1,22 @@
+---
+es:
+  activerecord:
+    attributes:
+      rule_group:
+        name: Nombre
+  rule_groups:
+    edit:
+      title: Editar grupo
+      name: Nombre
+      rules:
+        zero: No tiene reglas.
+        one: Tiene 1 regla.
+        other: "Tiene %{count} reglas."
+      submit: Guardar
+      delete: Borrar grupo
+      delete_confirm_title: ¿Borrar el grupo?
+      delete_confirm_body: Sus reglas no se borran; se quedan sin grupo.
+    update:
+      success: Grupo guardado
+    destroy:
+      success: Grupo borrado; sus reglas se quedan sin grupo
