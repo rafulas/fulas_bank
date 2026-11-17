@@ -1,0 +1,51 @@
+<%# locals: (comparison:) %>
+<%# Fulas Bank: each main category against what is normal for it this month
+    (Category::SpendingVsNormal). %>
+<% if comparison.history? %>
+  <% currency = comparison.currency %>
+  <section class="rounded-xl bg-container shadow-border-xs" aria-labelledby="vs-normal-title" data-testid="spending-vs-normal">
+    <div class="px-5 pt-4 pb-2 space-y-1">
+      <h2 id="vs-normal-title" class="font-sans text-xs font-semibold uppercase tracking-wider text-secondary">
+        <%= t(".title", month: l(comparison.month, format: "%B")) %>
+      </h2>
+      <p class="text-xs text-secondary">
+        <%= comparison.in_progress? ? t(".hint_in_progress", day: comparison.today.day) : t(".hint_finished") %>
+      </p>
+      <p class="text-sm text-primary privacy-sensitive">
+        <%= t(".total", spent: format_money(Money.new(comparison.spent, currency), precision: 0),
+                        normal: format_money(Money.new(comparison.normal, currency), precision: 0)) %>
+      </p>
+    </div>
+
+    <% if comparison.any? %>
+      <% [ [ :above, comparison.above ], [ :below, comparison.below ] ].each do |side, rows| %>
+        <% next if rows.empty? %>
+        <p class="px-5 pt-2 text-xs text-secondary"><%= t(".#{side}") %></p>
+        <ul class="divide-y divide-divider">
+          <% rows.each do |row| %>
+            <li class="flex items-center justify-between gap-4 px-5 py-2.5" data-vs-normal="<%= side %>">
+              <div class="min-w-0">
+                <%= render DS::ColorLabel.new(label: row.name, color: row.color, size: :sm) %>
+                <p class="text-xs text-secondary mt-0.5 privacy-sensitive">
+                  <%= t(".row_detail", spent: format_money(Money.new(row.spent, currency), precision: 0),
+                                       normal: format_money(Money.new(row.normal, currency), precision: 0)) %>
+                </p>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="<%= class_names("font-amount text-base font-semibold whitespace-nowrap privacy-sensitive", side == :above ? "text-destructive" : "text-success") %>">
+                  <%= side == :above ? "+" : "−" %><%= format_money(Money.new(row.difference.abs, currency), precision: 0) %>
+                </p>
+                <% if row.share %>
+                  <p class="text-xs text-secondary"><%= side == :above ? "+" : "−" %><%= format_percent((row.share.abs * 100).round, precision: 0) %></p>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+      <div class="pb-2"></div>
+    <% else %>
+      <p class="px-5 pb-4 text-sm text-secondary"><%= t(".all_normal") %></p>
+    <% end %>
+  </section>
+<% end %>

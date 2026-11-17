@@ -1,6 +1,15 @@
 ---
 en:
   category_summaries:
+    spending_vs_normal:
+      title: "%{month} against normal"
+      hint_in_progress: "Normal is what you usually have spent by day %{day}: the average of the previous 6 months, in proportion."
+      hint_finished: Normal is the average of the previous 6 months.
+      total: "You have spent %{spent}; normal is %{normal}."
+      above: Above normal
+      below: Below normal
+      row_detail: "%{spent} · normal %{normal}"
+      all_normal: Every category is within normal.
     transactions_count:
       one: 1 transaction
       other: "%{count} transactions"
