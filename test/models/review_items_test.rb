@@ -34,6 +34,23 @@ class ReviewItemsTest < ActiveSupport::TestCase
     assert_not_includes review.items.map(&:kind), :price_increase
   end
 
+  test "an overdue insurance instalment is listed and can be marked seen" do
+    travel_to Date.new(2026, 11, 17)
+    insurance = @family.insurances.create!(
+      name: "Seguro moto", kind: "motorcycle", payment_frequency: "custom", payment_account: accounts(:depository),
+      installments: [ { "date" => "2026-11-10", "amount" => "120" } ]
+    )
+
+    item = review.items.find { |entry| entry.kind == :overdue && entry.title == "Seguro moto" }
+    assert item, "the overdue instalment is listed"
+    assert_match ReviewItemsController::KEY_FORMAT, item.key
+    assert_includes item.key, insurance.id
+
+    ReviewItems.mark_seen!(@user, item.key)
+
+    assert_not review.items.any? { |entry| entry.key == item.key }
+  end
+
   private
     def review
       ReviewItems.new(@family, user: @user.reload)

@@ -74,7 +74,7 @@ class ReviewItems
 
     def overdue
       this_month.payments.select { |payment| payment.state == :overdue && !payment.income? }.map do |payment|
-        Item.new(key: "overdue:#{payment.occurrence.id}", kind: :overdue, title: payment.name, date: payment.date, amount: money(payment.amount), previous_amount: nil)
+        Item.new(key: "overdue:#{payment_key(payment)}", kind: :overdue, title: payment.name, date: payment.date, amount: money(payment.amount), previous_amount: nil)
       end
     end
 
@@ -82,8 +82,14 @@ class ReviewItems
       (this_month.payments + next_month.payments)
         .select { |payment| !payment.paid && !payment.income? && !payment.series.autopay? && payment.date.between?(today, today + DUE_SOON_DAYS) }
         .map do |payment|
-          Item.new(key: "due:#{payment.occurrence.id}", kind: :due_soon, title: payment.name, date: payment.date, amount: money(payment.amount), previous_amount: nil)
+          Item.new(key: "due:#{payment_key(payment)}", kind: :due_soon, title: payment.name, date: payment.date, amount: money(payment.amount), previous_amount: nil)
         end
+    end
+
+    # An insurance instalment has no stored payment (MonthPlan::InsuranceSeries):
+    # it goes by its policy and date instead.
+    def payment_key(payment)
+      payment.occurrence ? payment.occurrence.id : "#{payment.series.insurance.id}:#{payment.date.iso8601}"
     end
 
     def this_month
