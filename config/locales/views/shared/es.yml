@@ -40,10 +40,11 @@ es:
       prev_years: Años anteriores
       next_years: Años siguientes
     analysis_tabs:
-      aria: Resumen o comparar
+      aria: Resumen, comparar o comercios
       month: Mes
       recaps: Resúmenes
       compare: Comparar
+      merchants: Comercios
     preview: Vista previa
     dot_separator: "·"
     sync_toast:

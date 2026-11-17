@@ -31,6 +31,7 @@ es:
       analysis: Análisis
       day_format: "%-d de %B"
       merchants: Comercios
+      all_merchants: Ver todos los comercios
       merchants_count:
         one: 1 comercio
         other: "%{count} comercios"

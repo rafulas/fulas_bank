@@ -97,11 +97,14 @@
     <% end %>
     <div class="pb-1">
       <% analysis.top_merchants.each do |name, amount| %>
-        <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm border-t border-divider">
+        <%= link_to merchant_activity_link(name, analysis.period),
+              class: "flex items-center justify-between gap-3 px-4 py-2 text-sm border-t border-divider hover:bg-container-hover" do %>
           <span class="truncate text-primary"><%= name %></span>
           <span class="shrink-0 text-primary privacy-sensitive"><%= format_money(Money.new(-amount, currency)) %></span>
-        </div>
+        <% end %>
       <% end %>
+      <%= link_to t(".all_merchants"), merchant_activities_path(merchant_activity_period_params(analysis.period)),
+            class: "block px-4 py-2 text-sm text-secondary hover:text-primary border-t border-divider" %>
     </div>
   <% end %>
 </section>
