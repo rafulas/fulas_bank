@@ -1,0 +1,6 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t("forecast_scenario_changes.form.titles.#{@change.kind}")) %>
+  <% dialog.with_body do %>
+    <%= render "form", scenario: @scenario, change: @change %>
+  <% end %>
+<% end %>

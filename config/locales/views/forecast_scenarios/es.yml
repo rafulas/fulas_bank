@@ -1,0 +1,128 @@
+---
+es:
+  scenarios:
+    lines:
+      cancel_loan: "Cancelar préstamo: %{name}"
+  activerecord:
+    models:
+      scenario: Escenario
+      scenario_change: Cambio del escenario
+    attributes:
+      scenario:
+        name: Nombre
+        notes: Notas
+      scenario_change:
+        kind: Tipo
+        starts_on: Fecha
+        ends_on: Hasta
+        name: Concepto
+        amount: Importe
+        recurring_transaction: Recurrente
+        loan_account: Préstamo
+        account: Cuenta
+    errors:
+      models:
+        scenario_change:
+          attributes:
+            ends_on:
+              before_start: no puede ser anterior a la fecha de inicio
+  forecast_scenarios:
+    index:
+      back: "← Forecast"
+      title: Escenarios
+      subtitle: Versiones «¿y si…?» del Forecast. Prueba cambios (quitar un préstamo, un ingreso nuevo…) y compáralos con la previsión real, sin tocar tus datos.
+      new: Nuevo escenario
+      empty_title: Aún no tienes escenarios
+      empty_description: Crea uno, por ejemplo «Cancelar préstamos en febrero», y añádele los cambios que quieras probar.
+      changes:
+        zero: Sin cambios
+        one: 1 cambio
+        other: "%{count} cambios"
+    form:
+      name: Nombre
+      name_placeholder: Cancelar préstamos en febrero
+      notes: Notas
+      submit: Guardar
+    new:
+      title: Nuevo escenario
+    edit:
+      title: Editar escenario
+      delete: Borrar escenario
+      resource: escenario
+    create:
+      success: Escenario creado. Añádele los cambios que quieras probar.
+    update:
+      success: Escenario guardado
+    destroy:
+      success: Escenario borrado
+    show:
+      back_forecast: Forecast
+      back_scenarios: Escenarios
+      edit: Editar escenario
+      subtitle: Lo que cambiaría en tu previsión con estos cambios. Tus datos no se tocan.
+      changes_title: Cambios
+      add_change: Añadir cambio
+      no_changes: Añade un cambio para ver cómo quedaría tu previsión.
+      edit_change: Editar
+      delete_change: Quitar
+      kinds:
+        cancel_loan: Cancelar un préstamo
+        stop_recurring: Quitar un recurrente
+        change_amount: Cambiar el importe de un recurrente
+        add_movement: Añadir un ingreso o gasto
+        adjust_variable: Gastar más o menos al mes
+      kind_icons:
+        cancel_loan: landmark
+        stop_recurring: circle-slash
+        change_amount: pencil-line
+        add_movement: plus-circle
+        adjust_variable: shopping-cart
+      periods:
+        1y: 1 año
+        2y: 2 años
+        5y: 5 años
+      monthly: "Cada mes, desde %{month}"
+      monthly_hint: Media de lo que mejora (o empeora) el resultado de cada mes
+      end_total: "Saldo el %{date}"
+      without: "Sin el escenario: %{amount}"
+      final_difference: Diferencia al final
+      break_even: Lo recuperas en
+      break_even_hint: Primer mes en que tu saldo vuelve a estar igual o mejor que sin el escenario
+      never_catches_up: No se recupera en este plazo
+      always_ahead: Siempre por encima
+      chart_title: Saldo total a final de cada mes
+      legend_base: Sin el escenario
+      legend_scenario: Con el escenario
+      difference: Diferencia
+      table_title: Mes a mes
+      table_hint: Ingresos, gastos y resultado de cada mes con el escenario, comparados con la previsión real. Los traspasos entre tus cuentas no cuentan.
+      columns:
+        month: Mes
+        income: Ingresos
+        spending: Gastos
+        net: Resultado
+        base_net: Sin escenario
+        net_difference: Diferencia
+        total: Saldo final
+        total_difference: Dif. saldo
+    changes:
+      cancel_loan: "Cancelar el préstamo «%{name}»"
+      stop_recurring: "Quitar «%{name}»"
+      change_amount: "«%{name}» pasa a %{amount}"
+      add_movement:
+        outflow:
+          once: "%{name}: gasto de %{amount}"
+          monthly: "%{name}: gasto de %{amount} al mes"
+          yearly: "%{name}: gasto de %{amount} al año"
+        inflow:
+          once: "%{name}: ingreso de %{amount}"
+          monthly: "%{name}: ingreso de %{amount} al mes"
+          yearly: "%{name}: ingreso de %{amount} al año"
+      adjust_variable:
+        outflow: "Gastos varios: %{amount} más al mes"
+        inflow: "Gastos varios: %{amount} menos al mes"
+      from: "Desde el %{date}"
+      between: "Del %{from} al %{to}"
+      payoff_pending: "Pendiente ese día: %{amount} (lo calcula la app)"
+      payoff_manual: "Cifra escrita: %{amount}"
+      account: "Cuenta: %{name}"

@@ -1,0 +1,57 @@
+---
+es:
+  forecast_scenario_changes:
+    form:
+      titles:
+        cancel_loan: Cancelar un préstamo
+        stop_recurring: Quitar un recurrente
+        change_amount: Cambiar el importe de un recurrente
+        add_movement: Añadir un ingreso o gasto
+        adjust_variable: Gastar más o menos al mes
+      hints:
+        cancel_loan: Desde ese día dejas de pagar sus cuotas (también las de los recurrentes que lo pagan) y sale de una vez lo que cueste cancelarlo.
+        stop_recurring: Ese recurrente deja de preverse desde la fecha que elijas (y hasta la otra, si pones una).
+        change_amount: Desde esa fecha, cada pago de ese recurrente es del importe nuevo.
+        add_movement: Un ingreso o gasto que no está en tu previsión, una vez o cada mes o año.
+        adjust_variable: Sube o baja la línea de «Gastos varios» de cada mes.
+      choose: Elige uno
+      loan: Préstamo
+      owed_today: "debes hoy %{amount}"
+      payoff_date: Fecha de cancelación
+      payoff_mode: Cuánto cuesta cancelarlo
+      payoff_pending: Lo que quede pendiente ese día (lo calcula la app)
+      payoff_manual: Otra cifra (la escribo yo)
+      payoff_amount: Cifra, si la escribes tú
+      payoff_amount_placeholder: Solo con «Otra cifra»
+      pay_from: Lo pagas desde
+      main_account: La cuenta principal
+      recurring: Recurrente
+      new_amount: Importe nuevo de cada pago
+      from: Desde
+      until_optional: Hasta (opcional)
+      name: Concepto
+      name_placeholder: Coche nuevo
+      nature: Tipo
+      outflow: Gasto
+      inflow: Ingreso
+      amount: Importe
+      frequency: Cada cuánto
+      frequencies:
+        once: Una vez
+        monthly: Cada mes
+        yearly: Cada año
+      date_or_first: Fecha (o primera vez)
+      account: Cuenta
+      variable_direction: Gastos varios
+      spend_more: Gastar más
+      spend_less: Gastar menos
+      per_month: Al mes
+      submit: Guardar
+      delete: Quitar este cambio
+      resource: cambio
+    create:
+      success: Cambio añadido
+    update:
+      success: Cambio guardado
+    destroy:
+      success: Cambio quitado

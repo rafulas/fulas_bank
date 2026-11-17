@@ -1,0 +1,128 @@
+---
+en:
+  scenarios:
+    lines:
+      cancel_loan: "Pay off loan: %{name}"
+  activerecord:
+    models:
+      scenario: Scenario
+      scenario_change: Scenario change
+    attributes:
+      scenario:
+        name: Name
+        notes: Notes
+      scenario_change:
+        kind: Kind
+        starts_on: Date
+        ends_on: Until
+        name: Name
+        amount: Amount
+        recurring_transaction: Recurring
+        loan_account: Loan
+        account: Account
+    errors:
+      models:
+        scenario_change:
+          attributes:
+            ends_on:
+              before_start: cannot be before the start date
+  forecast_scenarios:
+    index:
+      back: "← Forecast"
+      title: Scenarios
+      subtitle: '"What if" versions of the Forecast. Try changes (paying off a loan, a new income...) and compare them with the real forecast, without touching your data.'
+      new: New scenario
+      empty_title: No scenarios yet
+      empty_description: Create one, such as "Pay off loans in February", and add the changes you want to try.
+      changes:
+        zero: No changes
+        one: 1 change
+        other: "%{count} changes"
+    form:
+      name: Name
+      name_placeholder: Pay off loans in February
+      notes: Notes
+      submit: Save
+    new:
+      title: New scenario
+    edit:
+      title: Edit scenario
+      delete: Delete scenario
+      resource: scenario
+    create:
+      success: Scenario created. Add the changes you want to try.
+    update:
+      success: Scenario saved
+    destroy:
+      success: Scenario deleted
+    show:
+      back_forecast: Forecast
+      back_scenarios: Scenarios
+      edit: Edit scenario
+      subtitle: What would change in your forecast with these changes. Your data is not touched.
+      changes_title: Changes
+      add_change: Add change
+      no_changes: Add a change to see how your forecast would look.
+      edit_change: Edit
+      delete_change: Remove
+      kinds:
+        cancel_loan: Pay off a loan
+        stop_recurring: Stop a recurring payment
+        change_amount: Change a recurring amount
+        add_movement: Add an income or expense
+        adjust_variable: Spend more or less each month
+      kind_icons:
+        cancel_loan: landmark
+        stop_recurring: circle-slash
+        change_amount: pencil-line
+        add_movement: plus-circle
+        adjust_variable: shopping-cart
+      periods:
+        1y: 1 year
+        2y: 2 years
+        5y: 5 years
+      monthly: "Each month, from %{month}"
+      monthly_hint: Average change in each month's result
+      end_total: "Balance on %{date}"
+      without: "Without the scenario: %{amount}"
+      final_difference: Difference at the end
+      break_even: Paid back in
+      break_even_hint: First month your balance is back to as good as without the scenario
+      never_catches_up: Not paid back in this period
+      always_ahead: Always ahead
+      chart_title: Total balance at the end of each month
+      legend_base: Without the scenario
+      legend_scenario: With the scenario
+      difference: Difference
+      table_title: Month by month
+      table_hint: Each month's income, spending and result with the scenario, compared with the real forecast. Transfers between your accounts do not count.
+      columns:
+        month: Month
+        income: Income
+        spending: Spending
+        net: Result
+        base_net: Without scenario
+        net_difference: Difference
+        total: End balance
+        total_difference: Balance diff.
+    changes:
+      cancel_loan: 'Pay off the loan "%{name}"'
+      stop_recurring: 'Stop "%{name}"'
+      change_amount: '"%{name}" becomes %{amount}'
+      add_movement:
+        outflow:
+          once: "%{name}: expense of %{amount}"
+          monthly: "%{name}: expense of %{amount} a month"
+          yearly: "%{name}: expense of %{amount} a year"
+        inflow:
+          once: "%{name}: income of %{amount}"
+          monthly: "%{name}: income of %{amount} a month"
+          yearly: "%{name}: income of %{amount} a year"
+      adjust_variable:
+        outflow: "Variable spending: %{amount} more a month"
+        inflow: "Variable spending: %{amount} less a month"
+      from: "From %{date}"
+      between: "From %{from} to %{to}"
+      payoff_pending: "Owed that day: %{amount} (worked out by the app)"
+      payoff_manual: "Amount typed in: %{amount}"
+      account: "Account: %{name}"

@@ -1,0 +1,15 @@
+<%# locals: (scenario:) %>
+
+<%= styled_form_with model: scenario, url: (scenario.persisted? ? forecast_scenario_path(scenario) : forecast_scenarios_path),
+      class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if scenario.errors.any? %>
+    <%= render DS::Alert.new(message: scenario.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.text_field :name, label: t(".name"), placeholder: t(".name_placeholder"), required: true %>
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>

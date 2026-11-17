@@ -16,12 +16,19 @@ DebtPlan::ForecastFeed = Data.define(:schedule, :account_id, :replaced_recurring
 
   # [ [date, loan name, amount], ... ] for the regular payments.
   def payments
+    loan_payments.map { |date, _key, name, amount| [ date, name, amount ] }
+  end
+
+  # The same with the loan's key (its account id) second: [ [date, key, loan
+  # name, amount], ... ]. Fulas Bank: the scenarios use it to stop a
+  # cancelled loan's payments.
+  def loan_payments
     schedule.months.flat_map do |month|
       month.payments.filter_map do |key, amount|
         regular = amount - month.additional.fetch(key, 0)
         next unless regular.positive?
 
-        [ day_in(month.date, payment_days.fetch(key, 1)), loan_names.fetch(key, key), regular.round(2) ]
+        [ day_in(month.date, payment_days.fetch(key, 1)), key, loan_names.fetch(key, key), regular.round(2) ]
       end
     end
   end

@@ -17,6 +17,8 @@
     <%= render DS::EmptyState.new(icon: "trending-up", title: t(".no_accounts_title"), description: t(".no_accounts_description")) %>
   <% else %>
     <div class="flex flex-wrap items-center gap-2">
+      <%# Fulas Bank: «what if» versions of the forecast. %>
+      <%= render DS::Link.new(text: t(".scenarios"), icon: "git-branch", variant: :secondary, size: :sm, href: forecast_scenarios_path, class: "order-last ml-auto") %>
       <% ForecastsController::PERIODS.each_key do |period| %>
         <%= render DS::Link.new(
           text: t(".periods.#{period}"),

@@ -2575,6 +2575,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_110000) do
     t.index ["rule_group_id"], name: "index_rules_on_rule_group_id"
   end
 
+  create_table "scenario_changes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "account_id"
+    t.decimal "amount", precision: 19, scale: 4
+    t.datetime "created_at", null: false
+    t.date "ends_on"
+    t.string "frequency", default: "once", null: false
+    t.string "kind", null: false
+    t.uuid "loan_account_id"
+    t.string "name"
+    t.string "nature", default: "outflow", null: false
+    t.string "payoff_mode", default: "pending", null: false
+    t.uuid "recurring_transaction_id"
+    t.uuid "scenario_id", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_scenario_changes_on_account_id"
+    t.index ["loan_account_id"], name: "index_scenario_changes_on_loan_account_id"
+    t.index ["recurring_transaction_id"], name: "index_scenario_changes_on_recurring_transaction_id"
+    t.index ["scenario_id"], name: "index_scenario_changes_on_scenario_id"
+  end
+
+  create_table "scenarios", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["family_id"], name: "index_scenarios_on_family_id"
+  end
+
   create_table "securities", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "asset_class"
     t.string "asset_sub_class"
@@ -3470,6 +3500,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_110000) do
   add_foreign_key "rule_runs", "rules"
   add_foreign_key "rules", "families"
   add_foreign_key "rules", "rule_groups", on_delete: :nullify
+  add_foreign_key "scenario_changes", "accounts", column: "loan_account_id", on_delete: :cascade
+  add_foreign_key "scenario_changes", "accounts", on_delete: :nullify
+  add_foreign_key "scenario_changes", "recurring_transactions", on_delete: :cascade
+  add_foreign_key "scenario_changes", "scenarios", on_delete: :cascade
+  add_foreign_key "scenarios", "families"
   add_foreign_key "security_audit_logs", "users", on_delete: :nullify
   add_foreign_key "security_prices", "securities"
   add_foreign_key "sessions", "impersonation_sessions", column: "active_impersonator_session_id", on_delete: :nullify

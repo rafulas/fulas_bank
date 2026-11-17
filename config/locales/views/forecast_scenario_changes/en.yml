@@ -1,0 +1,57 @@
+---
+en:
+  forecast_scenario_changes:
+    form:
+      titles:
+        cancel_loan: Pay off a loan
+        stop_recurring: Stop a recurring payment
+        change_amount: Change a recurring amount
+        add_movement: Add an income or expense
+        adjust_variable: Spend more or less each month
+      hints:
+        cancel_loan: From that day its instalments stop (also the recurring payments paying it) and what it costs to pay it off goes out at once.
+        stop_recurring: That recurring payment is no longer expected from the date you choose (until the other one, if you set it).
+        change_amount: From that date, each payment of that recurring movement has the new amount.
+        add_movement: An income or expense that is not in your forecast, once or every month or year.
+        adjust_variable: Raises or lowers each month's variable spending line.
+      choose: Choose one
+      loan: Loan
+      owed_today: "owed today %{amount}"
+      payoff_date: Payoff date
+      payoff_mode: What paying it off costs
+      payoff_pending: What is left that day (worked out by the app)
+      payoff_manual: Another amount (typed in)
+      payoff_amount: Amount, if you type it in
+      payoff_amount_placeholder: Only with "Another amount"
+      pay_from: Paid from
+      main_account: The main account
+      recurring: Recurring
+      new_amount: New amount of each payment
+      from: From
+      until_optional: Until (optional)
+      name: Name
+      name_placeholder: New car
+      nature: Type
+      outflow: Expense
+      inflow: Income
+      amount: Amount
+      frequency: How often
+      frequencies:
+        once: Once
+        monthly: Every month
+        yearly: Every year
+      date_or_first: Date (or first time)
+      account: Account
+      variable_direction: Variable spending
+      spend_more: Spend more
+      spend_less: Spend less
+      per_month: Per month
+      submit: Save
+      delete: Remove this change
+      resource: change
+    create:
+      success: Change added
+    update:
+      success: Change saved
+    destroy:
+      success: Change removed
