@@ -3,6 +3,9 @@ class Rule::ConditionFilter
 
   TYPES = [ "text", "number", "select" ]
 
+  # Fulas Bank: the longest regular expression a "matches" condition takes.
+  REGEX_MAX_LENGTH = 200
+
   # Operators that don't require a value (and that the form hides the value field for)
   VALUELESS_OPERATORS = [ "is_null", "is_not_null" ].freeze
 
@@ -22,6 +25,9 @@ class Rule::ConditionFilter
       # ("COMPRA TARJ 1234 MERCADONA"), where "contains" catches too much.
       [ :starts_with, "starts_with" ],
       [ :ends_with, "ends_with" ],
+      # Fulas Bank: a regular expression, case-insensitive
+      # ("^(MERCADONA|DIA|LIDL)\b"), for what the others cannot say.
+      [ :matches_regex, "matches" ],
       [ :equal_to, "=" ],
       [ :not_equal_to, "!=" ],
       [ :is_empty, "is_null" ],
@@ -145,6 +151,8 @@ class Rule::ConditionFilter
         "ILIKE"
       when "not_like"
         "NOT ILIKE"
+      when "matches"
+        "~*"
       when "is_null"
         "IS NULL"
       when "is_not_null"

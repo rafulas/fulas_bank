@@ -28,6 +28,11 @@ es:
     form:
       rule_name_label: Nombre de la regla (opcional)
       rule_name_placeholder: Introduce un nombre para esta regla
+      group_label: Grupo
+      no_group: Sin grupo
+      group_existing: Grupo
+      group_new: O crea uno nuevo
+      group_new_placeholder: Supermercados
       add_condition: Añadir condición
       add_condition_group: Añadir grupo de condiciones
       add_action: Añadir acción
@@ -35,6 +40,17 @@ es:
       starting_from: A partir de
       then: ENTONCES
     index:
+      search_placeholder: Buscar por nombre, texto o categoría
+      status_label: Estado
+      status_all: Todas
+      status_active: Activas
+      status_inactive: Inactivas
+      group_label: Grupo
+      group_all: Todos los grupos
+      group_none: Sin grupo
+      edit_group: Editar grupo
+      shown_of: "%{shown} de %{total}"
+      no_matches: Ninguna regla coincide con la búsqueda.
       page_title: Reglas
       delete_all_rules: Eliminar todas las reglas
       new_rule: Nueva regla
@@ -117,6 +133,7 @@ es:
         contains: Contiene
         does_not_contain: No contiene
         starts_with: Empieza por
+        matches_regex: Coincide con la expresión
         ends_with: Termina en
         equal_to: Igual a
         is_equal_to: Es igual a

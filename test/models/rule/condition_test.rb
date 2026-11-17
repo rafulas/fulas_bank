@@ -836,6 +836,26 @@ class Rule::ConditionTest < ActiveSupport::TestCase
     assert_equal [ "PAGO 100%_OFF" ], wildcard.apply(wildcard.prepare(@rule_scope)).map { |t| t.entry.name }
   end
 
+  test "Fulas Bank: a regular expression matches the name, ignoring case" do
+    create_transaction(date: Date.current, account: @account, amount: 20, name: "COMPRA MERCADONA 12")
+    create_transaction(date: Date.current, account: @account, amount: 30, name: "Lidl Madrid")
+    create_transaction(date: Date.current, account: @account, amount: 40, name: "Didlidl")
+
+    condition = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "matches", value: "(mercadona|^lidl)")
+
+    assert_equal [ "COMPRA MERCADONA 12", "Lidl Madrid" ].sort, condition.apply(condition.prepare(@rule_scope)).map { |t| t.entry.name }.sort
+  end
+
+  test "Fulas Bank: a regular expression must be valid and short" do
+    invalid = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "matches", value: "(mercadona")
+    long = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "matches", value: "a" * 201)
+
+    assert_not invalid.valid?
+    assert invalid.errors.added?(:value, :invalid_regex)
+    assert_not long.valid?
+    assert long.errors.added?(:value, :regex_too_long, count: Rule::ConditionFilter::REGEX_MAX_LENGTH)
+  end
+
   test "Fulas Bank: the rules list names the operator as the form does" do
     condition = Rule::Condition.new(rule: @transaction_rule, condition_type: "transaction_name", operator: "starts_with", value: "x")
 

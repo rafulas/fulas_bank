@@ -715,6 +715,9 @@ Rails.application.routes.draw do
     post :dismiss
   end
 
+  # Fulas Bank: rename or delete a group of rules (they are created from the
+  # rule form).
+  resources :rule_groups, only: %i[edit update destroy], path: "rules/grupos"
   resources :rules, except: :show do
     member do
       get :confirm

@@ -1,0 +1,24 @@
+<%= render DS::Dialog.new do |dialog| %>
+  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_body do %>
+    <%= styled_form_with model: @rule_group, url: rule_group_path(@rule_group), class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+      <% if @rule_group.errors.any? %>
+        <%= render DS::Alert.new(message: @rule_group.errors.full_messages.to_sentence, variant: :error) %>
+      <% end %>
+      <%= form.text_field :name, label: t(".name"), required: true %>
+      <p class="text-xs text-secondary"><%= t(".rules", count: @rule_group.rules.count) %></p>
+      <%= form.submit t(".submit") %>
+    <% end %>
+
+    <div class="pt-2">
+      <%= render DS::Button.new(
+        text: t(".delete"),
+        variant: "outline_destructive",
+        full_width: true,
+        href: rule_group_path(@rule_group),
+        method: :delete,
+        confirm: CustomConfirm.new(title: t(".delete_confirm_title"), body: t(".delete_confirm_body"), btn_text: t(".delete"))
+      ) %>
+    </div>
+  <% end %>
+<% end %>

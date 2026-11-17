@@ -1,0 +1,22 @@
+---
+en:
+  activerecord:
+    attributes:
+      rule_group:
+        name: Name
+  rule_groups:
+    edit:
+      title: Edit group
+      name: Name
+      rules:
+        zero: It has no rules.
+        one: It has 1 rule.
+        other: "It has %{count} rules."
+      submit: Save
+      delete: Delete group
+      delete_confirm_title: Delete the group?
+      delete_confirm_body: Its rules are not deleted; they are left without a group.
+    update:
+      success: Group saved
+    destroy:
+      success: Group deleted; its rules are left without a group
