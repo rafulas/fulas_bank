@@ -18,6 +18,7 @@ class MfaController < ApplicationController
     case Current.user.verify_otp(params[:code])
     when :accepted
       @backup_codes = Current.user.enable_mfa!
+      SecurityAuditLog.safely { SecurityAuditLog.log_mfa_enabled!(user: Current.user, request: request, actor: Current.true_user) }
       render :backup_codes
     when :replayed
       # Correct code, but its time step was already claimed by a concurrent
@@ -125,6 +126,7 @@ class MfaController < ApplicationController
 
   def disable
     Current.user.disable_mfa!
+    SecurityAuditLog.safely { SecurityAuditLog.log_mfa_disabled!(user: Current.user, request: request, actor: Current.true_user) }
     redirect_to settings_security_path, notice: t(".success")
   end
 

@@ -54,6 +54,10 @@ class User < ApplicationRecord
   # SSO JIT users have password_digest = nil and authenticate via OIDC only.
   validates :password, presence: true, on: :create, unless: :skip_password_validation?
   validates :password, length: { minimum: 8 }, allow_nil: true
+  # `validations: false` above also drops Rails' confirmation and current-password
+  # (password_challenge) checks, so restore both here.
+  validates :password, confirmation: true, allow_blank: true
+  validate :password_challenge_matches, unless: -> { password_challenge.nil? }
   normalizes :email, with: ->(email) { email.strip.downcase }
   normalizes :unconfirmed_email, with: ->(email) { email&.strip&.downcase }
   normalizes :locale, with: ->(locale) { locale.presence }
@@ -573,6 +577,20 @@ class User < ApplicationRecord
     AccountOrder.find(default_account_order) || AccountOrder.default
   end
 
+  # Fulas Bank: the ids of the accounts in the order set by hand ("manual").
+  ACCOUNT_POSITIONS_PREFERENCE = "account_positions".freeze
+
+  def account_positions
+    Array(preferences&.dig(ACCOUNT_POSITIONS_PREFERENCE)).map(&:to_s)
+  end
+
+  # Saves the order and makes it the one used.
+  def save_account_positions!(ids)
+    self.preferences = (preferences || {}).merge(ACCOUNT_POSITIONS_PREFERENCE => ids.map(&:to_s))
+    self.default_account_order = "manual"
+    save!
+  end
+
   def default_account_for_transactions
     return nil unless default_account_id.present?
 
@@ -731,6 +749,13 @@ class User < ApplicationRecord
   end
 
   private
+    def password_challenge_matches
+      digest_was = password_digest_was
+      return if digest_was.present? && BCrypt::Password.new(digest_was).is_password?(password_challenge)
+
+      errors.add(:password_challenge)
+    end
+
     def apply_ui_layout_defaults
       self.ui_layout = (ui_layout.presence || self.class.default_ui_layout)
     end

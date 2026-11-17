@@ -1,6 +1,15 @@
 ---
 es:
   category_summaries:
+    spending_vs_normal:
+      title: "%{month} frente a lo normal"
+      hint_in_progress: "Lo normal es lo que sueles llevar gastado a día %{day}: la media de los 6 meses anteriores, en proporción."
+      hint_finished: Lo normal es la media de los 6 meses anteriores.
+      total: "Llevas %{spent}; lo normal, %{normal}."
+      above: Por encima de lo normal
+      below: Por debajo de lo normal
+      row_detail: "%{spent} · lo normal, %{normal}"
+      all_normal: Todas las categorías van en lo normal.
     transactions_count:
       one: 1 transacción
       other: "%{count} transacciones"
@@ -31,6 +40,7 @@ es:
       analysis: Análisis
       day_format: "%-d de %B"
       merchants: Comercios
+      all_merchants: Ver todos los comercios
       merchants_count:
         one: 1 comercio
         other: "%{count} comercios"

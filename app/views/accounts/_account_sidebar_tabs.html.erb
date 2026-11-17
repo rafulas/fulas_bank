@@ -50,6 +50,9 @@
             class: "flex-1 justify-start"
           ) %>
 
+          <%# Fulas Bank: the order set by hand. %>
+          <%= render DS::Link.new(icon: "arrow-up-down", variant: :icon, size: :sm, href: edit_account_positions_path,
+                                  frame: :modal, title: t("accounts.sidebar.reorder"), class: "shrink-0") %>
           <%= render DS::ExpandToggle.new(
             expand_label: t("accounts.sidebar.expand_all"),
             collapse_label: t("accounts.sidebar.collapse_all"),
@@ -78,6 +81,9 @@
               class: "flex-1 justify-start"
             ) %>
 
+          <%# Fulas Bank: the order set by hand. %>
+          <%= render DS::Link.new(icon: "arrow-up-down", variant: :icon, size: :sm, href: edit_account_positions_path,
+                                  frame: :modal, title: t("accounts.sidebar.reorder"), class: "shrink-0") %>
           <%= render DS::ExpandToggle.new(
             expand_label: t("accounts.sidebar.expand_all"),
             collapse_label: t("accounts.sidebar.collapse_all"),
@@ -106,6 +112,9 @@
               class: "flex-1 justify-start"
             ) %>
 
+          <%# Fulas Bank: the order set by hand. %>
+          <%= render DS::Link.new(icon: "arrow-up-down", variant: :icon, size: :sm, href: edit_account_positions_path,
+                                  frame: :modal, title: t("accounts.sidebar.reorder"), class: "shrink-0") %>
           <%= render DS::ExpandToggle.new(
             expand_label: t("accounts.sidebar.expand_all"),
             collapse_label: t("accounts.sidebar.collapse_all"),

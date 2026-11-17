@@ -2071,6 +2071,32 @@ end
     assert_no_match(/attachment_status/, response.location)
   end
 
+  test "suggests the category of the movements with a similar name" do
+    physio = @user.family.categories.create!(name: "Fisio sugerida", color: "#4da568")
+    accounts(:depository).entries.create!(name: "FISIO GARCIA 03/11", date: Date.current - 1, amount: 55, currency: "USD",
+                                          entryable: Transaction.new(category: physio))
+
+    get category_suggestion_transactions_url(format: :json, name: "Fisio Garcia 17/11", nature: "outflow")
+
+    assert_response :success
+    assert_equal physio.id, response.parsed_body["category_id"]
+
+    get category_suggestion_transactions_url(format: :json, name: "Nada parecido")
+    assert_equal({}, response.parsed_body)
+  end
+
+  test "an uncategorized movement offers the suggested category in its detail" do
+    physio = @user.family.categories.create!(name: "Fisio detalle", color: "#4da568")
+    account = accounts(:depository)
+    account.entries.create!(name: "Fisio Garcia", date: Date.current - 1, amount: 55, currency: "USD", entryable: Transaction.new(category: physio))
+    entry = account.entries.create!(name: "FISIO GARCIA", date: Date.current, amount: 55, currency: "USD", entryable: Transaction.new)
+
+    get transaction_url(entry)
+
+    assert_response :success
+    assert_select "[data-testid='category-suggestion']", text: /Fisio detalle/
+  end
+
   private
     def rendered_entry_ids
       css_select("turbo-frame[id^='entry_']").map { |node| node["id"].delete_prefix("entry_") }

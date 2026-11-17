@@ -3,6 +3,23 @@ en:
   settings:
     securities:
       show:
+        activity_title: Activity
+        activity_subtitle: Where you are signed in and the latest security changes to your account.
+        sessions_title: Open sessions
+        unknown_device: Unknown device
+        last_active: "Last active: %{time}"
+        this_device: This device
+        sessions_hint: "A session unused for %{days} days is signed out automatically."
+        events_title: Security changes
+        no_events: No changes recorded yet.
+        events:
+          api_key_created: API key created
+          api_key_revoked: API key revoked
+          mfa_enabled: Two-factor authentication turned on
+          mfa_disabled: Two-factor authentication turned off
+          password_changed: Password changed
+          webauthn_credential_added: Security key added
+          webauthn_credential_removed: Security key removed
         disable_mfa: Disable 2FA
         disable_mfa_confirm: Are you sure you want to disable two-factor authentication?
           This will make your account less secure.
