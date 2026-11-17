@@ -88,7 +88,8 @@ class Transaction::CategorySuggester
       relation = relation.where.not(entries: { id: exclude_entry_id }) if exclude_entry_id
 
       if merchant_id.present? && key.present?
-        relation.where("transactions.merchant_id = :merchant OR #{KEY_SQL} = :key", merchant: merchant_id, key: key)
+        # Positional binds: the regex's [:alpha:] would read as a named one.
+        relation.where("transactions.merchant_id = ? OR #{KEY_SQL} = ?", merchant_id, key)
       elsif merchant_id.present?
         relation.where(transactions: { merchant_id: merchant_id })
       else
