@@ -25,6 +25,8 @@ class User < ApplicationRecord
   belongs_to :last_viewed_chat, class_name: "Chat", optional: true
   belongs_to :default_account, class_name: "Account", optional: true
   has_many :sessions, dependent: :destroy
+  # Fulas Bank: saved choices of the «Informe» (see StatusReport).
+  has_many :report_presets, dependent: :destroy
   has_many :chats, dependent: :destroy
   has_many :api_keys, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy

@@ -1,0 +1,69 @@
+<% content_for :page_header do %>
+  <div class="mb-4"><%= render "shared/analysis_tabs" %></div>
+  <div class="space-y-1 mb-6">
+    <h1 class="text-xl lg:text-3xl font-medium text-primary"><%= t(".title") %></h1>
+    <p class="text-sm lg:text-base text-secondary"><%= t(".subtitle") %></p>
+  </div>
+<% end %>
+
+<% report = @report %>
+<div class="flex flex-wrap items-start gap-6 pb-6 lg:pb-12">
+  <%= render "status_reports/options", report: report, presets: @presets, preset: @preset, accounts: @available_accounts %>
+
+  <div class="flex-[999_1_40rem] min-w-0 space-y-4">
+    <p class="text-sm text-secondary">
+      <%= t(".as_of", date: l(report.today, format: "%-d de %B de %Y"), period: report.period.label,
+            preset: @preset&.name || t(".custom")) %>
+    </p>
+
+    <% if report.sections.empty? || report.accounts.empty? %>
+      <%= render DS::EmptyState.new(icon: "file-text", title: t(".empty_title"), description: t(".empty_description")) %>
+    <% end %>
+
+    <% if report.show?("summary") && report.accounts.any? %>
+      <%= render "status_reports/summary", report: report %>
+    <% end %>
+
+    <% if report.show?("balances") %>
+      <%= render "status_reports/block", key: "balances", block: report.balances do %><% end %>
+    <% end %>
+
+    <% if report.show?("net_worth") %>
+      <% net_worth = report.net_worth %>
+      <%= render "status_reports/block", key: "net_worth", block: net_worth, subtitle: t(".net_worth_subtitle") do %>
+        <div class="h-56 w-full" data-controller="time-series-chart"
+             data-time-series-chart-data-value="<%= report.net_worth_series.to_json %>"></div>
+      <% end %>
+    <% end %>
+
+    <% if report.show?("loans") %>
+      <% debt_free_on = report.debt_free_on %>
+      <%= render "status_reports/block", key: "loans", block: report.loans,
+                 subtitle: (t(".debt_free_on", date: l(debt_free_on, format: "%B %Y")) if debt_free_on) do %><% end %>
+    <% end %>
+
+    <% if report.show?("investments") %>
+      <%= render "status_reports/block", key: "investments", block: report.investments do %><% end %>
+    <% end %>
+
+    <% if report.show?("stock_plans") %>
+      <%= render "status_reports/block", key: "stock_plans", block: report.stock_plans, subtitle: t(".stock_plans_subtitle") do %><% end %>
+    <% end %>
+
+    <% if report.show?("cash_flow") %>
+      <%= render "status_reports/block", key: "cash_flow", block: report.cash_flow,
+                 subtitle: t(".cash_flow_subtitle", income: status_report_money(report.analysis.income.amount),
+                             spent: status_report_money(report.analysis.spent.amount), rate: report.analysis.savings_rate) do %><% end %>
+    <% end %>
+
+    <% if report.show?("forecast") && @forecast %>
+      <%= render "status_reports/forecast", report: report, forecast: @forecast %>
+    <% end %>
+
+    <% if report.show?("fixed") %>
+      <%= render "status_reports/block", key: "fixed", block: report.fixed, subtitle: t(".fixed_subtitle") do %><% end %>
+    <% end %>
+
+    <p class="text-xs text-secondary"><%= t(".copy_hint") %></p>
+  </div>
+</div>

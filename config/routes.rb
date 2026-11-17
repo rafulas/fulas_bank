@@ -453,6 +453,10 @@ Rails.application.routes.draw do
   # (by name, since a movement without a merchant counts under its own).
   get "resumen/comercios", to: "merchant_activities#index", as: :merchant_activities
   get "resumen/comercios/detalle", to: "merchant_activities#show", as: :merchant_activity
+  # Fulas Bank: «Informe», a snapshot to read or paste into a spreadsheet,
+  # and the saved ways of opening it.
+  get "resumen/informe", to: "status_reports#show", as: :status_report
+  resources :report_presets, only: %i[create destroy], path: "resumen/informe/configuraciones"
   # Fulas Bank: spending by category and subcategory ("Resumen").
   resources :category_summaries, only: %i[index show], path: "resumen"
   # Fulas Bank: the necessary / discretionary / saving target and classes.

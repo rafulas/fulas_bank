@@ -1,0 +1,11 @@
+<%# locals: (text:, label:, tab:) %>
+<%# Fulas Bank: copies `text` (tab-separated) for a spreadsheet; `tab` is the
+    template's sheet it goes in. %>
+<div class="flex flex-col items-end gap-1"
+     data-controller="report-copy"
+     data-report-copy-copied-value="<%= t("status_reports.copy.copied", tab: tab) %>"
+     data-report-copy-failed-value="<%= t("status_reports.copy.failed") %>">
+  <textarea class="hidden" readonly aria-hidden="true" tabindex="-1" data-report-copy-target="source"><%= text %></textarea>
+  <%= render DS::Button.new(text: label, icon: "copy", variant: :outline, size: :sm, type: "button", data: { action: "report-copy#copy" }) %>
+  <p class="hidden text-xs text-success" role="status" data-report-copy-target="status"></p>
+</div>

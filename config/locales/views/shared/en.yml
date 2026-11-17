@@ -45,6 +45,7 @@ en:
       recaps: Recaps
       compare: Compare
       merchants: Merchants
+      report: Report
     preview: Preview
     dot_separator: "·"
     sync_toast:

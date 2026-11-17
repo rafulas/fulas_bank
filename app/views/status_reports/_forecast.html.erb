@@ -1,0 +1,22 @@
+<%# locals: (report:, forecast:) %>
+<% block = report.forecast_block(forecast) %>
+<% lowest_date, lowest = forecast.lowest_total %>
+<%= render "status_reports/block", key: "forecast", block: block, subtitle: t("status_reports.forecast.subtitle") do %>
+  <div class="@container">
+    <div class="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
+      <% [ 3, 6, 12 ].each do |months| %>
+        <%= summary_card title: t("status_reports.forecast.in_months", count: months) do %>
+          <span class="whitespace-nowrap"><%= format_money(forecast.total_on(Date.current >> months)) %></span>
+        <% end %>
+      <% end %>
+      <%= summary_card title: t("status_reports.forecast.lowest"), tone: (report.cushion && lowest && lowest.amount < report.cushion ? :negative : nil) do %>
+        <span class="whitespace-nowrap"><%= lowest ? format_money(lowest) : "—" %></span>
+        <% if lowest_date %>
+          <span class="block text-xs font-normal text-secondary"><%= l(lowest_date, format: "%-d %b %Y") %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <div class="h-56 w-full" data-controller="time-series-chart"
+       data-time-series-chart-data-value="<%= forecast.series.to_json %>"></div>
+<% end %>

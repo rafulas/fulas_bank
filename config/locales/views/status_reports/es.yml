@@ -1,0 +1,117 @@
+---
+es:
+  status_reports:
+    show:
+      title: Informe
+      subtitle: Cómo están tus cuentas hoy, para leerlo aquí o pegarlo en tu hoja de cálculo. Elige qué cuentas y qué secciones entran.
+      as_of: "A %{date} · periodo: %{period} · configuración: %{preset}"
+      custom: sin guardar
+      empty_title: Nada que mostrar
+      empty_description: Marca al menos una cuenta y una sección.
+      net_worth_subtitle: Activos, deudas y patrimonio neto a fin de cada mes del último año.
+      debt_free_on: "Con tu plan de deuda, sin deudas en %{date}."
+      stock_plans_subtitle: Cada año de tus planes de acciones, valorado con la última cotización.
+      cash_flow_subtitle: "Ingresos %{income} · gastos %{spent} · ahorro %{rate} %"
+      fixed_subtitle: Los recurrentes de este mes, por grupo.
+      copy_hint: "«Copiar para Sheets» copia la tabla sin «€», con coma decimal y un dato por celda. Pégala en la pestaña del mismo nombre de la plantilla y los gráficos del Dashboard se actualizan."
+    sections:
+      summary: Resumen
+      balances: Saldos por cuenta
+      net_worth: Evolución del patrimonio
+      loans: Préstamos
+      investments: Inversiones
+      stock_plans: Plan de acciones
+      cash_flow: Ingresos y gastos
+      forecast: Forecast
+      fixed: Fijos del mes
+    tabs:
+      summary: Resumen
+      history: Histórico
+      balances: Saldos
+      net_worth: Patrimonio
+      loans: Préstamos
+      investments: Inversiones
+      stock_plans: Acciones
+      cash_flow: Gastos
+      forecast: Forecast
+      fixed: Fijos
+    headers:
+      date: Fecha
+      liquidity: Liquidez
+      investments: Inversiones
+      other_assets: Otros activos
+      debt: Deuda
+      net_worth: Patrimonio neto
+      income: Ingresos
+      spending: Gastos
+      savings_rate: Ahorro %
+      account: Cuenta
+      type: Tipo
+      balance: Saldo
+      month_ago: Hace un mes
+      change: Diferencia
+      assets: Activos
+      loan: Préstamo
+      pending: Pendiente
+      payment: Cuota
+      ends_on: Acaba
+      value: Valor
+      contributed: Aportado
+      gain: Ganancia
+      return: Rentabilidad %
+      plan: Plan
+      delivered_on: Entrega
+      shares: Acciones
+      shares_source: Origen
+      sell_on: Venta
+      category: Categoría
+      spent: Gastado
+      normal: Lo normal
+      vs_normal: Frente a lo normal %
+      expected_total: Saldo previsto
+      cushion: Colchón
+      group: Grupo
+      monthly: Al mes
+    shares_sources:
+      typed: Reales
+      traded: De las compras
+      estimated: Estimadas
+    periods:
+      last_month: Mes pasado
+      current_month: Este mes
+      last_90_days: Últimos 90 días
+      current_year: Este año
+    copy:
+      button: Copiar para Sheets
+      history_row: Copiar fila para Histórico
+      copied: "Copiado. Pégalo en la pestaña «%{tab}»."
+      failed: No se ha podido copiar. Prueba otra vez o selecciona la tabla a mano.
+    summary:
+      net_worth: Patrimonio neto
+      liquidity: Liquidez
+      investments: Inversiones
+      debt: Deuda pendiente
+      change: "%{amount} frente a hace un mes"
+    forecast:
+      subtitle: Saldo previsto de las cuentas marcadas a fin de cada mes, como en el Forecast.
+      in_months:
+        one: Dentro de 1 mes
+        other: "Dentro de %{count} meses"
+      lowest: Punto más bajo
+    empty: No hay datos para las cuentas marcadas.
+    options:
+      label: Qué entra en el informe
+      presets: Configuraciones guardadas
+      period: Periodo de ingresos y gastos
+      accounts: Cuentas
+      sections: Secciones
+      save_label: Guardar esta configuración
+      save_placeholder: Para casa
+      save: Guardar
+      delete: "Borrar «%{name}»"
+      resource: configuración del informe
+  report_presets:
+    create:
+      success: "Configuración «%{name}» guardada"
+    destroy:
+      success: Configuración borrada
