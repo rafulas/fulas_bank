@@ -104,6 +104,7 @@ es:
       pill: Previsto
       overdue: Pendiente de importar
       edit: Editar movimiento previsto
+      transfer_accounts: "%{from} → %{to}"
     create:
       created: Transacción creada
       planned: "Guardado como movimiento previsto en %{account} para el %{date}. Lo verás en Próximos y en el Forecast."

@@ -154,9 +154,13 @@ en:
       nature: Type
       outflow: Expense
       inflow: Income
+      transfer: Transfer
       amount: Amount
       date: Expected date
       account: Account
+      from_account: From
+      destination_account: To
+      destination_blank: Choose the account
       notes: Notes
       submit: Save
       delete: Delete

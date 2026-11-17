@@ -433,6 +433,19 @@ class ForecastTest < ActiveSupport::TestCase
     assert_equal checking, forecast.main_account
   end
 
+  test "an expected transfer leaves one account and reaches the other on its day" do
+    savings = create_account("Forecast savings", Depository.new, balance: 0)
+    item = @family.forecast_items.create!(account: @account, destination_account: savings, name: "Traspaso a ahorro", nature: "transfer",
+                                          amount: 100, date: Date.current + 10)
+
+    forecast = Forecast.new(@family, accounts: [ @account, savings ], through: Date.current + 30, include_variable: false)
+
+    assert_equal [ @account, savings ], forecast.flows.select { |flow| flow.record == item }.map(&:account)
+    assert_equal 900, forecast.balances_on(Date.current + 10)[@account].amount
+    assert_equal 100, forecast.balances_on(Date.current + 10)[savings].amount
+    assert_equal 1_000, forecast.total_on(Date.current + 30).amount
+  end
+
   test "a recurring transfer leaves one account and reaches the other" do
     savings = create_account("Forecast savings", Depository.new, balance: 0)
     create_series(@account, name: "Ahorro mensual", amount: 100, destination_account: savings)

@@ -104,6 +104,7 @@ en:
       pill: Expected
       overdue: Waiting for import
       edit: Edit expected movement
+      transfer_accounts: "%{from} → %{to}"
     create:
       created: Transaction created
       planned: "Saved as an expected movement in %{account} on %{date}. You will see it in Upcoming and in the Forecast."

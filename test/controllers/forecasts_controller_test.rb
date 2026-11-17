@@ -51,6 +51,39 @@ class ForecastsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "adds an expected transfer between two accounts, and drops its destination when it stops being one" do
+    post forecast_items_url, params: {
+      forecast_item: { name: "Traspaso a inversión", nature: "transfer", amount: "100", date: (Date.current + 5).iso8601,
+                       account_id: accounts(:depository).id, destination_account_id: accounts(:investment).id }
+    }
+    assert_redirected_to forecast_url
+
+    item = @user.family.forecast_items.last
+    assert item.transfer?
+    assert_equal accounts(:investment), item.destination_account
+
+    patch forecast_item_url(item), params: { forecast_item: { nature: "outflow" } }
+    assert_nil item.reload.destination_account_id
+  end
+
+  test "a transfer needs another of the forecast's accounts to go to" do
+    assert_no_difference -> { ForecastItem.count } do
+      post forecast_items_url, params: {
+        forecast_item: { name: "Traspaso", nature: "transfer", amount: "100", date: (Date.current + 5).iso8601,
+                         account_id: accounts(:depository).id, destination_account_id: accounts(:vehicle).id }
+      }
+    end
+    assert_response :unprocessable_entity
+
+    assert_no_difference -> { ForecastItem.count } do
+      post forecast_items_url, params: {
+        forecast_item: { name: "Traspaso", nature: "transfer", amount: "100", date: (Date.current + 5).iso8601,
+                         account_id: accounts(:depository).id, destination_account_id: accounts(:depository).id }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
   test "rejects an account outside the forecast" do
     assert_no_difference -> { ForecastItem.count } do
       post forecast_items_url, params: {

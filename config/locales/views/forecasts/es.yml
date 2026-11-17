@@ -154,9 +154,13 @@ es:
       nature: Tipo
       outflow: Gasto
       inflow: Ingreso
+      transfer: Traspaso
       amount: Importe
       date: Fecha prevista
       account: Cuenta
+      from_account: Desde
+      destination_account: Hacia
+      destination_blank: Elige la cuenta
       notes: Notas
       submit: Guardar
       delete: Eliminar

@@ -43,14 +43,25 @@ class ForecastItemsController < ApplicationController
     end
     helper_method :forecast_accounts
 
-    # The account is not mass-assigned: it must be one of the user's forecast
-    # accounts, and anything else is dropped and fails validation.
+    # The accounts are not mass-assigned: each must be one of the user's
+    # forecast accounts, and anything else is dropped and fails validation.
+    # Fulas Bank: the same goes for where a transfer goes.
     def item_params
       permitted = params.require(:forecast_item).permit(:name, :nature, :amount, :date, :notes)
       account_param = params[:forecast_item]
-      return permitted unless account_param.respond_to?(:key?) && account_param.key?(:account_id)
+      return permitted unless account_param.respond_to?(:key?)
 
-      account = forecast_accounts.find { |candidate| candidate.id == account_param[:account_id].to_s }
-      permitted.merge(account_id: account&.id, currency: account&.currency)
+      if account_param.key?(:account_id)
+        account = forecast_account(account_param[:account_id])
+        permitted = permitted.merge(account_id: account&.id, currency: account&.currency)
+      end
+      if account_param.key?(:destination_account_id)
+        permitted = permitted.merge(destination_account_id: forecast_account(account_param[:destination_account_id])&.id)
+      end
+      permitted
+    end
+
+    def forecast_account(id)
+      forecast_accounts.find { |candidate| candidate.id == id.to_s }
     end
 end
