@@ -26,6 +26,15 @@ class Transactions::CategorizesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show suggests the category the movements with that name already have" do
+    create_transaction(account: @account, name: "Starbucks", category: @category, date: Date.current - 3)
+    create_transaction(account: @account, name: "STARBUCKS")
+    get transactions_categorize_url
+
+    assert_response :success
+    assert_select "[data-testid='categorize-suggestion'] button[value='#{@category.id}']"
+  end
+
   test "show groups subcategories immediately after their parent in the category select" do
     create_transaction(account: @account, name: "Starbucks")
     get transactions_categorize_url

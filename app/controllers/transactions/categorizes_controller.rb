@@ -19,6 +19,10 @@ class Transactions::CategorizesController < ApplicationController
     @group      = groups.first
     @categories = Current.family.categories.includes(:parent).alphabetically
     @total_uncategorized = uncategorized_count
+    # Fulas Bank: the category the movements like these already have.
+    @suggestion = Transaction::CategorySuggester.new(Current.family, scope: Current.accessible_entries)
+                                                .suggest(name: @group.display_name, merchant_id: @group.merchant&.id,
+                                                         inflow: @group.transaction_type == "income")
   end
 
   def create

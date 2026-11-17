@@ -23,8 +23,13 @@
     <%= hidden_field_tag "entry[idempotency_key]", new_transaction_idempotency_key, data: { "transaction-form-target": "idempotencyKey" } %>
   </section>
 
-  <section class="space-y-2">
-    <%= f.text_field :name, label: t(".description"), placeholder: t(".description_placeholder"), required: true %>
+  <%# Fulas Bank: as the name is typed, the category the movements like it
+      have is chosen, unless one was picked by hand. %>
+  <section class="space-y-2"
+           data-controller="category-suggestion"
+           data-category-suggestion-url-value="<%= category_suggestion_transactions_path(format: :json) %>">
+    <%= f.text_field :name, label: t(".description"), placeholder: t(".description_placeholder"), required: true,
+          data: { category_suggestion_target: "name", action: "input->category-suggestion#nameChanged change->category-suggestion#nameChanged" } %>
 
     <% if @entry.account_id %>
       <%= f.hidden_field :account_id, data: { transaction_form_target: "account" } %>
@@ -39,14 +44,17 @@
       amount_data: { transaction_form_target: "amount", action: "input->transaction-form#onAmountChange" },
       currency_data: { transaction_form_target: "currency", action: "change->transaction-form#onCurrencyChange" } %>
 
-    <%= f.fields_for :entryable do |ef| %>
-      <%= render DS::CategorySelect.new(
-      form: ef,
-      categories: categories,
-      selected_id: ef.object.category_id,
-      blank_label: t(".category_prompt")
-    ) %>
-    <% end %>
+    <div data-category-suggestion-target="select" data-action="click->category-suggestion#manualPick">
+      <%= f.fields_for :entryable do |ef| %>
+        <%= render DS::CategorySelect.new(
+        form: ef,
+        categories: categories,
+        selected_id: ef.object.category_id,
+        blank_label: t(".category_prompt")
+      ) %>
+      <% end %>
+    </div>
+    <p class="text-xs text-secondary -mt-1 hidden" data-category-suggestion-target="hint"><%= t(".category_suggested") %></p>
 
     <%= f.date_field :date,
       label: t(".date"),
