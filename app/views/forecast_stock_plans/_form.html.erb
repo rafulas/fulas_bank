@@ -1,0 +1,43 @@
+<%# locals: (plan:) %>
+
+<%= styled_form_with model: plan, url: (plan.persisted? ? forecast_stock_plan_path(plan) : forecast_stock_plans_path),
+      class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if plan.errors.any? %>
+    <%= render DS::Alert.new(message: plan.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <% if investment_accounts.empty? || plan_securities.empty? %>
+    <%= render DS::Alert.new(message: t(".no_holdings"), variant: :warning) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.text_field :name, label: t(".name"), required: true %>
+    <%= form.select :investment_account_id, investment_accounts.map { |account| [ account.name, account.id ] }, { label: t(".investment_account") }, required: true %>
+    <%= form.select :security_id, plan_securities.map { |security| [ [ security.ticker, security.name ].compact_blank.uniq.join(" · "), security.id ] },
+                    { label: t(".security") }, required: true %>
+    <%= form.select :cash_account_id, cash_accounts.map { |account| [ account.name, account.id ] },
+                    { label: t(".cash_account"), include_blank: t(".main_account"), help_text: t(".cash_account_hint") } %>
+    <%= form.number_field :base_bonus, label: t(".base_bonus"), step: 0.01, min: 0, required: true, help_text: t(".base_bonus_hint") %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :stock_percent, label: t(".stock_percent"), step: 0.01, min: 0, max: 100, required: true %>
+      <%= form.number_field :tax_percent, label: t(".tax_percent"), step: 0.01, min: 0, max: 100, required: true %>
+      <%= form.number_field :gift_every, label: t(".gift_every"), step: 1, min: 0, required: true, help_text: t(".gift_every_hint") %>
+      <%= form.number_field :lock_years, label: t(".lock_years"), step: 1, min: 0, required: true %>
+    </div>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if plan.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: forecast_stock_plan_path(plan),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

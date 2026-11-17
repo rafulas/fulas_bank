@@ -145,6 +145,8 @@ class Family < ApplicationRecord
   has_many :forecast_items, dependent: :destroy
   # Fulas Bank: the «what if» versions of the forecast (Escenarios).
   has_many :scenarios, dependent: :destroy
+  # Fulas Bank: bonuses paid partly in shares (Plan de acciones).
+  has_many :stock_plans, dependent: :destroy
   has_many :forecast_adjustments, dependent: :destroy
   has_many :investment_funds, dependent: :destroy
   has_many :insurances, dependent: :destroy

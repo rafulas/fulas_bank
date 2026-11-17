@@ -1,0 +1,88 @@
+---
+es:
+  forecast_stock_plans:
+    index:
+      back: "← Forecast"
+      title: Plan de acciones
+      subtitle: Bonus pagados en parte con acciones de la empresa. El Forecast espera el efectivo y las acciones el día que las recibes, y su venta cuando ya se pueden vender.
+      new: Nuevo plan
+      empty_title: Ningún plan todavía
+      empty_description: Crea uno con tu bonus base, el porcentaje en acciones, el IRPF y la acción de tu cuenta de inversión.
+    plan:
+      summary: "Acciones %{ticker} en %{account} · efectivo y ventas en %{cash}"
+      main_account: la cuenta principal del Forecast
+      terms: "Bonus base %{bonus} · %{stock} en acciones · IRPF %{tax} · 1 de regalo por cada %{gift} · %{years} años sin vender"
+      edit: Editar plan
+      add_year: Añadir año
+      edit_year: Editar año
+      price: "Cotización de %{ticker}: %{price} (%{date}). Las estimaciones se calculan con ella."
+      no_price: "La app aún no tiene cotización de %{ticker}: sin ella no se pueden estimar acciones ni ventas. Revisa los precios de la cuenta de inversión."
+      no_years: Añade el año de cada bonus, también los pasados cuyas acciones aún no has vendido.
+      can_sell: Ya se pueden vender
+      columns:
+        granted_on: Entrega
+        bonus: Bonus
+        in_shares: En acciones
+        shares: Acciones
+        cash: Efectivo neto
+        value: Valor hoy
+        sell_on: Venta
+      sources:
+        typed: "%{bought} + %{free} de regalo"
+        estimated: "Estimadas: %{bought} + %{free} de regalo"
+        traded: De tus compras en la cuenta
+    new:
+      title: Nuevo plan de acciones
+      default_name: Bonus en acciones
+    edit:
+      title: Editar plan de acciones
+    form:
+      name: Nombre
+      investment_account: Cuenta de inversión
+      security: Acción
+      cash_account: Cuenta del efectivo y las ventas
+      main_account: Cuenta principal del Forecast
+      cash_account_hint: Donde entra el bonus en efectivo y el dinero al vender.
+      base_bonus: Bonus base (100 %), bruto
+      base_bonus_hint: Cada año pones el porcentaje conseguido (por ejemplo, 120 %).
+      stock_percent: "% del bonus en acciones"
+      tax_percent: "IRPF del efectivo (%)"
+      gift_every: 1 de regalo por cada
+      gift_every_hint: 0 si no hay regalo.
+      lock_years: Años sin poder vender
+      no_holdings: Para crear un plan necesitas una cuenta de inversión con la acción (con al menos una compra).
+      submit: Guardar
+      delete: Eliminar plan
+      resource: plan de acciones
+    create:
+      success: Plan de acciones creado
+    update:
+      success: Plan de acciones actualizado
+    destroy:
+      success: Plan de acciones eliminado
+  forecast_stock_plan_grants:
+    new:
+      title: Añadir año
+    edit:
+      title: Editar año
+    form:
+      granted_on: Fecha de entrega de las acciones
+      granted_on_hint: Suele ser a finales de febrero o principios de marzo.
+      achievement_percent: Bonus conseguido (%)
+      achievement_percent_hint: "Sobre el bonus base de %{bonus}."
+      stock_percent: "% en acciones"
+      shares: Acciones compradas
+      gift_shares: Acciones de regalo
+      shares_hint: Déjalas vacías y se estiman con la cotización. Cuando las recibas, pon las reales. En un año pasado, vacías se toman de las compras de la cuenta de inversión.
+      sell_on: Fecha de venta
+      sell_on_hint: "Vacía, %{years} años después de la entrega."
+      notes: Notas
+      submit: Guardar
+      delete: Eliminar año
+      resource: año del plan
+    create:
+      success: Año añadido
+    update:
+      success: Año actualizado
+    destroy:
+      success: Año eliminado

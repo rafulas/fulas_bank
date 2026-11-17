@@ -1,0 +1,39 @@
+<%# locals: (plan:, grant:) %>
+
+<%= styled_form_with model: grant, url: (grant.persisted? ? forecast_stock_plan_grant_path(plan, grant) : forecast_stock_plan_grants_path(plan)),
+      class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+  <% if grant.errors.any? %>
+    <%= render DS::Alert.new(message: grant.errors.full_messages.to_sentence, variant: :error) %>
+  <% end %>
+
+  <div class="space-y-3">
+    <%= form.date_field :granted_on, label: t(".granted_on"), required: true, help_text: t(".granted_on_hint") %>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :achievement_percent, label: t(".achievement_percent"), step: 0.01, min: 0, required: true,
+                            help_text: t(".achievement_percent_hint", bonus: format_money(Money.new(plan.base_bonus, plan.currency))) %>
+      <%= form.number_field :stock_percent, label: t(".stock_percent"), step: 0.01, min: 0, max: 100, required: true %>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <%= form.number_field :shares, label: t(".shares"), step: 1, min: 0 %>
+      <%= form.number_field :gift_shares, label: t(".gift_shares"), step: 1, min: 0 %>
+    </div>
+    <p class="text-xs text-secondary px-1"><%= t(".shares_hint") %></p>
+    <%= form.date_field :sell_on, label: t(".sell_on"), help_text: t(".sell_on_hint", years: plan.lock_years) %>
+    <%= form.text_area :notes, label: t(".notes"), rows: 2 %>
+  </div>
+
+  <%= form.submit t(".submit") %>
+<% end %>
+
+<% if grant.persisted? %>
+  <div class="pt-2">
+    <%= render DS::Button.new(
+      text: t(".delete"),
+      variant: "outline_destructive",
+      full_width: true,
+      href: forecast_stock_plan_grant_path(plan, grant),
+      method: :delete,
+      confirm: CustomConfirm.for_resource_deletion(t(".resource"))
+    ) %>
+  </div>
+<% end %>

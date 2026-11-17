@@ -1,0 +1,27 @@
+---
+es:
+  activerecord:
+    attributes:
+      stock_plan:
+        name: Nombre
+        investment_account: Cuenta de inversión
+        security: Acción
+        cash_account: Cuenta del efectivo
+        base_bonus: Bonus base
+        stock_percent: Porcentaje en acciones
+        tax_percent: IRPF
+        gift_every: Regalo
+        lock_years: Años sin vender
+      stock_plan_grant:
+        granted_on: Fecha de entrega
+        sell_on: Fecha de venta
+        achievement_percent: Bonus conseguido
+        stock_percent: Porcentaje en acciones
+        shares: Acciones compradas
+        gift_shares: Acciones de regalo
+    errors:
+      models:
+        stock_plan_grant:
+          attributes:
+            sell_on:
+              before_granted: no puede ser antes de la entrega
