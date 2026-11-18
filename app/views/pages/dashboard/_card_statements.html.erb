@@ -1,0 +1,43 @@
+<%# locals: (panel:) %>
+<%# Fulas Bank: «Próximos extractos»: what each chosen card will charge next
+    (see CreditCard::Upcoming). %>
+<div class="bg-container rounded-xl shadow-border-xs p-3 space-y-2">
+  <div class="flex items-center justify-between gap-2 text-xs">
+    <span class="text-secondary"><%= t("pages.dashboard.card_statements.title") %></span>
+    <span class="text-primary font-medium privacy-sensitive"><%= format_money(panel.upcoming_statements_total) %></span>
+  </div>
+  <ul class="divide-y divide-subdued">
+    <% panel.upcoming_statements.each do |upcoming| %>
+      <li class="py-2 space-y-1">
+        <%= link_to account_path(upcoming.account), class: "flex items-center justify-between gap-3 hover:underline", data: { turbo_frame: :_top } do %>
+          <span class="flex items-center gap-2 min-w-0">
+            <%= icon "credit-card", size: "sm" %>
+            <span class="text-sm text-primary truncate"><%= upcoming.account.name %></span>
+          </span>
+          <% if (statement = upcoming.next_charge) %>
+            <span class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format_money(statement.amount_money) %></span>
+          <% end %>
+        <% end %>
+        <% if !upcoming.configured? %>
+          <p class="text-xs text-secondary"><%= t("pages.dashboard.card_statements.not_configured") %></p>
+        <% else %>
+          <% if (pending = upcoming.pending) %>
+            <p class="text-xs text-secondary"><%= t("pages.dashboard.card_statements.pending", month: l(pending.closes_on, format: "%B"), date: l(pending.charged_on, format: "%-d/%m")) %></p>
+          <% end %>
+          <% if (current = upcoming.current) %>
+            <p class="text-xs text-secondary privacy-sensitive">
+              <% if upcoming.pending %>
+                <%= t("pages.dashboard.card_statements.current_after", amount: format_money(current.amount_money), closes: l(current.closes_on, format: "%-d/%m"), date: l(current.charged_on, format: "%-d/%m")) %>
+              <% else %>
+                <%= t("pages.dashboard.card_statements.current", closes: l(current.closes_on, format: "%-d/%m"), date: l(current.charged_on, format: "%-d/%m")) %>
+              <% end %>
+            </p>
+          <% end %>
+          <% if (date, amount = upcoming.next_installment) && date %>
+            <p class="text-xs text-secondary privacy-sensitive"><%= t("pages.dashboard.card_statements.installment", amount: format_money(Money.new(amount, upcoming.account.currency)), date: l(date, format: "%-d/%m")) %></p>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

@@ -7,10 +7,18 @@
 # Which accounts it shows is the user's choice, kept in their preferences
 # ("transactions_panel_account_ids"); until they choose, it shows their
 # current accounts.
+#
+# Fulas Bank: Inicio shows the same panel (scope :home) with its own choice
+# of accounts ("home_panel_account_ids", the movements' one until set) and
+# the cards whose next statements it lists ("home_panel_card_ids", every
+# card with its statement days until set), see CreditCard::Upcoming.
 class Transaction::Panel
   WEEKS = 3
   BALANCE_DAYS = 90
   PREFERENCE_KEY = "transactions_panel_account_ids".freeze
+  HOME_PREFERENCE_KEY = "home_panel_account_ids".freeze
+  HOME_CARDS_PREFERENCE_KEY = "home_panel_card_ids".freeze
+  SCOPES = %i[transactions home].freeze
 
   Segment = Data.define(:name, :color, :amount)
   Day = Data.define(:date, :segments) do
@@ -28,12 +36,17 @@ class Transaction::Panel
     end
   end
 
-  attr_reader :family, :user, :today
+  attr_reader :family, :user, :today, :scope
 
-  def initialize(family, user:, today: Date.current)
+  def initialize(family, user:, today: Date.current, scope: :transactions)
     @family = family
     @user = user
     @today = today
+    @scope = SCOPES.include?(scope&.to_sym) ? scope.to_sym : :transactions
+  end
+
+  def home?
+    scope == :home
   end
 
   def currency
@@ -47,13 +60,39 @@ class Transaction::Panel
 
   def accounts
     @accounts ||= begin
-      chosen = user.transactions_panel_account_ids
+      chosen = (user.preferences&.dig(HOME_PREFERENCE_KEY) if home?) || user.transactions_panel_account_ids
       if chosen.nil?
         selectable_accounts.select { |account| account.accountable_type == "Depository" }
       else
         selectable_accounts.select { |account| chosen.include?(account.id) }
       end
     end
+  end
+
+  # Fulas Bank: the cards Inicio can list the next statements of.
+  def selectable_cards
+    selectable_accounts.select { |account| account.accountable_type == "CreditCard" }
+  end
+
+  # The cards whose next statements Inicio lists.
+  def statement_cards
+    @statement_cards ||= begin
+      chosen = user.preferences&.dig(HOME_CARDS_PREFERENCE_KEY)
+      if chosen.nil?
+        selectable_cards.select { |account| account.accountable.statement_cycle.configured? }
+      else
+        selectable_cards.select { |account| chosen.include?(account.id) }
+      end
+    end
+  end
+
+  def upcoming_statements
+    @upcoming_statements ||= statement_cards.map { |account| CreditCard::Upcoming.new(account, today: today) }
+  end
+
+  # What the listed cards will charge next, together.
+  def upcoming_statements_total
+    Money.new(upcoming_statements.sum { |upcoming| upcoming.next_charge_amount_in(currency) }, currency)
   end
 
   def weeks

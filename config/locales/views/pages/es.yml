@@ -38,6 +38,13 @@ es:
       heading: Condiciones del servicio
       placeholder: El contenido de las condiciones del servicio se mostrará aquí.
     dashboard:
+      card_statements:
+        title: Próximos extractos
+        pending: "Extracto de %{month}: se cobra el %{date}"
+        current: "En curso: cierra el %{closes} y se cobra el %{date}"
+        current_after: "Después, el en curso: %{amount} hasta ahora (cierra el %{closes}, se cobra el %{date})"
+        installment: "Cuota aplazada: %{amount} el %{date}"
+        not_configured: Pon el día de cierre y de cobro de la tarjeta para ver su extracto.
       month_close:
         title: "Cierre de %{month}"
         subtitle:

@@ -1,8 +1,8 @@
 <%= render DS::Dialog.new do |dialog| %>
-  <% dialog.with_header(title: t(".title")) %>
+  <% dialog.with_header(title: @panel.home? ? t(".home_title") : t(".title")) %>
   <% dialog.with_body do %>
-    <%= form_with url: transactions_panel_accounts_path, method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
-      <p class="text-sm text-secondary"><%= t(".hint") %></p>
+    <%= form_with url: transactions_panel_accounts_path(scope: (@panel.home? ? "home" : nil)), method: :patch, class: "space-y-4", data: { turbo_frame: :_top } do |form| %>
+      <p class="text-sm text-secondary"><%= @panel.home? ? t(".home_hint") : t(".hint") %></p>
       <%= hidden_field_tag "account_ids[]", "" %>
       <ul class="space-y-2">
         <% @panel.selectable_accounts.each do |account| %>
@@ -17,6 +17,24 @@
           </li>
         <% end %>
       </ul>
+      <% if @panel.home? && @panel.selectable_cards.any? %>
+        <%# Fulas Bank: the cards whose next statements Inicio lists. %>
+        <div class="space-y-2 border-t border-secondary pt-4">
+          <p class="text-sm font-medium text-primary"><%= t(".cards") %></p>
+          <p class="text-xs text-secondary"><%= t(".cards_hint") %></p>
+          <%= hidden_field_tag "card_ids[]", "", id: nil %>
+          <ul class="space-y-2">
+            <% @panel.selectable_cards.each do |card| %>
+              <li>
+                <label class="flex items-center gap-2 text-sm text-primary">
+                  <%= check_box_tag "card_ids[]", card.id, @panel.statement_cards.include?(card), id: dom_id(card, :statement_card), class: "checkbox checkbox--light" %>
+                  <%= card.name %>
+                </label>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
       <%= render DS::Button.new(text: t(".submit"), full_width: true, type: "submit") %>
     <% end %>
   <% end %>

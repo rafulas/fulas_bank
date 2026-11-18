@@ -1,0 +1,22 @@
+<%# locals: (panel:) %>
+<%# Fulas Bank: at the top of Inicio, as in Transacciones: the chosen
+    accounts' balances, this week's spending day by day, and what each
+    chosen card will charge next (see Transaction::Panel, scope :home). %>
+<section id="home-panel" class="space-y-3 mb-6">
+  <div class="flex items-center justify-between gap-2">
+    <h2 class="text-sm font-medium text-secondary"><%= t("transactions.panel.accounts_title") %></h2>
+    <%= render DS::Link.new(text: t("transactions.panel.choose_accounts"), icon: "settings-2", variant: :ghost, size: :sm,
+                            href: edit_transactions_panel_accounts_path(scope: "home"), frame: :modal) %>
+  </div>
+
+  <%= render "transactions/panel_balances_grid", panel: panel %>
+
+  <div class="grid grid-cols-1 <%= "lg:grid-cols-2" if panel.statement_cards.any? %> gap-2 items-start">
+    <% if (this_week = panel.weeks.last) %>
+      <%= render "transactions/panel_week", panel: panel, week: this_week, index: panel.weeks.size - 1 %>
+    <% end %>
+    <% if panel.statement_cards.any? %>
+      <%= render "pages/dashboard/card_statements", panel: panel %>
+    <% end %>
+  </div>
+</section>

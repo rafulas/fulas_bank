@@ -41,6 +41,8 @@ class PagesController < ApplicationController
     @balance_sheet = Current.family.balance_sheet
     @investment_statement = Current.family.investment_statement
     @accounts = Current.user.accessible_accounts.visible.with_attached_logo
+    # Fulas Bank: balances, this week and the next card statements, on top.
+    @home_panel = Transaction::Panel.new(Current.family, user: Current.user, scope: :home)
 
     family_currency = Current.family.currency
 

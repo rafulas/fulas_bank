@@ -365,6 +365,16 @@ module TransactionsHelper
   # ---- Fulas Bank: movements panel and month summaries ----
 
   # Two weeks ago shows its dates; the other two are "last week" and "this week".
+  # Fulas Bank: the icon of an account's card in the balances panel.
+  PANEL_ACCOUNT_ICONS = {
+    "CreditCard" => "credit-card", "Investment" => "trending-up", "Crypto" => "bitcoin", "Loan" => "landmark",
+    "Property" => "home", "Vehicle" => "car", "OtherLiability" => "receipt"
+  }.freeze
+
+  def panel_account_icon(account)
+    PANEL_ACCOUNT_ICONS.fetch(account.accountable_type, "wallet")
+  end
+
   def transactions_panel_week_label(week, index, count)
     case count - 1 - index
     when 0 then t("transactions.panel.this_week")
