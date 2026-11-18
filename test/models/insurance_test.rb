@@ -133,6 +133,15 @@ class InsuranceTest < ActiveSupport::TestCase
     assert charges.all? { |_, amount| amount.amount == 160 }
   end
 
+  test "a policy has no instalments before it started" do
+    insurance = @family.insurances.new(name: "Hogar", kind: "home", premium: 47.30, payment_frequency: "monthly", start_date: Date.new(2026, 1, 25))
+
+    dates = insurance.recent_instalments(Date.new(2026, 11, 18)).map(&:date)
+    assert_equal Date.new(2026, 1, 25), dates.first
+    assert_equal Date.new(2026, 11, 25), dates.last
+    assert_equal 11, dates.size
+  end
+
   test "a policy that will not be renewed ends at its next renewal and is cancelled then" do
     insurance = @family.insurances.create!(name: "Moto", kind: "motorcycle", premium: 300, payment_frequency: "annual",
                                            renewal_date: 1.year.ago.to_date + 10)

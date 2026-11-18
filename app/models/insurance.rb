@@ -202,13 +202,14 @@ class Insurance < ApplicationRecord
 
   # Fulas Bank: the charges of a policy paid every month, quarter, half year
   # or year, as [Date, Money], in `range`: on its renewal day (or start day)
-  # and every period from there, the premium each time, none from the day it
-  # ends.
+  # and every period from there, the premium each time, none before it
+  # started nor from the day it ends.
   def periodic_charges_between(range)
     anchor = renewal_date || start_date
     return [] if custom_payments? || anchor.nil? || premium.blank?
 
     step = 12 / payments_per_year
+    first = [ range.first, start_date ].compact.max
     last = [ range.last, last_charge_day ].compact.min
     periods = ((range.first.year * 12 + range.first.month) - (anchor.year * 12 + anchor.month)).fdiv(step).floor - 1
 
@@ -217,7 +218,7 @@ class Insurance < ApplicationRecord
       date = anchor.advance(months: periods * step)
       break if date > last
 
-      charges << [ date, Money.new(premium, currency) ] if date >= range.first
+      charges << [ date, Money.new(premium, currency) ] if date >= first
       periods += 1
     end
     charges
