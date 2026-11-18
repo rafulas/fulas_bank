@@ -33,6 +33,18 @@ class SubscriptionCostsControllerTest < ActionDispatch::IntegrationTest
     assert series.reload.typed_subscription?
   end
 
+  test "picking a subscription in the dialog removes it from the list and keeps the dialog open" do
+    series = recurring_transactions(:netflix_subscription)
+    series.update_columns(bill_type: "bill")
+
+    patch mark_subscription_cost_url(series, from: "pick"), as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, %(action="remove")
+    assert_includes response.body, ActionView::RecordIdentifier.dom_id(series, :subscription_candidate)
+    assert series.reload.typed_subscription?
+  end
+
   # «Añadir suscripción» used to open the recurring form behind the preview
   # gate and did nothing. It now lets you pick a recurring payment or create one.
   test "add subscription offers the recurring payments and a blank form" do
@@ -42,7 +54,7 @@ class SubscriptionCostsControllerTest < ActionDispatch::IntegrationTest
 
     get pick_subscription_costs_url, headers: { "Turbo-Frame" => "modal" }
     assert_response :success
-    assert_select "form[action=?]", mark_subscription_cost_path(series)
+    assert_select "form[action=?]", mark_subscription_cost_path(series, from: "pick")
     assert_select "a[href=?]", new_recurring_transaction_path(subscription: "1")
 
     get new_recurring_transaction_url(subscription: "1"), headers: { "Turbo-Frame" => "modal" }

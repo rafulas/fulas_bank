@@ -1,0 +1,6 @@
+<%# locals: (count:) %>
+<span id="review-bell-count">
+  <% if count.positive? %>
+    <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-destructive text-inverse text-xs font-semibold leading-4 text-center"><%= count > 9 ? "9+" : count %></span>
+  <% end %>
+</span>

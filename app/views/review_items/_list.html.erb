@@ -1,0 +1,32 @@
+<%# locals: (review:) %>
+<%# Fulas Bank: the bell's list. «Visto» redraws it and the count in place
+    (ReviewItemsController#seen), so the list stays open for the next one. %>
+<div id="review-bell-list">
+  <% if review.any? %>
+    <ul class="max-h-96 overflow-y-auto divide-y divide-divider border-t border-divider">
+      <% review.items.each do |item| %>
+        <li class="flex items-start gap-3 px-4 py-3">
+          <%= icon({ duplicate: "copy", price_increase: "trending-up", overdue: "alert-circle", due_soon: "clock" }.fetch(item.kind), size: "sm",
+                class: "mt-0.5", color: item.kind == :overdue ? "destructive" : "warning") %>
+          <div class="min-w-0 flex-1 space-y-0.5">
+            <p class="text-xs font-semibold uppercase tracking-wider text-secondary"><%= t("review_items.index.kinds.#{item.kind}") %></p>
+            <p class="truncate text-sm font-medium text-primary"><%= item.title %></p>
+            <p class="text-xs text-secondary privacy-sensitive">
+              <% date = l(item.date, format: t("month_plans.show.long_date")) %>
+              <% if item.previous_amount %>
+                <%= t("review_items.index.details.price_increase", previous: format_money(item.previous_amount), amount: format_money(item.amount), date: date) %>
+              <% else %>
+                <%= t("review_items.index.details.#{item.kind}", amount: format_money(item.amount), date: date) %>
+              <% end %>
+            </p>
+          </div>
+          <%= button_to t("review_items.index.seen"), seen_review_items_path(key: item.key),
+                class: "shrink-0 text-xs font-medium text-link hover:underline",
+                form: { data: { turbo_frame: "review_bell" } } %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="px-4 pb-4 text-sm text-secondary"><%= t("review_items.index.empty") %></p>
+  <% end %>
+</div>
