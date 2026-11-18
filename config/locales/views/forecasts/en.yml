@@ -27,6 +27,12 @@ en:
       result: Expected for the month
       months: Months averaged
       months_hint: "The same month of the last three years and the last six months. The highest and the lowest are dropped and the rest averaged."
+      months_all_planned: "In %{month} every category with spending has a budget or a plan, so there is no average: the forecast is the sum of what is below."
+      months_partly_planned: "Categories with a budget or a plan are not in these figures: they count separately, below."
+      budget_pill: "Budgeted"
+      not_averaged: "Not averaged: its budget or plan rules this month."
+      outlier: "Far above what this category usually spends. If it is a one-off payment, mark it as one-off."
+      outlier_hint: "In orange, months where a category spent three times its usual or more. If it is a one-off payment (a final instalment, a repayment), open the movement and mark it as one-off: it stops counting in the forecast."
       dropped: Dropped
       no_history: There are no movements to work it out yet.
       categories: By category
