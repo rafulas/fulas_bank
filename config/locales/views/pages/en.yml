@@ -40,10 +40,16 @@ en:
     dashboard:
       card_statements:
         title: Next statements
-        pending: "%{month} statement: charged on %{date}"
-        current: "Open: closes on %{closes}, charged on %{date}"
+        pending: "%{month} statement: %{amount}, charged on %{date}"
+        current: "Open statement: %{amount} so far, closes on %{closes}, charged on %{date}"
         current_after: "Then the open one: %{amount} so far (closes on %{closes}, charged on %{date})"
-        installment: "Instalment: %{amount} on %{date}"
+        installments:
+          one: "Instalment: %{amount} on %{dates}"
+          other: "Instalments: %{amount} (%{count} charges, on %{dates})"
+        deferred:
+          one: "Still deferred: %{amount} from 1 purchase"
+          other: "Still deferred: %{amount} from %{count} purchases"
+        and: " and "
         not_configured: Set the card's closing and payment days to see its statement.
       month_close:
         title: "%{month} close"

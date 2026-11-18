@@ -2,7 +2,9 @@
 # Inicio (see Transaction::Panel):
 #   - the statement already closed and not charged yet, if any;
 #   - the statement still open, with what it has so far;
-#   - the next instalment of a purchase paid in instalments.
+#   - the instalments of purchases paid in instalments charged with it (the
+#     bank charges them apart, «Operación financiada con tarjeta», on the
+#     same day or a day or two after), and what is still deferred.
 # A card without its statement days set has no statements to show.
 class CreditCard::Upcoming
   attr_reader :account, :cycle, :today
@@ -37,20 +39,54 @@ class CreditCard::Upcoming
     pending || current
   end
 
-  def next_charge_amount_in(currency)
-    statement = next_charge
-    return 0.to_d unless statement
+  # The fees and instalments still to come in the month the next statement
+  # is charged, whatever their day (the 4th, 5th or 6th), or, without a
+  # statement, in the month of the next one.
+  def installments
+    @installments ||= begin
+      upcoming = overview.active_financings
+                         .flat_map { |financing| financing.charges(cycle) }
+                         .select { |charge| charge.date > today }
+      month = next_charge&.charged_on || upcoming.map(&:date).min
+      month ? upcoming.select { |charge| charge.date.beginning_of_month == month.beginning_of_month }.sort_by(&:date) : []
+    end
+  end
 
-    money = statement.amount_money
+  def installments_amount
+    installments.sum(&:amount).to_d
+  end
+
+  def installment_dates
+    installments.map(&:date).uniq
+  end
+
+  # What will be charged: the next statement plus those instalments.
+  def total_amount
+    next_charge&.amount.to_d + installments_amount
+  end
+
+  def total_money
+    Money.new(total_amount, account.currency)
+  end
+
+  def total_amount_in(currency)
+    money = total_money
     money.currency.iso_code == currency.to_s ? money.amount.to_d : money.exchange_to(currency).amount.to_d
   rescue Money::ConversionError
-    statement.amount.to_d
+    total_amount
   end
 
-  # [date, amount] of the next instalment of a purchase paid in instalments.
-  def next_installment
-    return @next_installment if defined?(@next_installment)
-
-    @next_installment = CreditCard::Overview.new(account, cycle: cycle, today: today).next_installment
+  # What is still to be charged of the purchases paid in instalments.
+  def pending_financed
+    overview.pending_financed
   end
+
+  def financings_count
+    overview.active_financings.size
+  end
+
+  private
+    def overview
+      @overview ||= CreditCard::Overview.new(account, cycle: cycle, today: today)
+    end
 end

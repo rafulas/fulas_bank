@@ -14,27 +14,30 @@
             <%= icon "credit-card", size: "sm" %>
             <span class="text-sm text-primary truncate"><%= upcoming.account.name %></span>
           </span>
-          <% if (statement = upcoming.next_charge) %>
-            <span class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format_money(statement.amount_money) %></span>
+          <% if upcoming.next_charge || upcoming.installments.any? %>
+            <span class="text-sm font-medium text-primary privacy-sensitive whitespace-nowrap"><%= format_money(upcoming.total_money) %></span>
           <% end %>
         <% end %>
         <% if !upcoming.configured? %>
           <p class="text-xs text-secondary"><%= t("pages.dashboard.card_statements.not_configured") %></p>
         <% else %>
           <% if (pending = upcoming.pending) %>
-            <p class="text-xs text-secondary"><%= t("pages.dashboard.card_statements.pending", month: l(pending.closes_on, format: "%B"), date: l(pending.charged_on, format: "%-d/%m")) %></p>
+            <p class="text-xs text-secondary privacy-sensitive"><%= t("pages.dashboard.card_statements.pending", month: l(pending.closes_on, format: "%B"), amount: format_money(pending.amount_money), date: l(pending.charged_on, format: "%-d/%m")) %></p>
           <% end %>
           <% if (current = upcoming.current) %>
             <p class="text-xs text-secondary privacy-sensitive">
               <% if upcoming.pending %>
                 <%= t("pages.dashboard.card_statements.current_after", amount: format_money(current.amount_money), closes: l(current.closes_on, format: "%-d/%m"), date: l(current.charged_on, format: "%-d/%m")) %>
               <% else %>
-                <%= t("pages.dashboard.card_statements.current", closes: l(current.closes_on, format: "%-d/%m"), date: l(current.charged_on, format: "%-d/%m")) %>
+                <%= t("pages.dashboard.card_statements.current", amount: format_money(current.amount_money), closes: l(current.closes_on, format: "%-d/%m"), date: l(current.charged_on, format: "%-d/%m")) %>
               <% end %>
             </p>
           <% end %>
-          <% if (date, amount = upcoming.next_installment) && date %>
-            <p class="text-xs text-secondary privacy-sensitive"><%= t("pages.dashboard.card_statements.installment", amount: format_money(Money.new(amount, upcoming.account.currency)), date: l(date, format: "%-d/%m")) %></p>
+          <% if upcoming.installments.any? %>
+            <p class="text-xs text-secondary privacy-sensitive"><%= t("pages.dashboard.card_statements.installments", count: upcoming.installments.size, amount: format_money(Money.new(upcoming.installments_amount, upcoming.account.currency)), dates: upcoming.installment_dates.map { |date| l(date, format: "%-d/%m") }.to_sentence(words_connector: ", ", two_words_connector: t("pages.dashboard.card_statements.and"), last_word_connector: t("pages.dashboard.card_statements.and"))) %></p>
+          <% end %>
+          <% if upcoming.pending_financed.positive? %>
+            <p class="text-xs text-secondary privacy-sensitive"><%= t("pages.dashboard.card_statements.deferred", count: upcoming.financings_count, amount: format_money(Money.new(upcoming.pending_financed, upcoming.account.currency))) %></p>
           <% end %>
         <% end %>
       </li>

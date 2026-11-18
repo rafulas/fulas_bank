@@ -92,7 +92,7 @@ class Transaction::Panel
 
   # What the listed cards will charge next, together.
   def upcoming_statements_total
-    Money.new(upcoming_statements.sum { |upcoming| upcoming.next_charge_amount_in(currency) }, currency)
+    Money.new(upcoming_statements.sum { |upcoming| upcoming.total_amount_in(currency) }, currency)
   end
 
   def weeks

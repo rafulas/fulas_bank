@@ -40,10 +40,16 @@ es:
     dashboard:
       card_statements:
         title: Próximos extractos
-        pending: "Extracto de %{month}: se cobra el %{date}"
-        current: "En curso: cierra el %{closes} y se cobra el %{date}"
+        pending: "Extracto de %{month}: %{amount}, se cobra el %{date}"
+        current: "Extracto en curso: %{amount} hasta ahora, cierra el %{closes} y se cobra el %{date}"
         current_after: "Después, el en curso: %{amount} hasta ahora (cierra el %{closes}, se cobra el %{date})"
-        installment: "Cuota aplazada: %{amount} el %{date}"
+        installments:
+          one: "Cuota de lo aplazado: %{amount} el %{dates}"
+          other: "Cuotas de lo aplazado: %{amount} (%{count} cargos, el %{dates})"
+        deferred:
+          one: "Aplazado pendiente: %{amount} de 1 compra"
+          other: "Aplazado pendiente: %{amount} de %{count} compras"
+        and: " y "
         not_configured: Pon el día de cierre y de cobro de la tarjeta para ver su extracto.
       month_close:
         title: "Cierre de %{month}"
