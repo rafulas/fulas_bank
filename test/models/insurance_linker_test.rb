@@ -30,6 +30,21 @@ class InsuranceLinkerTest < ActiveSupport::TestCase
     assert_equal :suggested, @insurance.reload.recent_instalments(@today).first.status(@today)
   end
 
+  test "an instalment paid with the card is found when the policy's account has no such charge" do
+    charge(amount: 115.93, date: @today - 38)
+    paid = charge(amount: 150, date: @today - 39, account: accounts(:credit_card))
+
+    assert_equal 1, InsuranceLinker.new(@family, today: @today).run!
+    assert_equal paid, @insurance.insurance_payments.find_by!(due_on: @today - 40).entry
+  end
+
+  test "the charges offered for an instalment start with the one about its amount, whatever the account" do
+    charge(amount: 115.93, date: @today - 41)
+    card = charge(amount: 150, date: @today - 39, account: accounts(:credit_card))
+
+    assert_equal card, @insurance.payment_candidates(@today - 40, Money.new(150, "USD")).first
+  end
+
   test "a rejected charge is not proposed again, and the instalment ends up overdue" do
     rejected = charge(amount: 150, date: @today - 40)
     InsuranceLinker.new(@family, today: @today).run!

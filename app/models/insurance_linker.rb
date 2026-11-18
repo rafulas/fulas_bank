@@ -5,9 +5,11 @@
 #
 # An instalment is matched with an outgoing charge a few days either side of
 # its day, for about its amount (the bank rounds, or the insurer adds a
-# cent), in the account the policy is charged to when it has one. A charge
-# that already pays another instalment, or that the user turned down for
-# this one, is not proposed.
+# cent). The account the policy is charged to comes first, but a charge in
+# another current account or card counts too: an instalment is sometimes
+# paid with the card instead (Fulas Bank). A charge that already pays
+# another instalment, or that the user turned down for this one, is not
+# proposed.
 class InsuranceLinker
   MATCH_DAYS = 7
   AMOUNT_TOLERANCE = BigDecimal("0.05")
@@ -64,9 +66,10 @@ class InsuranceLinker
   end
 
   # Outgoing charges of the family that could pay an instalment due on
-  # `date`: around it, in the policy's account when it has one, and paying no
-  # other instalment or trade. With a tolerance, only those within it of the
-  # amount; the closest amount comes first, then the closest day.
+  # `date`: around it, in a current account or card, and paying no other
+  # instalment or trade. With a tolerance, only those within it of the
+  # amount. Charges about the amount come first, those in the policy's
+  # account before the rest, then the closest amount and the closest day.
   def candidates(insurance, date, amount, window: MATCH_DAYS.days, tolerance: AMOUNT_TOLERANCE)
     amount = amount.to_d
     scope = family.entries.where(entryable_type: "Transaction", excluded: false)
@@ -77,14 +80,16 @@ class InsuranceLinker
                   .where.not(id: Trade.where.not(bank_entry_id: nil).select(:bank_entry_id))
                   .includes(:account)
 
-    scope = if insurance.payment_account_id
-      scope.where(account_id: insurance.payment_account_id)
-    else
-      scope.joins(:account).where(accounts: { accountable_type: %w[Depository CreditCard] })
-    end
+    scope = scope.joins(:account).where(accounts: { accountable_type: %w[Depository CreditCard] })
 
+    close = ->(entry, limit) { (entry.amount.to_d - amount).abs <= amount * limit }
     list = scope.limit(200).to_a
-    list = list.select { |entry| (entry.amount.to_d - amount).abs <= amount * tolerance } if tolerance
-    list.sort_by { |entry| [ amount.positive? ? (entry.amount.to_d - amount).abs / amount : 0, (entry.date - date).abs ] }
+    list = list.select { |entry| close.call(entry, tolerance) } if tolerance
+    list.sort_by do |entry|
+      [ close.call(entry, AMOUNT_TOLERANCE) ? 0 : 1,
+        insurance.payment_account_id.nil? || entry.account_id == insurance.payment_account_id ? 0 : 1,
+        amount.positive? ? (entry.amount.to_d - amount).abs / amount : 0,
+        (entry.date - date).abs ]
+    end
   end
 end
