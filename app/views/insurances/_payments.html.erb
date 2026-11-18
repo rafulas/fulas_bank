@@ -1,6 +1,7 @@
 <%# locals: (insurance:, today: Date.current) %>
 <%# Fulas Bank: the instalments of the last year and the next one, with the
-    bank charge that paid each (see InsurancePayment). %>
+    bank charge that paid each (see InsurancePayment). Its buttons answer in
+    place (Insurances::PaymentsController), so the form stays open. %>
 <% instalments = insurance.recent_instalments(today) %>
 
 <% if instalments.any? %>
@@ -34,10 +35,10 @@
           <div class="flex flex-wrap items-center gap-2">
             <% case status %>
             <% when :suggested %>
-              <%= render DS::Button.new(text: t("insurances.payments.confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_insurance_payment_path(insurance, due), method: :patch, frame: :_top) %>
-              <%= render DS::Button.new(text: t("insurances.payments.reject"), icon: "x", variant: :outline, size: :sm, href: reject_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+              <%= render DS::Button.new(text: t("insurances.payments.confirm"), icon: "check", variant: :primary, size: :sm, href: confirm_insurance_payment_path(insurance, due, from: "policy"), method: :patch) %>
+              <%= render DS::Button.new(text: t("insurances.payments.reject"), icon: "x", variant: :outline, size: :sm, href: reject_insurance_payment_path(insurance, due, from: "policy"), method: :delete) %>
             <% when :paid %>
-              <%= render DS::Button.new(text: t("insurances.payments.clear"), icon: "undo-2", variant: :ghost, size: :sm, href: clear_insurance_payment_path(insurance, due), method: :delete, frame: :_top) %>
+              <%= render DS::Button.new(text: t("insurances.payments.clear"), icon: "undo-2", variant: :ghost, size: :sm, href: clear_insurance_payment_path(insurance, due, from: "policy"), method: :delete) %>
             <% else %>
               <% insurance.payment_candidates(instalment.date, instalment.amount).each do |candidate| %>
                 <%= render DS::Button.new(
@@ -45,12 +46,11 @@
                       icon: "link",
                       variant: :outline,
                       size: :sm,
-                      href: link_insurance_payment_path(insurance, due, entry_id: candidate.id),
-                      method: :post,
-                      frame: :_top
+                      href: link_insurance_payment_path(insurance, due, entry_id: candidate.id, from: "policy"),
+                      method: :post
                     ) %>
               <% end %>
-              <%= render DS::Button.new(text: t("insurances.payments.mark_paid"), icon: "check", variant: :ghost, size: :sm, href: mark_paid_insurance_payment_path(insurance, due), method: :post, frame: :_top) %>
+              <%= render DS::Button.new(text: t("insurances.payments.mark_paid"), icon: "check", variant: :ghost, size: :sm, href: mark_paid_insurance_payment_path(insurance, due, from: "policy"), method: :post) %>
             <% end %>
           </div>
         </li>
