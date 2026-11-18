@@ -29,6 +29,10 @@ es:
       edit:
         title: Cuentas del panel
         hint: Elige las cuentas cuyo saldo quieres ver arriba de los movimientos. Su suma es el «Saldo total» del panel izquierdo y del gráfico de 90 días.
+        home_title: Saldos de Inicio
+        home_hint: Elige las cuentas, tarjetas, inversiones y préstamos cuyo saldo quieres ver en Inicio.
+        cards: Próximos extractos
+        cards_hint: Las tarjetas de las que quieres ver lo que te van a cobrar.
         submit: Guardar
       update:
         success: Cuentas del panel guardadas

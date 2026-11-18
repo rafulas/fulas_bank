@@ -109,6 +109,20 @@ class CreditCard::CycleTest < ActiveSupport::TestCase
     assert_not card_statement_lines(today).any? { |flow| flow.amount == BigDecimal("120") }
   end
 
+  test "the next charge is the closed statement still to be charged, then the open one" do
+    spend(120, Date.new(2026, 9, 12))
+    spend(80, Date.new(2026, 10, 3))
+
+    upcoming = CreditCard::Upcoming.new(@card, today: Date.new(2026, 10, 2))
+    assert_equal BigDecimal("120"), upcoming.next_charge.amount
+    assert_equal Date.new(2026, 10, 5), upcoming.pending.charged_on
+    assert_equal BigDecimal("80"), upcoming.current.amount
+
+    later = CreditCard::Upcoming.new(@card, today: Date.new(2026, 10, 15))
+    assert_nil later.pending
+    assert_equal BigDecimal("80"), later.next_charge.amount
+  end
+
   private
     def card_statement_lines(today)
       Forecast.new(@family, accounts: [ @bank ], card_accounts: [ @card ], through: Date.new(2026, 12, 31), include_variable: false, today: today)

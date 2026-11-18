@@ -39,6 +39,10 @@
     </div>
   <% end %>
 
+  <% if accessible_accounts.any? && @home_panel %>
+    <%= render "pages/dashboard/panel", panel: @home_panel %>
+  <% end %>
+
   <% if accessible_accounts.any? && @month_close %>
     <%= render "pages/dashboard/month_close", month_close: @month_close %>
   <% end %>

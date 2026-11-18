@@ -60,6 +60,23 @@ class Transactions::PanelAccountsControllerTest < ActionDispatch::IntegrationTes
     assert_equal [ accounts(:depository).id ], @user.reload.transactions_panel_account_ids
   end
 
+  test "chooses Inicio's accounts and cards apart from the movements' ones" do
+    card = accounts(:credit_card)
+    get edit_transactions_panel_accounts_url(scope: "home")
+    assert_response :success
+    assert_select "input[name='card_ids[]'][value=?]", card.id
+
+    patch transactions_panel_accounts_url(scope: "home"), params: { account_ids: [ accounts(:depository).id ], card_ids: [ card.id ] }
+    assert_redirected_to root_url
+    prefs = users(:family_admin).reload.preferences
+    assert_equal [ accounts(:depository).id ], prefs[Transaction::Panel::HOME_PREFERENCE_KEY]
+    assert_equal [ card.id ], prefs[Transaction::Panel::HOME_CARDS_PREFERENCE_KEY]
+
+    get root_url
+    assert_response :success
+    assert_select "#home-panel", text: /#{Regexp.escape(card.name)}/
+  end
+
   test "opening the list from the menu starts without the filters used before" do
     get transactions_url(q: { types: [ "income" ], start_date: (Date.current - 30).iso8601 })
     assert_response :success

@@ -29,6 +29,10 @@ en:
       edit:
         title: Panel accounts
         hint: Choose the accounts whose balance you want to see above your transactions. Their sum is the "Total balance" in the left panel and the 90-day chart.
+        home_title: Home balances
+        home_hint: Choose the accounts, cards, investments and loans whose balance you want to see on Home.
+        cards: Next statements
+        cards_hint: The cards whose next charge you want to see.
         submit: Save
       update:
         success: Panel accounts saved

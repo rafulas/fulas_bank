@@ -22,6 +22,19 @@ class Transaction::PanelTest < ActiveSupport::TestCase
     assert_empty panel.accounts
   end
 
+  test "Inicio has its own accounts, the movements' ones until chosen, and its own cards" do
+    home = Transaction::Panel.new(@family, user: @user, today: @today, scope: :home)
+    assert_equal [ @checking ], home.accounts
+    # A card without its statement days is not listed until chosen.
+    assert_empty home.statement_cards
+
+    @user.update_home_panel!(account_ids: [ @checking.id, @card.id ], card_ids: [ @card.id ])
+    home = Transaction::Panel.new(@family, user: @user.reload, today: @today, scope: :home)
+    assert_equal [ @checking, @card ], home.accounts
+    assert_equal [ @card ], home.statement_cards
+    assert_equal [ @checking ], panel.accounts
+  end
+
   test "three weeks from Monday two weeks ago, each day split by main category" do
     food = @family.categories.create!(name: "Comida", color: "#22c55e")
     market = @family.categories.create!(name: "Súper", color: "#16a34a", parent: food)

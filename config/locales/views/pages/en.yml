@@ -38,6 +38,13 @@ en:
       heading: Terms of Service
       placeholder: Terms of service content will be displayed here.
     dashboard:
+      card_statements:
+        title: Next statements
+        pending: "%{month} statement: charged on %{date}"
+        current: "Open: closes on %{closes}, charged on %{date}"
+        current_after: "Then the open one: %{amount} so far (closes on %{closes}, charged on %{date})"
+        installment: "Instalment: %{amount} on %{date}"
+        not_configured: Set the card's closing and payment days to see its statement.
       month_close:
         title: "%{month} close"
         subtitle:

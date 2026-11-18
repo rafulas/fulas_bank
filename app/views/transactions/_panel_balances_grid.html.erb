@@ -1,0 +1,16 @@
+<%# locals: (panel:) %>
+<%# Fulas Bank: the chosen accounts' balances, one card each (movements
+    panel and Inicio). %>
+<% if panel.accounts.any? %>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+    <% panel.accounts.each do |account| %>
+      <%= link_to account_path(account), class: "flex items-center gap-3 bg-container rounded-xl shadow-border-xs px-3 py-2 min-w-0 hover:bg-container-hover", data: { turbo_frame: :_top } do %>
+        <%= render DS::FilledIcon.new(icon: panel_account_icon(account), size: "md", rounded: true) %>
+        <div class="min-w-0">
+          <p class="text-xs text-secondary truncate"><%= account.name %></p>
+          <p class="text-sm font-medium text-primary privacy-sensitive"><%= format_money(account.balance_money) %></p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

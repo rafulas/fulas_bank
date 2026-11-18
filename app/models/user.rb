@@ -723,6 +723,15 @@ class User < ApplicationRecord
     update_dashboard_preferences(Transaction::Panel::PREFERENCE_KEY => Array(ids).map(&:to_s).uniq)
   end
 
+  # Fulas Bank: Inicio's own choice of accounts, and of the cards whose next
+  # statements it lists (see Transaction::Panel).
+  def update_home_panel!(account_ids:, card_ids:)
+    update_dashboard_preferences(
+      Transaction::Panel::HOME_PREFERENCE_KEY => Array(account_ids).map(&:to_s).uniq,
+      Transaction::Panel::HOME_CARDS_PREFERENCE_KEY => Array(card_ids).map(&:to_s).uniq
+    )
+  end
+
   # Returns whether the user has enabled the two-column dashboard layout.
   def dashboard_two_column?
     preferences&.dig("dashboard_two_column") == true
