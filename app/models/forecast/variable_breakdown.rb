@@ -23,6 +23,12 @@ class Forecast::VariableBreakdown
   # The key that stands for "no category" in a link.
   NONE = "none".freeze
 
+  # Fulas Bank: a month a category spent at least this many times its usual
+  # (the median of its months with spending), and at least OUTLIER_MIN, is
+  # pointed out: usually a one-off payment to mark as such.
+  OUTLIER_FACTOR = 3
+  OUTLIER_MIN = 100
+
   attr_reader :family, :accounts, :month, :today, :plan
 
   def initialize(family, accounts:, month:, today: Date.current, plan: nil)
@@ -101,6 +107,44 @@ class Forecast::VariableBreakdown
     source = estimate.budget_source
     group = source&.group_for(category)
     group && budget_rows.find { |row| row.first == group }
+  end
+
+  # Fulas Bank: the categories (as strings, subcategories included) whose
+  # budget or plan rules the month: they are not in the sample months'
+  # totals, which only average the rest.
+  def outside_average_ids
+    @outside_average_ids ||= (estimate.planned_ids(month) | estimate.budget_covered_ids(month)).map(&:to_s)
+  end
+
+  # Whether a category's spending is in the average (no budget or plan
+  # rules it this month). Movements with no category always are.
+  def in_average?(row)
+    row.category.nil? || outside_average_ids.exclude?(row.category.id.to_s)
+  end
+
+  def budgeted?(row)
+    row.category.present? && budget_row_for(row.category).present?
+  end
+
+  # No category with spending is averaged: budgets and plans make the whole
+  # month, and the sample months would only show zeros.
+  def all_planned?
+    categories.any? && categories.none? { |row| in_average?(row) }
+  end
+
+  # A month far above what the category usually spends (see OUTLIER_FACTOR).
+  def outlier?(row, sample)
+    value = row.totals[sample]
+    return false if value.nil? || value < OUTLIER_MIN
+
+    spent = row.totals.values.select(&:positive?).sort
+    return false if spent.size < 3
+
+    value >= spent[spent.size / 2] * OUTLIER_FACTOR
+  end
+
+  def any_outlier?
+    categories.any? { |row| sample_months.any? { |sample| outlier?(row, sample) } }
   end
 
   # The categories left out of the forecast, by name.

@@ -27,6 +27,12 @@ es:
       result: Previsión del mes
       months: Meses que se promedian
       months_hint: "El mismo mes de los tres últimos años y los seis últimos meses. Se quitan el mayor y el menor y se hace la media del resto."
+      months_all_planned: "En %{month} todas las categorías con gasto tienen presupuesto o un plan, así que no hay media: la previsión es la suma de lo que ves abajo."
+      months_partly_planned: "Las categorías con presupuesto o plan no entran en estas cifras: cuentan aparte, abajo."
+      budget_pill: "Con presupuesto"
+      not_averaged: "No entra en la media: este mes manda su presupuesto o su plan."
+      outlier: "Muy por encima de lo habitual en esta categoría. Si es un pago puntual, márcalo como puntual."
+      outlier_hint: "En naranja, los meses en que una categoría gastó el triple o más de lo habitual. Si es un pago puntual (una cuota final, una amortización), abre el movimiento y márcalo como puntual: deja de contar en la previsión."
       dropped: Descartado
       no_history: Todavía no hay movimientos para calcularlo.
       categories: Por categoría

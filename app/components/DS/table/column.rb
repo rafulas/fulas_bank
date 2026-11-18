@@ -16,7 +16,9 @@ class DS::Table::Column < DesignSystemComponent
   # @param class [String, nil] extra classes for the body cells, e.g. "text-secondary"
   #   or "privacy-sensitive"
   # @param dense [Boolean] set by the table: tighter padding and smaller text
-  def initialize(header, cell:, sticky: false, dense: false, align: :left, numeric: false, row_header: false, class: nil)
+  # @param pinned [Boolean] keep the column in view while the table scrolls
+  #   sideways, for the column that names each row on a narrow screen
+  def initialize(header, cell:, sticky: false, dense: false, align: :left, numeric: false, row_header: false, pinned: false, class: nil)
     @header = header
     @cell = cell
     @sticky = sticky
@@ -26,6 +28,7 @@ class DS::Table::Column < DesignSystemComponent
     candidate = align.to_s.to_sym
     @align = numeric ? :right : (ALIGNS.include?(candidate) ? candidate : :left)
     @row_header = row_header
+    @pinned = pinned
     @cell_class = binding.local_variable_get(:class)
   end
 
@@ -38,7 +41,8 @@ class DS::Table::Column < DesignSystemComponent
       alignment_classes,
       # z-10 so a privacy-blurred amount, which paints in a layer of its own,
       # doesn't show through the header as it scrolls under it.
-      ("sticky top-0 z-10 bg-container" if @sticky)
+      ("sticky top-0 z-10 bg-container" if @sticky),
+      ("sticky left-0 bg-container #{@sticky ? 'z-20' : 'z-10'}" if @pinned)
     )
   end
 
@@ -56,6 +60,7 @@ class DS::Table::Column < DesignSystemComponent
         # Fulas Bank: figures in the amount font, as in FlowVista.
         ("font-amount" if @numeric),
         alignment_classes,
+        ("sticky left-0 z-[5] bg-container" if @pinned),
         @cell_class
       )
     )

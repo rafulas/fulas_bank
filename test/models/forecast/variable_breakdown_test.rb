@@ -40,6 +40,37 @@ class Forecast::VariableBreakdownTest < ActiveSupport::TestCase
     assert_equal [ 900 ], breakdown.entries_for(Forecast::VariableBreakdown::NONE)[Date.new(2026, 9, 1)].map(&:amount)
   end
 
+  test "points out a month far above what a category usually spends" do
+    spend(100, Date.new(2026, 6, 5), category: @food)
+    spend(120, Date.new(2026, 7, 5), category: @food)
+    spend(110, Date.new(2026, 8, 5), category: @food)
+    spend(14_973, Date.new(2026, 9, 5), category: @food)
+
+    row = breakdown.categories.find { |category| category.key == @food.id }
+    assert breakdown.outlier?(row, Date.new(2026, 9, 1))
+    assert_not breakdown.outlier?(row, Date.new(2026, 8, 1))
+    assert breakdown.any_outlier?
+  end
+
+  test "a one-off movement is not in the breakdown" do
+    spend(100, Date.new(2026, 8, 5), category: @food)
+    spend(14_973, Date.new(2026, 9, 5), category: @food, kind: "one_time")
+
+    row = breakdown.categories.find { |category| category.key == @food.id }
+    assert_nil row.totals[Date.new(2026, 9, 1)]
+  end
+
+  test "with every category planned, nothing is averaged" do
+    spend(100, Date.new(2026, 8, 5), category: @food)
+    plan = Forecast::VariablePlan.new(@family, user: users(:family_admin))
+    plan.plan!(Date.new(2026, 11, 1), @food.id, 80)
+    planned = Forecast::VariableBreakdown.new(@family, accounts: [ @account ], month: Date.new(2026, 11, 1), today: @today, plan: plan)
+
+    assert_not planned.in_average?(planned.categories.first)
+    assert planned.all_planned?
+    assert_not breakdown.all_planned?
+  end
+
   private
     def breakdown
       Forecast::VariableBreakdown.new(@family, accounts: [ @account ], month: Date.new(2026, 11, 1), today: @today)
