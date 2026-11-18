@@ -15,7 +15,7 @@ class Insurances::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
   test "links an instalment to its charge, shows it on both sides and undoes it" do
     get edit_insurance_path(@insurance)
-    assert_select "form[action=?]", link_insurance_payment_path(@insurance, @due.iso8601, entry_id: @charge.id)
+    assert_select "form[action=?]", link_insurance_payment_path(@insurance, @due.iso8601, entry_id: @charge.id, from: "policy")
 
     post link_insurance_payment_path(@insurance, @due.iso8601, entry_id: @charge.id)
     payment = @insurance.insurance_payments.find_by!(due_on: @due)
@@ -27,6 +27,16 @@ class Insurances::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
     delete clear_insurance_payment_path(@insurance, @due.iso8601)
     assert_not payment.reload.paid?
+  end
+
+  test "from the policy's form it answers in place, redrawing the instalments" do
+    post link_insurance_payment_path(@insurance, @due.iso8601, entry_id: @charge.id, from: "policy"), as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, %(target="#{ActionView::RecordIdentifier.dom_id(@insurance, :payments)}")
+    assert_includes response.body, clear_insurance_payment_path(@insurance, @due.iso8601, from: "policy")
+    assert @insurance.insurance_payments.find_by!(due_on: @due).paid?
   end
 
   test "marks an instalment paid without a charge" do

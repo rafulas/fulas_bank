@@ -2,6 +2,11 @@
 # was paid (see InsurancePayment): link it to a bank charge, confirm or turn
 # down the charge the app proposed, mark it paid by hand, or undo it. The
 # instalment is named by its due day.
+#
+# From the policy's form (`from=policy`) each action answers in place
+# (Turbo Stream): the
+# instalments card and the policy's line in the list are redrawn, so the
+# next instalment can be linked without leaving and reopening the policy.
 class Insurances::PaymentsController < ApplicationController
   before_action :set_payment
 
@@ -56,7 +61,23 @@ class Insurances::PaymentsController < ApplicationController
       Current.family.entries.joins(:account).merge(Account.accessible_by(Current.user))
     end
 
-    def back(**flash)
-      redirect_back_or_to insurances_path, **flash
+    def back(notice: nil, alert: nil)
+      return redirect_back_or_to(insurances_path, notice: notice, alert: alert) unless params[:from] == "policy"
+
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = notice if notice
+          flash.now[:alert] = alert if alert
+          @insurance.insurance_payments.reset
+          render turbo_stream: [
+            turbo_stream.replace(ActionView::RecordIdentifier.dom_id(@insurance, :payments),
+                                 partial: "insurances/payments", locals: { insurance: @insurance }),
+            turbo_stream.replace(ActionView::RecordIdentifier.dom_id(@insurance),
+                                 partial: "insurances/insurance", locals: { insurance: @insurance }),
+            *flash_notification_stream_items
+          ]
+        end
+        format.html { redirect_back_or_to insurances_path, notice: notice, alert: alert }
+      end
     end
 end
