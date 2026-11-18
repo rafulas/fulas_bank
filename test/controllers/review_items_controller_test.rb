@@ -20,6 +20,17 @@ class ReviewItemsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#review_bell li", text: /#{I18n.t("review_items.index.kinds.price_increase")}/, count: 0
   end
 
+  test "from the bell, «Visto» redraws its list and count in place" do
+    change = @series.recurring_price_changes.create!(effective_on: 2.days.ago.to_date, previous_amount: 12.99, new_amount: 15.99, currency: "USD", source: "detected")
+
+    post seen_review_items_path(key: "price:#{change.id}"), as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, %(target="review-bell-list")
+    assert_includes response.body, %(target="review-bell-count")
+    assert_not_includes response.body, I18n.t("review_items.index.kinds.price_increase")
+  end
+
   test "a malformed key is ignored" do
     post seen_review_items_path(key: "anything")
 

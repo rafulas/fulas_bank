@@ -38,7 +38,16 @@ class SubscriptionCostsController < ApplicationController
   def mark
     series = accessible_series.find(params[:id])
     series.update!(bill_type: "subscription")
-    redirect_to subscription_costs_path, notice: t(".success", name: series.display_name)
+    notice = t(".success", name: series.display_name)
+
+    # Fulas Bank: from «Añadir suscripción» the chosen one leaves the list and
+    # the dialog stays open, to pick several in a row.
+    if params[:from] == "pick" && request.format.turbo_stream?
+      flash.now[:notice] = notice
+      render turbo_stream: [ turbo_stream.remove(ActionView::RecordIdentifier.dom_id(series, :subscription_candidate)), *flash_notification_stream_items ]
+    else
+      redirect_to subscription_costs_path, notice: notice
+    end
   end
 
   private

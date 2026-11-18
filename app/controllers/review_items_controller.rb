@@ -13,6 +13,17 @@ class ReviewItemsController < ApplicationController
     key = params[:key].to_s
     ReviewItems.mark_seen!(Current.user, key) if key.match?(KEY_FORMAT)
 
-    redirect_back_or_to root_path
+    respond_to do |format|
+      # Fulas Bank: from the bell, its list and count are redrawn in place and
+      # the list stays open for the next item.
+      format.turbo_stream do
+        review = ReviewItems.new(Current.family, user: Current.user)
+        render turbo_stream: [
+          turbo_stream.replace("review-bell-list", partial: "review_items/list", locals: { review: review }),
+          turbo_stream.replace("review-bell-count", partial: "review_items/badge", locals: { count: review.count })
+        ]
+      end
+      format.html { redirect_back_or_to root_path }
+    end
   end
 end

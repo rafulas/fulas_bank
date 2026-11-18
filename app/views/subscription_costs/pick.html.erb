@@ -1,21 +1,23 @@
 <%# «Añadir suscripción»: most subscriptions are already a recurring payment
     the app found in the movements, so the dialog offers those first and
     a blank form second. %>
-<%= render DS::Dialog.new do |dialog| %>
+<%# Fulas Bank: «Elegir» marks it in place and keeps the dialog open for the
+    next one; the page behind is reloaded when it closes. %>
+<%= render DS::Dialog.new(reload_on_close: true) do |dialog| %>
   <% dialog.with_header(title: t(".title"), subtitle: t(".hint")) %>
   <% dialog.with_body do %>
     <div class="space-y-3">
       <% if @candidates.any? %>
         <div class="max-h-80 overflow-y-auto rounded-lg shadow-border-xs divide-y divide-divider">
           <% @candidates.each do |series| %>
-            <div class="flex items-center gap-3 px-3 py-2.5">
+            <div id="<%= dom_id(series, :subscription_candidate) %>" class="flex items-center gap-3 px-3 py-2.5">
               <%= render "subscription_costs/logo", series: series %>
               <div class="min-w-0 grow">
                 <p class="truncate text-sm text-primary"><%= series.list_name %></p>
                 <p class="text-xs text-secondary privacy-sensitive"><%= format_money(series.amount_money) %> · <%= frequency_label(series) %></p>
               </div>
               <%= render DS::Button.new(text: t(".choose"), variant: :outline, size: :sm,
-                    href: mark_subscription_cost_path(series), method: :patch, frame: :_top) %>
+                    href: mark_subscription_cost_path(series, from: "pick"), method: :patch) %>
             </div>
           <% end %>
         </div>
