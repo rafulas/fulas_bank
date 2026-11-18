@@ -123,6 +123,21 @@ class CreditCard::CycleTest < ActiveSupport::TestCase
     assert_equal BigDecimal("80"), later.next_charge.amount
   end
 
+  test "the next charge adds every instalment charged that month, whatever the day" do
+    deferred = spend(300, Date.new(2026, 9, 10))
+    CardFinancing.from_entry(deferred).update!(installments_count: 3, installment_amount: 101)
+    other = spend(40, Date.new(2026, 9, 20))
+    CardFinancing.from_entry(other).update!(installments_count: 2, installment_amount: 20, first_installment_on: Date.new(2026, 11, 6))
+    spend(80, Date.new(2026, 10, 3))
+
+    upcoming = CreditCard::Upcoming.new(@card, today: Date.new(2026, 10, 15))
+    assert_equal BigDecimal("80"), upcoming.next_charge.amount
+    assert_equal [ 101, 20 ].map { |amount| BigDecimal(amount) }, upcoming.installments.map(&:amount)
+    assert_equal BigDecimal("201"), upcoming.total_amount
+    assert_equal BigDecimal("343"), upcoming.pending_financed
+    assert_equal 2, upcoming.financings_count
+  end
+
   private
     def card_statement_lines(today)
       Forecast.new(@family, accounts: [ @bank ], card_accounts: [ @card ], through: Date.new(2026, 12, 31), include_variable: false, today: today)
