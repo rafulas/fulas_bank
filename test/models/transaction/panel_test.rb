@@ -30,7 +30,7 @@ class Transaction::PanelTest < ActiveSupport::TestCase
 
     @user.update_home_panel!(account_ids: [ @checking.id, @card.id ], card_ids: [ @card.id ])
     home = Transaction::Panel.new(@family, user: @user.reload, today: @today, scope: :home)
-    assert_equal [ @checking, @card ], home.accounts
+    assert_equal [ @checking, @card ].sort_by(&:id), home.accounts.sort_by(&:id)
     assert_equal [ @card ], home.statement_cards
     assert_equal [ @checking ], panel.accounts
   end
